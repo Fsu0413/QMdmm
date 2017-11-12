@@ -18,6 +18,7 @@ public:
     virtual ~QMdmmRoom();
 
     string addPlayer(QMdmmPlayer *player, const string &userName = string());
+    bool full() const;
 
     bool removePlayer(QMdmmPlayer *player);
     bool removePlayer(const string &playerName);

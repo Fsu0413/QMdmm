@@ -3,22 +3,40 @@
 #include "qmdmmserverroom.h"
 #include <algorithm>
 #include <map>
+#include <thread>
 #include <vector>
 
 using std::map;
+using std::thread;
 using std::vector;
 
 struct QMdmmServerPrivate
 {
     QMdmmServerPrivate()
         : room(nullptr)
+        , roomThread(nullptr)
     {
     }
 
     QMdmmServerRoom *room;
+    thread *roomThread;
     map<QMdmmSocket *, QMdmmServerPlayer *> playerMap;
     map<QMdmmSocket *, QMdmmServerPlayer *> observerMap;
     vector<QMdmmSocket *> connectedSockets;
+
+    void startGame()
+    {
+        if (roomThread != nullptr)
+            roomThread = new thread([this]() { room->run(); });
+    }
+
+    void stopGame()
+    {
+        if (roomThread != nullptr) {
+            roomThread->join();
+            delete roomThread;
+        }
+    }
 };
 
 QMdmmServer::QMdmmServer()
@@ -77,12 +95,17 @@ void QMdmmServer::socketDisconnected(QMdmmSocket *socket)
 void QMdmmServer::addPlayer(QMdmmSocket *socket, const string &playerName)
 {
     QMDMMD(QMdmmServer);
-    auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
-    if (csIt != d->connectedSockets.cend()) {
-        QMdmmServerPlayer *player = new QMdmmServerPlayer;
-        player->setSocket(socket);
-        d->room->addPlayer(player, playerName);
-        d->playerMap[socket] = player;
+    if (!d->room->full()) {
+        auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
+        if (csIt != d->connectedSockets.cend()) {
+            QMdmmServerPlayer *player = new QMdmmServerPlayer;
+            player->setSocket(socket);
+            d->room->addPlayer(player, playerName);
+            d->playerMap[socket] = player;
+
+            if (d->room->full())
+                d->startGame();
+        }
     }
 }
 

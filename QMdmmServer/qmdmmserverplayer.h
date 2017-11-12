@@ -19,13 +19,12 @@ public:
     void setSocket(QMdmmSocket *socket);
     QMdmmSocket *socket() const;
 
+    // This request MUST BLOCK room thread, should be done in QMdmmSocket
+    // TODO: make it private
     void request(int requestId, const string &requestData);
     void notify(int notifyId, const string &notifyData);
-    void reply(int requestId, const string &replyData);
 
     int connectId() const;
-
-    // void notifyServer(int notifyId, const string &notifyData); // chat only?
 
 private:
     QMDMM_D(QMdmmServerPlayer)

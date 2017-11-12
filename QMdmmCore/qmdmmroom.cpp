@@ -13,7 +13,6 @@ using std::out_of_range;
 struct QMdmmRoomPrivate
 {
     constexpr QMdmmRoomPrivate()
-        : players()
     {
     }
 
@@ -50,6 +49,12 @@ string QMdmmRoom::addPlayer(QMdmmPlayer *player, const string &userName)
     d->players[useName] = player;
 
     return useName;
+}
+
+bool QMdmmRoom::full() const
+{
+    QMDMMD(const QMdmmRoom);
+    return d->players.size() >= 3;
 }
 
 bool QMdmmRoom::removePlayer(QMdmmPlayer *player)

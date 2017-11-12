@@ -10,9 +10,8 @@ class QMDMMSERVER_EXPORT QMdmmProtocol
 namespace QMdmmProtocol {
 enum QMdmmRequestId
 {
-    RequestFromServerMask = 0x1000,
+    // No requests is from server, all requests are from room
 
-    RequestFromRoomMask = 0x2000,
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
     RequestStriveForFirstOrLast, // request: N/A, reply: int firstOrLast
     RequestOperation, // request: N/A, reply: int operation, string targetName
@@ -22,7 +21,8 @@ enum QMdmmRequestId
 enum QMdmmNotifyId
 {
     NotifyFromServerMask = 0x1000,
-    NotifyPing, // int ping-id
+    NotifyPingClient, // int ping-id
+    NotifyPongServer, // int ping-id
     NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyFromRoomMask = 0x2000,
@@ -35,7 +35,8 @@ enum QMdmmNotifyId
     NotifyUpdate, // broadcast, string playerName, int item
 
     NotifyToServerMask = 0x4000,
-    NotifyPong, // int ping-id
+    NotifyPongClient, // int ping-id
+    NotifyPingServer, // int ping-id
     NotifySpeak, // string contents
     NotifyOperating, // TODO: for ob
 
