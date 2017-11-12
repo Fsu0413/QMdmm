@@ -1,6 +1,6 @@
 #include "qmdmmserver.h"
 #include "qmdmmserverplayer.h"
-#include <QMdmmCore/QMdmmRoom>
+#include "qmdmmserverroom.h"
 #include <algorithm>
 #include <map>
 #include <vector>
@@ -15,7 +15,7 @@ struct QMdmmServerPrivate
     {
     }
 
-    QMdmmRoom *room;
+    QMdmmServerRoom *room;
     map<QMdmmSocket *, QMdmmServerPlayer *> playerMap;
     map<QMdmmSocket *, QMdmmServerPlayer *> observerMap;
     vector<QMdmmSocket *> connectedSockets;
@@ -25,7 +25,7 @@ QMdmmServer::QMdmmServer()
     : d_ptr(new QMdmmServerPrivate)
 {
     QMDMMD(QMdmmServer);
-    d->room = new QMdmmRoom;
+    d->room = new QMdmmServerRoom;
 }
 
 QMdmmServer::~QMdmmServer()
@@ -35,13 +35,13 @@ QMdmmServer::~QMdmmServer()
     delete d;
 }
 
-QMdmmRoom *QMdmmServer::room()
+QMdmmServerRoom *QMdmmServer::room()
 {
     QMDMMD(QMdmmServer);
     return d->room;
 }
 
-const QMdmmRoom *QMdmmServer::room() const
+const QMdmmServerRoom *QMdmmServer::room() const
 {
     QMDMMD(const QMdmmServer);
     return d->room;

@@ -8,7 +8,7 @@
 using std::string;
 
 struct QMdmmServerPrivate;
-class QMdmmRoom;
+class QMdmmServerRoom;
 class QMdmmSocket;
 
 class QMDMMSERVER_EXPORT QMdmmServer
@@ -17,8 +17,8 @@ public:
     QMdmmServer();
     virtual ~QMdmmServer();
 
-    QMdmmRoom *room();
-    const QMdmmRoom *room() const;
+    QMdmmServerRoom *room();
+    const QMdmmServerRoom *room() const;
 
     virtual bool prepare() = 0;
 

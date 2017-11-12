@@ -45,6 +45,12 @@ class QMDMMCORE_EXPORT QMdmmCoreGlobal
 
 #define QMDMM_UNUSED(n) ((void)n)
 
+#define QMDMM_FOREVER for (;;)
+
+#ifndef forever
+#define forever for (;;)
+#endif
+
 namespace QMdmmData {
 enum Place
 {
