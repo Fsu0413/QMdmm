@@ -1,6 +1,7 @@
 #ifndef QMDMMSERVERPLAYER_H
 #define QMDMMSERVERPLAYER_H
 
+#include "qmdmmprotocol.h"
 #include "qmdmmserverglobal.h"
 #include <QMdmmCore/QMdmmPlayer>
 #include <string>
@@ -21,8 +22,8 @@ public:
 
     // This request MUST BLOCK room thread, should be done in QMdmmSocket
     // TODO: make it private
-    void request(int requestId, const string &requestData);
-    void notify(int notifyId, const string &notifyData);
+    void request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
+    void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
     int connectId() const;
 

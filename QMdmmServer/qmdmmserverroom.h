@@ -10,14 +10,30 @@ public:
     QMdmmServerRoom();
     ~QMdmmServerRoom();
 
-    struct GameOver
+    struct QMDMMSERVER_EXPORT GameOverType
     {
-        char dummy;
+        enum Type
+        {
+            RoundOver,
+            GameOver,
+            ErrorOver,
+
+            NotOver
+        };
+
+        Type t;
+        GameOverType() = delete;
+        constexpr GameOverType(const GameOverType &other);
+        constexpr GameOverType(const GameOverType::Type type);
+
+        GameOverType &operator=(const GameOverType &other);
+
+        bool operator==(const GameOverType &other) const;
     };
-    struct RoundOver
-    {
-        char dummy;
-    };
+
+    static GameOverType RoundOver;
+    static GameOverType GameOver;
+    static GameOverType ErrorOver;
 
     void run();
 };
