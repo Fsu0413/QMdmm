@@ -37,7 +37,7 @@ enum QMdmmNotifyId
     NotifyToServerMask = 0x4000,
     NotifyPong, // int ping-id
     NotifySpeak, // string contents
-    NotifyOperation, // TODO: for ob
+    NotifyOperating, // TODO: for ob
 
     NotifyToRoomMask = 0x8000,
 };
