@@ -1,10 +1,10 @@
 #ifndef QMDMMPROTOCOL_H
 #define QMDMMPROTOCOL_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmcoreglobal.h"
 
 #if 0
-class QMDMMSERVER_EXPORT QMdmmProtocol
+class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
 
 namespace QMdmmProtocol {

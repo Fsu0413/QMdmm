@@ -1,8 +1,8 @@
 #ifndef QMDMMSERVER_H
 #define QMDMMSERVER_H
 
-#include "qmdmmprotocol.h"
 #include "qmdmmserverglobal.h"
+#include <QMdmmCore/QMdmmProtocol>
 #include <string>
 
 using std::string;

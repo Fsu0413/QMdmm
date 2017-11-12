@@ -1,9 +1,9 @@
 #ifndef QMDMMSERVERPLAYER_H
 #define QMDMMSERVERPLAYER_H
 
-#include "qmdmmprotocol.h"
 #include "qmdmmserverglobal.h"
 #include <QMdmmCore/QMdmmPlayer>
+#include <QMdmmCore/QMdmmProtocol>
 #include <string>
 
 struct QMdmmServerPlayerPrivate;

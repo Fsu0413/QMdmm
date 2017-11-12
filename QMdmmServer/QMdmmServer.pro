@@ -15,7 +15,6 @@ SOURCES += \
     qmdmmserver.cpp \
     qmdmmsocket.cpp \
     qmdmmserverplayer.cpp \
-    qmdmmprotocol.cpp \
     qmdmmserverroom.cpp
 
 HEADERS += \
@@ -23,7 +22,6 @@ HEADERS += \
     qmdmmserver.h \
     qmdmmsocket.h \
     qmdmmserverplayer.h \
-    qmdmmprotocol.h \
     qmdmmserverroom.h
 
 DESTDIR = $$OUT_PWD/../dist/lib

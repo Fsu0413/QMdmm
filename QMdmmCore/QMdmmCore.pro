@@ -18,7 +18,8 @@ SOURCES += qmdmmcore.cpp \
 HEADERS +=\
     qmdmmroom.h \
     qmdmmplayer.h \
-    qmdmmcoreglobal.h
+    qmdmmcoreglobal.h \
+    qmdmmprotocol.h
 
 DESTDIR = $$OUT_PWD/../dist/lib
 DLLDESTDIR = $$OUT_PWD/../dist/bin
