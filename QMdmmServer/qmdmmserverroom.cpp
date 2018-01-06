@@ -4,12 +4,19 @@ QMdmmServerRoom::GameOverType QMdmmServerRoom::RoundOver(QMdmmServerRoom::GameOv
 QMdmmServerRoom::GameOverType QMdmmServerRoom::GameOver(QMdmmServerRoom::GameOverType::GameOver);
 QMdmmServerRoom::GameOverType QMdmmServerRoom::ErrorOver(QMdmmServerRoom::GameOverType::ErrorOver);
 
+struct QMdmmServerRoomPrivate
+{
+};
+
 QMdmmServerRoom::QMdmmServerRoom()
+    : d_ptr(new QMdmmServerRoomPrivate)
 {
 }
 
 QMdmmServerRoom::~QMdmmServerRoom()
 {
+    QMDMMD(QMdmmServerRoom);
+    delete d;
 }
 
 void QMdmmServerRoom::run()

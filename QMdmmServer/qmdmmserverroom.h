@@ -4,6 +4,8 @@
 #include "qmdmmserverglobal.h"
 #include <QMdmmCore/QMdmmRoom>
 
+struct QMdmmServerRoomPrivate;
+
 class QMDMMSERVER_EXPORT QMdmmServerRoom : public QMdmmRoom
 {
 public:
@@ -36,6 +38,9 @@ public:
     static GameOverType ErrorOver;
 
     void run();
+
+private:
+    QMDMM_D(QMdmmServerRoom)
 };
 
 #endif // QMDMMSERVERROOM_H

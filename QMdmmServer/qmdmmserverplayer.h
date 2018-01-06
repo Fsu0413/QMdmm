@@ -7,7 +7,7 @@
 #include <string>
 
 struct QMdmmServerPlayerPrivate;
-class QMdmmSocket;
+class QMdmmServerSocket;
 
 using std::string;
 
@@ -17,12 +17,12 @@ public:
     QMdmmServerPlayer();
     ~QMdmmServerPlayer();
 
-    void setSocket(QMdmmSocket *socket);
-    QMdmmSocket *socket() const;
+    void setSocket(QMdmmServerSocket *socket);
+    QMdmmServerSocket *socket() const;
 
     // This request MUST BLOCK room thread, should be done in QMdmmSocket
     // TODO: make it private
-    void request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
+    bool request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
     int connectId() const;

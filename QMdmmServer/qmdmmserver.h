@@ -9,7 +9,7 @@ using std::string;
 
 struct QMdmmServerPrivate;
 class QMdmmServerRoom;
-class QMdmmSocket;
+class QMdmmServerSocket;
 
 class QMDMMSERVER_EXPORT QMdmmServer
 {
@@ -27,21 +27,21 @@ public:
 
     virtual void exec() = 0;
 
-    void socketConnected(QMdmmSocket *socket);
-    void socketDisconnected(QMdmmSocket *socket);
+    void socketConnected(QMdmmServerSocket *socket);
+    void socketDisconnected(QMdmmServerSocket *socket);
 
-    void addPlayer(QMdmmSocket *socket, const string &playerName);
-    bool reconnectPlayer(QMdmmSocket *socket, int connectId, const string &playerName);
+    void addPlayer(QMdmmServerSocket *socket, const string &playerName);
+    bool reconnectPlayer(QMdmmServerSocket *socket, int connectId, const string &playerName);
 
     // MUST BE called in Room thread, synchornized it to Server thread by QMdmmSocket.
     // Do not return until Client replied or timeout occurred.
-    bool requestSocket(QMdmmSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
+    bool requestSocket(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
 
     // called in either Room thread or Server thread. If called in Room thread, synchornized it to Server thread by QMdmmSocket.
-    void notifySocket(QMdmmSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void notifySocket(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
     // MUST BE called in Server thread
-    void notifyServer(QMdmmSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
 private:
     QMDMM_D(QMdmmServer)

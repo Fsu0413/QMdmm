@@ -1,5 +1,5 @@
 #include "qmdmmserverplayer.h"
-#include "qmdmmsocket.h"
+#include "qmdmmserversocket.h"
 #include <random>
 
 using std::random_device;
@@ -13,7 +13,7 @@ struct QMdmmServerPlayerPrivate
     }
 
     int connectId;
-    QMdmmSocket *socket;
+    QMdmmServerSocket *socket;
 };
 
 QMdmmServerPlayer::QMdmmServerPlayer()
@@ -30,16 +30,28 @@ QMdmmServerPlayer::~QMdmmServerPlayer()
     delete d;
 }
 
-void QMdmmServerPlayer::setSocket(QMdmmSocket *socket)
+void QMdmmServerPlayer::setSocket(QMdmmServerSocket *socket)
 {
     QMDMMD(QMdmmServerPlayer);
     d->socket = socket;
 }
 
-QMdmmSocket *QMdmmServerPlayer::socket() const
+QMdmmServerSocket *QMdmmServerPlayer::socket() const
 {
     QMDMMD(const QMdmmServerPlayer);
     return d->socket;
+}
+
+bool QMdmmServerPlayer::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData)
+{
+    QMDMMD(QMdmmServerPlayer);
+    return d->socket->request(requestId, requestData, replyData);
+}
+
+void QMdmmServerPlayer::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+{
+    QMDMMD(QMdmmServerPlayer);
+    d->socket->notify(notifyId, notifyData);
 }
 
 int QMdmmServerPlayer::connectId() const

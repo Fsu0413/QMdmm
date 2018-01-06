@@ -13,16 +13,16 @@ PRECOMPILED_HEADER = qmdmmserverglobal.h
 
 SOURCES += \
     qmdmmserver.cpp \
-    qmdmmsocket.cpp \
     qmdmmserverplayer.cpp \
-    qmdmmserverroom.cpp
+    qmdmmserverroom.cpp \
+    qmdmmserversocket.cpp
 
 HEADERS += \
     qmdmmserverglobal.h \
     qmdmmserver.h \
-    qmdmmsocket.h \
     qmdmmserverplayer.h \
-    qmdmmserverroom.h
+    qmdmmserverroom.h \
+    qmdmmserversocket.h
 
 DESTDIR = $$OUT_PWD/../dist/lib
 DLLDESTDIR = $$OUT_PWD/../dist/bin

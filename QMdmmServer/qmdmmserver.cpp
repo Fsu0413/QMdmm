@@ -20,9 +20,9 @@ struct QMdmmServerPrivate
 
     QMdmmServerRoom *room;
     thread *roomThread;
-    map<QMdmmSocket *, QMdmmServerPlayer *> playerMap;
-    map<QMdmmSocket *, QMdmmServerPlayer *> observerMap;
-    vector<QMdmmSocket *> connectedSockets;
+    map<QMdmmServerSocket *, QMdmmServerPlayer *> playerMap;
+    map<QMdmmServerSocket *, QMdmmServerPlayer *> observerMap;
+    vector<QMdmmServerSocket *> connectedSockets;
 
     void startGame()
     {
@@ -65,13 +65,13 @@ const QMdmmServerRoom *QMdmmServer::room() const
     return d->room;
 }
 
-void QMdmmServer::socketConnected(QMdmmSocket *socket)
+void QMdmmServer::socketConnected(QMdmmServerSocket *socket)
 {
     QMDMMD(QMdmmServer);
     d->connectedSockets.push_back(socket);
 }
 
-void QMdmmServer::socketDisconnected(QMdmmSocket *socket)
+void QMdmmServer::socketDisconnected(QMdmmServerSocket *socket)
 {
     QMDMMD(QMdmmServer);
     auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
@@ -92,7 +92,7 @@ void QMdmmServer::socketDisconnected(QMdmmSocket *socket)
     }
 }
 
-void QMdmmServer::addPlayer(QMdmmSocket *socket, const string &playerName)
+void QMdmmServer::addPlayer(QMdmmServerSocket *socket, const string &playerName)
 {
     QMDMMD(QMdmmServer);
     if (!d->room->full()) {
@@ -109,7 +109,7 @@ void QMdmmServer::addPlayer(QMdmmSocket *socket, const string &playerName)
     }
 }
 
-bool QMdmmServer::reconnectPlayer(QMdmmSocket *socket, int connectId, const string &playerName)
+bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId, const string &playerName)
 {
     QMDMMD(QMdmmServer);
     auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
@@ -130,4 +130,8 @@ bool QMdmmServer::reconnectPlayer(QMdmmSocket *socket, int connectId, const stri
     }
 
     return false;
+}
+
+void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+{
 }
