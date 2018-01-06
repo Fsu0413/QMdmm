@@ -22,6 +22,7 @@ public:
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
     void notified(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
+protected:
     virtual bool sendRequest(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData) = 0;
     virtual bool waitForReply(QMdmmProtocol::QMdmmRequestId requestId, string &replyData) = 0;
     virtual bool sendNotify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData) = 0;
