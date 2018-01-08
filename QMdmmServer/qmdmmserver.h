@@ -17,9 +17,6 @@ public:
     QMdmmServer();
     virtual ~QMdmmServer();
 
-    QMdmmServerRoom *room();
-    const QMdmmServerRoom *room() const;
-
     virtual bool prepare() = 0;
 
     virtual bool listen() = 0;
@@ -31,7 +28,7 @@ public:
     void socketDisconnected(QMdmmServerSocket *socket);
 
     void addPlayer(QMdmmServerSocket *socket, const string &playerName);
-    bool reconnectPlayer(QMdmmServerSocket *socket, int connectId, const string &playerName);
+    bool reconnectPlayer(QMdmmServerSocket *socket, int connectId);
 
     // MUST BE called in Room thread, synchornized it to Server thread by QMdmmSocket.
     // Do not return until Client replied or timeout occurred.

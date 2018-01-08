@@ -13,28 +13,31 @@ using std::vector;
 struct QMdmmServerPrivate
 {
     QMdmmServerPrivate()
-        : room(nullptr)
-        , roomThread(nullptr)
     {
     }
 
-    QMdmmServerRoom *room;
-    thread *roomThread;
+    map<QMdmmServerRoom *, thread *> roomThreadMap;
     map<QMdmmServerSocket *, QMdmmServerPlayer *> playerMap;
+    map<QMdmmServerPlayer *, QMdmmServerRoom *> roomMap;
     map<QMdmmServerSocket *, QMdmmServerPlayer *> observerMap;
     vector<QMdmmServerSocket *> connectedSockets;
 
-    void startGame()
+    void startGame(QMdmmServerRoom *room)
     {
-        if (roomThread != nullptr)
-            roomThread = new thread([this]() { room->run(); });
+        auto it = roomThreadMap.find(room);
+        if (it == roomThreadMap.cend())
+            roomThreadMap[room] = new thread([room]() { room->run(); });
     }
 
-    void stopGame()
+    void stopGame(QMdmmServerRoom *room)
     {
-        if (roomThread != nullptr) {
-            roomThread->join();
-            delete roomThread;
+        auto it = roomThreadMap.find(room);
+        if (it != roomThreadMap.cend()) {
+            auto temp = it->second;
+            roomThreadMap.erase(it);
+            temp->join();
+            delete room;
+            delete temp;
         }
     }
 };
@@ -42,27 +45,13 @@ struct QMdmmServerPrivate
 QMdmmServer::QMdmmServer()
     : d_ptr(new QMdmmServerPrivate)
 {
-    QMDMMD(QMdmmServer);
-    d->room = new QMdmmServerRoom;
+    // QMDMMD(QMdmmServer);
 }
 
 QMdmmServer::~QMdmmServer()
 {
     QMDMMD(QMdmmServer);
-    delete d->room;
     delete d;
-}
-
-QMdmmServerRoom *QMdmmServer::room()
-{
-    QMDMMD(QMdmmServer);
-    return d->room;
-}
-
-const QMdmmServerRoom *QMdmmServer::room() const
-{
-    QMDMMD(const QMdmmServer);
-    return d->room;
 }
 
 void QMdmmServer::socketConnected(QMdmmServerSocket *socket)
@@ -95,36 +84,40 @@ void QMdmmServer::socketDisconnected(QMdmmServerSocket *socket)
 void QMdmmServer::addPlayer(QMdmmServerSocket *socket, const string &playerName)
 {
     QMDMMD(QMdmmServer);
-    if (!d->room->full()) {
-        auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
-        if (csIt != d->connectedSockets.cend()) {
-            QMdmmServerPlayer *player = new QMdmmServerPlayer;
-            player->setSocket(socket);
-            d->room->addPlayer(player, playerName);
-            d->playerMap[socket] = player;
+    auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
+    if (csIt != d->connectedSockets.cend()) {
+        QMdmmServerPlayer *player = new QMdmmServerPlayer;
+        player->setSocket(socket);
+        QMdmmServerRoom *room = nullptr;
 
-            if (d->room->full())
-                d->startGame();
+        for (auto it = d->roomThreadMap.begin(); it != d->roomThreadMap.end(); ++it) {
+            if (!it->first->full()) {
+                room = it->first;
+                break;
+            }
         }
+
+        if (room == nullptr) {
+            room = new QMdmmServerRoom;
+            d->roomThreadMap[room] = nullptr;
+        }
+
+        room->addPlayer(player, playerName);
+        d->playerMap[socket] = player;
+        d->roomMap[player] = room;
+        if (room->full())
+            d->startGame(room);
     }
 }
 
-bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId, const string &playerName)
+bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId)
 {
     QMDMMD(QMdmmServer);
-    auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
-    if (csIt != d->connectedSockets.cend()) {
-        QMdmmServerPlayer *player = dynamic_cast<QMdmmServerPlayer *>(d->room->player(playerName));
-        if (player == nullptr)
-            return false;
-        else if (player->connectId() != connectId)
-            return false;
-        else {
-            player->setSocket(socket);
-            d->playerMap[socket] = player;
 
-            // TODO: notify reconnect
-            // reconnectNotify(socket);
+    for (auto it = d->roomMap.begin(); it != d->roomMap.end(); ++it) {
+        if (it->first->connectId() == connectId) {
+            it->first->setSocket(socket);
+            d->playerMap[socket] = it->first;
             return true;
         }
     }
