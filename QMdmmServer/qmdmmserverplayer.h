@@ -22,7 +22,7 @@ public:
 
     // This request MUST BLOCK room thread, should be done in QMdmmSocket
     // TODO: make it private
-    bool request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
+    void request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
     int connectId() const;

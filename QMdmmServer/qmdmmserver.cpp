@@ -128,3 +128,7 @@ bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId)
 void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
 {
 }
+
+void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const std::string &replyData)
+{
+}

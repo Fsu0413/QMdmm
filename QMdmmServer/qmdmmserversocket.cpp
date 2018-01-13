@@ -34,13 +34,16 @@ QMdmmServer *QMdmmServerSocket::getServer() const
     return d->server;
 }
 
-bool QMdmmServerSocket::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData)
+void QMdmmServerSocket::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData)
 {
-    bool ret = sendRequest(requestId, requestData);
-    if (ret)
-        ret = waitForReply(requestId, replyData);
+    sendRequest(requestId, requestData);
+}
 
-    return ret;
+void QMdmmServerSocket::replyed(QMdmmProtocol::QMdmmRequestId requestId, const string &replyData)
+{
+    QMDMMD(QMdmmServerSocket);
+    if (d->server != nullptr)
+        d->server->replyToServer(this, requestId, replyData);
 }
 
 void QMdmmServerSocket::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)

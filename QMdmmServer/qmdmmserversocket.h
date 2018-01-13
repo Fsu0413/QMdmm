@@ -18,13 +18,13 @@ public:
     void setServer(QMdmmServer *server);
     QMdmmServer *getServer() const;
 
-    bool request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
+    void request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
+    void replyed(QMdmmProtocol::QMdmmRequestId requestId, const string &replyData);
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
     void notified(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
 protected:
     virtual bool sendRequest(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData) = 0;
-    virtual bool waitForReply(QMdmmProtocol::QMdmmRequestId requestId, string &replyData) = 0;
     virtual bool sendNotify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData) = 0;
 
 private:

@@ -42,10 +42,10 @@ QMdmmServerSocket *QMdmmServerPlayer::socket() const
     return d->socket;
 }
 
-bool QMdmmServerPlayer::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData)
+void QMdmmServerPlayer::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData)
 {
     QMDMMD(QMdmmServerPlayer);
-    return d->socket->request(requestId, requestData, replyData);
+    d->socket->request(requestId, requestData);
 }
 
 void QMdmmServerPlayer::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)

@@ -30,15 +30,9 @@ public:
     void addPlayer(QMdmmServerSocket *socket, const string &playerName);
     bool reconnectPlayer(QMdmmServerSocket *socket, int connectId);
 
-    // MUST BE called in Room thread, synchornized it to Server thread by QMdmmSocket.
-    // Do not return until Client replied or timeout occurred.
-    bool requestSocket(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData, string &replyData);
-
-    // called in either Room thread or Server thread. If called in Room thread, synchornized it to Server thread by QMdmmSocket.
-    void notifySocket(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
-
     // MUST BE called in Server thread
     void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &replyData);
 
 private:
     QMDMM_D(QMdmmServer)
