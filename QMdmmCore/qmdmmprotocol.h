@@ -42,6 +42,6 @@ enum QMdmmNotifyId
 
     NotifyToRoomMask = 0x8000,
 };
-}
+} // namespace QMdmmProtocol
 
 #endif // QMDMMPROTOCOL_H

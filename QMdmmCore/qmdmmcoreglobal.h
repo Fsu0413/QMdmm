@@ -76,6 +76,6 @@ enum StoneScissorsCloth
 };
 
 QMDMMCORE_EXPORT bool isPlaceAdjecent(Place p1, Place p2);
-}
+} // namespace QMdmmData
 
 #endif // QMDMMLOGIC_GLOBAL_H
