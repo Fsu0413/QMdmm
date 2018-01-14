@@ -128,6 +128,18 @@ bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId)
 
 void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
 {
+    QMDMMD(QMdmmServer);
+
+    if (notifyId & QMdmmProtocol::NotifyToRoomMask) {
+        auto playerIt = d->playerMap.find(socket);
+        if (playerIt != d->playerMap.cend()) {
+            auto roomIt = d->roomMap.find(playerIt->second);
+            if (roomIt != d->roomMap.cend())
+                roomIt->second->notified(playerIt->second, notifyId, notifyData);
+        }
+    } else {
+        // process notify
+    }
 }
 
 void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &replyData)
