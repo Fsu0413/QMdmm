@@ -2,9 +2,13 @@
 #define QMDMMSERVERROOM_H
 
 #include "qmdmmserverglobal.h"
+#include <QMdmmCore/QMdmmProtocol>
 #include <QMdmmCore/QMdmmRoom>
 
 struct QMdmmServerRoomPrivate;
+class QMdmmServerPlayer;
+
+using std::string;
 
 class QMDMMSERVER_EXPORT QMdmmServerRoom : public QMdmmRoom
 {
@@ -38,6 +42,8 @@ public:
     static GameOverType ErrorOver;
 
     void run();
+    void notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const string &notifyData);
 
 private:
     QMDMM_D(QMdmmServerRoom)

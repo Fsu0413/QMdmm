@@ -1,6 +1,7 @@
 #include "qmdmmserver.h"
 #include "qmdmmserverplayer.h"
 #include "qmdmmserverroom.h"
+#include "qmdmmserversocket.h"
 #include <algorithm>
 #include <map>
 #include <thread>
@@ -129,6 +130,14 @@ void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNo
 {
 }
 
-void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const std::string &replyData)
+void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &replyData)
 {
+    QMDMMD(QMdmmServer);
+
+    auto playerIt = d->playerMap.find(socket);
+    if (playerIt != d->playerMap.cend()) {
+        auto roomIt = d->roomMap.find(playerIt->second);
+        if (roomIt != d->roomMap.cend())
+            roomIt->second->replyed(playerIt->second, requestId, replyData);
+    }
 }

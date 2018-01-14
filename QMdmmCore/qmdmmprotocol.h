@@ -11,6 +11,7 @@ namespace QMdmmProtocol {
 enum QMdmmRequestId
 {
     // No requests is from server, all requests are from room
+    RequestInvalid = 0,
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
     RequestStriveForFirstOrLast, // request: N/A, reply: int firstOrLast
@@ -20,6 +21,8 @@ enum QMdmmRequestId
 
 enum QMdmmNotifyId
 {
+    NotifyInvalid = 0,
+
     NotifyFromServerMask = 0x1000,
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
