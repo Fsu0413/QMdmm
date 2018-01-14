@@ -3,6 +3,7 @@
 #include "qmdmmserversocket.h"
 #include <chrono>
 #include <condition_variable>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <vector>
@@ -12,6 +13,7 @@ using std::chrono::seconds;
 using std::chrono::system_clock;
 using std::chrono::time_point;
 using std::condition_variable;
+using std::function;
 using std::map;
 using std::mutex;
 using std::string;
@@ -36,7 +38,7 @@ struct QMdmmServerRoomPrivate
     QMdmmServerRoomPrivate();
 
     void doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
-    void waitForReply(bool (QMdmmServerRoomPrivate::*checkReplyFunc)());
+    void waitForReply(function<bool()> checkReplyFunc);
     void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 };
 
@@ -53,7 +55,7 @@ void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdm
     nowRequestId = requestId;
 }
 
-void QMdmmServerRoomPrivate::waitForReply(bool (QMdmmServerRoomPrivate::*checkReplyFunc)())
+void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
 {
     replys.clear();
     unique_lock<mutex> uniqueLock(condMutex);
@@ -61,11 +63,11 @@ void QMdmmServerRoomPrivate::waitForReply(bool (QMdmmServerRoomPrivate::*checkRe
 #ifdef HASTIMEOUT
     time_point nowTime = system_clock::now();
     time_point timeoutTime = now + seconds(2 * timeout);
-    if (!cond.wait_until(uniqueLock, timeoutTime, [this, checkReplyFunc]() -> bool { return (this->*checkReplyFunc)(); })) {
+    if (!cond.wait_until(uniqueLock, timeoutTime, checkReplyFunc)) {
         // timeout
     }
 #else
-    cond.wait(uniqueLock, [this, checkReplyFunc]() -> bool { return (this->*checkReplyFunc)(); });
+    cond.wait(uniqueLock, checkReplyFunc);
 #endif
 }
 
