@@ -1,6 +1,7 @@
 #include "qmdmmserverroom.h"
 #include "qmdmmserverplayer.h"
 #include "qmdmmserversocket.h"
+#include <QMdmmCore/QMdmmStoneScissorsCloth>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -35,20 +36,26 @@ struct QMdmmServerRoomPrivate
     mutex condMutex;
     map<QMdmmServerPlayer *, string> replys;
 
+    QMdmmServerRoom *parent;
+
     QMdmmServerRoomPrivate();
 
     void doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
     void waitForReply(function<bool()> checkReplyFunc);
     void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+
+    vector<QMdmmServerPlayer *> stoneScissorsCloth();
 };
 
 QMdmmServerRoomPrivate::QMdmmServerRoomPrivate()
     : nowRequestId(QMdmmProtocol::RequestInvalid)
+    , parent(nullptr)
 {
 }
 
 void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData)
 {
+    replys.clear();
     for (QMdmmServerPlayer *player : players)
         player->request(requestId, requestData);
 
@@ -57,7 +64,6 @@ void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdm
 
 void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
 {
-    replys.clear();
     unique_lock<mutex> uniqueLock(condMutex);
 
 #ifdef HASTIMEOUT
@@ -77,9 +83,46 @@ void QMdmmServerRoomPrivate::doNotify(vector<QMdmmServerPlayer *> players, QMdmm
         player->notify(notifyId, notifyData);
 }
 
+vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth()
+{
+    vector<QMdmmServerPlayer *> ret;
+
+    if (parent == nullptr)
+        return ret;
+
+    vector<QMdmmServerPlayer *> players;
+    for (QMdmmPlayer *p : parent->players()) {
+        QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(p);
+        if (sp != nullptr && sp->alive())
+            players.push_back(sp);
+    }
+
+    if (players.empty())
+        return ret;
+
+    doRequest(players, QMdmmProtocol::RequestStoneScissorsCloth, string());
+    waitForReply([this, players]() -> bool { return replys.size() == players.size(); });
+
+    vector<QMdmmStoneScissorsCloth> sscs;
+    for (vector<QMdmmServerPlayer *>::size_type i = 0; i < players.size(); ++i) {
+        QMdmmServerPlayer *player = players.at(i);
+        int n = atoi(replys[player].c_str());
+        sscs.push_back(static_cast<QMdmmStoneScissorsCloth::Type>(n));
+    }
+
+    auto winners = QMdmmStoneScissorsCloth::winners(sscs);
+
+    for (auto i : winners)
+        ret.push_back(players.at(i));
+
+    return ret;
+}
+
 QMdmmServerRoom::QMdmmServerRoom()
     : d_ptr(new QMdmmServerRoomPrivate)
 {
+    QMDMMD(QMdmmServerRoom);
+    d->parent = this;
 }
 
 QMdmmServerRoom::~QMdmmServerRoom()

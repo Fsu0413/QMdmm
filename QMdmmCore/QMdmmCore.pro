@@ -13,13 +13,15 @@ PRECOMPILED_HEADER = qmdmmcoreglobal.h
 
 SOURCES += qmdmmcore.cpp \
     qmdmmroom.cpp \
-    qmdmmplayer.cpp
+    qmdmmplayer.cpp \
+    qmdmmstonescissorscloth.cpp
 
 HEADERS +=\
     qmdmmroom.h \
     qmdmmplayer.h \
     qmdmmcoreglobal.h \
-    qmdmmprotocol.h
+    qmdmmprotocol.h \
+    qmdmmstonescissorscloth.h
 
 DESTDIR = $$OUT_PWD/../dist/lib
 DLLDESTDIR = $$OUT_PWD/../dist/bin

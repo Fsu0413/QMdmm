@@ -40,10 +40,10 @@ enum QMdmmNotifyId
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
-    NotifySpeak, // string contents
-    NotifyOperating, // TODO: for ob
 
     NotifyToRoomMask = 0x8000,
+    NotifySpeak, // string contents
+    NotifyOperating, // TODO: for ob
 };
 } // namespace QMdmmProtocol
 
