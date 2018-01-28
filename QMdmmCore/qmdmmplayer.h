@@ -29,6 +29,14 @@ public:
 
     int upgradePoint() const;
 
+    // action checks
+    bool canBuyKnife() const;
+    bool canBuyHorse() const;
+    bool canSlash(const QMdmmPlayer *to) const;
+    bool canKick(const QMdmmPlayer *to) const;
+    bool canMove(QMdmmData::Place toPlace) const;
+    bool canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const;
+
     // actions
     bool buyKnife();
     bool buyHorse();
