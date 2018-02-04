@@ -4,11 +4,11 @@
 using std::map;
 
 QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth()
-    : m_type(Undefined)
+    : m_type(QMdmmData::Stone)
 {
 }
 
-QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth(QMdmmStoneScissorsCloth::Type type)
+QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth(QMdmmData::StoneScissorsCloth type)
     : m_type(type)
 {
 }
@@ -24,7 +24,7 @@ QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(const QMdmmStoneScis
     return *this;
 }
 
-QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(QMdmmStoneScissorsCloth::Type type)
+QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(QMdmmData::StoneScissorsCloth type)
 {
     m_type = type;
     return *this;
@@ -36,23 +36,23 @@ QMdmmStoneScissorsCloth::~QMdmmStoneScissorsCloth()
 
 bool QMdmmStoneScissorsCloth::operator>(const QMdmmStoneScissorsCloth &op2) const
 {
-    return (m_type == Stone && op2.m_type == Scissors) || (m_type == Scissors && op2.m_type == Cloth) || (m_type == Cloth && op2.m_type == Stone);
+    return (m_type == QMdmmData::Stone && op2.m_type == QMdmmData::Scissors) || (m_type == QMdmmData::Scissors && op2.m_type == QMdmmData::Cloth)
+        || (m_type == QMdmmData::Cloth && op2.m_type == QMdmmData::Stone);
 }
 
 bool QMdmmStoneScissorsCloth::operator==(const QMdmmStoneScissorsCloth &op2) const
 {
-    return m_type == op2.m_type && m_type != Undefined;
+    return m_type == op2.m_type;
 }
 
 vector<vector<QMdmmStoneScissorsCloth>::size_type> QMdmmStoneScissorsCloth::winners(const vector<QMdmmStoneScissorsCloth> &judgers)
 {
-    map<Type, vector<vector<QMdmmStoneScissorsCloth>::size_type>> judgersMap;
+    map<QMdmmData::StoneScissorsCloth, vector<vector<QMdmmStoneScissorsCloth>::size_type>> judgersMap;
 
     for (vector<QMdmmStoneScissorsCloth>::size_type i = 0; i < judgers.size(); ++i) {
         const auto &judger = judgers.at(i);
-        Type t = judger;
-        if (t != Undefined)
-            judgersMap[t].push_back(i);
+        QMdmmData::StoneScissorsCloth t = judger;
+        judgersMap[t].push_back(i);
     }
 
     if (judgersMap.size() == 2) {
@@ -72,7 +72,7 @@ vector<vector<QMdmmStoneScissorsCloth>::size_type> QMdmmStoneScissorsCloth::winn
     return vector<vector<QMdmmStoneScissorsCloth>::size_type>();
 }
 
-QMdmmStoneScissorsCloth::operator QMdmmStoneScissorsCloth::Type() const
+QMdmmStoneScissorsCloth::operator QMdmmData::StoneScissorsCloth() const
 {
     return m_type;
 }

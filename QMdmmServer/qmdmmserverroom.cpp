@@ -107,7 +107,7 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth()
     for (vector<QMdmmServerPlayer *>::size_type i = 0; i < players.size(); ++i) {
         QMdmmServerPlayer *player = players.at(i);
         int n = atoi(replys[player].c_str());
-        sscs.push_back(static_cast<QMdmmStoneScissorsCloth::Type>(n));
+        sscs.push_back(static_cast<QMdmmData::StoneScissorsCloth>(n));
     }
 
     auto winners = QMdmmStoneScissorsCloth::winners(sscs);

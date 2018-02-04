@@ -9,21 +9,12 @@ using std::vector;
 class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth
 {
 public:
-    enum Type
-    {
-        Undefined = 0,
-
-        Stone,
-        Scissors,
-        Cloth
-    };
-
     QMdmmStoneScissorsCloth();
-    QMdmmStoneScissorsCloth(Type type);
+    QMdmmStoneScissorsCloth(QMdmmData::StoneScissorsCloth type);
 
     QMdmmStoneScissorsCloth(const QMdmmStoneScissorsCloth &other);
     QMdmmStoneScissorsCloth &operator=(const QMdmmStoneScissorsCloth &other);
-    QMdmmStoneScissorsCloth &operator=(Type type);
+    QMdmmStoneScissorsCloth &operator=(QMdmmData::StoneScissorsCloth type);
 
     ~QMdmmStoneScissorsCloth();
 
@@ -32,10 +23,10 @@ public:
 
     static vector<vector<QMdmmStoneScissorsCloth>::size_type> winners(const vector<QMdmmStoneScissorsCloth> &judgers);
 
-    operator Type() const;
+    operator QMdmmData::StoneScissorsCloth() const;
 
 private:
-    Type m_type;
+    QMdmmData::StoneScissorsCloth m_type;
 };
 
 #endif
