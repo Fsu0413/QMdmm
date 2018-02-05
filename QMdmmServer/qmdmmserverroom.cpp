@@ -4,6 +4,7 @@
 #include <QMdmmCore/QMdmmStoneScissorsCloth>
 #include <chrono>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <map>
 #include <mutex>
@@ -14,6 +15,7 @@ using std::chrono::seconds;
 using std::chrono::system_clock;
 using std::chrono::time_point;
 using std::condition_variable;
+using std::deque;
 using std::function;
 using std::map;
 using std::mutex;
@@ -44,7 +46,8 @@ struct QMdmmServerRoomPrivate
     void waitForReply(function<bool()> checkReplyFunc);
     void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
 
-    vector<QMdmmServerPlayer *> stoneScissorsCloth();
+    vector<QMdmmServerPlayer *> stoneScissorsCloth(const vector<QMdmmServerPlayer *> &players);
+    void sortWinnerOrder(vector<QMdmmServerPlayer *> &winners);
 };
 
 QMdmmServerRoomPrivate::QMdmmServerRoomPrivate()
@@ -83,19 +86,12 @@ void QMdmmServerRoomPrivate::doNotify(vector<QMdmmServerPlayer *> players, QMdmm
         player->notify(notifyId, notifyData);
 }
 
-vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth()
+vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth(const vector<QMdmmServerPlayer *> &players)
 {
     vector<QMdmmServerPlayer *> ret;
 
     if (parent == nullptr)
         return ret;
-
-    vector<QMdmmServerPlayer *> players;
-    for (QMdmmPlayer *p : parent->players()) {
-        QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(p);
-        if (sp != nullptr && sp->alive())
-            players.push_back(sp);
-    }
 
     if (players.empty())
         return ret;
@@ -106,16 +102,101 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth()
     vector<QMdmmStoneScissorsCloth> sscs;
     for (vector<QMdmmServerPlayer *>::size_type i = 0; i < players.size(); ++i) {
         QMdmmServerPlayer *player = players.at(i);
-        int n = atoi(replys[player].c_str());
+        int n = atoi(replys.at(player).c_str()); // TODO: complete the protocol
         sscs.push_back(static_cast<QMdmmData::StoneScissorsCloth>(n));
     }
 
     auto winners = QMdmmStoneScissorsCloth::winners(sscs);
 
+    // notify winner to client
+    // TODO: complete the protocol
+
     for (auto i : winners)
         ret.push_back(players.at(i));
 
     return ret;
+}
+
+void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winners)
+{
+    // number of winners can be 1 or 2
+    if (winners.size() == 1)
+        return;
+
+    // only one winner?
+    if (winners.at(0) == winners.at(1))
+        return;
+
+    auto winnersCopy = winners;
+    doRequest(winners, QMdmmProtocol::RequestStriveForFirstOrLast, string());
+
+#if 1
+    // if (judgefirst)
+    waitForReply([this, winnersCopy]() -> bool { return replys.size() == winnersCopy.size(); });
+    // notify the selection to client
+
+#else
+    // else if (fight for first)
+    // wait for the first result, then wait ONLY for another 1s for avoiding network delay
+    waitForReply([this]() -> bool { return !replys.empty(); });
+
+    // notify the selection to client
+    QMdmmServerPlayer *p = replys.begin()->first();
+
+    time_point nowTime = system_clock::now();
+    time_point timeoutTime = now + seconds(1);
+    // NO SLEEP(1) HERE!!!
+    while (!cond.wait_until(uniqueLock, timeoutTime, []() -> bool { return true; })) {
+        // timeout
+    }
+        // endif
+#endif
+
+    winners.clear();
+
+    map<int, QMdmmServerPlayer *> winnerMap;
+    for (auto x : replys) {
+        int n = atoi(x.second.c_str());
+        auto it = winnerMap.find(n);
+        if (it == winnerMap.cend())
+            winnerMap[n] = x.first;
+        else {
+            // now only 2 winners are allowed
+            vector<QMdmmServerPlayer *> judgements{x.first, it->second};
+
+            vector<QMdmmServerPlayer *> winners = stoneScissorsCloth(judgements);
+            while (winners.empty())
+                winners = stoneScissorsCloth(judgements);
+
+            winnerMap[n] = (*winners.begin());
+        }
+    }
+
+    // fill map
+
+    for (int i = 0; i < 2; ++i) {
+        auto it = winnerMap.find(i + 1);
+        if (it != winnerMap.cend()) {
+            auto winnersCopyIt = std::find(winnersCopy.cbegin(), winnersCopy.cend(), it->second);
+            if (winnersCopyIt != winnersCopy.cend())
+                winnersCopy.erase(winnersCopyIt);
+        }
+    }
+    if (!winnersCopy.empty()) {
+        for (int i = 0; i < 2; ++i) {
+            auto it = winnerMap.find(i + 1);
+            if (it == winnerMap.cend()) {
+                auto winnersCopyIt = winnersCopy.cbegin();
+                winnerMap[i + 1] = (*winnersCopyIt);
+                winnersCopy.erase(winnersCopyIt);
+
+                if (winnersCopy.empty())
+                    break;
+            }
+        }
+    }
+    for (int i = 0; i < 2; ++i)
+        winners.push_back(winnerMap[i + 1]);
 }
 
 QMdmmServerRoom::QMdmmServerRoom()
