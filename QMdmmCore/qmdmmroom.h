@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-struct QMdmRoomPrivate;
+struct QMdmmRoomPrivate;
 class QMdmmPlayer;
 
 using std::string;

@@ -9,6 +9,7 @@
 #include <map>
 #include <mutex>
 #include <vector>
+#include <algorithm>
 
 using std::chrono::duration;
 using std::chrono::seconds;

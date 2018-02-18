@@ -30,11 +30,11 @@ class QMDMMCORE_EXPORT QMdmmCoreGlobal
 #define QMDMM_D(c)                                    \
     friend struct c##Private;                         \
     c##Private *const d_ptr;                          \
-    inline constexpr c##Private *d_func()             \
+    inline  c##Private *d_func()             \
     {                                                 \
         return d_ptr;                                 \
     }                                                 \
-    inline constexpr const c##Private *d_func() const \
+    inline  const c##Private *d_func() const \
     {                                                 \
         return d_ptr;                                 \
     }

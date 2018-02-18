@@ -38,4 +38,5 @@ load(qt_functions)
 packagesExist(jsoncpp) {
     # todo: check the installation of jsoncpp
     CONFIG += system_jsoncpp
+    LIBS += -ljsoncpp
 }

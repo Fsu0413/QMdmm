@@ -29,6 +29,12 @@ DLLDESTDIR = $$OUT_PWD/../dist/bin
 
 LIBS += -lQMdmmCore
 
+linux-* {
+    QMAKE_CFLAGS += -pthread
+    QMAKE_CXXFLAGS += -pthread
+    QMAKE_LFLAGS += -pthread
+}
+
 generateHeaders.target = $$system_path($$OUT_PWD/../dist/include/QMdmmServer/.timestamp)
 !build_pass: mkpath($$OUT_PWD/../dist/include/QMdmmServer)
 

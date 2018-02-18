@@ -12,7 +12,7 @@ using std::out_of_range;
 
 struct QMdmmRoomPrivate
 {
-    constexpr QMdmmRoomPrivate()
+    QMdmmRoomPrivate()
     {
     }
 
