@@ -36,15 +36,15 @@ struct QMdmmServerRoomPrivate
     QMdmmProtocol::QMdmmRequestId nowRequestId;
     condition_variable cond;
     mutex condMutex;
-    map<QMdmmServerPlayer *, string> replys;
+    map<QMdmmServerPlayer *, Json::Value> replys;
 
     QMdmmServerRoom *parent;
 
     QMdmmServerRoomPrivate();
 
-    void doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
+    void doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
     void waitForReply(function<bool()> checkReplyFunc);
-    void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
 
     vector<QMdmmServerPlayer *> stoneScissorsCloth(const vector<QMdmmServerPlayer *> &players);
     void sortWinnerOrder(vector<QMdmmServerPlayer *> &winners);
@@ -56,7 +56,7 @@ QMdmmServerRoomPrivate::QMdmmServerRoomPrivate()
 {
 }
 
-void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const string &requestData)
+void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData)
 {
     replys.clear();
     for (QMdmmServerPlayer *player : players)
@@ -80,7 +80,7 @@ void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
 #endif
 }
 
-void QMdmmServerRoomPrivate::doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+void QMdmmServerRoomPrivate::doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
     for (QMdmmServerPlayer *player : players)
         player->notify(notifyId, notifyData);
@@ -96,13 +96,13 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth(const vec
     if (players.empty())
         return ret;
 
-    doRequest(players, QMdmmProtocol::RequestStoneScissorsCloth, string());
+    doRequest(players, QMdmmProtocol::RequestStoneScissorsCloth, Json::Value());
     waitForReply([this, players]() -> bool { return replys.size() == players.size(); });
 
     vector<QMdmmStoneScissorsCloth> sscs;
     for (vector<QMdmmServerPlayer *>::size_type i = 0; i < players.size(); ++i) {
         QMdmmServerPlayer *player = players.at(i);
-        int n = atoi(replys.at(player).c_str()); // TODO: complete the protocol
+        int n = replys.at(player)["ssc"].asInt();
         sscs.push_back(static_cast<QMdmmData::StoneScissorsCloth>(n));
     }
 
@@ -128,7 +128,7 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
         return;
 
     auto winnersCopy = winners;
-    doRequest(winners, QMdmmProtocol::RequestStriveForFirstOrLast, string());
+    doRequest(winners, QMdmmProtocol::RequestStriveForFirstOrLast, Json::Value());
 
 #if 1
     // if (judgefirst)
@@ -156,7 +156,7 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
 
     map<int, QMdmmServerPlayer *> winnerMap;
     for (auto x : replys) {
-        int n = atoi(x.second.c_str());
+        int n = x.second["firstOrLast"].asInt();
         auto it = winnerMap.find(n);
         if (it == winnerMap.cend())
             winnerMap[n] = x.first;
@@ -231,13 +231,13 @@ void QMdmmServerRoom::run()
     }
 }
 
-void QMdmmServerRoom::notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+void QMdmmServerRoom::notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
     // only speak data can be notified to room?
     // consider putting this logic to QMdmmServer
 }
 
-void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const string &notifyData)
+void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &notifyData)
 {
     QMDMMD(QMdmmServerRoom);
 
@@ -247,7 +247,7 @@ void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmReq
     if (d->nowRequestId == requestId) {
         d->replys[player] = notifyData;
     } else {
-        d->replys[player] = string();
+        d->replys[player] = Json::Value();
     }
 
     d->cond.notify_one();

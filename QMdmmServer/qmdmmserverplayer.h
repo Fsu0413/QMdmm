@@ -4,6 +4,7 @@
 #include "qmdmmserverglobal.h"
 #include <QMdmmCore/QMdmmPlayer>
 #include <QMdmmCore/QMdmmProtocol>
+#include <json/json.h>
 #include <string>
 
 struct QMdmmServerPlayerPrivate;
@@ -20,10 +21,8 @@ public:
     void setSocket(QMdmmServerSocket *socket);
     QMdmmServerSocket *socket() const;
 
-    // This request MUST BLOCK room thread, should be done in QMdmmSocket
-    // TODO: make it private
-    void request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData);
-    void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
+    void request(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
+    void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
 
     int connectId() const;
 

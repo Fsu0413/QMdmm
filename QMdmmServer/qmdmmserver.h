@@ -3,6 +3,7 @@
 
 #include "qmdmmserverglobal.h"
 #include <QMdmmCore/QMdmmProtocol>
+#include <json/json.h>
 #include <string>
 
 using std::string;
@@ -31,8 +32,8 @@ public:
     bool reconnectPlayer(QMdmmServerSocket *socket, int connectId);
 
     // MUST BE called in Server thread
-    void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
-    void replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &replyData);
+    void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
+    void replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData);
 
 private:
     QMDMM_D(QMdmmServer)

@@ -42,8 +42,8 @@ public:
     static GameOverType ErrorOver;
 
     void run();
-    void notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData);
-    void replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const string &notifyData);
+    void notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
+    void replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &notifyData);
 
 private:
     QMDMM_D(QMdmmServerRoom)

@@ -25,6 +25,8 @@ class QMDMMCORE_EXPORT QMdmmCoreGlobal
 #define QMDMMCORE_EXPORT
 #endif
 
+#define QMDMMCORE_EXPORT_NOHEADER QMDMMCORE_EXPORT
+
 #define QMDMM_D(c)                                    \
     friend struct c##Private;                         \
     c##Private *const d_ptr;                          \

@@ -20,10 +20,22 @@ staticlib: DEFINES += QMDMM_STATIC
     QMAKE_CFLAGS += -Wpointer-to-int-cast
     QMAKE_CXXFLAGS += -Wc++11-compat
     *-g++: QMAKE_CXXFLAGS += -Wzero-as-null-pointer-constant
-    mac:QMAKE_LFLAGS += -Wl,-undefined -Wl,error
-    else:QMAKE_LFLAGS += -Wl,--no-undefined
+    mac {
+        # macOS and iOS does not use GNU ld
+        QMAKE_LFLAGS += -Wl,-undefined -Wl,error
+    } else {
+        # treat any other linker as GNU ld temporily
+        QMAKE_LFLAGS += -Wl,--no-undefined
+    }
 }
 
 LIBS += -L$$OUT_PWD/../dist/lib
 INCLUDEPATH += $$OUT_PWD/../dist/include
 
+
+load(qt_functions)
+
+packagesExist(jsoncpp) {
+    # todo: check the installation of jsoncpp
+    CONFIG += system_jsoncpp
+}

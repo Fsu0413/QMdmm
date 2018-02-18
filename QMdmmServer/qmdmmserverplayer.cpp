@@ -42,13 +42,13 @@ QMdmmServerSocket *QMdmmServerPlayer::socket() const
     return d->socket;
 }
 
-void QMdmmServerPlayer::request(QMdmmProtocol::QMdmmRequestId requestId, const string &requestData)
+void QMdmmServerPlayer::request(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData)
 {
     QMDMMD(QMdmmServerPlayer);
     d->socket->request(requestId, requestData);
 }
 
-void QMdmmServerPlayer::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+void QMdmmServerPlayer::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
     QMDMMD(QMdmmServerPlayer);
     d->socket->notify(notifyId, notifyData);

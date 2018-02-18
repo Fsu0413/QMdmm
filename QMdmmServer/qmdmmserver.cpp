@@ -126,7 +126,7 @@ bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, int connectId)
     return false;
 }
 
-void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const string &notifyData)
+void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
     QMDMMD(QMdmmServer);
 
@@ -142,7 +142,7 @@ void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNo
     }
 }
 
-void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const string &replyData)
+void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData)
 {
     QMDMMD(QMdmmServer);
 
