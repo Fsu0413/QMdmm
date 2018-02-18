@@ -2,6 +2,7 @@
 #include "qmdmmserverplayer.h"
 #include "qmdmmserversocket.h"
 #include <QMdmmCore/QMdmmStoneScissorsCloth>
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -9,7 +10,6 @@
 #include <map>
 #include <mutex>
 #include <vector>
-#include <algorithm>
 
 using std::chrono::duration;
 using std::chrono::seconds;
