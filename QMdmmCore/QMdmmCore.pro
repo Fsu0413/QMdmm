@@ -53,3 +53,5 @@ includetarget.files = $$OUT_PWD/../dist/include/QMdmmCore/*
 target.path = /lib/
 dlltarget.path = /bin/
 INSTALLS += target dlltarget includetarget
+
+QMAKE_CLEAN += $$system_path($$OUT_PWD/../dist/include/QMdmmCore/.timestamp)

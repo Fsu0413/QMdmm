@@ -38,3 +38,5 @@ PRE_TARGETDEPS += $$generateHeadersJson.target
 DEFINES += JSON_DLL_BUILD
 
 win32-msvc*: QMAKE_CXXFLAGS += -wd4275
+
+QMAKE_CLEAN += $$system_path($$OUT_PWD/../dist/include/json/.timestamp)
