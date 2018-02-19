@@ -28,9 +28,11 @@ enum QMdmmNotifyId
     NotifyFromServerMask = 0x1000,
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
+    NotifySignedIn, // string playerName, (to player)int connectionId
     NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyFromRoomMask = 0x2000,
+    NotifyAddPlayer, // broadcast
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, struct { string playerName, int ssc } detail[3]
@@ -42,6 +44,9 @@ enum QMdmmNotifyId
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
+    NotifySignIn, // string playerName
+    NotifyMarshal, // string playerName, int connectionId
+    NotifyObserve, // string observerName, string playerName, int connectionId
 
     NotifyToRoomMask = 0x8000,
     NotifySpeak, // string contents

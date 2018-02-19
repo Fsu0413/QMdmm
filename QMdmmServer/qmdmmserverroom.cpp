@@ -234,7 +234,7 @@ void QMdmmServerRoom::run()
 
 void QMdmmServerRoom::notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
-    // only speak data can be notified to room?
+    // only speak and operation can be notified to room?
     // consider putting this logic to QMdmmServer
 }
 
