@@ -24,7 +24,7 @@ public:
     void request(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
 
-    int connectId() const;
+    int connectionId() const;
 
 private:
     QMDMM_D(QMdmmServerPlayer)

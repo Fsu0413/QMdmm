@@ -7,12 +7,12 @@ using std::random_device;
 struct QMdmmServerPlayerPrivate
 {
     QMdmmServerPlayerPrivate()
-        : connectId(0)
+        : connectionId(0)
         , socket(nullptr)
     {
     }
 
-    int connectId;
+    int connectionId;
     QMdmmServerSocket *socket;
 };
 
@@ -21,7 +21,7 @@ QMdmmServerPlayer::QMdmmServerPlayer()
 {
     QMDMMD(QMdmmServerPlayer);
     random_device rd;
-    d->connectId = (rd() % 89999) + 10000;
+    d->connectionId = (rd() % 89999) + 10000;
 }
 
 QMdmmServerPlayer::~QMdmmServerPlayer()
@@ -54,8 +54,8 @@ void QMdmmServerPlayer::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json
     d->socket->notify(notifyId, notifyData);
 }
 
-int QMdmmServerPlayer::connectId() const
+int QMdmmServerPlayer::connectionId() const
 {
     QMDMMD(const QMdmmServerPlayer);
-    return d->connectId;
+    return d->connectionId;
 }

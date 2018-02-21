@@ -18,6 +18,8 @@ public:
     void setServer(QMdmmServer *server);
     QMdmmServer *getServer() const;
 
+    virtual void disconnect() = 0;
+
     void request(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
     void replyed(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData);
     void notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);

@@ -29,7 +29,7 @@ public:
     void socketDisconnected(QMdmmServerSocket *socket);
 
     void addPlayer(QMdmmServerSocket *socket, const string &playerName);
-    bool reconnectPlayer(QMdmmServerSocket *socket, int connectId);
+    bool reconnectPlayer(QMdmmServerSocket *socket, const string &playerName, int connectionId);
 
     // MUST BE called in Server thread
     void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);

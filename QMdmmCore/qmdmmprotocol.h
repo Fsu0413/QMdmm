@@ -28,18 +28,20 @@ enum QMdmmNotifyId
     NotifyFromServerMask = 0x1000,
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
-    NotifySignedIn, // string playerName, (to player)int connectionId
+    NotifyConnected, // string playerName, bool isReconnect, (to player)int connectionId
+    NoitfyDisconnected, // string playerName
     NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyFromRoomMask = 0x2000,
-    NotifyAddPlayer, // broadcast
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyStoneScissorsCloth, // broadcast, struct { string playerName, int ssc } detail[3]
-    NotifyFirstOrLast, // broadcast, struct { string playerName, int firstOrLast } detail[2]
+    NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc } detail[3]
+    NotifyFirstOrLast, // broadcast, object { playerName: int firstOrLast } detail[2]
     NotifyOperation, // broadcast, string playerName, int operation, string targetName
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
+    NotifyGameOver, // broadcast, string winnerPlayerName
+    NotifyOb, // TODO: for ob
 
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
