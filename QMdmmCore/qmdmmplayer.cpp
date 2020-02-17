@@ -3,7 +3,8 @@
 struct QMdmmPlayerPrivate
 {
     constexpr QMdmmPlayerPrivate()
-        : knife(false)
+        : name()
+        , knife(false)
         , horse(false)
         , hp(10)
         , place(QMdmmData::Country)
@@ -13,6 +14,7 @@ struct QMdmmPlayerPrivate
         , upgradePoint(0)
     {
     }
+    std::string name;
 
     bool knife;
     bool horse;
@@ -34,6 +36,18 @@ QMdmmPlayer::QMdmmPlayer()
 QMdmmPlayer::~QMdmmPlayer()
 {
     delete d_ptr;
+}
+
+void QMdmmPlayer::setName(const std::string &name)
+{
+    QMDMMD(QMdmmPlayer);
+    d->name = name;
+}
+
+std::string QMdmmPlayer::name() const
+{
+    QMDMMD(const QMdmmPlayer);
+    return d->name;
 }
 
 bool QMdmmPlayer::hasKnife() const
@@ -119,6 +133,9 @@ bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
     if (!d->knife)
         return false;
 
+    if (to->dead())
+        return false;
+
     if (d->place != to->place())
         return false;
 
@@ -129,6 +146,9 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
 {
     QMDMMD(const QMdmmPlayer);
     if (!d->horse)
+        return false;
+
+    if (to->dead())
         return false;
 
     if ((d->place != to->place()) || (d->place == QMdmmData::Country))
@@ -145,6 +165,9 @@ bool QMdmmPlayer::canMove(QMdmmData::Place toPlace) const
 
 bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const
 {
+    if (to->dead())
+        return false;
+
     QMDMMD(const QMdmmPlayer);
     return QMdmmData::isPlaceAdjecent(to->place(), toPlace) && ((QMdmmData::isPlaceAdjecent(d->place, to->place()) && (toPlace == d->place)) || (d->place == to->place()));
 }
@@ -176,6 +199,11 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
 
     QMDMMD(QMdmmPlayer);
     to->damage(this, d->knifeDamage, QMdmmData::Slash);
+
+    if (place() != QMdmmData::Country) {
+        // life punishment: damage point is maxHp / 2
+        damage(to, maxHp() / 2, QMdmmData::PunishHp);
+    }
 
     return true;
 }
@@ -216,7 +244,7 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace)
     return false;
 }
 
-bool QMdmmPlayer::doNothing()
+bool QMdmmPlayer::doNothing(const std::string &)
 {
     return true;
 }

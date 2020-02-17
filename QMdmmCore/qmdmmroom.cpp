@@ -41,12 +41,13 @@ string QMdmmRoom::addPlayer(QMdmmPlayer *player, const string &userName)
     }
 
     QMDMMD(QMdmmRoom);
-    if (d->players.find(useName) != d->players.cend()) {
+    while (d->players.find(useName) != d->players.cend()) {
         ostringstream oss;
         oss << no++;
-        useName = userName + oss.str();
+        useName = useName + oss.str();
     }
     d->players[useName] = player;
+    player->setName(useName);
 
     return useName;
 }
@@ -92,17 +93,6 @@ QMdmmPlayer *QMdmmRoom::player(const string &playerName) const
     }
 }
 
-string QMdmmRoom::playerName(QMdmmPlayer *player) const
-{
-    QMDMMD(const QMdmmRoom);
-    for (auto it = d->players.begin(); it != d->players.end(); ++it) {
-        if (it->second == player)
-            return it->first;
-    }
-
-    return string();
-}
-
 vector<QMdmmPlayer *> QMdmmRoom::players() const
 {
     QMDMMD(const QMdmmRoom);
@@ -121,4 +111,21 @@ vector<string> QMdmmRoom::playerNames() const
         res.push_back(it->first);
 
     return res;
+}
+
+vector<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
+{
+    QMDMMD(const QMdmmRoom);
+    vector<QMdmmPlayer *> res;
+    for (auto it = d->players.begin(); it != d->players.end(); ++it) {
+        if (it->second->alive())
+            res.push_back(it->second);
+    }
+
+    return res;
+}
+
+int QMdmmRoom::alivePlayersCount() const
+{
+    return int(alivePlayers().size());
 }

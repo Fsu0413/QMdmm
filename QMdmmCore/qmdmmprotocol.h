@@ -17,7 +17,7 @@ enum QMdmmRequestId
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
     RequestStriveForFirstOrLast, // request: N/A, reply: int firstOrLast
-    RequestOperation, // request: N/A, reply: int operation, string targetName
+    RequestOperation, // request: N/A, reply: string operation, optional string toPlayer, optional int toPosition
     RequestUpdate, // request: N/A, reply: int item
 };
 
@@ -37,7 +37,7 @@ enum QMdmmNotifyId
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc } detail[3]
     NotifyFirstOrLast, // broadcast, object { playerName: int firstOrLast } detail[2]
-    NotifyOperation, // broadcast, string playerName, int operation, string targetName
+    NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPosition
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
     NotifyGameOver, // broadcast, string winnerPlayerName

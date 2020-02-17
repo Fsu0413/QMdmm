@@ -11,7 +11,7 @@ android || ios {
 }
 staticlib: DEFINES += QMDMM_STATIC
 
-!isEmpty($$(PREFIX)) {
+!isEmpty(PREFIX) {
     CONFIG += install_build
 }
 

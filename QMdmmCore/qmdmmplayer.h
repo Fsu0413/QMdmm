@@ -2,6 +2,7 @@
 #define QMDMMPLAYER_H
 
 #include "qmdmmcoreglobal.h"
+#include <string>
 
 struct QMdmmPlayerPrivate;
 
@@ -11,7 +12,11 @@ public:
     QMdmmPlayer();
     virtual ~QMdmmPlayer();
 
-    // property getters
+    // property setters/getters
+    // permanent property
+    void setName(const std::string &name);
+    std::string name() const;
+
     // current property
     bool hasKnife() const;
     bool hasHorse() const;
@@ -47,8 +52,9 @@ public:
     bool move(QMdmmData::Place toPlace);
     bool letMove(QMdmmPlayer *to, QMdmmData::Place toPlace);
 
-    bool doNothing();
+    bool doNothing(const std::string &reason);
 
+    // action runs
     void damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason);
     void placeChange(QMdmmData::Place toPlace);
 

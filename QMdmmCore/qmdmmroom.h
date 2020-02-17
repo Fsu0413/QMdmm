@@ -24,10 +24,12 @@ public:
     bool removePlayer(const string &playerName);
 
     QMdmmPlayer *player(const string &playerName) const;
-    string playerName(QMdmmPlayer *player) const;
 
     vector<QMdmmPlayer *> players() const;
     vector<string> playerNames() const;
+
+    vector<QMdmmPlayer *> alivePlayers() const;
+    int alivePlayersCount() const;
 
 private:
     QMDMM_D(QMdmmRoom)

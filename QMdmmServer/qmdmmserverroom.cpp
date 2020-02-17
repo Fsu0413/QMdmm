@@ -11,10 +11,6 @@
 #include <mutex>
 #include <vector>
 
-using std::chrono::duration;
-using std::chrono::seconds;
-using std::chrono::system_clock;
-using std::chrono::time_point;
 using std::condition_variable;
 using std::deque;
 using std::function;
@@ -23,6 +19,10 @@ using std::mutex;
 using std::string;
 using std::unique_lock;
 using std::vector;
+using std::chrono::duration;
+using std::chrono::seconds;
+using std::chrono::system_clock;
+using std::chrono::time_point;
 
 QMdmmServerRoom::GameOverType QMdmmServerRoom::RoundOver(QMdmmServerRoom::GameOverType::RoundOver);
 QMdmmServerRoom::GameOverType QMdmmServerRoom::GameOver(QMdmmServerRoom::GameOverType::GameOver);
@@ -44,11 +44,15 @@ struct QMdmmServerRoomPrivate
     QMdmmServerRoomPrivate();
 
     void doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
+    void doRequest(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData);
     void waitForReply(function<bool()> checkReplyFunc);
     void doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
 
     vector<QMdmmServerPlayer *> stoneScissorsCloth(const vector<QMdmmServerPlayer *> &players);
     void sortWinnerOrder(vector<QMdmmServerPlayer *> &winners);
+    void operate(const vector<QMdmmServerPlayer *> &winners);
+
+    vector<QMdmmServerPlayer *> serverPlayers() const;
 };
 
 QMdmmServerRoomPrivate::QMdmmServerRoomPrivate()
@@ -60,10 +64,15 @@ QMdmmServerRoomPrivate::QMdmmServerRoomPrivate()
 void QMdmmServerRoomPrivate::doRequest(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData)
 {
     replys.clear();
+    nowRequestId = requestId;
+
     for (QMdmmServerPlayer *player : players)
         player->request(requestId, requestData);
+}
 
-    nowRequestId = requestId;
+void QMdmmServerRoomPrivate::doRequest(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &requestData)
+{
+    doRequest(vector<QMdmmServerPlayer *> {player}, requestId, requestData);
 }
 
 void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
@@ -79,6 +88,8 @@ void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
 #else
     cond.wait(uniqueLock, checkReplyFunc);
 #endif
+
+    nowRequestId = QMdmmProtocol::RequestInvalid;
 }
 
 void QMdmmServerRoomPrivate::doNotify(vector<QMdmmServerPlayer *> players, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
@@ -147,10 +158,10 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
     time_point nowTime = system_clock::now();
     time_point timeoutTime = now + seconds(1);
     // NO SLEEP(1) HERE!!!
-    while (!cond.wait_until(uniqueLock, timeoutTime, []() -> bool { return true; })) {
+    while (!cond.wait_until(uniqueLock, timeoutTime, []() -> bool { return replys.size() == winnersCopy.size(); })) {
         // timeout
     }
-        // endif
+    // endif
 #endif
 
     winners.clear();
@@ -163,7 +174,7 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
             winnerMap[n] = x.first;
         else {
             // now only 2 winners are allowed
-            vector<QMdmmServerPlayer *> judgements{x.first, it->second};
+            vector<QMdmmServerPlayer *> judgements {x.first, it->second};
 
             vector<QMdmmServerPlayer *> winners = stoneScissorsCloth(judgements);
             while (winners.empty())
@@ -198,6 +209,139 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
     }
     for (int i = 0; i < 2; ++i)
         winners.push_back(winnerMap[i + 1]);
+}
+
+void QMdmmServerRoomPrivate::operate(const vector<QMdmmServerPlayer *> &winners)
+{
+    for (const auto &winner : winners) {
+        doRequest(winner, QMdmmProtocol::RequestOperation, Json::Value());
+        waitForReply([this]() -> bool { return replys.size() == 1; });
+
+        // choice sanity check: Shall be done again on client
+        // Moves Catagary:
+        //  Buy:
+        //    Buy knife: only available when winner is in city without knife
+        //    Buy horse: only available when winner is in city without horse
+        //  Move:
+        //    Go to country: only available when winner is in city
+        //    Go to city No. x (on GUI it may says "Go to the city where Player X at"): only available when winner is in country
+        //  Make other players move:
+        //    Push sb. to city No. x: only available when both players are in country
+        //    Push sb. to country: only available when both players are in same city
+        //    Pull sb. to city No. x: only available when winner is in city No. x and another player is in country
+        //    Pull sb. to country: only available when winner is in country and another player is in city
+        //  Damage:
+        //    Slash sb.: only available when both players are in same place. Life punishment will be applied when both players are in city
+        //    Kick sb.: only available when both players are in same city
+        //  Do nothing:
+        //    Zhuangbi; Dese; Xianbai: always available
+
+        Json::Value operationReply = replys.begin()->second;
+        string operation = operationReply["operation"].asString();
+        if (operation == string("buyknife")) {
+            if (!winner->canBuyKnife()) {
+                // ??
+                continue;
+            }
+
+            if (!winner->buyKnife()) {
+                // ??
+                continue;
+            }
+        } else if (operation == string("buyhorse")) {
+            if (!winner->canBuyHorse()) {
+                // ??
+                continue;
+            }
+
+            if (!winner->buyHorse()) {
+                // ??
+                continue;
+            }
+        } else if (operation == string("move")) {
+            QMdmmData::Place targetPlace = static_cast<QMdmmData::Place>(operationReply["toPlace"].asInt());
+            if (!winner->canMove(targetPlace)) {
+                // ??
+                continue;
+            }
+
+            if (!winner->move(targetPlace)) {
+                // ??
+                continue;
+            }
+        } else if (operation == string("letmove")) {
+            QMdmmServerPlayer *targetPlayer = dynamic_cast<QMdmmServerPlayer *>(parent->player(operationReply["toPlayer"].asString()));
+            if (targetPlayer == nullptr) {
+                // ??
+                continue;
+            }
+            QMdmmData::Place targetPlace = static_cast<QMdmmData::Place>(operationReply["toPlace"].asInt());
+            if (!winner->canLetMove(targetPlayer, targetPlace)) {
+                // ??
+                continue;
+            }
+
+            if (!winner->letMove(targetPlayer, targetPlace)) {
+                // ??
+                continue;
+            }
+        } else if (operation == string("slash")) {
+            QMdmmServerPlayer *targetPlayer = dynamic_cast<QMdmmServerPlayer *>(parent->player(operationReply["toPlayer"].asString()));
+            if (targetPlayer == nullptr) {
+                // ??
+                continue;
+            }
+
+            if (!winner->canSlash(targetPlayer)) {
+                // ??
+                continue;
+            }
+
+            if (!winner->slash(targetPlayer)) {
+                // ??
+                continue;
+            }
+        } else if (operation == string("kick")) {
+            QMdmmServerPlayer *targetPlayer = dynamic_cast<QMdmmServerPlayer *>(parent->player(operationReply["toPlayer"].asString()));
+            if (targetPlayer == nullptr) {
+                // ??
+                continue;
+            }
+
+            if (!winner->canKick(targetPlayer)) {
+                // ??
+                continue;
+            }
+
+            if (!winner->kick(targetPlayer)) {
+                // ??
+                continue;
+            }
+        } else if ((operation == string("zhuangbi")) || (operation == string("dese")) || (operation == string("xianbai"))) {
+            if (!winner->doNothing(operation)) {
+                // ??
+                continue;
+            }
+        } else {
+            // ??
+            continue;
+        }
+        operationReply["fromPlayer"] = winner->name();
+        doNotify(serverPlayers(), QMdmmProtocol::NotifyOperation, operationReply);
+    }
+}
+
+vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::serverPlayers() const
+{
+    auto players = parent->players();
+    vector<QMdmmServerPlayer *> r;
+    for (QMdmmPlayer *player : players) {
+        auto splayer = dynamic_cast<QMdmmServerPlayer *>(player);
+        if (splayer != nullptr)
+            r.push_back(splayer);
+    }
+
+    return r;
 }
 
 QMdmmServerRoom::QMdmmServerRoom()
