@@ -2,7 +2,7 @@
 
 struct QMdmmPlayerPrivate
 {
-    constexpr QMdmmPlayerPrivate()
+    QMdmmPlayerPrivate()
         : name()
         , knife(false)
         , horse(false)
