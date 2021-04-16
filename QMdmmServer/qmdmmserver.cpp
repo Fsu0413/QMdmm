@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmserver.h"
 #include "qmdmmserverplayer.h"
 #include "qmdmmserverroom.h"
@@ -83,7 +85,7 @@ struct QMdmmServerPrivate
     static const map<QMdmmProtocol::QMdmmNotifyId, NotifyFunc> notifyFuncMap;
 };
 
-const map<QMdmmProtocol::QMdmmNotifyId, QMdmmServerPrivate::NotifyFunc> QMdmmServerPrivate::notifyFuncMap{
+const map<QMdmmProtocol::QMdmmNotifyId, QMdmmServerPrivate::NotifyFunc> QMdmmServerPrivate::notifyFuncMap {
     make_pair(QMdmmProtocol::NotifyPongClient, &QMdmmServerPrivate::pongClientFunc), make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServerFunc),
     make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signInFunc), make_pair(QMdmmProtocol::NotifyMarshal, &QMdmmServerPrivate::marshalFunc),
     make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observeFunc)};

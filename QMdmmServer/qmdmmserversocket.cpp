@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmserversocket.h"
 #include "qmdmmserver.h"
 #include <QMdmmCore/QMdmmProtocol>

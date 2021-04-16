@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 include($$_PRO_FILE_PWD_/../QMdmm.pri)
 
 CONFIG -= qt

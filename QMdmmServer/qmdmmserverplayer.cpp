@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmserverplayer.h"
 #include "qmdmmserversocket.h"
 #include <random>

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmcoreglobal.h"
 
 bool QMdmmData::isPlaceAdjecent(Place p1, Place p2)

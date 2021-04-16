@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #ifndef QMDMMPROTOCOL_H
 #define QMDMMPROTOCOL_H
 
@@ -77,7 +79,7 @@ public:
     QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &value);
     QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &value);
     QMdmmPacket(const QMdmmPacket &package);
-    QMdmmPacket(const string &str);
+    explicit QMdmmPacket(const string &str);
 
     QMdmmPacket &operator=(const QMdmmPacket &package);
 

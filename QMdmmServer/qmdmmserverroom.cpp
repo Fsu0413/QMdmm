@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmserverroom.h"
 #include "qmdmmserverplayer.h"
 #include "qmdmmserversocket.h"
@@ -83,7 +85,7 @@ void QMdmmServerRoomPrivate::waitForReply(function<bool()> checkReplyFunc)
     time_point nowTime = system_clock::now();
     time_point timeoutTime = now + seconds(2 * timeout);
     if (!cond.wait_until(uniqueLock, timeoutTime, checkReplyFunc)) {
-        // timeout
+        // timeout, time to disconnect the player who lost the connection then continues
     }
 #else
     cond.wait(uniqueLock, checkReplyFunc);
@@ -380,6 +382,9 @@ void QMdmmServerRoom::notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNo
 {
     // only speak and operation can be notified to room?
     // consider putting this logic to QMdmmServer
+    QMDMM_UNUSED(player);
+    QMDMM_UNUSED(notifyId);
+    QMDMM_UNUSED(notifyData);
 }
 
 void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &notifyData)

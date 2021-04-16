@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #ifndef QMDMMSERVERROOM_H
 #define QMDMMSERVERROOM_H
 

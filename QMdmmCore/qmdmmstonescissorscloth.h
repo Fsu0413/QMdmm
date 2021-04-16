@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #ifndef QMDMMSTONESCISSORSCLOTH_H
 #define QMDMMSTONESCISSORSCLOTH_H
 
@@ -10,7 +12,7 @@ class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth
 {
 public:
     QMdmmStoneScissorsCloth();
-    QMdmmStoneScissorsCloth(QMdmmData::StoneScissorsCloth type);
+    /* implicit */ QMdmmStoneScissorsCloth(QMdmmData::StoneScissorsCloth type);
 
     QMdmmStoneScissorsCloth(const QMdmmStoneScissorsCloth &other);
     QMdmmStoneScissorsCloth &operator=(const QMdmmStoneScissorsCloth &other);
@@ -23,7 +25,7 @@ public:
 
     static vector<vector<QMdmmStoneScissorsCloth>::size_type> winners(const vector<QMdmmStoneScissorsCloth> &judgers);
 
-    operator QMdmmData::StoneScissorsCloth() const;
+    /* implicit */ operator QMdmmData::StoneScissorsCloth() const;
 
 private:
     QMdmmData::StoneScissorsCloth m_type;

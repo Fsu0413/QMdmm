@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #ifndef QMDMMSERVERPLAYER_H
 #define QMDMMSERVERPLAYER_H
 
