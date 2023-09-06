@@ -1,5 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
-add_library(QMdmmCore
+set(QMDMMCORE_HEADERS
     qmdmmcoreglobal.h
 
     qmdmmroom.h
@@ -7,11 +8,22 @@ add_library(QMdmmCore
     qmdmmcoreglobal.h
     qmdmmprotocol.h
     qmdmmstonescissorscloth.h
+)
+
+set(QMDMMCORE_SOURCES
     qmdmmcore.cpp
     qmdmmroom.cpp
     qmdmmplayer.cpp
     qmdmmstonescissorscloth.cpp
     qmdmmprotocol.cpp
+)
+
+find_classes_in_header_files("${QMDMMCORE_HEADERS}" "include/QMdmmCore" QMDMMCORE_GENERATED_HEADERS)
+
+add_library(QMdmmCore
+    ${QMDMMCORE_HEADERS}
+    ${QMDMMCORE_SOURCES}
+    ${QMDMMCORE_GENERATED_HEADERS}
 )
 
 target_precompile_headers(QMdmmCore
@@ -33,6 +45,11 @@ if (ANDROID OR IOS)
         PUBLIC MOBILE_DEVICES
     )
 endif()
+
+target_include_directories(QMdmmCore
+    INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/include"
+    PUBLIC .
+)
 
 if (JSONCPP_FOUND)
     target_link_libraries(QMdmmCore
@@ -67,26 +84,6 @@ else()
     target_link_libraries(QMdmmCore
         PUBLIC QMdmmInternalJsonCppLibrary
     )
-
-#    generateHeadersJson.target = $$system_path($$OUT_PWD/../dist/include/json/.timestamp)
-#    !build_pass: mkpath($$OUT_PWD/../dist/include/json)
-
-#    contains(QMAKE_HOST.os, "Windows"): generateHeadersJson.commands = cscript $$system_path($$PWD/../../../tools/AutoGenerateHeader.vbs) -o $$system_path($$OUT_PWD/../dist/include/json) -f $$system_path($$PWD/json/)
-#    else: generateHeadersJson.commands = $$PWD/../../../tools/AutoGenerateHeader.sh -o $$OUT_PWD/../dist/include/json -f $$PWD/json/
-
-#    JSON_HEADERS_ABSOLUTE =
-#    for (header, JSON_HEADERS): JSON_HEADERS_ABSOLUTE += $$system_path($$absolute_path($$header))
-
-#    generateHeadersJson.depends = $$JSON_HEADERS_ABSOLUTE
-
-#    QMAKE_EXTRA_TARGETS += generateHeadersJson
-#    PRE_TARGETDEPS += $$generateHeadersJson.target
-
-#    DEFINES += JSON_DLL_BUILD
-
-#    win32-msvc*: QMAKE_CXXFLAGS += -wd4275
-
-#    QMAKE_CLEAN += $$system_path($$OUT_PWD/../dist/include/json/.timestamp)
 endif()
 
 #generateHeaders.target = $$system_path($$OUT_PWD/../dist/include/QMdmmCore/.timestamp)

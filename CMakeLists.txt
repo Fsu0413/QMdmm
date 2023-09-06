@@ -11,12 +11,16 @@ option(BUILD_SHARED_LIBS "Build shared libraries" true)
 
 set(CMAKE_CXX_STANDARD 11)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+include(AutoGenerateHeader)
+
 if (NOT WIN32)
     find_package(PkgConfig QUIET)
     if (PKG_CONFIG_FOUND)
-        # pkg_search_module(JSONCPP QUIET IMPORTED_TARGET GLOBAL jsoncpp)
+        pkg_search_module(JSONCPP QUIET IMPORTED_TARGET GLOBAL jsoncpp)
     endif()
 endif()
 
 add_subdirectory(QMdmmCore)
-# add_subdirectory(QMdmmServer)
+add_subdirectory(QMdmmServer)

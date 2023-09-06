@@ -1,16 +1,27 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-add_library(QMdmmServer
+set(QMDMMSERVER_HEADERS
     qmdmmserverglobal.h
 
     qmdmmserver.h
     qmdmmserverplayer.h
     qmdmmserverroom.h
     qmdmmserversocket.h
+)
+
+set(QMDMMSERVER_SOURCES
     qmdmmserver.cpp
     qmdmmserverplayer.cpp
     qmdmmserverroom.cpp
     qmdmmserversocket.cpp
+)
+
+find_classes_in_header_files("${QMDMMSERVER_HEADERS}" "include/QMdmmServer" QMDMMSERVER_GENERATED_HEADERS)
+
+add_library(QMdmmServer
+    ${QMDMMSERVER_HEADERS}
+    ${QMDMMSERVER_SOURCES}
+    ${QMDMMSERVER_GENERATED_HEADERS}
 )
 
 target_precompile_headers(QMdmmServer
