@@ -30,10 +30,11 @@ Makefile*
 
 *.autosave
 
-# QtCtreator Qml
+# QtCreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
 
-# QtCtreator CMake
+# QtCreator CMake
 CMakeLists.txt.user*
 
+.DS_Store
