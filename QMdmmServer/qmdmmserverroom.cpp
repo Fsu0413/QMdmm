@@ -114,10 +114,9 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::stoneScissorsCloth(const vec
     waitForReply([this, players]() -> bool { return replys.size() == players.size(); });
 
     vector<QMdmmStoneScissorsCloth> sscs;
-    for (vector<QMdmmServerPlayer *>::size_type i = 0; i < players.size(); ++i) {
-        QMdmmServerPlayer *player = players.at(i);
+    for (auto *player : players) {
         int n = replys.at(player)["ssc"].asInt();
-        sscs.push_back(static_cast<QMdmmData::StoneScissorsCloth>(n));
+        sscs.emplace_back(static_cast<QMdmmData::StoneScissorsCloth>(n));
     }
 
     auto winners = QMdmmStoneScissorsCloth::winners(sscs);
@@ -169,7 +168,7 @@ void QMdmmServerRoomPrivate::sortWinnerOrder(vector<QMdmmServerPlayer *> &winner
     winners.clear();
 
     map<int, QMdmmServerPlayer *> winnerMap;
-    for (auto x : replys) {
+    for (auto &x : replys) {
         int n = x.second["firstOrLast"].asInt();
         auto it = winnerMap.find(n);
         if (it == winnerMap.cend())
@@ -338,7 +337,7 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::serverPlayers() const
     auto players = parent->players();
     vector<QMdmmServerPlayer *> r;
     for (QMdmmPlayer *player : players) {
-        auto splayer = dynamic_cast<QMdmmServerPlayer *>(player);
+        auto *splayer = dynamic_cast<QMdmmServerPlayer *>(player);
         if (splayer != nullptr)
             r.push_back(splayer);
     }
@@ -347,15 +346,13 @@ vector<QMdmmServerPlayer *> QMdmmServerRoomPrivate::serverPlayers() const
 }
 
 QMdmmServerRoom::QMdmmServerRoom()
-    : d_ptr(new QMdmmServerRoomPrivate)
+    : d(new QMdmmServerRoomPrivate)
 {
-    QMDMMD(QMdmmServerRoom);
     d->parent = this;
 }
 
 QMdmmServerRoom::~QMdmmServerRoom()
 {
-    QMDMMD(QMdmmServerRoom);
     delete d;
 }
 
@@ -389,8 +386,6 @@ void QMdmmServerRoom::notified(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmNo
 
 void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &notifyData)
 {
-    QMDMMD(QMdmmServerRoom);
-
     unique_lock<mutex> uniqueLock(d->condMutex);
     QMDMM_UNUSED(uniqueLock);
 
@@ -403,21 +398,14 @@ void QMdmmServerRoom::replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmReq
     d->cond.notify_one();
 }
 
-constexpr QMdmmServerRoom::GameOverType::GameOverType(const QMdmmServerRoom::GameOverType &other)
-    : t(other.t)
-{
-}
+constexpr QMdmmServerRoom::GameOverType::GameOverType(const QMdmmServerRoom::GameOverType &other) = default;
 
 constexpr QMdmmServerRoom::GameOverType::GameOverType(const QMdmmServerRoom::GameOverType::Type type)
     : t(type)
 {
 }
 
-QMdmmServerRoom::GameOverType &QMdmmServerRoom::GameOverType::operator=(const QMdmmServerRoom::GameOverType &other)
-{
-    t = other.t;
-    return *this;
-}
+QMdmmServerRoom::GameOverType &QMdmmServerRoom::GameOverType::operator=(const QMdmmServerRoom::GameOverType &other) = default;
 
 bool QMdmmServerRoom::GameOverType::operator==(const QMdmmServerRoom::GameOverType &other) const
 {

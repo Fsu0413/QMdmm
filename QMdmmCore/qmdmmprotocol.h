@@ -5,7 +5,6 @@
 
 #include "qmdmmcoreglobal.h"
 #include <string>
-using std::string;
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmProtocol
@@ -79,7 +78,7 @@ public:
     QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &value);
     QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &value);
     QMdmmPacket(const QMdmmPacket &package);
-    explicit QMdmmPacket(const string &str);
+    explicit QMdmmPacket(const std::string &str);
 
     QMdmmPacket &operator=(const QMdmmPacket &package);
 
@@ -88,11 +87,11 @@ public:
     QMdmmProtocol::QMdmmNotifyId notifyId() const;
     Json::Value value() const;
 
-    string toString() const;
-    bool hasError(string *errorString = nullptr) const;
+    std::string toString() const;
+    bool hasError(std::string *errorString = nullptr) const;
 
 private:
-    QMDMM_D(QMdmmPacket)
+    QMdmmPacketPrivate *const d;
 };
 
 #endif // QMDMMPROTOCOL_H

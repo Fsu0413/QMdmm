@@ -4,6 +4,7 @@
 
 #include <map>
 using std::map;
+using std::vector;
 
 QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth()
     : m_type(QMdmmData::Stone)
@@ -15,16 +16,9 @@ QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth(QMdmmData::StoneScissorsCloth t
 {
 }
 
-QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth(const QMdmmStoneScissorsCloth &other)
-    : m_type(other.m_type)
-{
-}
+QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth(const QMdmmStoneScissorsCloth &other) = default;
 
-QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(const QMdmmStoneScissorsCloth &other)
-{
-    m_type = other.m_type;
-    return *this;
-}
+QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(const QMdmmStoneScissorsCloth &other) = default;
 
 QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(QMdmmData::StoneScissorsCloth type)
 {
@@ -32,9 +26,7 @@ QMdmmStoneScissorsCloth &QMdmmStoneScissorsCloth::operator=(QMdmmData::StoneScis
     return *this;
 }
 
-QMdmmStoneScissorsCloth::~QMdmmStoneScissorsCloth()
-{
-}
+QMdmmStoneScissorsCloth::~QMdmmStoneScissorsCloth() = default;
 
 bool QMdmmStoneScissorsCloth::operator>(const QMdmmStoneScissorsCloth &op2) const
 {
@@ -71,7 +63,7 @@ vector<vector<QMdmmStoneScissorsCloth>::size_type> QMdmmStoneScissorsCloth::winn
             return it2->second;
     }
 
-    return vector<vector<QMdmmStoneScissorsCloth>::size_type>();
+    return {};
 }
 
 QMdmmStoneScissorsCloth::operator QMdmmData::StoneScissorsCloth() const

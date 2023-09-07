@@ -29,23 +29,9 @@ class QMDMMCORE_EXPORT QMdmmCoreGlobal
 
 #define QMDMMCORE_EXPORT_NOHEADER QMDMMCORE_EXPORT
 
-#define QMDMM_D(c)                          \
-    friend struct c##Private;               \
-    c##Private *const d_ptr;                \
-    inline c##Private *d_func()             \
-    {                                       \
-        return d_ptr;                       \
-    }                                       \
-    inline const c##Private *d_func() const \
-    {                                       \
-        return d_ptr;                       \
-    }
-
 #define QMDMM_DISABLE_COPY(c) \
     c(const c &) = delete;    \
     c &operator=(const c &) = delete;
-
-#define QMDMMD(c) c##Private *d = d_func()
 
 #define QMDMM_UNUSED(n) ((void)n)
 

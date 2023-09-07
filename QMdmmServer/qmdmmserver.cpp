@@ -11,6 +11,7 @@
 
 using std::make_pair;
 using std::map;
+using std::string;
 using std::thread;
 using std::vector;
 
@@ -39,7 +40,7 @@ struct QMdmmServerPrivate
     {
         auto it = roomThreadMap.find(room);
         if (it != roomThreadMap.cend()) {
-            auto temp = it->second;
+            auto *temp = it->second;
             roomThreadMap.erase(it);
             temp->join();
             delete room;
@@ -91,27 +92,24 @@ const map<QMdmmProtocol::QMdmmNotifyId, QMdmmServerPrivate::NotifyFunc> QMdmmSer
     make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observeFunc)};
 
 QMdmmServer::QMdmmServer()
-    : d_ptr(new QMdmmServerPrivate(this))
+    : d(new QMdmmServerPrivate(this))
 {
     // QMDMMD(QMdmmServer);
 }
 
 QMdmmServer::~QMdmmServer()
 {
-    QMDMMD(QMdmmServer);
     delete d;
 }
 
 void QMdmmServer::socketConnected(QMdmmServerSocket *socket)
 {
-    QMDMMD(QMdmmServer);
     socket->setServer(this);
     d->connectedSockets.push_back(socket);
 }
 
 void QMdmmServer::socketDisconnected(QMdmmServerSocket *socket)
 {
-    QMDMMD(QMdmmServer);
     auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
     if (csIt != d->connectedSockets.cend()) {
         auto pmIt = d->playerMap.find(socket);
@@ -133,7 +131,6 @@ void QMdmmServer::socketDisconnected(QMdmmServerSocket *socket)
 
 void QMdmmServer::addPlayer(QMdmmServerSocket *socket, const string &playerName)
 {
-    QMDMMD(QMdmmServer);
     auto csIt = std::find(d->connectedSockets.cbegin(), d->connectedSockets.cend(), socket);
     if (csIt != d->connectedSockets.cend()) {
         QMdmmServerPlayer *player = new QMdmmServerPlayer;
@@ -159,8 +156,8 @@ void QMdmmServer::addPlayer(QMdmmServerSocket *socket, const string &playerName)
         auto players = room->players();
         Json::Value connectionInfo;
         connectionInfo["playerName"] = playerName;
-        for (auto it = players.begin(); it != players.end(); ++it) {
-            QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(*it);
+        for (auto & it : players) {
+            QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(it);
             if (sp == player) {
                 Json::Value v = connectionInfo;
                 v["connectionId"] = player->connectionId();
@@ -176,8 +173,6 @@ void QMdmmServer::addPlayer(QMdmmServerSocket *socket, const string &playerName)
 
 bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, const string &playerName, int connectionId)
 {
-    QMDMMD(QMdmmServer);
-
     for (auto it = d->roomMap.begin(); it != d->roomMap.end(); ++it) {
         if (it->first->connectionId() == connectionId && it->second->player(playerName) == it->first) {
             it->first->setSocket(socket);
@@ -187,8 +182,8 @@ bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, const string &playe
             Json::Value connectionInfo;
             connectionInfo["playerName"] = playerName;
             connectionInfo["isReconnect"] = true;
-            for (auto playerIt = players.begin(); playerIt != players.end(); ++playerIt) {
-                QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(*playerIt);
+            for (auto & player : players) {
+                QMdmmServerPlayer *sp = dynamic_cast<QMdmmServerPlayer *>(player);
                 if (sp == it->first) {
                     Json::Value v = connectionInfo;
                     v["connectionId"] = it->first->connectionId();
@@ -206,16 +201,14 @@ bool QMdmmServer::reconnectPlayer(QMdmmServerSocket *socket, const string &playe
 
 void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
-    QMDMMD(QMdmmServer);
-
-    if (notifyId & QMdmmProtocol::NotifyToRoomMask) {
+    if ((notifyId & QMdmmProtocol::NotifyToRoomMask) != 0) {
         auto playerIt = d->playerMap.find(socket);
         if (playerIt != d->playerMap.cend()) {
             auto roomIt = d->roomMap.find(playerIt->second);
             if (roomIt != d->roomMap.cend())
                 roomIt->second->notified(playerIt->second, notifyId, notifyData);
         }
-    } else if (notifyId & QMdmmProtocol::NotifyToServerMask) {
+    } else if ((notifyId & QMdmmProtocol::NotifyToServerMask) != 0) {
         // process notify
         auto funcit = QMdmmServerPrivate::notifyFuncMap.find(notifyId);
         if (funcit != QMdmmServerPrivate::notifyFuncMap.cend()) {
@@ -228,8 +221,6 @@ void QMdmmServer::notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNo
 
 void QMdmmServer::replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData)
 {
-    QMDMMD(QMdmmServer);
-
     auto playerIt = d->playerMap.find(socket);
     if (playerIt != d->playerMap.cend()) {
         auto roomIt = d->roomMap.find(playerIt->second);

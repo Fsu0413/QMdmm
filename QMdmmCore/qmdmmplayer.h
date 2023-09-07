@@ -68,7 +68,7 @@ public:
     void prepareForGameStart(int playerNum);
 
 private:
-    QMDMM_D(QMdmmPlayer)
+    QMdmmPlayerPrivate *const d;
     QMDMM_DISABLE_COPY(QMdmmPlayer)
 };
 

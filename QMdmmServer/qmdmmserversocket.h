@@ -7,7 +7,6 @@
 #include <QMdmmCore/QMdmmProtocol>
 #include <string>
 
-using std::string;
 class QMdmmServer;
 struct QMdmmServerSocketPrivate;
 
@@ -28,11 +27,11 @@ public:
     void notified(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
 
 protected:
-    virtual bool send(const string &data) = 0;
-    void received(const string &data);
+    virtual bool send(const std::string &data) = 0;
+    void received(const std::string &data);
 
 private:
-    QMDMM_D(QMdmmServerSocket)
+    QMdmmServerSocketPrivate *const d;
     QMDMM_DISABLE_COPY(QMdmmServerSocket)
 };
 

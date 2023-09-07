@@ -4,6 +4,8 @@
 #include "qmdmmserver.h"
 #include <QMdmmCore/QMdmmProtocol>
 
+using std::string;
+
 struct QMdmmServerSocketPrivate
 {
     QMdmmServer *server;
@@ -15,25 +17,22 @@ struct QMdmmServerSocketPrivate
 };
 
 QMdmmServerSocket::QMdmmServerSocket()
-    : d_ptr(new QMdmmServerSocketPrivate)
+    : d(new QMdmmServerSocketPrivate)
 {
 }
 
 QMdmmServerSocket::~QMdmmServerSocket()
 {
-    QMDMMD(QMdmmServerSocket);
     delete d;
 }
 
 void QMdmmServerSocket::setServer(QMdmmServer *server)
 {
-    QMDMMD(QMdmmServerSocket);
     d->server = server;
 }
 
 QMdmmServer *QMdmmServerSocket::getServer() const
 {
-    QMDMMD(const QMdmmServerSocket);
     return d->server;
 }
 
@@ -49,7 +48,6 @@ void QMdmmServerSocket::request(QMdmmProtocol::QMdmmRequestId requestId, const J
 
 void QMdmmServerSocket::replyed(QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData)
 {
-    QMDMMD(QMdmmServerSocket);
     if (d->server != nullptr)
         d->server->replyToServer(this, requestId, replyData);
 }
@@ -66,7 +64,6 @@ void QMdmmServerSocket::notify(QMdmmProtocol::QMdmmNotifyId notifyId, const Json
 
 void QMdmmServerSocket::notified(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData)
 {
-    QMDMMD(QMdmmServerSocket);
     if (d->server != nullptr)
         d->server->notifyServer(this, notifyId, notifyData);
 }

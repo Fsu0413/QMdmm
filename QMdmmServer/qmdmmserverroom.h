@@ -10,8 +10,6 @@
 struct QMdmmServerRoomPrivate;
 class QMdmmServerPlayer;
 
-using std::string;
-
 class QMDMMSERVER_EXPORT QMdmmServerRoom : public QMdmmRoom
 {
 public:
@@ -48,7 +46,7 @@ public:
     void replyed(QMdmmServerPlayer *player, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &notifyData);
 
 private:
-    QMDMM_D(QMdmmServerRoom)
+    QMdmmServerRoomPrivate *const d;
 };
 
 #endif // QMDMMSERVERROOM_H

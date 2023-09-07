@@ -5,8 +5,7 @@
 struct QMdmmPlayerPrivate
 {
     QMdmmPlayerPrivate()
-        : name()
-        , knife(false)
+        : knife(false)
         , horse(false)
         , hp(10)
         , place(QMdmmData::Country)
@@ -31,72 +30,62 @@ struct QMdmmPlayerPrivate
 };
 
 QMdmmPlayer::QMdmmPlayer()
-    : d_ptr(new QMdmmPlayerPrivate)
+    : d(new QMdmmPlayerPrivate)
 {
 }
 
 QMdmmPlayer::~QMdmmPlayer()
 {
-    delete d_ptr;
+    delete d;
 }
 
 void QMdmmPlayer::setName(const std::string &name)
 {
-    QMDMMD(QMdmmPlayer);
     d->name = name;
 }
 
 std::string QMdmmPlayer::name() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->name;
 }
 
 bool QMdmmPlayer::hasKnife() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->knife;
 }
 
 bool QMdmmPlayer::hasHorse() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->horse;
 }
 
 int QMdmmPlayer::hp() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->hp;
 }
 
 QMdmmData::Place QMdmmPlayer::place() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->place;
 }
 
 int QMdmmPlayer::knifeDamage() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->knifeDamage;
 }
 
 int QMdmmPlayer::horseDamage() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->horseDamage;
 }
 
 int QMdmmPlayer::maxHp() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->maxHp;
 }
 
 bool QMdmmPlayer::dead() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->hp <= 0;
 }
 
@@ -107,31 +96,21 @@ bool QMdmmPlayer::alive() const
 
 int QMdmmPlayer::upgradePoint() const
 {
-    QMDMMD(const QMdmmPlayer);
     return d->upgradePoint;
 }
 
 bool QMdmmPlayer::canBuyKnife() const
 {
-    QMDMMD(const QMdmmPlayer);
-    if (d->knife)
-        return false;
-
-    return true;
+    return !d->knife;
 }
 
 bool QMdmmPlayer::canBuyHorse() const
 {
-    QMDMMD(const QMdmmPlayer);
-    if (d->horse)
-        return false;
-
-    return true;
+    return !d->horse;
 }
 
 bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
 {
-    QMDMMD(const QMdmmPlayer);
     if (!d->knife)
         return false;
 
@@ -146,7 +125,6 @@ bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
 
 bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
 {
-    QMDMMD(const QMdmmPlayer);
     if (!d->horse)
         return false;
 
@@ -161,7 +139,6 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
 
 bool QMdmmPlayer::canMove(QMdmmData::Place toPlace) const
 {
-    QMDMMD(const QMdmmPlayer);
     return QMdmmData::isPlaceAdjecent(d->place, toPlace);
 }
 
@@ -170,7 +147,6 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) co
     if (to->dead())
         return false;
 
-    QMDMMD(const QMdmmPlayer);
     return QMdmmData::isPlaceAdjecent(to->place(), toPlace) && ((QMdmmData::isPlaceAdjecent(d->place, to->place()) && (toPlace == d->place)) || (d->place == to->place()));
 }
 
@@ -179,7 +155,6 @@ bool QMdmmPlayer::buyKnife()
     if (!canBuyKnife())
         return false;
 
-    QMDMMD(QMdmmPlayer);
     d->knife = true;
     return true;
 }
@@ -189,7 +164,6 @@ bool QMdmmPlayer::buyHorse()
     if (!canBuyHorse())
         return false;
 
-    QMDMMD(QMdmmPlayer);
     d->horse = true;
     return true;
 }
@@ -199,7 +173,6 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
     if (!canSlash(to))
         return false;
 
-    QMDMMD(QMdmmPlayer);
     to->damage(this, d->knifeDamage, QMdmmData::Slash);
 
     if (place() != QMdmmData::Country) {
@@ -215,7 +188,6 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
     if (!canKick(to))
         return false;
 
-    QMDMMD(QMdmmPlayer);
     to->damage(this, d->horseDamage, QMdmmData::Kick);
 
     if (!to->dead())
@@ -234,7 +206,7 @@ bool QMdmmPlayer::move(QMdmmData::Place toPlace)
     return false;
 }
 
-bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace)
+bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace) // NOLINT
 {
     // pull, push, kick(effect)
 
@@ -246,7 +218,7 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace)
     return false;
 }
 
-bool QMdmmPlayer::doNothing(const std::string &)
+bool QMdmmPlayer::doNothing(const std::string & /*unused*/)
 {
     return true;
 }
@@ -254,23 +226,19 @@ bool QMdmmPlayer::doNothing(const std::string &)
 void QMdmmPlayer::damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
 {
     QMDMM_UNUSED(reason);
-    QMDMMD(QMdmmPlayer);
     d->hp -= damagePoint;
 
     if (dead())
-        ++(from->d_func()->upgradePoint);
+        ++(from->d->upgradePoint);
 }
 
 void QMdmmPlayer::placeChange(QMdmmData::Place toPlace)
 {
-    QMDMMD(QMdmmPlayer);
     d->place = toPlace;
 }
 
 bool QMdmmPlayer::upgradeKnife()
 {
-    QMDMMD(QMdmmPlayer);
-
     if (d->knifeDamage >= 5)
         return false;
 
@@ -280,8 +248,6 @@ bool QMdmmPlayer::upgradeKnife()
 
 bool QMdmmPlayer::upgradeHorse()
 {
-    QMDMMD(QMdmmPlayer);
-
     if (d->horseDamage >= 10)
         return false;
 
@@ -291,8 +257,6 @@ bool QMdmmPlayer::upgradeHorse()
 
 bool QMdmmPlayer::upgradeMaxHp()
 {
-    QMDMMD(QMdmmPlayer);
-
     if (d->maxHp >= 20)
         return false;
 
@@ -302,7 +266,6 @@ bool QMdmmPlayer::upgradeMaxHp()
 
 void QMdmmPlayer::prepareForGameStart(int playerNum)
 {
-    QMDMMD(QMdmmPlayer);
     d->hp = d->maxHp;
     d->place = static_cast<QMdmmData::Place>(playerNum);
     d->knife = false;

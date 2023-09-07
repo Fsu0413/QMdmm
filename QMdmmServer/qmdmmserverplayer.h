@@ -12,8 +12,6 @@
 struct QMdmmServerPlayerPrivate;
 class QMdmmServerSocket;
 
-using std::string;
-
 class QMDMMSERVER_EXPORT QMdmmServerPlayer : public QMdmmPlayer
 {
 public:
@@ -29,7 +27,7 @@ public:
     int connectionId() const;
 
 private:
-    QMDMM_D(QMdmmServerPlayer)
+    QMdmmServerPlayerPrivate *const d;
 };
 
 #endif // QMDMMSERVERPLAYER_H

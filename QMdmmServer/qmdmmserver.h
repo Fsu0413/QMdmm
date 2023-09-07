@@ -8,8 +8,6 @@
 #include <json/json.h>
 #include <string>
 
-using std::string;
-
 struct QMdmmServerPrivate;
 class QMdmmServerRoom;
 class QMdmmServerSocket;
@@ -30,15 +28,15 @@ public:
     void socketConnected(QMdmmServerSocket *socket);
     void socketDisconnected(QMdmmServerSocket *socket);
 
-    void addPlayer(QMdmmServerSocket *socket, const string &playerName);
-    bool reconnectPlayer(QMdmmServerSocket *socket, const string &playerName, int connectionId);
+    void addPlayer(QMdmmServerSocket *socket, const std::string &playerName);
+    bool reconnectPlayer(QMdmmServerSocket *socket, const std::string &playerName, int connectionId);
 
     // MUST BE called in Server thread
     void notifyServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &notifyData);
     void replyToServer(QMdmmServerSocket *socket, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &replyData);
 
 private:
-    QMDMM_D(QMdmmServer)
+    QMdmmServerPrivate *const d;
     QMDMM_DISABLE_COPY(QMdmmServer)
 };
 

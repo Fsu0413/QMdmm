@@ -6,8 +6,6 @@
 #include "qmdmmcoreglobal.h"
 #include <vector>
 
-using std::vector;
-
 class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth
 {
 public:
@@ -23,7 +21,7 @@ public:
     bool operator>(const QMdmmStoneScissorsCloth &op2) const;
     bool operator==(const QMdmmStoneScissorsCloth &op2) const;
 
-    static vector<vector<QMdmmStoneScissorsCloth>::size_type> winners(const vector<QMdmmStoneScissorsCloth> &judgers);
+    static std::vector<std::vector<QMdmmStoneScissorsCloth>::size_type> winners(const std::vector<QMdmmStoneScissorsCloth> &judgers);
 
     /* implicit */ operator QMdmmData::StoneScissorsCloth() const;
 

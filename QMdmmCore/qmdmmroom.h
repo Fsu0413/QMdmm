@@ -10,31 +10,28 @@
 struct QMdmmRoomPrivate;
 class QMdmmPlayer;
 
-using std::string;
-using std::vector;
-
 class QMDMMCORE_EXPORT QMdmmRoom
 {
 public:
     QMdmmRoom();
     virtual ~QMdmmRoom();
 
-    string addPlayer(QMdmmPlayer *player, const string &userName = string());
+    std::string addPlayer(QMdmmPlayer *player, const std::string &userName = std::string());
     bool full() const;
 
     bool removePlayer(QMdmmPlayer *player);
-    bool removePlayer(const string &playerName);
+    bool removePlayer(const std::string &playerName);
 
-    QMdmmPlayer *player(const string &playerName) const;
+    QMdmmPlayer *player(const std::string &playerName) const;
 
-    vector<QMdmmPlayer *> players() const;
-    vector<string> playerNames() const;
+    std::vector<QMdmmPlayer *> players() const;
+    std::vector<std::string> playerNames() const;
 
-    vector<QMdmmPlayer *> alivePlayers() const;
+    std::vector<QMdmmPlayer *> alivePlayers() const;
     int alivePlayersCount() const;
 
 private:
-    QMDMM_D(QMdmmRoom)
+    QMdmmRoomPrivate *const d;
     QMDMM_DISABLE_COPY(QMdmmRoom)
 };
 

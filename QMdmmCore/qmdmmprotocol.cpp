@@ -5,6 +5,7 @@
 
 #include <sstream>
 using std::ostringstream;
+using std::string;
 
 struct QMdmmPacketPrivate
 {
@@ -24,37 +25,33 @@ struct QMdmmPacketPrivate
 };
 
 QMdmmPacket::QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &value)
-    : d_ptr(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketPrivate)
 {
-    QMDMMD(QMdmmPacket);
     d->type = type;
     d->v = value;
     d->requestId = requestId;
 }
 
 QMdmmPacket::QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &value)
-    : d_ptr(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketPrivate)
 {
-    QMDMMD(QMdmmPacket);
     d->type = QMdmmPacket::TypeNotify;
     d->v = value;
     d->notifyId = notifyId;
 }
 
 QMdmmPacket::QMdmmPacket(const QMdmmPacket &package)
-    : d_ptr(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketPrivate)
 {
-    QMDMMD(QMdmmPacket);
-    d->type = package.d_func()->type;
-    d->v = package.d_func()->v;
-    d->requestId = package.d_func()->requestId;
-    d->notifyId = package.d_func()->notifyId;
+    d->type = package.d->type;
+    d->v = package.d->v;
+    d->requestId = package.d->requestId;
+    d->notifyId = package.d->notifyId;
 }
 
 QMdmmPacket::QMdmmPacket(const string &str)
-    : d_ptr(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketPrivate)
 {
-    QMDMMD(QMdmmPacket);
     Json::Reader reader;
     Json::Value value;
     if (reader.parse(str, value, false)) {
@@ -69,42 +66,36 @@ QMdmmPacket::QMdmmPacket(const string &str)
 
 QMdmmPacket &QMdmmPacket::operator=(const QMdmmPacket &package)
 {
-    QMDMMD(QMdmmPacket);
-    d->type = package.d_func()->type;
-    d->v = package.d_func()->v;
-    d->requestId = package.d_func()->requestId;
-    d->notifyId = package.d_func()->notifyId;
+    d->type = package.d->type;
+    d->v = package.d->v;
+    d->requestId = package.d->requestId;
+    d->notifyId = package.d->notifyId;
 
     return *this;
 }
 
 QMdmmPacket::Type QMdmmPacket::type() const
 {
-    QMDMMD(const QMdmmPacket);
     return d->type;
 }
 
 QMdmmProtocol::QMdmmRequestId QMdmmPacket::requestId() const
 {
-    QMDMMD(const QMdmmPacket);
     return d->requestId;
 }
 
 QMdmmProtocol::QMdmmNotifyId QMdmmPacket::notifyId() const
 {
-    QMDMMD(const QMdmmPacket);
     return d->notifyId;
 }
 
 Json::Value QMdmmPacket::value() const
 {
-    QMDMMD(const QMdmmPacket);
     return d->v;
 }
 
 std::string QMdmmPacket::toString() const
 {
-    QMDMMD(const QMdmmPacket);
     Json::Value root;
     root["type"] = static_cast<int>(d->type);
     root["requestId"] = static_cast<int>(d->requestId);
@@ -116,7 +107,6 @@ std::string QMdmmPacket::toString() const
 
 bool QMdmmPacket::hasError(std::string *errorString) const
 {
-    QMDMMD(const QMdmmPacket);
     if (errorString != nullptr)
         *errorString = d->error;
 
