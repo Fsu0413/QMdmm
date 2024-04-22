@@ -16,8 +16,6 @@ set(QMDMMSERVER_SOURCES
     qmdmmserversocket.cpp
 )
 
-find_classes_in_header_files("${QMDMMSERVER_HEADERS}" "include/QMdmmServer" QMDMMSERVER_GENERATED_HEADERS)
-
 add_library(QMdmmServer
     ${QMDMMSERVER_HEADERS}
     ${QMDMMSERVER_SOURCES}
@@ -27,6 +25,8 @@ add_library(QMdmmServer
 target_precompile_headers(QMdmmServer
     PRIVATE qmdmmserverglobal.h
 )
+
+auto_generate_header_file_for_target(QMdmmServer "${QMDMMSERVER_HEADERS}")
 
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(QMdmmServer
@@ -67,20 +67,6 @@ target_link_libraries(QMdmmServer
 #        QMAKE_LFLAGS += -Wl,--no-undefined
 #    }
 #}
-
-#generateHeaders.target = $$system_path($$OUT_PWD/../dist/include/QMdmmServer/.timestamp)
-#!build_pass: mkpath($$OUT_PWD/../dist/include/QMdmmServer)
-
-#contains(QMAKE_HOST.os, "Windows"): generateHeaders.commands = cscript $$system_path($$PWD/../tools/AutoGenerateHeader.vbs) -o $$system_path($$OUT_PWD/../dist/include/QMdmmServer) -f $$system_path($$PWD/)
-#else: generateHeaders.commands = $$PWD/../tools/AutoGenerateHeader.sh -o $$OUT_PWD/../dist/include/QMdmmServer -f $$PWD/
-
-#HEADERS_ABSOLUTE =
-#for (header, HEADERS): HEADERS_ABSOLUTE += $$system_path($$absolute_path($$header))
-
-#generateHeaders.depends = $$HEADERS_ABSOLUTE
-
-#QMAKE_EXTRA_TARGETS += generateHeaders
-#PRE_TARGETDEPS += $$generateHeaders.target
 
 #includetarget.path = /include/QMdmmServer/
 #includetarget.files = $$OUT_PWD/../dist/include/QMdmmServer/*

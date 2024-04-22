@@ -1,47 +1,69 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
 
-function(find_classes_in_header_file FILE_NAME OUTPUT_VAR)
-    set(OUTPUT)
-    set(CLASS_REGEX "^(class|struct) +[A-Z]*_EXPORT +([A-Za-z0-9_]+)( .*)?")
-    file(STRINGS "${FILE_NAME}" FILE_MATCHED_LINES REGEX "${CLASS_REGEX}")
-    foreach (MATCHED IN LISTS FILE_MATCHED_LINES)
-        string(REGEX MATCH "${CLASS_REGEX}" MATCHED_2 "${MATCHED}")
-        if (NOT MATCHED_2)
-            message(FATAL_ERROR "Unexpected error: ${MATCHED} ${MATCHED_2} ${CMAKE_MATCH_2} ${FILE_MATCHED_LINES}")
+# This file has different logic of original .sh or .vbs files.
+# It can produce output file list as well as final output files.
+
+# When included in project mode, it registers functions for generating output file list.
+# When being run, it generates files.
+
+set(RMESSENTIALS_HEADER_GENERATION_REGEX "(struct|class) [A-Z]*_EXPORT ([A-Za-z_][A-Za-z0-9_]*)")
+set(AUTO_GENERATE_HEADER_CMAKE_FILE "${CMAKE_CURRENT_LIST_FILE}")
+
+function(auto_generate_header_file_list original_header_file_path output_var)
+    file(STRINGS "${original_header_file_path}" ORIGINAL_HEADER_STRINGS REGEX "${RMESSENTIALS_HEADER_GENERATION_REGEX}")
+    set(output)
+    foreach (ORIGINAL_HEADER_STRING IN LISTS ORIGINAL_HEADER_STRINGS)
+        if (ORIGINAL_HEADER_STRING MATCHES "${RMESSENTIALS_HEADER_GENERATION_REGEX}")
+            list(APPEND output "${CMAKE_MATCH_2}")
+        else()
+            message(FATAL_ERROR "Error when reading file ${original_header_file_path}")
         endif()
-        list(APPEND OUTPUT ${CMAKE_MATCH_2})
     endforeach()
-    set("${OUTPUT_VAR}" "${OUTPUT}" PARENT_SCOPE)
+    set("${output_var}" "${output}" PARENT_SCOPE)
 endfunction()
 
-# TODO: use DEPFILE
-function(find_classes_in_header_files FILE_PATHS INCLUDE_PREFIX OUTPUT_VAR)
-    set(OUTPUT)
-    foreach (FILE_PATH IN LISTS FILE_PATHS)
-        get_filename_component(FILE_NAME "${FILE_PATH}" NAME)
-        find_classes_in_header_file("${FILE_PATH}" out)
-        foreach (FILE_CLASS IN LISTS out)
-            set(INCLUDE_FILE "${INCLUDE_PREFIX}/${FILE_CLASS}")
-            list(APPEND OUTPUT "${INCLUDE_FILE}")
-            add_custom_command(OUTPUT "${INCLUDE_FILE}"
-                               COMMAND "${CMAKE_COMMAND}" -P "${AUTO_GENERATE_HEADER_CMAKE_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${INCLUDE_PREFIX}" "${FILE_NAME}" "${FILE_CLASS}"
-                               DEPENDS "${FILE_PATH}" "${AUTO_GENERATE_HEADER_CMAKE_FILE}"
+function(write_header_file original_header_file_path target_header_file_path)
+    get_filename_component(original_header_file_name "${original_header_file_path}" NAME)
+    get_filename_component(target_header_file_name "${target_header_file_path}" NAME)
+    get_filename_component(target_header_directory "${target_header_file_path}" DIRECTORY)
+    if (NOT IS_DIRECTORY "${target_header_directory}")
+        file(MAKE_DIRECTORY "${target_header_directory}")
+    endif()
+    if (original_header_file_name STREQUAL target_header_file_name)
+        file(COPY "${original_header_file_path}" DESTINATION "${target_header_directory}")
+    else()
+        set(target_content "#include \"${original_header_file_name}\"")
+        file(WRITE "${target_header_file_path}" "${target_content}")
+    endif()
+endfunction()
+
+# PROJECT_NAME must be defined when included in project mode so let's judge this
+# At least project() must be called from top directory CMakeLists.txt
+
+if (DEFINED PROJECT_NAME)
+    # project mode
+    # register functions for generate header
+    function (auto_generate_header_file_for_target target header_files)
+        foreach (header_file IN LISTS header_files)
+            get_filename_component(header_path_absolute "${header_file}" ABSOLUTE)
+            auto_generate_header_file_list("${header_path_absolute}" header_generated_file_names)
+            get_filename_component(header_file_name "${header_file}" NAME)
+            list(PREPEND header_generated_file_names "${header_file_name}")
+            set(header_generated_paths)
+            foreach (header_generated_file_name IN LISTS header_generated_file_names)
+                list(APPEND header_generated_paths "${CMAKE_BINARY_DIR}/build/include/${target}/${header_generated_file_name}")
+            endforeach()
+            add_custom_command(OUTPUT ${header_generated_paths}
+                               COMMAND "${CMAKE_COMMAND}" -P "${AUTO_GENERATE_HEADER_CMAKE_FILE}" "${header_path_absolute}" ${header_generated_paths}
+                               MAIN_DEPENDENCY "${header_file}"
+                               COMMENT "Generating header files \"${header_file}\"..."
+            )
+            target_sources("${target}" PRIVATE ${header_generated_paths})
+            install(FILES ${header_generated_paths}
+                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
+                OPTIONAL
             )
         endforeach()
-    endforeach()
-    set("${OUTPUT_VAR}" "${OUTPUT}" PARENT_SCOPE)
-endfunction()
-
-function(generate_class_name_header BINARY_DIR ORIGINAL_FILE_NAME CLASS_NAME)
-    file(WRITE "${BINARY_DIR}/${CLASS_NAME}"
-         "#include \"${ORIGINAL_FILE_NAME}\"
-"
-    )
-endfunction()
-
-if (DEFINED PROJECT_VERSION)
-    # include mode, only function call is used
-    set(AUTO_GENERATE_HEADER_CMAKE_FILE "${CMAKE_CURRENT_LIST_FILE}")
+    endfunction()
 else()
     # generate mode
     set(START_ARGN)
@@ -51,7 +73,9 @@ else()
             break()
         endif()
     endforeach()
-    math(EXPR START_ARGN2 "${START_ARGN} + 1")
-    math(EXPR START_ARGN3 "${START_ARGN2} + 1")
-    generate_class_name_header("${CMAKE_ARGV${START_ARGN}}" "${CMAKE_ARGV${START_ARGN2}}" "${CMAKE_ARGV${START_ARGN3}}")
+    math(EXPR START_ARG2 "${START_ARGN} + 1")
+    math(EXPR END_ARG "${CMAKE_ARGC} - 1")
+    foreach (I RANGE ${START_ARG2} ${END_ARG})
+        write_header_file("${CMAKE_ARGV${START_ARGN}}" "${CMAKE_ARGV${I}}")
+    endforeach()
 endif()

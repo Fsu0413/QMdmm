@@ -18,17 +18,16 @@ set(QMDMMCORE_SOURCES
     qmdmmprotocol.cpp
 )
 
-find_classes_in_header_files("${QMDMMCORE_HEADERS}" "include/QMdmmCore" QMDMMCORE_GENERATED_HEADERS)
-
 add_library(QMdmmCore
     ${QMDMMCORE_HEADERS}
     ${QMDMMCORE_SOURCES}
-    ${QMDMMCORE_GENERATED_HEADERS}
 )
 
 target_precompile_headers(QMdmmCore
     PRIVATE qmdmmcoreglobal.h
 )
+
+auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
 
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(QMdmmCore
@@ -47,8 +46,8 @@ if (ANDROID OR IOS)
 endif()
 
 target_include_directories(QMdmmCore
-    INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/include"
-    PUBLIC .
+    INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+    PRIVATE .
 )
 
 if (JSONCPP_FOUND)
@@ -85,20 +84,6 @@ else()
         PUBLIC QMdmmInternalJsonCppLibrary
     )
 endif()
-
-#generateHeaders.target = $$system_path($$OUT_PWD/../dist/include/QMdmmCore/.timestamp)
-#!build_pass: mkpath($$OUT_PWD/../dist/include/QMdmmCore)
-
-#contains(QMAKE_HOST.os, "Windows"): generateHeaders.commands = cscript $$system_path($$PWD/../tools/AutoGenerateHeader.vbs) -o $$system_path($$OUT_PWD/../dist/include/QMdmmCore) -f $$system_path($$PWD/)
-#else: generateHeaders.commands = $$PWD/../tools/AutoGenerateHeader.sh -o $$OUT_PWD/../dist/include/QMdmmCore -f $$PWD/
-
-#HEADERS_ABSOLUTE =
-#for (header, QMDMM_HEADERS): HEADERS_ABSOLUTE += $$system_path($$absolute_path($$header))
-
-#generateHeaders.depends = $$HEADERS_ABSOLUTE
-
-#QMAKE_EXTRA_TARGETS += generateHeaders
-#PRE_TARGETDEPS += $$generateHeaders.target
 
 #includetarget.path = /include/QMdmmCore/
 #includetarget.files = $$OUT_PWD/../dist/include/QMdmmCore/*
