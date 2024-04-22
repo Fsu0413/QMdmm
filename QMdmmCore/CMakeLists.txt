@@ -50,40 +50,9 @@ target_include_directories(QMdmmCore
     PRIVATE src
 )
 
-if (JSONCPP_FOUND)
-    target_link_libraries(QMdmmCore
-        PUBLIC PkgConfig::JSONCPP
-    )
-else()
-    add_library(QMdmmInternalJsonCppLibrary
-        3rdparty/jsoncpp/json_reader.cpp
-        3rdparty/jsoncpp/json_value.cpp
-        3rdparty/jsoncpp/json_writer.cpp
-        3rdparty/jsoncpp/json/config.h
-        3rdparty/jsoncpp/json/features.h
-        3rdparty/jsoncpp/json/forwards.h
-        3rdparty/jsoncpp/json/json.h
-        3rdparty/jsoncpp/json/reader.h
-        3rdparty/jsoncpp/json/value.h
-        3rdparty/jsoncpp/json/version.h
-        3rdparty/jsoncpp/json/writer.h
-        3rdparty/jsoncpp/json/allocator.h
-        3rdparty/jsoncpp/json/assertions.h
-        3rdparty/jsoncpp/json/autolink.h
-        3rdparty/jsoncpp/json_tool.h
-    )
-    target_include_directories(QMdmmInternalJsonCppLibrary
-        PUBLIC 3rdparty/jsoncpp
-    )
-    if (BUILD_SHARED_LIBS)
-        target_compile_definitions(QMdmmInternalJsonCppLibrary
-            PRIVATE JSON_DLL_BUILD
-        )
-    endif()
-    target_link_libraries(QMdmmCore
-        PUBLIC QMdmmInternalJsonCppLibrary
-    )
-endif()
+target_link_libraries(QMdmmCore
+    PUBLIC QMdmm::JsonCpp
+)
 
 #includetarget.path = /include/QMdmmCore/
 #includetarget.files = $$OUT_PWD/../dist/include/QMdmmCore/*

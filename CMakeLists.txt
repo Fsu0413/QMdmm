@@ -15,12 +15,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(AutoGenerateHeader)
 
-if (NOT WIN32)
-    find_package(PkgConfig QUIET)
-    if (PKG_CONFIG_FOUND)
-        pkg_search_module(JSONCPP QUIET IMPORTED_TARGET GLOBAL jsoncpp)
-    endif()
-endif()
-
+add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmServer)
