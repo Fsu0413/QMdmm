@@ -1,21 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 set(QMDMMCORE_HEADERS
-    qmdmmcoreglobal.h
+    src/qmdmmcoreglobal.h
 
-    qmdmmroom.h
-    qmdmmplayer.h
-    qmdmmcoreglobal.h
-    qmdmmprotocol.h
-    qmdmmstonescissorscloth.h
+    src/qmdmmroom.h
+    src/qmdmmplayer.h
+    src/qmdmmcoreglobal.h
+    src/qmdmmprotocol.h
+    src/qmdmmstonescissorscloth.h
 )
 
 set(QMDMMCORE_SOURCES
-    qmdmmcore.cpp
-    qmdmmroom.cpp
-    qmdmmplayer.cpp
-    qmdmmstonescissorscloth.cpp
-    qmdmmprotocol.cpp
+    src/qmdmmcore.cpp
+    src/qmdmmroom.cpp
+    src/qmdmmplayer.cpp
+    src/qmdmmstonescissorscloth.cpp
+    src/qmdmmprotocol.cpp
 )
 
 add_library(QMdmmCore
@@ -24,7 +24,7 @@ add_library(QMdmmCore
 )
 
 target_precompile_headers(QMdmmCore
-    PRIVATE qmdmmcoreglobal.h
+    PRIVATE src/qmdmmcoreglobal.h
 )
 
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
@@ -47,7 +47,7 @@ endif()
 
 target_include_directories(QMdmmCore
     INTERFACE "${CMAKE_BINARY_DIR}/build/include"
-    PRIVATE .
+    PRIVATE src
 )
 
 if (JSONCPP_FOUND)
