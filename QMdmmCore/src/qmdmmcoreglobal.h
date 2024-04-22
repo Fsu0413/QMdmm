@@ -7,6 +7,7 @@
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmCoreGlobal
+class QMDMMCORE_EXPORT QMdmmData
 #endif
 
 #ifndef QMDMM_STATIC
