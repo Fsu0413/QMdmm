@@ -4,7 +4,7 @@
 #define QMDMMSTONESCISSORSCLOTH_H
 
 #include "qmdmmcoreglobal.h"
-#include <vector>
+#include <QList>
 
 class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth
 {
@@ -21,7 +21,7 @@ public:
     bool operator>(const QMdmmStoneScissorsCloth &op2) const;
     bool operator==(const QMdmmStoneScissorsCloth &op2) const;
 
-    static std::vector<std::vector<QMdmmStoneScissorsCloth>::size_type> winners(const std::vector<QMdmmStoneScissorsCloth> &judgers);
+    static QList<int> winners(const QList<QMdmmStoneScissorsCloth> &judgers);
 
     /* implicit */ operator QMdmmData::StoneScissorsCloth() const;
 

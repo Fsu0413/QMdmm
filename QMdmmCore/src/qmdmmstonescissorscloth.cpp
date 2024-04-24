@@ -2,9 +2,7 @@
 
 #include "qmdmmstonescissorscloth.h"
 
-#include <map>
-using std::map;
-using std::vector;
+#include <QMap>
 
 QMdmmStoneScissorsCloth::QMdmmStoneScissorsCloth()
     : m_type(QMdmmData::Stone)
@@ -39,11 +37,11 @@ bool QMdmmStoneScissorsCloth::operator==(const QMdmmStoneScissorsCloth &op2) con
     return m_type == op2.m_type;
 }
 
-vector<vector<QMdmmStoneScissorsCloth>::size_type> QMdmmStoneScissorsCloth::winners(const vector<QMdmmStoneScissorsCloth> &judgers)
+QList<int> QMdmmStoneScissorsCloth::winners(const QList<QMdmmStoneScissorsCloth> &judgers)
 {
-    map<QMdmmData::StoneScissorsCloth, vector<vector<QMdmmStoneScissorsCloth>::size_type>> judgersMap;
+    QMap<QMdmmData::StoneScissorsCloth, QList<int>> judgersMap;
 
-    for (vector<QMdmmStoneScissorsCloth>::size_type i = 0; i < judgers.size(); ++i) {
+    for (int i = 0; i < judgers.size(); ++i) {
         const auto &judger = judgers.at(i);
         QMdmmData::StoneScissorsCloth t = judger;
         judgersMap[t].push_back(i);
@@ -54,13 +52,13 @@ vector<vector<QMdmmStoneScissorsCloth>::size_type> QMdmmStoneScissorsCloth::winn
         auto it2 = judgersMap.begin();
         ++it2;
 
-        QMdmmStoneScissorsCloth type1 = it1->first;
-        QMdmmStoneScissorsCloth type2 = it2->first;
+        QMdmmStoneScissorsCloth type1 = it1.key();
+        QMdmmStoneScissorsCloth type2 = it2.key();
 
         if (type1 > type2)
-            return it1->second;
+            return it1.value();
         else
-            return it2->second;
+            return it2.value();
     }
 
     return {};

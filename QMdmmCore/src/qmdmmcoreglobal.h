@@ -3,7 +3,9 @@
 #ifndef QMDMMCOREGLOBAL_H
 #define QMDMMCOREGLOBAL_H
 
-#include <cstddef>
+#include <QtGlobal>
+
+#include <QMetaType>
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmCoreGlobal
@@ -11,32 +13,16 @@ class QMDMMCORE_EXPORT QMdmmData
 #endif
 
 #ifndef QMDMM_STATIC
-#ifdef _WIN32
 #ifdef QMDMMCORE_LIBRARY
-#define QMDMMCORE_EXPORT __declspec(dllexport)
+#define QMDMMCORE_EXPORT Q_DECL_EXPORT
 #else
-#define QMDMMCORE_EXPORT __declspec(dllimport)
-#endif
-#else
-#ifdef QMDMMCORE_LIBRARY
-#define QMDMMCORE_EXPORT __attribute__((visibility("default")))
-#else
-#define QMDMMCORE_EXPORT
-#endif
+#define QMDMMCORE_EXPORT Q_DECL_IMPORT
 #endif
 #else
 #define QMDMMCORE_EXPORT
 #endif
 
 #define QMDMMCORE_EXPORT_NOHEADER QMDMMCORE_EXPORT
-
-#define QMDMM_DISABLE_COPY(c) \
-    c(const c &) = delete;    \
-    c &operator=(const c &) = delete;
-
-#define QMDMM_UNUSED(n) ((void)n)
-
-#define QMDMM_FOREVER for (;;)
 
 #ifndef forever
 #define forever for (;;)
@@ -68,5 +54,9 @@ enum StoneScissorsCloth
 
 QMDMMCORE_EXPORT bool isPlaceAdjecent(Place p1, Place p2);
 } // namespace QMdmmData
+
+Q_DECLARE_METATYPE(QMdmmData::Place)
+Q_DECLARE_METATYPE(QMdmmData::DamageReason)
+Q_DECLARE_METATYPE(QMdmmData::StoneScissorsCloth)
 
 #endif // QMDMMLOGIC_GLOBAL_H

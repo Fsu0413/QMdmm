@@ -15,7 +15,6 @@ struct QMdmmPlayerPrivate
         , upgradePoint(0)
     {
     }
-    std::string name;
 
     bool knife;
     bool horse;
@@ -29,20 +28,16 @@ struct QMdmmPlayerPrivate
     int upgradePoint;
 };
 
-QMdmmPlayer::QMdmmPlayer(const std::string &name)
-    : d(new QMdmmPlayerPrivate)
+QMdmmPlayer::QMdmmPlayer(const QString &name, QObject *parent)
+    : QObject(parent)
+    , d(new QMdmmPlayerPrivate)
 {
-    d->name = name;
+    setObjectName(name);
 }
 
 QMdmmPlayer::~QMdmmPlayer()
 {
     delete d;
-}
-
-std::string QMdmmPlayer::name() const
-{
-    return d->name;
 }
 
 bool QMdmmPlayer::hasKnife() const
@@ -152,6 +147,7 @@ bool QMdmmPlayer::buyKnife()
         return false;
 
     d->knife = true;
+    emit hasKnifeChanged(d->knife, QPrivateSignal());
     return true;
 }
 
@@ -161,6 +157,7 @@ bool QMdmmPlayer::buyHorse()
         return false;
 
     d->horse = true;
+    emit hasHorseChanged(d->horse, QPrivateSignal());
     return true;
 }
 
@@ -214,23 +211,31 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace) // NOLINT
     return false;
 }
 
-bool QMdmmPlayer::doNothing(const std::string & /*unused*/)
+bool QMdmmPlayer::doNothing(const QString & /*unused*/)
 {
     return true;
 }
 
 void QMdmmPlayer::damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
 {
-    QMDMM_UNUSED(reason);
-    d->hp -= damagePoint;
+    Q_UNUSED(reason);
+    bool wasDead = dead();
 
-    if (dead())
+    d->hp -= damagePoint;
+    emit hpChanged(d->hp, QPrivateSignal());
+
+    if (!wasDead && dead()) {
         ++(from->d->upgradePoint);
+        emit aliveChanged(alive(), QPrivateSignal());
+        emit deadChanged(dead(), QPrivateSignal());
+        emit from->upgradePointChanged(from->d->upgradePoint, QPrivateSignal());
+    }
 }
 
 void QMdmmPlayer::placeChange(QMdmmData::Place toPlace)
 {
     d->place = toPlace;
+    emit placeChanged(d->place, QPrivateSignal());
 }
 
 // TODO: configure item for maximum value of upgrade
@@ -240,6 +245,7 @@ bool QMdmmPlayer::upgradeKnife()
         return false;
 
     ++d->knifeDamage;
+    emit knifeDamageChanged(d->knifeDamage, QPrivateSignal());
     return true;
 }
 
@@ -249,6 +255,7 @@ bool QMdmmPlayer::upgradeHorse()
         return false;
 
     ++d->horseDamage;
+    emit horseDamageChanged(d->horseDamage, QPrivateSignal());
     return true;
 }
 
@@ -258,14 +265,20 @@ bool QMdmmPlayer::upgradeMaxHp()
         return false;
 
     ++d->maxHp;
+    emit maxHpChanged(d->maxHp, QPrivateSignal());
     return true;
 }
 
 void QMdmmPlayer::prepareForGameStart(int playerNum)
 {
     d->hp = d->maxHp;
+    emit hpChanged(d->hp, QPrivateSignal());
     d->place = static_cast<QMdmmData::Place>(playerNum);
+    emit placeChanged(d->place, QPrivateSignal());
     d->knife = false;
+    emit hasKnifeChanged(d->knife, QPrivateSignal());
     d->horse = false;
+    emit hasHorseChanged(d->horse, QPrivateSignal());
     d->upgradePoint = 0;
+    emit upgradePointChanged(d->upgradePoint, QPrivateSignal());
 }

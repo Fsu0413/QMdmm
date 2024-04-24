@@ -3,50 +3,42 @@
 #include "qmdmmroom.h"
 #include "qmdmmplayer.h"
 
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
-using std::map;
-using std::ostringstream;
-using std::out_of_range;
-using std::string;
-using std::vector;
+#include <QMap>
+#include <QString>
 
 struct QMdmmRoomPrivate
 {
     QMdmmRoomPrivate() = default;
-    map<string, QMdmmPlayer *> players;
+    QMap<QString, QMdmmPlayer *> players;
 };
 
-QMdmmRoom::QMdmmRoom()
-    : d(new QMdmmRoomPrivate)
+QMdmmRoom::QMdmmRoom(QObject *parent)
+    : QObject(parent)
+    , d(new QMdmmRoomPrivate)
 {
 }
 
 QMdmmRoom::~QMdmmRoom()
 {
-    for (auto &[name, player] : d->players)
-        delete player;
-
+    qDeleteAll(d->players);
     delete d;
 }
 
-bool QMdmmRoom::addPlayer(const string &playerName)
+bool QMdmmRoom::addPlayer(const QString &playerName)
 {
-    if (d->players.find(playerName) != d->players.cend())
+    if (d->players.contains(playerName))
         return false;
 
-    d->players.emplace(playerName, new QMdmmPlayer(playerName));
+    d->players.insert(playerName, new QMdmmPlayer(playerName));
     return true;
 }
 
-bool QMdmmRoom::removePlayer(const std::string &playerName)
+bool QMdmmRoom::removePlayer(const QString &playerName)
 {
-    std::map<string, QMdmmPlayer *>::iterator it = d->players.find(playerName);
-    if (it != d->players.cend()) {
-        delete it->second;
+    auto it = d->players.find(playerName);
+
+    if (it != d->players.end()) {
+        delete it.value();
         d->players.erase(it);
         return true;
     }
@@ -59,37 +51,25 @@ bool QMdmmRoom::full() const
     return d->players.size() >= 3;
 }
 
-QMdmmPlayer *QMdmmRoom::player(const string &playerName) const
+QMdmmPlayer *QMdmmRoom::player(const QString &playerName) const
 {
-    try {
-        return d->players.at(playerName);
-    } catch (const out_of_range &) {
-        return nullptr;
-    }
+    return d->players.value(playerName, nullptr);
 }
 
-vector<QMdmmPlayer *> QMdmmRoom::players() const
+QList<QMdmmPlayer *> QMdmmRoom::players() const
 {
-    vector<QMdmmPlayer *> res;
-    for (const auto &[name, player] : d->players)
-        res.push_back(player);
-
-    return res;
+    return d->players.values();
 }
 
-vector<string> QMdmmRoom::playerNames() const
+QStringList QMdmmRoom::playerNames() const
 {
-    vector<string> res;
-    for (const auto &[name, player] : d->players)
-        res.push_back(name);
-
-    return res;
+    return d->players.keys();
 }
 
-vector<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
+QList<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
 {
-    vector<QMdmmPlayer *> res;
-    for (const auto &[name, player] : d->players) {
+    QList<QMdmmPlayer *> res;
+    foreach (const auto &player, d->players) {
         if (player->alive())
             res.push_back(player);
     }
@@ -99,5 +79,5 @@ vector<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
 
 int QMdmmRoom::alivePlayersCount() const
 {
-    return int(alivePlayers().size());
+    return alivePlayers().size();
 }

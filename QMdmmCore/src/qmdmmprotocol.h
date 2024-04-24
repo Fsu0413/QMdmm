@@ -4,7 +4,6 @@
 #define QMDMMPROTOCOL_H
 
 #include "qmdmmcoreglobal.h"
-#include <string>
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmProtocol
@@ -57,11 +56,8 @@ enum QMdmmNotifyId
 };
 } // namespace QMdmmProtocol
 
-namespace Json {
-class Value;
-}
-
 struct QMdmmPacketPrivate;
+class QJsonValue;
 
 class QMDMMCORE_EXPORT QMdmmPacket
 {
@@ -75,20 +71,20 @@ public:
         TypeInvalid = -1
     };
 
-    QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &value);
-    QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const Json::Value &value);
+    QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value);
+    QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value);
     QMdmmPacket(const QMdmmPacket &package);
-    explicit QMdmmPacket(const std::string &str);
+    explicit QMdmmPacket(const QByteArray &serialized);
 
     QMdmmPacket &operator=(const QMdmmPacket &package);
 
     Type type() const;
     QMdmmProtocol::QMdmmRequestId requestId() const;
     QMdmmProtocol::QMdmmNotifyId notifyId() const;
-    Json::Value value() const;
+    QJsonValue value() const;
 
-    std::string toString() const;
-    bool hasError(std::string *errorString = nullptr) const;
+    QByteArray serialize() const;
+    bool hasError(QString *errorString = nullptr) const;
 
 private:
     QMdmmPacketPrivate *const d;

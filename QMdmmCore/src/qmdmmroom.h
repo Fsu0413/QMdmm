@@ -4,33 +4,36 @@
 #define QMDMMROOM_H
 
 #include "qmdmmcoreglobal.h"
-#include <string>
-#include <vector>
+
+#include <QList>
+#include <QObject>
 
 struct QMdmmRoomPrivate;
 class QMdmmPlayer;
 
-class QMDMMCORE_EXPORT QMdmmRoom final
+class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
 {
-public:
-    QMdmmRoom();
-    virtual ~QMdmmRoom();
+    Q_OBJECT
 
-    bool addPlayer(const std::string &playerName);
-    bool removePlayer(const std::string &playerName);
+public:
+    explicit QMdmmRoom(QObject *parent = nullptr);
+    ~QMdmmRoom() override;
+
+    bool addPlayer(const QString &playerName);
+    bool removePlayer(const QString &playerName);
     bool full() const;
 
-    QMdmmPlayer *player(const std::string &playerName) const;
+    QMdmmPlayer *player(const QString &playerName) const;
 
-    std::vector<QMdmmPlayer *> players() const;
-    std::vector<std::string> playerNames() const;
+    QList<QMdmmPlayer *> players() const;
+    QStringList playerNames() const;
 
-    std::vector<QMdmmPlayer *> alivePlayers() const;
+    QList<QMdmmPlayer *> alivePlayers() const;
     int alivePlayersCount() const;
 
 private:
     QMdmmRoomPrivate *const d;
-    QMDMM_DISABLE_COPY(QMdmmRoom)
+    Q_DISABLE_COPY(QMdmmRoom)
 };
 
 #endif // QMDMMROOM_H

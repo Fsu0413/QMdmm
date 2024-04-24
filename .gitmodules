@@ -1,3 +1,0 @@
-[submodule "3rdparty/jsoncpp/upstream"]
-	path = 3rdparty/jsoncpp/upstream
-	url = ../../open-source-parsers/jsoncpp
