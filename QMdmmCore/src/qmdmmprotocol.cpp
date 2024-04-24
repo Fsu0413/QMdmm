@@ -22,7 +22,34 @@ struct QMdmmPacketPrivate
     QMdmmProtocol::QMdmmNotifyId notifyId;
 
     string error;
+
+    static Json::StreamWriter *getJsonWriter();
+    static Json::CharReader *getJsonReader();
 };
+
+Json::StreamWriter *QMdmmPacketPrivate::getJsonWriter()
+{
+    static std::unique_ptr<Json::StreamWriter> theWriter([]() {
+        Json::StreamWriterBuilder builder;
+        Json::StreamWriterBuilder::setDefaults(&builder.settings_);
+        builder["emitUTF8"] = true;
+        builder["indentation"] = "";
+        return builder.newStreamWriter();
+    }());
+    return theWriter.get();
+}
+
+Json::CharReader *QMdmmPacketPrivate::getJsonReader()
+{
+    static std::unique_ptr<Json::CharReader> theReader([]() {
+        Json::CharReaderBuilder builder;
+        Json::CharReaderBuilder::strictMode(&builder.settings_);
+        builder["failIfExtra"] = false;
+
+        return builder.newCharReader();
+    }());
+    return theReader.get();
+}
 
 QMdmmPacket::QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const Json::Value &value)
     : d(new QMdmmPacketPrivate)
@@ -52,15 +79,16 @@ QMdmmPacket::QMdmmPacket(const QMdmmPacket &package)
 QMdmmPacket::QMdmmPacket(const string &str)
     : d(new QMdmmPacketPrivate)
 {
-    Json::Reader reader;
+    Json::CharReader *reader = d->getJsonReader();
+    std::string errs;
     Json::Value value;
-    if (reader.parse(str, value, false)) {
+    if (reader->parse(str.c_str(), str.c_str() + str.length(), &value, &errs)) {
         d->type = static_cast<Type>(value["type"].asInt());
         d->requestId = static_cast<QMdmmProtocol::QMdmmRequestId>(value["requestId"].asInt());
         d->notifyId = static_cast<QMdmmProtocol::QMdmmNotifyId>(value["notifyId"].asInt());
         d->v = value["value"];
     } else {
-        d->error = reader.getFormattedErrorMessages();
+        d->error = errs;
     }
 }
 
@@ -101,8 +129,13 @@ std::string QMdmmPacket::toString() const
     root["requestId"] = static_cast<int>(d->requestId);
     root["notifyId"] = static_cast<int>(d->notifyId);
     root["value"] = d->v;
-    Json::FastWriter writer;
-    return writer.write(root);
+    std::ostringstream oss;
+    Json::StreamWriter *writer = d->getJsonWriter();
+    if (writer->write(root, &oss) == 0)
+        return oss.str();
+
+    d->error = "Error when writing packet to string";
+    return {};
 }
 
 bool QMdmmPacket::hasError(std::string *errorString) const

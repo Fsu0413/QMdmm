@@ -8,15 +8,14 @@
 
 struct QMdmmPlayerPrivate;
 
-class QMDMMCORE_EXPORT QMdmmPlayer
+class QMDMMCORE_EXPORT QMdmmPlayer final
 {
 public:
-    QMdmmPlayer();
-    virtual ~QMdmmPlayer();
+    explicit QMdmmPlayer(const std::string &name);
+    ~QMdmmPlayer();
 
     // property setters/getters
     // permanent property
-    void setName(const std::string &name);
     std::string name() const;
 
     // current property

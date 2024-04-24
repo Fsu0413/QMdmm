@@ -10,17 +10,15 @@
 struct QMdmmRoomPrivate;
 class QMdmmPlayer;
 
-class QMDMMCORE_EXPORT QMdmmRoom
+class QMDMMCORE_EXPORT QMdmmRoom final
 {
 public:
     QMdmmRoom();
     virtual ~QMdmmRoom();
 
-    std::string addPlayer(QMdmmPlayer *player, const std::string &userName = std::string());
-    bool full() const;
-
-    bool removePlayer(QMdmmPlayer *player);
+    bool addPlayer(const std::string &playerName);
     bool removePlayer(const std::string &playerName);
+    bool full() const;
 
     QMdmmPlayer *player(const std::string &playerName) const;
 

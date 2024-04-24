@@ -29,19 +29,15 @@ struct QMdmmPlayerPrivate
     int upgradePoint;
 };
 
-QMdmmPlayer::QMdmmPlayer()
+QMdmmPlayer::QMdmmPlayer(const std::string &name)
     : d(new QMdmmPlayerPrivate)
 {
+    d->name = name;
 }
 
 QMdmmPlayer::~QMdmmPlayer()
 {
     delete d;
-}
-
-void QMdmmPlayer::setName(const std::string &name)
-{
-    d->name = name;
 }
 
 std::string QMdmmPlayer::name() const
@@ -175,10 +171,10 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
 
     to->damage(this, d->knifeDamage, QMdmmData::Slash);
 
-    if (place() != QMdmmData::Country) {
-        // life punishment: damage point is maxHp / 2
+    // life punishment: damage point is maxHp / 2
+    // TODO: configure item for amount / switch of punish HP
+    if (place() != QMdmmData::Country)
         damage(to, maxHp() / 2, QMdmmData::PunishHp);
-    }
 
     return true;
 }
@@ -237,6 +233,7 @@ void QMdmmPlayer::placeChange(QMdmmData::Place toPlace)
     d->place = toPlace;
 }
 
+// TODO: configure item for maximum value of upgrade
 bool QMdmmPlayer::upgradeKnife()
 {
     if (d->knifeDamage >= 5)

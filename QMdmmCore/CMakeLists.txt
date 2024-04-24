@@ -3,19 +3,26 @@
 set(QMDMMCORE_HEADERS
     src/qmdmmcoreglobal.h
 
+    src/qmdmmprotocol.h
+
     src/qmdmmroom.h
     src/qmdmmplayer.h
-    src/qmdmmcoreglobal.h
-    src/qmdmmprotocol.h
+
+    src/qmdmmlogic.h
+    src/qmdmmagent.h
     src/qmdmmstonescissorscloth.h
 )
 
 set(QMDMMCORE_SOURCES
     src/qmdmmcore.cpp
+    src/qmdmmprotocol.cpp
+
     src/qmdmmroom.cpp
     src/qmdmmplayer.cpp
+
+    src/qmdmmlogic.cpp
+    src/qmdmmagent.cpp
     src/qmdmmstonescissorscloth.cpp
-    src/qmdmmprotocol.cpp
 )
 
 add_library(QMdmmCore
