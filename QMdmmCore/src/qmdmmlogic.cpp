@@ -1,6 +1,21 @@
 #include "qmdmmlogic.h"
 
 #include "qmdmmagent.h"
+#include "qmdmmplayer.h"
+#include "qmdmmroom.h"
+
+void QMdmmLogic::run()
+{
+    QMdmmRoom *room = new QMdmmRoom;
+
+    room->addPlayer(QStringLiteral("player1"));
+    room->addPlayer(QStringLiteral("player2"));
+    room->addPlayer(QStringLiteral("player3"));
+
+    // logic main loop
+
+    delete room;
+}
 
 QMdmmLogicRunner::QMdmmLogicRunner(QObject *parent)
     : QThread(parent)
@@ -35,4 +50,6 @@ bool QMdmmLogicRunner::deregisterAgent(QMdmmAgent *agent)
 
 void QMdmmLogicRunner::run()
 {
+    QMdmmLogic logic;
+    logic.run();
 }

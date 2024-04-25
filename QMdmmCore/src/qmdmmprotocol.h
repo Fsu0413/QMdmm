@@ -12,7 +12,7 @@ class QMDMMCORE_EXPORT QMdmmProtocol
 namespace QMdmmProtocol {
 enum QMdmmRequestId
 {
-    // No requests is from server, all requests are from room
+    // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
@@ -32,7 +32,7 @@ enum QMdmmNotifyId
     NoitfyDisconnected, // string playerName
     NotifySpoken, // broadcast, string playerName, string contents
 
-    NotifyFromRoomMask = 0x2000,
+    NotifyFromLogicMask = 0x2000,
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc } detail[3]
@@ -50,7 +50,7 @@ enum QMdmmNotifyId
     NotifyMarshal, // string playerName, int connectionId
     NotifyObserve, // string observerName, string playerName, int connectionId
 
-    NotifyToRoomMask = 0x8000,
+    NotifyToLogicMask = 0x8000,
     NotifySpeak, // string contents
     NotifyOperating, // TODO: for ob
 };
