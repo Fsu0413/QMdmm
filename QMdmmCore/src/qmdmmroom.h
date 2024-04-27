@@ -21,15 +21,15 @@ public:
 
     bool addPlayer(const QString &playerName);
     bool removePlayer(const QString &playerName);
-    bool full() const;
+    [[nodiscard]] bool full() const;
 
-    QMdmmPlayer *player(const QString &playerName) const;
+    [[nodiscard]] QMdmmPlayer *player(const QString &playerName) const;
 
-    QList<QMdmmPlayer *> players() const;
-    QStringList playerNames() const;
+    [[nodiscard]] QList<QMdmmPlayer *> players() const;
+    [[nodiscard]] QStringList playerNames() const;
 
-    QList<QMdmmPlayer *> alivePlayers() const;
-    int alivePlayersCount() const;
+    [[nodiscard]] QList<QMdmmPlayer *> alivePlayers() const;
+    [[nodiscard]] int alivePlayersCount() const;
 
 private:
     QMdmmRoomPrivate *const d;

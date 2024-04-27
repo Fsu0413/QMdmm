@@ -55,10 +55,7 @@ QList<int> QMdmmStoneScissorsCloth::winners(const QList<QMdmmStoneScissorsCloth>
         QMdmmStoneScissorsCloth type1 = it1.key();
         QMdmmStoneScissorsCloth type2 = it2.key();
 
-        if (type1 > type2)
-            return it1.value();
-        else
-            return it2.value();
+        return (type1 > type2) ? it1.value() : it2.value();
     }
 
     return {};

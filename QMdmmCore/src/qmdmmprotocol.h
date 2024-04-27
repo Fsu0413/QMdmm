@@ -16,9 +16,9 @@ enum QMdmmRequestId
     RequestInvalid = 0,
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
-    RequestStriveForFirstOrLast, // request: N/A, reply: int firstOrLast
-    RequestOperation, // request: N/A, reply: string operation, optional string toPlayer, optional int toPosition
-    RequestUpdate, // request: N/A, reply: int item
+    RequestStriveForOperateOrder, // request: int totalOperationNum, int eachOperationNum, reply: array { int order }
+    RequestOperation, // request: int currentOrder, reply: string operation, optional string toPlayer, optional int toPosition
+    RequestUpdate, // request: int remaningTimes, reply: int item
 };
 
 enum QMdmmNotifyId
@@ -28,27 +28,27 @@ enum QMdmmNotifyId
     NotifyFromServerMask = 0x1000,
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
+    NotifyVersion, // string versionNumber
     NotifyConnected, // string playerName, bool isReconnect, (to player)int connectionId
     NoitfyDisconnected, // string playerName
-    NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyFromLogicMask = 0x2000,
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc } detail[3]
-    NotifyFirstOrLast, // broadcast, object { playerName: int firstOrLast } detail[2]
+    NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]
+    NotifyOperateOrder, // broadcast, array { string playerName } [totalOperationNum]
     NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPosition
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
     NotifyGameOver, // broadcast, string winnerPlayerName
     NotifyOb, // TODO: for ob
+    NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
-    NotifySignIn, // string playerName
-    NotifyMarshal, // string playerName, int connectionId
-    NotifyObserve, // string observerName, string playerName, int connectionId
+    NotifySignIn, // string playerName, bool isReconnect, optional int connectionId
+    NotifyObserve, // string observerName, string playerName
 
     NotifyToLogicMask = 0x8000,
     NotifySpeak, // string contents
@@ -78,12 +78,12 @@ public:
 
     QMdmmPacket &operator=(const QMdmmPacket &package);
 
-    Type type() const;
-    QMdmmProtocol::QMdmmRequestId requestId() const;
-    QMdmmProtocol::QMdmmNotifyId notifyId() const;
-    QJsonValue value() const;
+    [[nodiscard]] Type type() const;
+    [[nodiscard]] QMdmmProtocol::QMdmmRequestId requestId() const;
+    [[nodiscard]] QMdmmProtocol::QMdmmNotifyId notifyId() const;
+    [[nodiscard]] QJsonValue value() const;
 
-    QByteArray serialize() const;
+    [[nodiscard]] QByteArray serialize() const;
     bool hasError(QString *errorString = nullptr) const;
 
 private:

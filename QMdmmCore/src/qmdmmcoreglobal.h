@@ -24,10 +24,6 @@ class QMDMMCORE_EXPORT QMdmmData
 
 #define QMDMMCORE_EXPORT_NOHEADER QMDMMCORE_EXPORT
 
-#ifndef forever
-#define forever for (;;)
-#endif
-
 namespace QMdmmData {
 enum Place
 {

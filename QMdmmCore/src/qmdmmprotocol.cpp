@@ -20,34 +20,7 @@ struct QMdmmPacketPrivate
     QMdmmProtocol::QMdmmNotifyId notifyId;
 
     QString error;
-
-    // static Json::StreamWriter *getJsonWriter();
-    // static Json::CharReader *getJsonReader();
 };
-
-// Json::StreamWriter *QMdmmPacketPrivate::getJsonWriter()
-// {
-//     static std::unique_ptr<Json::StreamWriter> theWriter([]() {
-//         Json::StreamWriterBuilder builder;
-//         Json::StreamWriterBuilder::setDefaults(&builder.settings_);
-//         builder["emitUTF8"] = true;
-//         builder["indentation"] = "";
-//         return builder.newStreamWriter();
-//     }());
-//     return theWriter.get();
-// }
-
-// Json::CharReader *QMdmmPacketPrivate::getJsonReader()
-// {
-//     static std::unique_ptr<Json::CharReader> theReader([]() {
-//         Json::CharReaderBuilder builder;
-//         Json::CharReaderBuilder::strictMode(&builder.settings_);
-//         builder["failIfExtra"] = false;
-
-//         return builder.newCharReader();
-//     }());
-//     return theReader.get();
-// }
 
 QMdmmPacket::QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value)
     : d(new QMdmmPacketPrivate)

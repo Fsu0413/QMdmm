@@ -29,30 +29,30 @@ public:
     // property setters/getters
 
     // current property
-    bool hasKnife() const;
-    bool hasHorse() const;
-    int hp() const;
-    QMdmmData::Place place() const;
+    [[nodiscard]] bool hasKnife() const;
+    [[nodiscard]] bool hasHorse() const;
+    [[nodiscard]] int hp() const;
+    [[nodiscard]] QMdmmData::Place place() const;
 
     // upgradeable property
-    int knifeDamage() const;
-    int horseDamage() const;
-    int maxHp() const;
+    [[nodiscard]] int knifeDamage() const;
+    [[nodiscard]] int horseDamage() const;
+    [[nodiscard]] int maxHp() const;
 
     // calculated property
-    bool dead() const;
-    bool alive() const;
-    int upgradePoint() const;
+    [[nodiscard]] bool dead() const;
+    [[nodiscard]] bool alive() const;
+    [[nodiscard]] int upgradePoint() const;
 
     // action checks
-    bool canBuyKnife() const;
-    bool canBuyHorse() const;
-    bool canSlash(const QMdmmPlayer *to) const;
-    bool canKick(const QMdmmPlayer *to) const;
-    bool canMove(QMdmmData::Place toPlace) const;
-    bool canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const;
+    [[nodiscard]] bool canBuyKnife() const;
+    [[nodiscard]] bool canBuyHorse() const;
+    [[nodiscard]] bool canSlash(const QMdmmPlayer *to) const;
+    [[nodiscard]] bool canKick(const QMdmmPlayer *to) const;
+    [[nodiscard]] bool canMove(QMdmmData::Place toPlace) const;
+    [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const;
 
-public slots:
+public slots: // NOLINT(readability-redundant-access-specifiers)
     // actions
     bool buyKnife();
     bool buyHorse();
