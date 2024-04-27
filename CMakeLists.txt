@@ -41,11 +41,20 @@ if (Qt6_FOUND)
     endif()
 endif()
 
-# simulate qt_standard_project_setup() if there is none
+# modify the default output location
 
 include(GNUInstallDirs)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_LIBDIR}")
+
 if (WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    set(CMAKE_SHARED_MODULE_PREFIX "")
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    if (NOT MSVC)
+        # match behavoir of qt6_add_library
+        set(CMAKE_IMPORT_LIBRARY_SUFFIX ".a")
+    endif()
 endif()
 
 add_subdirectory(3rdparty)
