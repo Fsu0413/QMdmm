@@ -6,7 +6,7 @@
 #include "qmdmmcoreglobal.h"
 #include <QList>
 
-class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth
+class QMDMMCORE_EXPORT QMdmmStoneScissorsCloth final
 {
 public:
     QMdmmStoneScissorsCloth();

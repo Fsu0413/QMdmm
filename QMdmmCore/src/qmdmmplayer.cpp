@@ -77,6 +77,7 @@ int QMdmmPlayer::maxHp() const
 
 bool QMdmmPlayer::dead() const
 {
+    // TODO: setting - 0 HP alive / dead
     return d->hp <= 0;
 }
 
