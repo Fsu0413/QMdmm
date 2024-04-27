@@ -13,6 +13,7 @@ class QMDMMCORE_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
+    Q_PROPERTY(bool ready READ ready WRITE setReady NOTIFY readyChanged FINAL)
 
 public:
     explicit QMdmmAgent(QString name, QObject *parent = nullptr);
@@ -25,11 +26,15 @@ public:
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &name);
 
+    [[nodiscard]] bool ready() const;
+    void setReady(bool ready);
+
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void streamReadyRead();
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
+    void readyChanged(bool, QPrivateSignal);
 
 private:
     QMdmmAgentPrivate *const d;

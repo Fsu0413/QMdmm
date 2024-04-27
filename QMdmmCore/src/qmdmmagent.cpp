@@ -1,9 +1,17 @@
 #include "qmdmmagent.h"
+#include "qmdmmprotocol.h"
+
 #include <QIODevice>
 
 struct QMdmmAgentPrivate
 {
+    bool ready;
     QString screenName;
+
+    QMdmmAgentPrivate()
+        : ready(false)
+    {
+    }
 };
 
 QMdmmAgent::QMdmmAgent(QString name, QObject *parent)
@@ -30,9 +38,26 @@ QString QMdmmAgent::screenName() const
 
 void QMdmmAgent::setScreenName(const QString &name)
 {
-    d->screenName = name;
+    if (name != screenName()) {
+        d->screenName = name;
+        emit screenNameChanged(name, QPrivateSignal());
+    }
+}
+
+bool QMdmmAgent::ready() const
+{
+    return d->ready;
+}
+
+void QMdmmAgent::setReady(bool ready)
+{
+    if (ready != d->ready) {
+        d->ready = ready;
+        emit readyChanged(ready, QPrivateSignal());
+    }
 }
 
 void QMdmmAgent::streamReadyRead()
 {
+    QMdmmPacket p("");
 }
