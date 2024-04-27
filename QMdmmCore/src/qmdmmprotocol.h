@@ -36,6 +36,7 @@ enum NotifyId
     NoitfyDisconnected, // string playerName
 
     NotifyFromLogicMask = 0x2000,
+    NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]

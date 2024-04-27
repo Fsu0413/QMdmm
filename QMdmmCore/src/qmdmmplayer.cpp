@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmplayer.h"
+#include "qmdmmroom.h"
 
 struct QMdmmPlayerPrivate
 {
@@ -28,8 +29,8 @@ struct QMdmmPlayerPrivate
     int upgradePoint;
 };
 
-QMdmmPlayer::QMdmmPlayer(const QString &name, QObject *parent)
-    : QObject(parent)
+QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
+    : QObject(room)
     , d(new QMdmmPlayerPrivate)
 {
     setObjectName(name);
@@ -38,6 +39,18 @@ QMdmmPlayer::QMdmmPlayer(const QString &name, QObject *parent)
 QMdmmPlayer::~QMdmmPlayer()
 {
     delete d;
+}
+
+QMdmmRoom *QMdmmPlayer::room()
+{
+    // We don't need extra cost for qobject_cast here, since every Player is created with Room as parent.
+    return static_cast<QMdmmRoom *>(parent());
+}
+
+const QMdmmRoom *QMdmmPlayer::room() const
+{
+    // same as above
+    return static_cast<const QMdmmRoom *>(parent());
 }
 
 bool QMdmmPlayer::hasKnife() const

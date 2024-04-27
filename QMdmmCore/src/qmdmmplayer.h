@@ -6,6 +6,8 @@
 #include "qmdmmcoreglobal.h"
 #include <QObject>
 
+class QMdmmRoom;
+
 struct QMdmmPlayerPrivate;
 
 class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
@@ -21,10 +23,12 @@ class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
     Q_PROPERTY(int upgradePoint READ upgradePoint WRITE setUpgradePoint NOTIFY upgradePointChanged DESIGNABLE false)
 
 public:
-    explicit QMdmmPlayer(const QString &name, QObject *parent = nullptr);
+    explicit QMdmmPlayer(const QString &name, QMdmmRoom *room /* or parent */);
     ~QMdmmPlayer() override;
 
     // property setters/getters
+    [[nodiscard]] QMdmmRoom *room();
+    [[nodiscard]] const QMdmmRoom *room() const;
 
     // current property
     [[nodiscard]] bool hasKnife() const;
@@ -95,7 +99,7 @@ signals:
 
 private:
     QMdmmPlayerPrivate *const d;
-    Q_DISABLE_COPY(QMdmmPlayer)
+    Q_DISABLE_COPY_MOVE(QMdmmPlayer)
 };
 
 #endif // QMDMMPLAYER_H

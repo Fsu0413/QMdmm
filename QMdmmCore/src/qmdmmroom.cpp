@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmroom.h"
+#include "qmdmmlogic.h"
 #include "qmdmmplayer.h"
 
 #include <QMap>
@@ -8,20 +9,30 @@
 
 struct QMdmmRoomPrivate
 {
-    QMdmmRoomPrivate() = default;
+    QMdmmLogic *logic = nullptr;
     QMap<QString, QMdmmPlayer *> players;
 };
 
-QMdmmRoom::QMdmmRoom(QObject *parent)
+QMdmmRoom::QMdmmRoom(QMdmmLogic *logic, QObject *parent)
     : QObject(parent)
     , d(new QMdmmRoomPrivate)
 {
+    d->logic = logic;
 }
 
 QMdmmRoom::~QMdmmRoom()
 {
-    qDeleteAll(d->players);
     delete d;
+}
+
+QMdmmLogic *QMdmmRoom::logic()
+{
+    return d->logic;
+}
+
+const QMdmmLogic *QMdmmRoom::logic() const
+{
+    return d->logic;
 }
 
 bool QMdmmRoom::addPlayer(const QString &playerName)
@@ -29,7 +40,7 @@ bool QMdmmRoom::addPlayer(const QString &playerName)
     if (d->players.contains(playerName))
         return false;
 
-    d->players.insert(playerName, new QMdmmPlayer(playerName));
+    d->players.insert(playerName, new QMdmmPlayer(playerName, this));
     return true;
 }
 

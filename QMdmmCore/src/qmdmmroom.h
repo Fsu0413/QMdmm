@@ -8,16 +8,21 @@
 #include <QList>
 #include <QObject>
 
-struct QMdmmRoomPrivate;
 class QMdmmPlayer;
+class QMdmmLogic;
+
+struct QMdmmRoomPrivate;
 
 class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QMdmmRoom(QObject *parent = nullptr);
+    explicit QMdmmRoom(QMdmmLogic *logic, QObject *parent = nullptr);
     ~QMdmmRoom() override;
+
+    [[nodiscard]] QMdmmLogic *logic();
+    [[nodiscard]] const QMdmmLogic *logic() const;
 
     bool addPlayer(const QString &playerName);
     bool removePlayer(const QString &playerName);
@@ -33,7 +38,7 @@ public:
 
 private:
     QMdmmRoomPrivate *const d;
-    Q_DISABLE_COPY(QMdmmRoom)
+    Q_DISABLE_COPY_MOVE(QMdmmRoom)
 };
 
 #endif // QMDMMROOM_H
