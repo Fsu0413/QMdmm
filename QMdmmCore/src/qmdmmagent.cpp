@@ -26,11 +26,6 @@ QMdmmAgent::~QMdmmAgent()
     delete d;
 }
 
-void QMdmmAgent::setStream(QIODevice *stream)
-{
-    (void)stream;
-}
-
 QString QMdmmAgent::screenName() const
 {
     return d->screenName;
@@ -57,7 +52,15 @@ void QMdmmAgent::setReady(bool ready)
     }
 }
 
-void QMdmmAgent::streamReadyRead()
+void QMdmmAgent::packetReceived(QMdmmPacket packet)
 {
-    QMdmmPacket p("");
+    (void)packet;
+}
+
+void QMdmmAgent::socketDisconnected()
+{
+}
+
+void QMdmmAgent::socketReconnected()
+{
 }

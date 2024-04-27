@@ -85,6 +85,7 @@ struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJson
 class QMDMMCORE_EXPORT QMdmmPacket final
 {
 public:
+    QMdmmPacket();
     QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value);
     QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
     explicit QMdmmPacket(const QByteArray &serialized);
@@ -100,5 +101,7 @@ public:
 private:
     QSharedDataPointer<QMdmmPacketData> d;
 };
+
+Q_DECLARE_METATYPE(QMdmmPacket)
 
 #endif // QMDMMPROTOCOL_H

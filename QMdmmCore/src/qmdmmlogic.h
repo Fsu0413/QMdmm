@@ -29,13 +29,6 @@ public:
     bool registerAgent(QMdmmAgent *agent);
     bool deregisterAgent(QMdmmAgent *agent);
 
-    // bool incomingMessage(int todo, ...);
-    // bool outgoingMessage(int todo, ...);
-
-    // // Functions to be called in Logic thread, or "callback" function to QMdmmLogic
-    // // maybe private then friend?
-    // bool outgoingMessageFromLogic(int todo, ...);
-
     void run() override;
 };
 

@@ -11,16 +11,14 @@ struct QMdmmPlayerPrivate;
 class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool hasKnife READ hasKnife NOTIFY hasKnifeChanged DESIGNABLE false)
-    Q_PROPERTY(bool hasHorse READ hasHorse NOTIFY hasHorseChanged DESIGNABLE false)
-    Q_PROPERTY(int hp READ hp NOTIFY hpChanged DESIGNABLE false)
-    Q_PROPERTY(QMdmmData::Place place READ place NOTIFY placeChanged DESIGNABLE false)
-    Q_PROPERTY(int knifeDamage READ knifeDamage NOTIFY knifeDamageChanged DESIGNABLE false)
-    Q_PROPERTY(int horseDamage READ horseDamage NOTIFY horseDamageChanged DESIGNABLE false)
-    Q_PROPERTY(int maxHp READ maxHp NOTIFY maxHpChanged DESIGNABLE false)
-    Q_PROPERTY(bool dead READ dead STORED false NOTIFY deadChanged DESIGNABLE false)
-    Q_PROPERTY(bool alive READ alive STORED false NOTIFY aliveChanged DESIGNABLE false)
-    Q_PROPERTY(int upgradePoint READ upgradePoint NOTIFY upgradePointChanged DESIGNABLE false)
+    Q_PROPERTY(bool hasKnife READ hasKnife WRITE setHasKnife NOTIFY hasKnifeChanged DESIGNABLE false)
+    Q_PROPERTY(bool hasHorse READ hasHorse WRITE setHasHorse NOTIFY hasHorseChanged DESIGNABLE false)
+    Q_PROPERTY(int hp READ hp WRITE setHp NOTIFY hpChanged DESIGNABLE false)
+    Q_PROPERTY(QMdmmData::Place place READ place WRITE setPlace NOTIFY placeChanged DESIGNABLE false)
+    Q_PROPERTY(int knifeDamage READ knifeDamage WRITE setKnifeDamage NOTIFY knifeDamageChanged DESIGNABLE false)
+    Q_PROPERTY(int horseDamage READ horseDamage WRITE setHorseDamage NOTIFY horseDamageChanged DESIGNABLE false)
+    Q_PROPERTY(int maxHp READ maxHp WRITE setMaxHp NOTIFY maxHpChanged DESIGNABLE false)
+    Q_PROPERTY(int upgradePoint READ upgradePoint WRITE setUpgradePoint NOTIFY upgradePointChanged DESIGNABLE false)
 
 public:
     explicit QMdmmPlayer(const QString &name, QObject *parent = nullptr);
@@ -30,19 +28,27 @@ public:
 
     // current property
     [[nodiscard]] bool hasKnife() const;
+    void setHasKnife(bool k);
     [[nodiscard]] bool hasHorse() const;
+    void setHasHorse(bool h);
     [[nodiscard]] int hp() const;
+    void setHp(int h, bool *kills = nullptr);
     [[nodiscard]] QMdmmData::Place place() const;
+    void setPlace(QMdmmData::Place toPlace);
 
     // upgradeable property
     [[nodiscard]] int knifeDamage() const;
+    void setKnifeDamage(int k);
     [[nodiscard]] int horseDamage() const;
+    void setHorseDamage(int h);
     [[nodiscard]] int maxHp() const;
+    void setMaxHp(int m);
+    [[nodiscard]] int upgradePoint() const;
+    void setUpgradePoint(int u);
 
     // calculated property
     [[nodiscard]] bool dead() const;
     [[nodiscard]] bool alive() const;
-    [[nodiscard]] int upgradePoint() const;
 
     // action checks
     [[nodiscard]] bool canBuyKnife() const;
@@ -67,7 +73,6 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     // action runs
     void damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason);
-    void placeChange(QMdmmData::Place toPlace);
 
     // upgrades
     bool upgradeKnife();
@@ -84,9 +89,9 @@ signals:
     void knifeDamageChanged(int, QPrivateSignal);
     void horseDamageChanged(int, QPrivateSignal);
     void maxHpChanged(int, QPrivateSignal);
-    void deadChanged(bool, QPrivateSignal);
-    void aliveChanged(bool, QPrivateSignal);
     void upgradePointChanged(int, QPrivateSignal);
+
+    void die(QPrivateSignal);
 
 private:
     QMdmmPlayerPrivate *const d;

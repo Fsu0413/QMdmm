@@ -4,9 +4,9 @@
 #define QMDMMAGENT_H
 
 #include "qmdmmcoreglobal.h"
+#include "qmdmmprotocol.h"
 #include <QObject>
 
-class QIODevice;
 struct QMdmmAgentPrivate;
 
 class QMDMMCORE_EXPORT QMdmmAgent : public QObject
@@ -19,9 +19,6 @@ public:
     explicit QMdmmAgent(QString name, QObject *parent = nullptr);
     ~QMdmmAgent() override;
 
-    // protocol
-    void setStream(QIODevice *stream);
-
     // properties
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &name);
@@ -30,11 +27,16 @@ public:
     void setReady(bool ready);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void streamReadyRead();
+    void packetReceived(QMdmmPacket packet);
+
+    void socketDisconnected();
+    void socketReconnected();
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
     void readyChanged(bool, QPrivateSignal);
+
+    void sendPacket(QMdmmPacket packet);
 
 private:
     QMdmmAgentPrivate *const d;

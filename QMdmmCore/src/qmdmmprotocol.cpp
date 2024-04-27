@@ -33,6 +33,11 @@ QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob)
     return *this;
 }
 
+QMdmmPacket::QMdmmPacket()
+    : d(new QMdmmPacketData)
+{
+}
+
 QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value)
     : d(new QMdmmPacketData(type, requestId, QMdmmProtocol::NotifyInvalid, value))
 {
