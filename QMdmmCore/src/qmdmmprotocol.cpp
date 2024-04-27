@@ -4,51 +4,47 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QSharedData>
 
-struct QMdmmPacketPrivate
+QMdmmPacketData::QMdmmPacketData()
 {
-    QMdmmPacketPrivate()
-        : type(QMdmmPacket::TypeInvalid)
-        , requestId(QMdmmProtocol::RequestInvalid)
-        , notifyId(QMdmmProtocol::NotifyInvalid)
-    {
-    }
+    value(QStringLiteral("type")) = static_cast<int>(QMdmmProtocol::TypeInvalid);
+    value(QStringLiteral("requestId")) = static_cast<int>(QMdmmProtocol::RequestInvalid);
+    value(QStringLiteral("notifyId")) = static_cast<int>(QMdmmProtocol::NotifyInvalid);
+    value(QStringLiteral("value")) = QJsonValue();
+}
 
-    QMdmmPacket::Type type;
-    QJsonValue v;
-    QMdmmProtocol::QMdmmRequestId requestId;
-    QMdmmProtocol::QMdmmNotifyId notifyId;
-
-    QString error;
-};
-
-QMdmmPacket::QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value)
-    : d(new QMdmmPacketPrivate)
+QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &v)
 {
-    d->type = type;
-    d->v = value;
-    d->requestId = requestId;
+    value(QStringLiteral("type")) = static_cast<int>(type);
+    value(QStringLiteral("requestId")) = static_cast<int>(requestId);
+    value(QStringLiteral("notifyId")) = static_cast<int>(notifyId);
+    value(QStringLiteral("value")) = v;
+}
+
+QMdmmPacketData::QMdmmPacketData(const QJsonObject &ob)
+    : QJsonObject(ob)
+{
+}
+
+QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob)
+{
+    QJsonObject::operator=(ob);
+    return *this;
+}
+
+QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value)
+    : d(new QMdmmPacketData(type, requestId, QMdmmProtocol::NotifyInvalid, value))
+{
 }
 
 QMdmmPacket::QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value)
-    : d(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketData(QMdmmProtocol::TypeNotify, QMdmmProtocol::RequestInvalid, notifyId, value))
 {
-    d->type = QMdmmPacket::TypeNotify;
-    d->v = value;
-    d->notifyId = notifyId;
-}
-
-QMdmmPacket::QMdmmPacket(const QMdmmPacket &package)
-    : d(new QMdmmPacketPrivate)
-{
-    d->type = package.d->type;
-    d->v = package.d->v;
-    d->requestId = package.d->requestId;
-    d->notifyId = package.d->notifyId;
 }
 
 QMdmmPacket::QMdmmPacket(const QByteArray &serialized)
-    : d(new QMdmmPacketPrivate)
+    : d(new QMdmmPacketData)
 {
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(serialized, &err);
@@ -63,53 +59,32 @@ QMdmmPacket::QMdmmPacket(const QByteArray &serialized)
         return;
     }
 
-    QJsonObject ob = doc.object();
-
-    d->type = static_cast<Type>(ob.value(QStringLiteral("type")).toInt());
-    d->requestId = static_cast<QMdmmProtocol::QMdmmRequestId>(ob.value(QStringLiteral("requestId")).toInt());
-    d->notifyId = static_cast<QMdmmProtocol::QMdmmNotifyId>(ob.value(QStringLiteral("notifyId")).toInt());
-    d->v = ob.value(QStringLiteral("value"));
+    *d = doc.object();
 }
 
-QMdmmPacket &QMdmmPacket::operator=(const QMdmmPacket &package)
+QMdmmProtocol::PacketType QMdmmPacket::type() const
 {
-    d->type = package.d->type;
-    d->v = package.d->v;
-    d->requestId = package.d->requestId;
-    d->notifyId = package.d->notifyId;
-
-    return *this;
-}
-
-QMdmmPacket::Type QMdmmPacket::type() const
-{
-    return d->type;
+    return static_cast<QMdmmProtocol::PacketType>(d->value(QStringLiteral("type")).toInt(QMdmmProtocol::TypeInvalid));
 }
 
 QMdmmProtocol::QMdmmRequestId QMdmmPacket::requestId() const
 {
-    return d->requestId;
+    return static_cast<QMdmmProtocol::QMdmmRequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
 }
 
 QMdmmProtocol::QMdmmNotifyId QMdmmPacket::notifyId() const
 {
-    return d->notifyId;
+    return static_cast<QMdmmProtocol::QMdmmNotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
 }
 
 QJsonValue QMdmmPacket::value() const
 {
-    return d->v;
+    return d->value(QStringLiteral("value"));
 }
 
 QByteArray QMdmmPacket::serialize() const
 {
-    QJsonObject ob;
-    ob.insert(QStringLiteral("type"), static_cast<int>(d->type));
-    ob.insert(QStringLiteral("requestId"), static_cast<int>(d->requestId));
-    ob.insert(QStringLiteral("notifyId"), static_cast<int>(d->notifyId));
-    ob.insert(QStringLiteral("value"), d->v);
-
-    QJsonDocument doc(ob);
+    QJsonDocument doc(*d);
     return doc.toJson(QJsonDocument::Compact);
 }
 

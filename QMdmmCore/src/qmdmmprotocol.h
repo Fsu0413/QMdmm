@@ -5,6 +5,9 @@
 
 #include "qmdmmcoreglobal.h"
 
+#include <QJsonObject>
+#include <QSharedData>
+
 #if 0
 class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
@@ -54,31 +57,39 @@ enum QMdmmNotifyId
     NotifySpeak, // string contents
     NotifyOperating, // TODO: for ob
 };
+
+enum PacketType
+{
+    TypeRequest,
+    TypeReply,
+    TypeNotify,
+
+    TypeInvalid = -1
+};
 } // namespace QMdmmProtocol
 
-struct QMdmmPacketPrivate;
-class QJsonValue;
+// Failed to pimpl following class since it inherits QSharedData
+// So put it to header file and inherit QJsonObject, in order not to affect binary compatibility when more data come in
+// ATTENTION: neither of the inherited 2 classes have virtual dtor
+struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJsonObject
+{
+    QMdmmPacketData();
+    QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value);
 
-class QMDMMCORE_EXPORT QMdmmPacket
+    QMdmmPacketData(const QJsonObject &ob);
+    QMdmmPacketData &operator=(const QJsonObject &ob);
+
+    QString error;
+};
+
+class QMDMMCORE_EXPORT QMdmmPacket final
 {
 public:
-    enum Type
-    {
-        TypeRequest,
-        TypeReply,
-        TypeNotify,
-
-        TypeInvalid = -1
-    };
-
-    QMdmmPacket(Type type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value);
+    QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value);
     QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value);
-    QMdmmPacket(const QMdmmPacket &package);
     explicit QMdmmPacket(const QByteArray &serialized);
 
-    QMdmmPacket &operator=(const QMdmmPacket &package);
-
-    [[nodiscard]] Type type() const;
+    [[nodiscard]] QMdmmProtocol::PacketType type() const;
     [[nodiscard]] QMdmmProtocol::QMdmmRequestId requestId() const;
     [[nodiscard]] QMdmmProtocol::QMdmmNotifyId notifyId() const;
     [[nodiscard]] QJsonValue value() const;
@@ -87,7 +98,7 @@ public:
     bool hasError(QString *errorString = nullptr) const;
 
 private:
-    QMdmmPacketPrivate *const d;
+    QSharedDataPointer<QMdmmPacketData> d;
 };
 
 #endif // QMDMMPROTOCOL_H
