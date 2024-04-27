@@ -14,7 +14,7 @@ QMdmmPacketData::QMdmmPacketData()
     value(QStringLiteral("value")) = QJsonValue();
 }
 
-QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &v)
+QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &v)
 {
     value(QStringLiteral("type")) = static_cast<int>(type);
     value(QStringLiteral("requestId")) = static_cast<int>(requestId);
@@ -33,12 +33,12 @@ QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob)
     return *this;
 }
 
-QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value)
+QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value)
     : d(new QMdmmPacketData(type, requestId, QMdmmProtocol::NotifyInvalid, value))
 {
 }
 
-QMdmmPacket::QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value)
+QMdmmPacket::QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value)
     : d(new QMdmmPacketData(QMdmmProtocol::TypeNotify, QMdmmProtocol::RequestInvalid, notifyId, value))
 {
 }
@@ -67,14 +67,14 @@ QMdmmProtocol::PacketType QMdmmPacket::type() const
     return static_cast<QMdmmProtocol::PacketType>(d->value(QStringLiteral("type")).toInt(QMdmmProtocol::TypeInvalid));
 }
 
-QMdmmProtocol::QMdmmRequestId QMdmmPacket::requestId() const
+QMdmmProtocol::RequestId QMdmmPacket::requestId() const
 {
-    return static_cast<QMdmmProtocol::QMdmmRequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
+    return static_cast<QMdmmProtocol::RequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
 }
 
-QMdmmProtocol::QMdmmNotifyId QMdmmPacket::notifyId() const
+QMdmmProtocol::NotifyId QMdmmPacket::notifyId() const
 {
-    return static_cast<QMdmmProtocol::QMdmmNotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
+    return static_cast<QMdmmProtocol::NotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
 }
 
 QJsonValue QMdmmPacket::value() const

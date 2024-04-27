@@ -13,7 +13,7 @@ class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
 
 namespace QMdmmProtocol {
-enum QMdmmRequestId
+enum RequestId
 {
     // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
@@ -24,7 +24,7 @@ enum QMdmmRequestId
     RequestUpdate, // request: int remaningTimes, reply: int item
 };
 
-enum QMdmmNotifyId
+enum NotifyId
 {
     NotifyInvalid = 0,
 
@@ -74,7 +74,7 @@ enum PacketType
 struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJsonObject
 {
     QMdmmPacketData();
-    QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value);
+    QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
 
     QMdmmPacketData(const QJsonObject &ob);
     QMdmmPacketData &operator=(const QJsonObject &ob);
@@ -85,13 +85,13 @@ struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJson
 class QMDMMCORE_EXPORT QMdmmPacket final
 {
 public:
-    QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::QMdmmRequestId requestId, const QJsonValue &value);
-    QMdmmPacket(QMdmmProtocol::QMdmmNotifyId notifyId, const QJsonValue &value);
+    QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value);
+    QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
     explicit QMdmmPacket(const QByteArray &serialized);
 
     [[nodiscard]] QMdmmProtocol::PacketType type() const;
-    [[nodiscard]] QMdmmProtocol::QMdmmRequestId requestId() const;
-    [[nodiscard]] QMdmmProtocol::QMdmmNotifyId notifyId() const;
+    [[nodiscard]] QMdmmProtocol::RequestId requestId() const;
+    [[nodiscard]] QMdmmProtocol::NotifyId notifyId() const;
     [[nodiscard]] QJsonValue value() const;
 
     [[nodiscard]] QByteArray serialize() const;
