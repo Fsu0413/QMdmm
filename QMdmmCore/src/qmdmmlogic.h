@@ -4,7 +4,7 @@
 #define QMDMMLOGIC_H
 
 #include "qmdmmcoreglobal.h"
-#include <QThread>
+#include <QObject>
 
 class QMdmmAgent;
 
@@ -54,26 +54,6 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
 private:
     QMdmmLogicPrivate *const d;
-};
-
-struct QMdmmLogicRunnerPrivate;
-
-class QMDMMCORE_EXPORT QMdmmLogicRunner final : public QThread
-{
-    Q_OBJECT
-
-public:
-    // Constuctor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
-    // pay attention
-    QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
-    ~QMdmmLogicRunner() override;
-
-    // Functions to be called in Server thread
-    bool registerAgent(QMdmmAgent *agent);
-    bool deregisterAgent(QMdmmAgent *agent);
-
-private:
-    QMdmmLogicRunnerPrivate *const d;
 };
 
 #endif

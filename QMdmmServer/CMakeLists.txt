@@ -3,10 +3,14 @@
 set(QMDMMSERVER_HEADERS
     src/qmdmmserverglobal.h
     src/qmdmmserver.h
+    src/qmdmmagent.h
+    src/qmdmmlogicrunner.h
 )
 
 set(QMDMMSERVER_SOURCES
     src/qmdmmserver.cpp
+    src/qmdmmagent.cpp
+    src/qmdmmlogicrunner.cpp
 )
 
 add_custom_target(QMdmmServer)

@@ -7,9 +7,7 @@ set(QMDMMCORE_HEADERS
 
     src/qmdmmroom.h
     src/qmdmmplayer.h
-
     src/qmdmmlogic.h
-    src/qmdmmagent.h
     src/qmdmmstonescissorscloth.h
 )
 
@@ -19,9 +17,7 @@ set(QMDMMCORE_SOURCES
 
     src/qmdmmroom.cpp
     src/qmdmmplayer.cpp
-
     src/qmdmmlogic.cpp
-    src/qmdmmagent.cpp
     src/qmdmmstonescissorscloth.cpp
 )
 

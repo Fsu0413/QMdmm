@@ -3,13 +3,14 @@
 #ifndef QMDMMAGENT_H
 #define QMDMMAGENT_H
 
-#include "qmdmmcoreglobal.h"
-#include "qmdmmprotocol.h"
+#include "qmdmmserverglobal.h"
+
+#include <QMdmmCore/QMdmmProtocol>
 #include <QObject>
 
 struct QMdmmAgentPrivate;
 
-class QMDMMCORE_EXPORT QMdmmAgent : public QObject
+class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)

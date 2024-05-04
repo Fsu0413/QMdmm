@@ -1,5 +1,6 @@
 #include "qmdmmagent.h"
-#include "qmdmmprotocol.h"
+
+#include <QMdmmCore/QMdmmProtocol>
 
 #include <QIODevice>
 

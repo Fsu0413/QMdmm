@@ -1,11 +1,13 @@
 #include "qmdmmserver.h"
 
-#include <QMdmmCore/QMdmmAgent>
-#include <QMdmmCore/QMdmmLogic>
+#include "qmdmmagent.h"
+#include "qmdmmlogicrunner.h"
 
 #include <QHash>
 #include <QTcpServer>
 #include <QTcpSocket>
+
+class QMdmmLogicRunner;
 
 class QMdmmServerPrivate : public QObject
 {
