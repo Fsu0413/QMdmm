@@ -40,7 +40,9 @@ if (Qt6_FOUND)
     )
 
     target_compile_definitions(QMdmmCore6
-        PUBLIC QT_NO_CAST_FROM_ASCII
+        PUBLIC "QT_NO_CAST_FROM_ASCII"
+               "QT_DISABLE_DEPRECATED_BEFORE=0x70000"
+               "QMDMM_VERSION=\"${QMdmm_VERSION}\""
     )
 
     if (BUILD_SHARED_LIBS)
@@ -81,7 +83,9 @@ if (Qt5_FOUND)
     )
 
     target_compile_definitions(QMdmmCore5
-        PUBLIC QT_NO_CAST_FROM_ASCII
+        PUBLIC "QT_NO_CAST_FROM_ASCII"
+               "QT_DISABLE_DEPRECATED_BEFORE=0x70000"
+               "QMDMM_VERSION=\"${QMdmm_VERSION}\""
     )
 
     if (BUILD_SHARED_LIBS)

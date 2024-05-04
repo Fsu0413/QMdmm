@@ -90,7 +90,7 @@ QJsonValue QMdmmPacket::value() const
 QByteArray QMdmmPacket::serialize() const
 {
     QJsonDocument doc(*d);
-    return doc.toJson(QJsonDocument::Compact);
+    return doc.toJson(QJsonDocument::Compact).append('\n');
 }
 
 bool QMdmmPacket::hasError(QString *errorString) const

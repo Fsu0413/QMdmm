@@ -44,6 +44,7 @@ if (Qt6_FOUND)
 
     target_link_libraries(QMdmmServer6
         PUBLIC QMdmmCore6
+               Qt6::Network
     )
 
     install(TARGETS QMdmmServer6
@@ -85,6 +86,7 @@ if (Qt5_FOUND)
 
     target_link_libraries(QMdmmServer5
         PUBLIC QMdmmCore5
+               Qt5::Network
     )
 
     install(TARGETS QMdmmServer5

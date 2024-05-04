@@ -12,3 +12,8 @@ bool QMdmmData::isPlaceAdjecent(Place p1, Place p2)
 
     return true;
 }
+
+QVersionNumber QMdmmGlobal::version()
+{
+    return QVersionNumber::fromString(QStringLiteral(QMDMM_VERSION));
+}

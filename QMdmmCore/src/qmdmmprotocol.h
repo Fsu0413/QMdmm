@@ -5,6 +5,7 @@
 
 #include "qmdmmcoreglobal.h"
 
+#include <QByteArray>
 #include <QJsonObject>
 #include <QSharedData>
 
@@ -100,6 +101,11 @@ public:
 
     [[nodiscard]] QByteArray serialize() const;
     bool hasError(QString *errorString = nullptr) const;
+
+    [[nodiscard]] inline operator QByteArray() const
+    {
+        return serialize();
+    }
 
 private:
     QSharedDataPointer<QMdmmPacketData> d;

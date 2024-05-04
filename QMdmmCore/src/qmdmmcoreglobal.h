@@ -3,9 +3,9 @@
 #ifndef QMDMMCOREGLOBAL_H
 #define QMDMMCOREGLOBAL_H
 
-#include <QtGlobal>
-
 #include <QMetaType>
+#include <QVersionNumber>
+#include <QtGlobal>
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmCoreGlobal
@@ -54,5 +54,9 @@ QMDMMCORE_EXPORT bool isPlaceAdjecent(Place p1, Place p2);
 Q_DECLARE_METATYPE(QMdmmData::Place)
 Q_DECLARE_METATYPE(QMdmmData::DamageReason)
 Q_DECLARE_METATYPE(QMdmmData::StoneScissorsCloth)
+
+namespace QMdmmGlobal {
+QMDMMCORE_EXPORT QVersionNumber version();
+}
 
 #endif // QMDMMLOGIC_GLOBAL_H
