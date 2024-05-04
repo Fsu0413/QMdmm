@@ -6,6 +6,7 @@
 
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QPointer>
 
 QJsonValue QMdmmLogicConfiguration::serialize() const
 {
@@ -63,6 +64,26 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     return true;
 }
 
+struct QMdmmLogicPrivate
+{
+    QMdmmLogicConfiguration conf;
+};
+
+QMdmmLogic::QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration)
+    : d(new QMdmmLogicPrivate {logicConfiguration})
+{
+}
+
+QMdmmLogic::~QMdmmLogic()
+{
+    delete d;
+}
+
+const QMdmmLogicConfiguration &QMdmmLogic::configuration() const
+{
+    return d->conf;
+}
+
 void QMdmmLogic::run()
 {
     QMdmmRoom *room = new QMdmmRoom(this);
@@ -76,12 +97,25 @@ void QMdmmLogic::run()
     delete room;
 }
 
-QMdmmLogicRunner::QMdmmLogicRunner(QObject *parent)
-    : QThread(parent)
+struct QMdmmLogicRunnerPrivate
 {
+    QPointer<QMdmmLogic> logic;
+};
+
+QMdmmLogicRunner::QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
+    : QThread(parent)
+    , d(new QMdmmLogicRunnerPrivate)
+{
+    d->logic = new QMdmmLogic(logicConfiguration);
+    d->logic->moveToThread(this);
+    connect(this, &QMdmmLogicRunner::started, d->logic, &QMdmmLogic::run);
+    connect(this, &QMdmmLogicRunner::finished, d->logic, &QMdmmLogic::deleteLater);
 }
 
-QMdmmLogicRunner::~QMdmmLogicRunner() = default;
+QMdmmLogicRunner::~QMdmmLogicRunner()
+{
+    delete d;
+}
 
 bool QMdmmLogicRunner::registerAgent(QMdmmAgent *agent)
 {
@@ -104,9 +138,3 @@ bool QMdmmLogicRunner::deregisterAgent(QMdmmAgent *agent)
 // bool QMdmmLogicRunner::outgoingMessageFromLogic(int todo)
 // {
 // }
-
-void QMdmmLogicRunner::run()
-{
-    QMdmmLogic logic;
-    logic.run();
-}

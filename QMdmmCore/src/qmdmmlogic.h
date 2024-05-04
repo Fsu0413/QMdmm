@@ -37,13 +37,26 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
     bool deserialize(const QJsonValue &value);
 };
 
-// This will be implemented using custom event queue.
-// Qt signal-slot does not apply in this class.
-class QMDMMCORE_EXPORT QMdmmLogic
+struct QMdmmLogicPrivate;
+
+class QMDMMCORE_EXPORT QMdmmLogic : public QObject
 {
+    Q_OBJECT
+
 public:
+    QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration);
+    ~QMdmmLogic() override;
+
+    [[nodiscard]] const QMdmmLogicConfiguration &configuration() const;
+
+public slots: // NOLINT(readability-redundant-access-specifiers)
     void run();
+
+private:
+    QMdmmLogicPrivate *const d;
 };
+
+struct QMdmmLogicRunnerPrivate;
 
 class QMDMMCORE_EXPORT QMdmmLogicRunner final : public QThread
 {
@@ -52,16 +65,15 @@ class QMDMMCORE_EXPORT QMdmmLogicRunner final : public QThread
 public:
     // Constuctor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
     // pay attention
-    QMdmmLogicRunner(QObject *parent = nullptr);
+    QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogicRunner() override;
 
     // Functions to be called in Server thread
     bool registerAgent(QMdmmAgent *agent);
     bool deregisterAgent(QMdmmAgent *agent);
 
-    // void start() (not overrided);
-
-    void run() override;
+private:
+    QMdmmLogicRunnerPrivate *const d;
 };
 
 #endif

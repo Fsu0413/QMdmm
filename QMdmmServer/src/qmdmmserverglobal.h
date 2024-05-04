@@ -4,25 +4,16 @@
 #define QMDMMSERVERGLOBAL_H
 
 #include <QMdmmCore/QMdmmCoreGlobal>
-#include <cstddef>
 
 #if 0
 class QMDMMSERVER_EXPORT QMdmmServerGlobal
 #endif
 
 #ifndef QMDMM_STATIC
-#ifdef _WIN32
 #ifdef QMDMMSERVER_LIBRARY
-#define QMDMMSERVER_EXPORT __declspec(dllexport)
+#define QMDMMSERVER_EXPORT Q_DECL_EXPORT
 #else
-#define QMDMMSERVER_EXPORT __declspec(dllimport)
-#endif
-#else
-#ifdef QMDMMSERVER_LIBRARY
-#define QMDMMSERVER_EXPORT __attribute__((visibility("default")))
-#else
-#define QMDMMSERVER_EXPORT
-#endif
+#define QMDMMSERVER_EXPORT Q_DECL_IMPORT
 #endif
 #else
 #define QMDMMSERVER_EXPORT
