@@ -18,7 +18,7 @@ class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
     Q_OBJECT
 
 public:
-    explicit QMdmmRoom(QMdmmLogic *logic, QObject *parent = nullptr);
+    explicit QMdmmRoom(QMdmmLogic *logic);
     ~QMdmmRoom() override;
 
     [[nodiscard]] QMdmmLogic *logic();

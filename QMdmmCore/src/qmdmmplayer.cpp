@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmplayer.h"
+#include "qmdmmlogic.h"
 #include "qmdmmroom.h"
 
 struct QMdmmPlayerPrivate
 {
-    QMdmmPlayerPrivate()
+    QMdmmPlayerPrivate(QMdmmRoom *room)
         : knife(false)
         , horse(false)
-        , hp(10)
+        , hp(room->logic()->configuration().initialMaxHp)
         , place(QMdmmData::Country)
-        , knifeDamage(1)
-        , horseDamage(2)
-        , maxHp(10)
+        , knifeDamage(room->logic()->configuration().initialKnifeDamage)
+        , horseDamage(room->logic()->configuration().initialHorseDamage)
+        , maxHp(room->logic()->configuration().initialMaxHp)
         , upgradePoint(0)
     {
     }
@@ -31,7 +32,7 @@ struct QMdmmPlayerPrivate
 
 QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
     : QObject(room)
-    , d(new QMdmmPlayerPrivate)
+    , d(new QMdmmPlayerPrivate(room))
 {
     setObjectName(name);
 }
@@ -173,8 +174,8 @@ void QMdmmPlayer::setUpgradePoint(int u)
 
 bool QMdmmPlayer::dead() const
 {
-    // TODO: setting - 0 HP alive / dead
-    return d->hp <= 0;
+    bool zeroHpAsDead = room()->logic()->configuration().zeroHpAsDead;
+    return zeroHpAsDead ? (d->hp <= 0) : (d->hp < 0);
 }
 
 bool QMdmmPlayer::alive() const
@@ -270,10 +271,29 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
 
     to->damage(this, knifeDamage(), QMdmmData::Slash);
 
-    // life punishment: damage point is maxHp / 2, with reminders ignored
-    // TODO: configure item for amount / switch of punish HP
-    if (place() != QMdmmData::Country)
-        damage(to, maxHp() / 2, QMdmmData::PunishHp);
+    if (place() != QMdmmData::Country) {
+        int punishHpModifier = room()->logic()->configuration().punishHpModifier;
+        QMdmmLogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logic()->configuration().punishHpRoundStrategy;
+
+        int punishedHp;
+        switch (punishHpRoundStrategy) {
+        default:
+        case QMdmmLogicConfiguration::RoundDown:
+            punishedHp = maxHp() / punishHpModifier;
+            break;
+        case QMdmmLogicConfiguration::RoundToNearest:
+            punishedHp = ((maxHp() * 2) / punishHpModifier + 1) / 2;
+            break;
+        case QMdmmLogicConfiguration::RoundUp:
+            punishedHp = (maxHp() + punishHpModifier - 1) / punishHpModifier;
+            break;
+        case QMdmmLogicConfiguration::PlusOne:
+            punishedHp = maxHp() / punishHpModifier + 1;
+            break;
+        }
+
+        damage(to, punishedHp, QMdmmData::PunishHp);
+    }
 
     return true;
 }
@@ -328,10 +348,9 @@ void QMdmmPlayer::damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageRe
         from->setUpgradePoint(from->upgradePoint() + 1);
 }
 
-// TODO: configure item for maximum value of upgrade
 bool QMdmmPlayer::upgradeKnife()
 {
-    if (knifeDamage() >= 5)
+    if (knifeDamage() >= room()->logic()->configuration().maximumKnifeDamage)
         return false;
 
     setKnifeDamage(knifeDamage() + 1);
@@ -340,7 +359,7 @@ bool QMdmmPlayer::upgradeKnife()
 
 bool QMdmmPlayer::upgradeHorse()
 {
-    if (horseDamage() >= 10)
+    if (horseDamage() >= room()->logic()->configuration().maximumHorseDamage)
         return false;
 
     setHorseDamage(horseDamage() + 1);
@@ -349,7 +368,7 @@ bool QMdmmPlayer::upgradeHorse()
 
 bool QMdmmPlayer::upgradeMaxHp()
 {
-    if (maxHp() >= 20)
+    if (maxHp() >= room()->logic()->configuration().maximumMaxHp)
         return false;
 
     setMaxHp(maxHp() + 1);

@@ -10,7 +10,7 @@ class QMdmmAgent;
 
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 {
-    int playerNumPerRoom = 1;
+    int playerNumPerRoom = 3;
 
     int initialKnifeDamage = 1;
     int maximumKnifeDamage = 5;

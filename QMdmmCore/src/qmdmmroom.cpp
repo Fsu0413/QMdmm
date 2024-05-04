@@ -9,15 +9,13 @@
 
 struct QMdmmRoomPrivate
 {
-    QMdmmLogic *logic = nullptr;
     QMap<QString, QMdmmPlayer *> players;
 };
 
-QMdmmRoom::QMdmmRoom(QMdmmLogic *logic, QObject *parent)
-    : QObject(parent)
+QMdmmRoom::QMdmmRoom(QMdmmLogic *logic)
+    : QObject(logic)
     , d(new QMdmmRoomPrivate)
 {
-    d->logic = logic;
 }
 
 QMdmmRoom::~QMdmmRoom()
@@ -27,12 +25,14 @@ QMdmmRoom::~QMdmmRoom()
 
 QMdmmLogic *QMdmmRoom::logic()
 {
-    return d->logic;
+    // We don't need extra cost for qobject_cast here, since every Room is created with Logic as parent.
+    return static_cast<QMdmmLogic *>(parent());
 }
 
 const QMdmmLogic *QMdmmRoom::logic() const
 {
-    return d->logic;
+    // same as above
+    return static_cast<const QMdmmLogic *>(parent());
 }
 
 bool QMdmmRoom::addPlayer(const QString &playerName)
@@ -59,7 +59,7 @@ bool QMdmmRoom::removePlayer(const QString &playerName)
 
 bool QMdmmRoom::full() const
 {
-    return d->players.size() >= 3;
+    return d->players.size() >= logic()->configuration().playerNumPerRoom;
 }
 
 QMdmmPlayer *QMdmmRoom::player(const QString &playerName) const
