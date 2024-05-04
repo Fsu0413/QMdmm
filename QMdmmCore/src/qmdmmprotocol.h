@@ -34,6 +34,8 @@ enum NotifyId
     NotifyVersion, // string versionNumber
     NotifyConnected, // string playerName, bool isReconnect, (to player)int connectionId
     NoitfyDisconnected, // string playerName
+    NotifyStartReconnectMarshal,
+    NotifyEndReconnectMarshal,
 
     NotifyFromLogicMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
