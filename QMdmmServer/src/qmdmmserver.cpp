@@ -4,29 +4,114 @@
 #include "qmdmmlogicrunner.h"
 
 #include <QHash>
+#include <QPointer>
 #include <QTcpServer>
 #include <QTcpSocket>
 
-class QMdmmLogicRunner;
+class QMdmmSocketPrivate : public QObject
+{
+    Q_OBJECT
+
+public:
+    QMdmmSocketPrivate(QIODevice *socket, QMdmmSocket::Type type, QMdmmSocket *p)
+        : QObject(p)
+        , socket(socket)
+        , p(p)
+        , hasError(false)
+        , type(type)
+    {
+        connect(socket, &QIODevice::aboutToClose, this, &QMdmmSocketPrivate::deleteLater);
+        connect(socket, &QIODevice::readyRead, this, &QMdmmSocketPrivate::messageReceived);
+        connect(p, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
+    }
+
+    QPointer<QIODevice> socket;
+    QMdmmSocket *p;
+
+    bool hasError;
+    QMdmmSocket::Type type;
+
+public slots:
+    void sendPacket(QMdmmPacket packet)
+    {
+        if (socket == nullptr)
+            return;
+
+        socket->write(packet);
+        if (type == QMdmmSocket::TypeQTcpSocket)
+            static_cast<QTcpSocket *>(socket.data())->flush();
+    }
+
+    void messageReceived()
+    {
+        if (socket == nullptr)
+            return;
+
+        while (socket->canReadLine()) {
+            QByteArray arr = socket->readLine();
+            QMdmmPacket packet(arr);
+            QString packetError;
+            bool packetHasError = packet.hasError(&packetError);
+
+            if (packetHasError) {
+                // TODO: make use of this error string
+                (void)packetError;
+
+                // Don't process more package for this connection. It is not guaranteed to be the desired client
+                p->setHasError(true);
+                break;
+            }
+
+            emit p->packetReceived(packet, QMdmmSocket::QPrivateSignal());
+            if (hasError)
+                break;
+        }
+    }
+};
+
+QMdmmSocket::QMdmmSocket(QIODevice *socket, Type type, QObject *parent)
+    : QObject(parent)
+    , d(new QMdmmSocketPrivate(socket, type, this))
+{
+}
+
+QMdmmSocket::~QMdmmSocket()
+{
+    // No need to delete d.
+}
+
+void QMdmmSocket::setHasError(bool hasError)
+{
+    d->hasError = hasError;
+
+    // QIODevice::close() disconnects socket - it is virtual and inherited in QAbstractSocket!
+    if (hasError && d->socket != nullptr)
+        d->socket->close();
+}
+
+bool QMdmmSocket::hasError() const
+{
+    return d->hasError;
+}
 
 class QMdmmServerPrivate : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QIODevice *, const QJsonValue &)> cb;
+    static QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> cb;
 
 public:
     QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *p);
 
     // callbacks
-    bool pongClient(QIODevice *socket, const QJsonValue &packetValue);
-    bool pingServer(QIODevice *socket, const QJsonValue &packetValue);
-    bool signIn(QIODevice *socket, const QJsonValue &packetValue);
-    bool observe(QIODevice *socket, const QJsonValue &packetValue);
+    bool pongClient(QMdmmSocket *, const QJsonValue &);
+    bool pingServer(QMdmmSocket *, const QJsonValue &);
+    bool signIn(QMdmmSocket *socket, const QJsonValue &packetValue);
+    bool observe(QMdmmSocket *, const QJsonValue &);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void serverNewConnection();
-    void socketMessageReceived();
+    void socketPacketReceived(QMdmmPacket packet);
 
 public: // NOLINT(readability-redundant-access-specifiers)
     // variables
@@ -37,7 +122,7 @@ public: // NOLINT(readability-redundant-access-specifiers)
     QMdmmLogicRunner *current;
 };
 
-QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QIODevice *, const QJsonValue &)> QMdmmServerPrivate::cb {
+QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::cb {
     std::make_pair(QMdmmProtocol::NotifyPongClient, &QMdmmServerPrivate::pongClient),
     std::make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
     std::make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signIn),
@@ -61,23 +146,24 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     s->listen(QHostAddress::Any, serverConfiguration.port);
 }
 
-bool QMdmmServerPrivate::pongClient(QIODevice *socket, const QJsonValue &packetValue)
+bool QMdmmServerPrivate::pongClient(QMdmmSocket *, const QJsonValue &)
+{
+    return true;
+}
+
+bool QMdmmServerPrivate::pingServer(QMdmmSocket *, const QJsonValue &)
+{
+    return true;
+}
+
+bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     return false;
 }
 
-bool QMdmmServerPrivate::pingServer(QIODevice *socket, const QJsonValue &packetValue)
+bool QMdmmServerPrivate::observe(QMdmmSocket *, const QJsonValue &)
 {
-    return false;
-}
-
-bool QMdmmServerPrivate::signIn(QIODevice *socket, const QJsonValue &packetValue)
-{
-    return false;
-}
-
-bool QMdmmServerPrivate::observe(QIODevice *socket, const QJsonValue &packetValue)
-{
+    // not implemented by now
     return false;
 }
 
@@ -86,62 +172,32 @@ void QMdmmServerPrivate::serverNewConnection() // NOLINT(readability-make-member
     while (s->hasPendingConnections()) {
         QTcpSocket *socket = s->nextPendingConnection();
         connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
-        connect(socket, &QTcpSocket::readyRead, this, &QMdmmServerPrivate::socketMessageReceived);
+        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, QMdmmSocket::TypeQTcpSocket, this);
+        connect(mdmmSocket, &QMdmmSocket::packetReceived, this, &QMdmmServerPrivate::socketPacketReceived);
 
         QJsonObject ob;
         ob.insert(QStringLiteral("versionNumber"), QMdmmGlobal::version().toString());
         QMdmmPacket packet(QMdmmProtocol::NotifyVersion, ob);
-        socket->write(packet);
-        socket->flush();
+        emit mdmmSocket->sendPacket(packet);
     }
 }
 
-void QMdmmServerPrivate::socketMessageReceived()
+void QMdmmServerPrivate::socketPacketReceived(QMdmmPacket packet)
 {
-    QIODevice *device = qobject_cast<QIODevice *>(sender());
+    QMdmmSocket *socket = qobject_cast<QMdmmSocket *>(sender());
 
-    if (device == nullptr)
+    if (socket == nullptr)
         return;
 
-    bool errorFlag = false;
-
-    while (device->canReadLine()) {
-        QByteArray arr = device->readLine();
-        QMdmmPacket packet(arr);
-        QString packetError;
-        bool packetHasError = packet.hasError(&packetError);
-
-        if (packetHasError) {
-            // TODO: make use of this error string
-            (void)packetError;
-
-            // Don't process more package for this connection. It is not guaranteed to be the desired client
-            errorFlag = true;
-            break;
+    if (packet.type() == QMdmmProtocol::TypeNotify) {
+        if ((packet.notifyId() | QMdmmProtocol::NotifyToServerMask) != 0) {
+            // These packages should be processed in Server
+            bool (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = cb.value(packet.notifyId());
+            if (call != nullptr)
+                (this->*call)(socket, packet.value());
+            else
+                socket->setHasError(true);
         }
-
-        if (packet.type() == QMdmmProtocol::TypeNotify) {
-            if ((packet.notifyId() | QMdmmProtocol::NotifyToServerMask) != 0) {
-                // These packages should be processed in Server
-                bool (QMdmmServerPrivate::*call)(QIODevice *, const QJsonValue &) = cb.value(packet.notifyId());
-                if (call != nullptr) {
-                    (this->*call)(device, packet.value());
-                } else {
-                    // incompatible client?
-                    errorFlag = true;
-                    break;
-                }
-            } else {
-                // TODO: Notify to Logic
-            }
-        } else {
-            // TODO: request / reply
-        }
-    }
-
-    if (errorFlag) {
-        // QIODevice::close() disconnects socket - it is virtual and inherited in QAbstractSocket!
-        device->close();
     }
 }
 

@@ -58,6 +58,7 @@ if (Qt6_FOUND)
 
     target_link_libraries(QMdmmCore6
         PUBLIC Qt6::Core
+               Qt6::StateMachine
     )
 
     install(TARGETS QMdmmCore6

@@ -20,8 +20,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(AutoGenerateHeader)
 
-find_package(Qt6 COMPONENTS Core Network)
-find_package(Qt5 COMPONENTS Core Network)
+find_package(Qt6 6.1 COMPONENTS Core Network StateMachine)
+find_package(Qt5 5.15 COMPONENTS Core Network)
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))
     message(FATAL_ERROR "at least one of Qt 5 and Qt 6 is needed")

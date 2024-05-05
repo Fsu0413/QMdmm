@@ -5,8 +5,7 @@
 
 #include "qmdmmcoreglobal.h"
 #include <QObject>
-
-class QMdmmAgent;
+#include <QStateMachine>
 
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 {
@@ -39,17 +38,17 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 
 struct QMdmmLogicPrivate;
 
-class QMDMMCORE_EXPORT QMdmmLogic : public QObject
+class QMDMMCORE_EXPORT QMdmmLogic : public QStateMachine
 {
     Q_OBJECT
 
 public:
-    QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration);
+    QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogic() override;
 
     [[nodiscard]] const QMdmmLogicConfiguration &configuration() const;
 
-public slots: // NOLINT(readability-redundant-access-specifiers)
+signals:
     void run();
 
 private:

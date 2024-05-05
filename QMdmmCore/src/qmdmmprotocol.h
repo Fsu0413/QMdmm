@@ -33,18 +33,19 @@ enum NotifyId
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
     NotifyVersion, // string versionNumber
-    NotifyConnected, // string playerName, bool isReconnect, (to player)int connectionId
-    NoitfyDisconnected, // string playerName
     NotifyStartReconnectMarshal,
     NotifyEndReconnectMarshal,
 
     NotifyFromLogicMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
+    NotifyConnected, // string playerName, string screenName, bool isReconnect, (to player)int connectionId
+    NoitfyDisconnected, // string playerName
+    NotifyReady, // string playerName, bool ready
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]
     NotifyOperateOrder, // broadcast, array { string playerName } [totalOperationNum]
-    NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPosition
+    NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPlace, optional string reason
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
     NotifyGameOver, // broadcast, string winnerPlayerName
@@ -54,7 +55,7 @@ enum NotifyId
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
-    NotifySignIn, // string playerName, bool isReconnect, optional int connectionId
+    NotifySignIn, // string screenName, bool isReconnect, optional int connectionId
     NotifyObserve, // string observerName, string playerName
 
     NotifyToLogicMask = 0x8000,

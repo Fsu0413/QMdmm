@@ -292,7 +292,8 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
             break;
         }
 
-        damage(to, punishedHp, QMdmmData::PunishHp);
+        if (punishedHp > 0)
+            damage(to, punishedHp, QMdmmData::PunishHp);
     }
 
     return true;
