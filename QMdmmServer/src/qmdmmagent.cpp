@@ -1,30 +1,73 @@
 #include "qmdmmagent.h"
+#include "qmdmmserver.h"
 
 #include <QMdmmCore/QMdmmProtocol>
 
-#include <QIODevice>
+#include <QPointer>
 
-struct QMdmmAgentPrivate
+class QMdmmAgentPrivate : public QObject
 {
+    Q_OBJECT
+
+public:
+    QMdmmAgentPrivate(QMdmmAgent *a)
+        : QObject(a)
+        , a(a)
+        , ready(false)
+        , socket(nullptr)
+        , isReconnect(false)
+    {
+    }
+
+    void setSocket(QMdmmSocket *_socket)
+    {
+        if (socket != nullptr) {
+            // not allowed but...
+
+            socket->deleteLater();
+        }
+
+        socket = _socket;
+        connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmAgentPrivate::packetReceived);
+        connect(socket, &QMdmmSocket::disconnected, this, &QMdmmAgentPrivate::socketDisconnected);
+        connect(a, &QMdmmAgent::sendPacket, socket, &QMdmmSocket::sendPacket);
+    }
+
+    QMdmmAgent *a;
     bool ready;
     QString screenName;
+    QPointer<QMdmmSocket> socket;
+    bool isReconnect;
 
-    QMdmmAgentPrivate()
-        : ready(false)
+public slots: // NOLINT(readability-redundant-access-specifiers)
+    void packetReceived(QMdmmPacket packet)
     {
+        (void)packet;
+    }
+
+    void socketDisconnected()
+    {
+        isReconnect = true;
+        socket->deleteLater();
+        socket = nullptr;
+    }
+
+    void socketReconnected()
+    {
+        isReconnect = false;
     }
 };
 
 QMdmmAgent::QMdmmAgent(QString name, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmAgentPrivate)
+    , d(new QMdmmAgentPrivate(this))
 {
     setObjectName(name);
 }
 
 QMdmmAgent::~QMdmmAgent()
 {
-    delete d;
+    // no need
 }
 
 QString QMdmmAgent::screenName() const
@@ -53,15 +96,9 @@ void QMdmmAgent::setReady(bool ready)
     }
 }
 
-void QMdmmAgent::packetReceived(QMdmmPacket packet)
+void QMdmmAgent::setSocket(QMdmmSocket *socket)
 {
-    (void)packet;
+    d->setSocket(socket);
 }
 
-void QMdmmAgent::socketDisconnected()
-{
-}
-
-void QMdmmAgent::socketReconnected()
-{
-}
+#include "qmdmmagent.moc"

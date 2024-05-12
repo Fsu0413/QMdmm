@@ -8,7 +8,9 @@
 #include <QMdmmCore/QMdmmProtocol>
 #include <QObject>
 
-struct QMdmmAgentPrivate;
+class QMdmmSocket;
+
+class QMdmmAgentPrivate;
 
 class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
 {
@@ -27,11 +29,7 @@ public:
     [[nodiscard]] bool ready() const;
     void setReady(bool ready);
 
-public slots: // NOLINT(readability-redundant-access-specifiers)
-    void packetReceived(QMdmmPacket packet);
-
-    void socketDisconnected();
-    void socketReconnected();
+    void setSocket(QMdmmSocket *socket);
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);

@@ -20,9 +20,14 @@ public:
         , hasError(false)
         , type(type)
     {
-        connect(socket, &QIODevice::aboutToClose, this, &QMdmmSocketPrivate::deleteLater);
         connect(socket, &QIODevice::readyRead, this, &QMdmmSocketPrivate::messageReceived);
         connect(p, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
+        connect(this, &QMdmmSocketPrivate::destroyed, socket, &QIODevice::deleteLater);
+
+        if (type == QMdmmSocket::TypeQTcpSocket) {
+            QTcpSocket *tcpSocket = static_cast<QTcpSocket *>(socket);
+            connect(tcpSocket, &QTcpSocket::disconnected, p, &QMdmmSocket::disconnected);
+        }
     }
 
     QPointer<QIODevice> socket;
@@ -31,8 +36,8 @@ public:
     bool hasError;
     QMdmmSocket::Type type;
 
-public slots:
-    void sendPacket(QMdmmPacket packet)
+public slots: // NOLINT(readability-redundant-access-specifiers)
+    void sendPacket(QMdmmPacket packet) // NOLINT(readability-make-member-function-const)
     {
         if (socket == nullptr)
             return;
@@ -42,7 +47,7 @@ public slots:
             static_cast<QTcpSocket *>(socket.data())->flush();
     }
 
-    void messageReceived()
+    void messageReceived() // NOLINT(readability-make-member-function-const)
     {
         if (socket == nullptr)
             return;
@@ -104,10 +109,10 @@ public:
     QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *p);
 
     // callbacks
-    bool pongClient(QMdmmSocket *, const QJsonValue &);
-    bool pingServer(QMdmmSocket *, const QJsonValue &);
+    bool pongClient(QMdmmSocket *socket, const QJsonValue &packetValue);
+    bool pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
     bool signIn(QMdmmSocket *socket, const QJsonValue &packetValue);
-    bool observe(QMdmmSocket *, const QJsonValue &);
+    bool observe(QMdmmSocket *socket, const QJsonValue &packetValue);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void serverNewConnection();
@@ -146,12 +151,12 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     s->listen(QHostAddress::Any, serverConfiguration.port);
 }
 
-bool QMdmmServerPrivate::pongClient(QMdmmSocket *, const QJsonValue &)
+bool QMdmmServerPrivate::pongClient(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     return true;
 }
 
-bool QMdmmServerPrivate::pingServer(QMdmmSocket *, const QJsonValue &)
+bool QMdmmServerPrivate::pingServer(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     return true;
 }
@@ -161,7 +166,7 @@ bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
     return false;
 }
 
-bool QMdmmServerPrivate::observe(QMdmmSocket *, const QJsonValue &)
+bool QMdmmServerPrivate::observe(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     // not implemented by now
     return false;

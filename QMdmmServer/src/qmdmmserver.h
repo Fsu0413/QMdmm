@@ -33,11 +33,13 @@ public:
     ~QMdmmSocket() override;
 
     void setHasError(bool hasError);
-    bool hasError() const;
+    [[nodiscard]] bool hasError() const;
 
 signals:
     void sendPacket(QMdmmPacket);
     void packetReceived(QMdmmPacket, QPrivateSignal);
+
+    void disconnected();
 
 private:
     friend class QMdmmSocketPrivate;
