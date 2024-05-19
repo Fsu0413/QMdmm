@@ -5,7 +5,6 @@
 
 #include "qmdmmcoreglobal.h"
 #include <QObject>
-#include <QStateMachine>
 
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 {
@@ -38,7 +37,7 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 
 struct QMdmmLogicPrivate;
 
-class QMDMMCORE_EXPORT QMdmmLogic : public QStateMachine
+class QMDMMCORE_EXPORT QMdmmLogic : public QObject
 {
     Q_OBJECT
 
@@ -48,7 +47,6 @@ public:
 
     [[nodiscard]] const QMdmmLogicConfiguration &configuration() const;
 
-signals:
     void run();
 
 private:

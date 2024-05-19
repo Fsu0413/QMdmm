@@ -66,29 +66,12 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
 struct QMdmmLogicPrivate
 {
     QMdmmLogicConfiguration conf;
-
-    QState *prepareState;
-    QState *playingState;
-    QState *stoneScissorsClothState;
-    QState *striveForOrderState;
-    QState *operationState;
-    QState *upgradeState;
 };
 
 QMdmmLogic::QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
-    : QStateMachine(parent)
+    : QObject(parent)
     , d(new QMdmmLogicPrivate {logicConfiguration})
 {
-    d->prepareState = new QState(this);
-    d->playingState = new QState(this);
-    d->stoneScissorsClothState = new QState(d->playingState);
-    d->striveForOrderState = new QState(d->playingState);
-    d->operationState = new QState(d->playingState);
-    d->upgradeState = new QState(this);
-    d->playingState->setInitialState(d->stoneScissorsClothState);
-    setInitialState(d->prepareState);
-
-    d->prepareState->addTransition(this, &QMdmmLogic::run, d->playingState);
 }
 
 QMdmmLogic::~QMdmmLogic()
@@ -99,4 +82,9 @@ QMdmmLogic::~QMdmmLogic()
 const QMdmmLogicConfiguration &QMdmmLogic::configuration() const
 {
     return d->conf;
+}
+
+void QMdmmLogic::run()
+{
+
 }

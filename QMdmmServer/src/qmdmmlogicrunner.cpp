@@ -16,7 +16,7 @@ QMdmmLogicRunner::QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfigura
 {
     d->logic = new QMdmmLogic(logicConfiguration);
     d->logic->moveToThread(this);
-    connect(this, &QMdmmLogicRunner::started, d->logic, &QMdmmLogic::run);
+    // connect(this, &QMdmmLogicRunner::started, d->logic, &QMdmmLogic::run);
     connect(this, &QMdmmLogicRunner::finished, d->logic, &QMdmmLogic::deleteLater);
 }
 
