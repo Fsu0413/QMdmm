@@ -24,7 +24,7 @@ public:
     [[nodiscard]] QMdmmLogic *logic();
     [[nodiscard]] const QMdmmLogic *logic() const;
 
-    bool addPlayer(const QString &playerName);
+    QMdmmPlayer *addPlayer(const QString &playerName);
     bool removePlayer(const QString &playerName);
     [[nodiscard]] bool full() const;
 

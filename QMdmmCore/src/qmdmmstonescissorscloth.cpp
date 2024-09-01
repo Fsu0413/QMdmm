@@ -42,14 +42,14 @@ QList<int> QMdmmStoneScissorsCloth::winners(const QList<QMdmmStoneScissorsCloth>
     QMap<QMdmmData::StoneScissorsCloth, QList<int>> judgersMap;
 
     for (int i = 0; i < judgers.size(); ++i) {
-        const auto &judger = judgers.at(i);
+        const QMdmmStoneScissorsCloth &judger = judgers.at(i);
         QMdmmData::StoneScissorsCloth t = judger;
         judgersMap[t].push_back(i);
     }
 
     if (judgersMap.size() == 2) {
-        auto it1 = judgersMap.begin();
-        auto it2 = judgersMap.begin();
+        QMap<QMdmmData::StoneScissorsCloth, QList<int>>::iterator it1 = judgersMap.begin();
+        QMap<QMdmmData::StoneScissorsCloth, QList<int>>::iterator it2 = judgersMap.begin();
         ++it2;
 
         QMdmmStoneScissorsCloth type1 = it1.key();

@@ -35,18 +35,20 @@ const QMdmmLogic *QMdmmRoom::logic() const
     return static_cast<const QMdmmLogic *>(parent());
 }
 
-bool QMdmmRoom::addPlayer(const QString &playerName)
+QMdmmPlayer *QMdmmRoom::addPlayer(const QString &playerName)
 {
     if (d->players.contains(playerName))
-        return false;
+        return nullptr;
 
-    d->players.insert(playerName, new QMdmmPlayer(playerName, this));
-    return true;
+    QMdmmPlayer *ret = new QMdmmPlayer(playerName, this);
+    d->players.insert(playerName, ret);
+
+    return ret;
 }
 
 bool QMdmmRoom::removePlayer(const QString &playerName)
 {
-    auto it = d->players.find(playerName);
+    QMap<QString, QMdmmPlayer *>::iterator it = d->players.find(playerName);
 
     if (it != d->players.end()) {
         delete it.value();
@@ -80,7 +82,7 @@ QStringList QMdmmRoom::playerNames() const
 QList<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
 {
     QList<QMdmmPlayer *> res;
-    foreach (const auto &player, d->players) {
+    foreach (QMdmmPlayer *player, d->players) {
         if (player->alive())
             res.push_back(player);
     }
