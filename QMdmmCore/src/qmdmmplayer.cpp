@@ -1,34 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmplayer.h"
+#include "qmdmmplayer_p.h"
+
 #include "qmdmmlogic.h"
 #include "qmdmmroom.h"
 
-struct QMdmmPlayerPrivate
+QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
+    : knife(false)
+    , horse(false)
+    , hp(room->logic()->configuration().initialMaxHp)
+    , place(QMdmmData::Country)
+    , knifeDamage(room->logic()->configuration().initialKnifeDamage)
+    , horseDamage(room->logic()->configuration().initialHorseDamage)
+    , maxHp(room->logic()->configuration().initialMaxHp)
+    , upgradePoint(0)
 {
-    QMdmmPlayerPrivate(QMdmmRoom *room)
-        : knife(false)
-        , horse(false)
-        , hp(room->logic()->configuration().initialMaxHp)
-        , place(QMdmmData::Country)
-        , knifeDamage(room->logic()->configuration().initialKnifeDamage)
-        , horseDamage(room->logic()->configuration().initialHorseDamage)
-        , maxHp(room->logic()->configuration().initialMaxHp)
-        , upgradePoint(0)
-    {
-    }
-
-    bool knife;
-    bool horse;
-    int hp;
-    int place;
-
-    int knifeDamage;
-    int horseDamage;
-    int maxHp;
-
-    int upgradePoint;
-};
+}
 
 QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
     : QObject(room)

@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmroom.h"
+#include "qmdmmroom_p.h"
+
 #include "qmdmmlogic.h"
 #include "qmdmmplayer.h"
 
-#include <QMap>
 #include <QString>
-
-struct QMdmmRoomPrivate
-{
-    QMap<QString, QMdmmPlayer *> players;
-};
 
 QMdmmRoom::QMdmmRoom(QMdmmLogic *logic)
     : QObject(logic)

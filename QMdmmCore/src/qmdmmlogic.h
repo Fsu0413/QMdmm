@@ -37,7 +37,7 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
 
 struct QMdmmLogicPrivate;
 
-class QMDMMCORE_EXPORT QMdmmLogic : public QObject
+class QMDMMCORE_EXPORT QMdmmLogic final : public QObject
 {
     Q_OBJECT
     friend struct QMdmmLogicPrivate;
