@@ -16,7 +16,7 @@ class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
     Q_PROPERTY(bool hasKnife READ hasKnife WRITE setHasKnife NOTIFY hasKnifeChanged DESIGNABLE false)
     Q_PROPERTY(bool hasHorse READ hasHorse WRITE setHasHorse NOTIFY hasHorseChanged DESIGNABLE false)
     Q_PROPERTY(int hp READ hp WRITE setHp NOTIFY hpChanged DESIGNABLE false)
-    Q_PROPERTY(QMdmmData::Place place READ place WRITE setPlace NOTIFY placeChanged DESIGNABLE false)
+    Q_PROPERTY(int place READ place WRITE setPlace NOTIFY placeChanged DESIGNABLE false)
     Q_PROPERTY(int knifeDamage READ knifeDamage WRITE setKnifeDamage NOTIFY knifeDamageChanged DESIGNABLE false)
     Q_PROPERTY(int horseDamage READ horseDamage WRITE setHorseDamage NOTIFY horseDamageChanged DESIGNABLE false)
     Q_PROPERTY(int maxHp READ maxHp WRITE setMaxHp NOTIFY maxHpChanged DESIGNABLE false)
@@ -37,8 +37,8 @@ public:
     void setHasHorse(bool h);
     [[nodiscard]] int hp() const;
     void setHp(int h, bool *kills = nullptr);
-    [[nodiscard]] QMdmmData::Place place() const;
-    void setPlace(QMdmmData::Place toPlace);
+    [[nodiscard]] int place() const;
+    void setPlace(int toPlace);
 
     // upgradeable property
     [[nodiscard]] int knifeDamage() const;
@@ -59,8 +59,8 @@ public:
     [[nodiscard]] bool canBuyHorse() const;
     [[nodiscard]] bool canSlash(const QMdmmPlayer *to) const;
     [[nodiscard]] bool canKick(const QMdmmPlayer *to) const;
-    [[nodiscard]] bool canMove(QMdmmData::Place toPlace) const;
-    [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const;
+    [[nodiscard]] bool canMove(int toPlace) const;
+    [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, int toPlace) const;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // actions
@@ -70,8 +70,8 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool slash(QMdmmPlayer *to);
     bool kick(QMdmmPlayer *to);
 
-    bool move(QMdmmData::Place toPlace);
-    bool letMove(QMdmmPlayer *to, QMdmmData::Place toPlace);
+    bool move(int toPlace);
+    bool letMove(QMdmmPlayer *to, int toPlace);
 
     bool doNothing(const QString &reason);
 
@@ -84,12 +84,13 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool upgradeMaxHp();
 
     void prepareForGameStart(int playerNum);
+    void resetUpgrades();
 
 signals:
     void hasKnifeChanged(bool, QPrivateSignal);
     void hasHorseChanged(bool, QPrivateSignal);
     void hpChanged(int, QPrivateSignal);
-    void placeChanged(QMdmmData::Place, QPrivateSignal);
+    void placeChanged(int, QPrivateSignal);
     void knifeDamageChanged(int, QPrivateSignal);
     void horseDamageChanged(int, QPrivateSignal);
     void maxHpChanged(int, QPrivateSignal);

@@ -4,12 +4,14 @@ set(QMDMMSERVER_HEADERS
     src/qmdmmserverglobal.h
     src/qmdmmserver.h
     src/qmdmmagent.h
+    src/qmdmmclient.h
     src/qmdmmlogicrunner.h
 )
 
 set(QMDMMSERVER_SOURCES
     src/qmdmmserver.cpp
     src/qmdmmagent.cpp
+    src/qmdmmclient.cpp
     src/qmdmmlogicrunner.cpp
 )
 

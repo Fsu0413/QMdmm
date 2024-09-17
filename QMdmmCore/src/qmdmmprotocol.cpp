@@ -8,18 +8,18 @@
 
 QMdmmPacketData::QMdmmPacketData()
 {
-    value(QStringLiteral("type")) = static_cast<int>(QMdmmProtocol::TypeInvalid);
-    value(QStringLiteral("requestId")) = static_cast<int>(QMdmmProtocol::RequestInvalid);
-    value(QStringLiteral("notifyId")) = static_cast<int>(QMdmmProtocol::NotifyInvalid);
-    value(QStringLiteral("value")) = QJsonValue();
+    insert(QStringLiteral("type"), static_cast<int>(QMdmmProtocol::TypeInvalid));
+    insert(QStringLiteral("requestId"), static_cast<int>(QMdmmProtocol::RequestInvalid));
+    insert(QStringLiteral("notifyId"), static_cast<int>(QMdmmProtocol::NotifyInvalid));
+    insert(QStringLiteral("value"), QJsonValue());
 }
 
 QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &v)
 {
-    value(QStringLiteral("type")) = static_cast<int>(type);
-    value(QStringLiteral("requestId")) = static_cast<int>(requestId);
-    value(QStringLiteral("notifyId")) = static_cast<int>(notifyId);
-    value(QStringLiteral("value")) = v;
+    insert(QStringLiteral("type"), static_cast<int>(type));
+    insert(QStringLiteral("requestId"), static_cast<int>(requestId));
+    insert(QStringLiteral("notifyId"), static_cast<int>(notifyId));
+    insert(QStringLiteral("value"), v);
 }
 
 QMdmmPacketData::QMdmmPacketData(const QJsonObject &ob)

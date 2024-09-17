@@ -21,7 +21,7 @@ struct QMdmmPlayerPrivate
     bool knife;
     bool horse;
     int hp;
-    QMdmmData::Place place;
+    int place;
 
     int knifeDamage;
     int horseDamage;
@@ -107,12 +107,12 @@ void QMdmmPlayer::setHp(int h, bool *kills)
     }
 }
 
-QMdmmData::Place QMdmmPlayer::place() const
+int QMdmmPlayer::place() const
 {
     return d->place;
 }
 
-void QMdmmPlayer::setPlace(QMdmmData::Place toPlace)
+void QMdmmPlayer::setPlace(int toPlace)
 {
     if (d->place != toPlace) {
         d->place = toPlace;
@@ -221,12 +221,12 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
     return true;
 }
 
-bool QMdmmPlayer::canMove(QMdmmData::Place toPlace) const
+bool QMdmmPlayer::canMove(int toPlace) const
 {
     return alive() && QMdmmData::isPlaceAdjecent(place(), toPlace);
 }
 
-bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, QMdmmData::Place toPlace) const
+bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
 {
     if (dead() || to->dead())
         return false;
@@ -312,7 +312,7 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
     return true;
 }
 
-bool QMdmmPlayer::move(QMdmmData::Place toPlace)
+bool QMdmmPlayer::move(int toPlace)
 {
     if (canMove(toPlace)) {
         setPlace(toPlace);
@@ -322,7 +322,7 @@ bool QMdmmPlayer::move(QMdmmData::Place toPlace)
     return false;
 }
 
-bool QMdmmPlayer::letMove(QMdmmPlayer *to, QMdmmData::Place toPlace) // NOLINT(readability-make-member-function-const)
+bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const)
 {
     // pull, push, kick(effect)
 
@@ -381,6 +381,14 @@ void QMdmmPlayer::prepareForGameStart(int playerNum)
     setHasKnife(false);
     setHasHorse(false);
     setHp(maxHp());
-    setPlace(static_cast<QMdmmData::Place>(playerNum));
+    setPlace(playerNum);
+    setUpgradePoint(0);
+}
+
+void QMdmmPlayer::resetUpgrades()
+{
+    setMaxHp(room()->logic()->configuration().initialMaxHp);
+    setKnifeDamage(room()->logic()->configuration().initialKnifeDamage);
+    setHorseDamage(room()->logic()->configuration().initialHorseDamage);
     setUpgradePoint(0);
 }

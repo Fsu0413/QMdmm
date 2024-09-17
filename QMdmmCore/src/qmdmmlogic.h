@@ -40,14 +40,43 @@ struct QMdmmLogicPrivate;
 class QMDMMCORE_EXPORT QMdmmLogic : public QObject
 {
     Q_OBJECT
+    friend struct QMdmmLogicPrivate;
 
 public:
+    enum State
+    {
+        BeforeGameStart,
+        SscForOperation,
+        OperationOrder,
+        SscForOperationOrder,
+        Operation,
+        Upgrade,
+        GameFinish,
+    };
+    Q_ENUM(State)
+
     QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogic() override;
 
     [[nodiscard]] const QMdmmLogicConfiguration &configuration() const;
+    [[nodiscard]] State state() const;
 
-    void run();
+public slots: // NOLINT(readability-redundant-access-specifiers)
+    void addPlayer(const QString &playerName);
+    void removePlayer(const QString &playerName);
+    void gameStart();
+
+    void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
+    void operationOrderReply(const QString &playerName, const QList<int> &desiredOrder);
+    void operationReply(const QString &playerName, const QString &operation, const QString &toPlayer, int toPosition);
+    void updateReply(const QString &playerName, const QList<int> &items);
+
+signals: // NOLINT(readability-redundant-access-specifiers)
+    void requestSscForOperation(const QStringList &playerNames, QPrivateSignal);
+    void sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies, QPrivateSignal);
+    void requestOperationOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections, QPrivateSignal);
+    void operationOrderResult(const QHash<int, QString> &result, QPrivateSignal);
+    void requestSscForOperationOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
 
 private:
     QMdmmLogicPrivate *const d;

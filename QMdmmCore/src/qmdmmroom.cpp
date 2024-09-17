@@ -90,7 +90,31 @@ QList<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
     return res;
 }
 
+QStringList QMdmmRoom::alivePlayerNames() const
+{
+    QStringList res;
+    for (QMap<QString, QMdmmPlayer *>::const_iterator it = d->players.constBegin(); it != d->players.constEnd(); ++it) {
+        if (it.value()->alive())
+            res.push_back(it.key());
+    }
+
+    return res;
+}
+
 int QMdmmRoom::alivePlayersCount() const
 {
     return alivePlayers().size();
+}
+
+void QMdmmRoom::prepareForGameStart()
+{
+    int i = 0;
+    foreach (QMdmmPlayer *player, d->players)
+        player->prepareForGameStart(++i);
+}
+
+void QMdmmRoom::resetUpgrades()
+{
+    foreach (QMdmmPlayer *player, d->players)
+        player->resetUpgrades();
 }

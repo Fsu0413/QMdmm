@@ -20,7 +20,7 @@ enum RequestId
     RequestInvalid = 0,
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
-    RequestStriveForOperateOrder, // request: int totalOperationNum, int eachOperationNum, reply: array { int order }
+    RequestOperationOrder, // request: array {int remainedOrder}, int maximumOrder, int selectionNum, reply: array { int order }
     RequestOperation, // request: int currentOrder, reply: string operation, optional string toPlayer, optional int toPosition
     RequestUpdate, // request: int remaningTimes, reply: int item
 };
@@ -33,18 +33,17 @@ enum NotifyId
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
     NotifyVersion, // string versionNumber
-    NotifyStartReconnectMarshal,
-    NotifyEndReconnectMarshal,
+    NotifySignedIn, // string playerName, int connectionId
 
     NotifyFromLogicMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
-    NotifyConnected, // string playerName, string screenName, bool isReconnect, (to player)int connectionId
-    NoitfyDisconnected, // string playerName
-    NotifyReady, // string playerName, bool ready
+    NotifyPlayerAdded, // string playerName, string screenName, bool isReconnect
+    NotifyPlayerRemoved, // string playerName
+    NotifyReadyToggled, // string playerName, bool ready
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]
-    NotifyOperateOrder, // broadcast, array { string playerName } [totalOperationNum]
+    NotifyOperationOrder, // broadcast, array { string playerName } [totalOperationNum]
     NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPlace, optional string reason
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
@@ -59,6 +58,7 @@ enum NotifyId
     NotifyObserve, // string observerName, string playerName
 
     NotifyToLogicMask = 0x8000,
+    NotifyReady, // bool ready
     NotifySpeak, // string contents
     NotifyOperating, // TODO: for ob
 };
@@ -103,7 +103,7 @@ public:
     [[nodiscard]] QByteArray serialize() const;
     bool hasError(QString *errorString = nullptr) const;
 
-    [[nodiscard]] inline operator QByteArray() const
+    [[nodiscard]] inline operator QByteArray() const // NOLINT(readability-redundant-inline-specifier)
     {
         return serialize();
     }

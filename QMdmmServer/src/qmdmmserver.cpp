@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #include "qmdmmserver.h"
 
 #include "qmdmmagent.h"
@@ -80,10 +82,8 @@ QMdmmSocket::QMdmmSocket(QIODevice *socket, Type type, QObject *parent)
 {
 }
 
-QMdmmSocket::~QMdmmSocket()
-{
-    // No need to delete d.
-}
+// No need to delete d.
+QMdmmSocket::~QMdmmSocket() = default;
 
 void QMdmmSocket::setHasError(bool hasError)
 {
@@ -212,10 +212,8 @@ QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QO
 {
 }
 
-QMdmmServer::~QMdmmServer()
-{
-    // No need to delete d.
-    // It will always be deleted by QObject dtor
-}
+// No need to delete d.
+// It will always be deleted by QObject dtor
+QMdmmServer::~QMdmmServer() = default;
 
 #include "qmdmmserver.moc"

@@ -20,7 +20,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(AutoGenerateHeader)
 
-find_package(Qt6      COMPONENTS Core Network )
+# find_package Qt6 must be called before Qt5 - QTBUG-97097
+
+find_package(Qt6      COMPONENTS Core Network)
 find_package(Qt5 5.15 COMPONENTS Core Network)
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))
@@ -52,7 +54,7 @@ if (WIN32)
     set(CMAKE_SHARED_MODULE_PREFIX "")
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     if (NOT MSVC)
-        # match behavoir of qt6_add_library
+        # match behavior of qt6_add_library
         set(CMAKE_IMPORT_LIBRARY_SUFFIX ".a")
     endif()
 endif()

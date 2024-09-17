@@ -34,7 +34,11 @@ public:
     [[nodiscard]] QStringList playerNames() const;
 
     [[nodiscard]] QList<QMdmmPlayer *> alivePlayers() const;
+    [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const;
+
+    void prepareForGameStart();
+    void resetUpgrades();
 
 private:
     QMdmmRoomPrivate *const d;
