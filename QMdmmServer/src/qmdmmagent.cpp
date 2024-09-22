@@ -1,64 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmagent.h"
+#include "qmdmmagent_p.h"
+
 #include "qmdmmserver.h"
+#include "qmdmmsocket.h"
 
-#include <QMdmmCore/QMdmmProtocol>
-
-#include <QPointer>
-
-class QMdmmAgentPrivate : public QObject
+QMdmmAgentPrivate::QMdmmAgentPrivate(QMdmmAgent *a)
+    : QObject(a)
+    , a(a)
+    , ready(false)
+    , socket(nullptr)
+    , isReconnect(false)
 {
-    Q_OBJECT
+}
 
-public:
-    QMdmmAgentPrivate(QMdmmAgent *a)
-        : QObject(a)
-        , a(a)
-        , ready(false)
-        , socket(nullptr)
-        , isReconnect(false)
-    {
-    }
+void QMdmmAgentPrivate::setSocket(QMdmmSocket *_socket)
+{
+    if (socket != nullptr) {
+        // not allowed but...
 
-    void setSocket(QMdmmSocket *_socket)
-    {
-        if (socket != nullptr) {
-            // not allowed but...
-
-            socket->deleteLater();
-        }
-
-        socket = _socket;
-        connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmAgentPrivate::packetReceived);
-        connect(socket, &QMdmmSocket::disconnected, this, &QMdmmAgentPrivate::socketDisconnected);
-        connect(a, &QMdmmAgent::sendPacket, socket, &QMdmmSocket::sendPacket);
-    }
-
-    QMdmmAgent *a;
-    bool ready;
-    QString screenName;
-    QPointer<QMdmmSocket> socket;
-    bool isReconnect;
-
-public slots: // NOLINT(readability-redundant-access-specifiers)
-    void packetReceived(QMdmmPacket packet)
-    {
-        (void)packet;
-    }
-
-    void socketDisconnected()
-    {
-        isReconnect = true;
         socket->deleteLater();
-        socket = nullptr;
     }
 
-    void socketReconnected()
-    {
-        isReconnect = false;
-    }
-};
+    socket = _socket;
+    connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmAgentPrivate::packetReceived);
+    connect(socket, &QMdmmSocket::disconnected, this, &QMdmmAgentPrivate::socketDisconnected);
+    connect(a, &QMdmmAgent::sendPacket, socket, &QMdmmSocket::sendPacket);
+}
+
+void QMdmmAgentPrivate::packetReceived(QMdmmPacket packet)
+{
+    (void)packet;
+}
+
+void QMdmmAgentPrivate::socketDisconnected()
+{
+    isReconnect = true;
+    socket->deleteLater();
+    socket = nullptr;
+}
+
+void QMdmmAgentPrivate::socketReconnected()
+{
+    isReconnect = false;
+}
 
 QMdmmAgent::QMdmmAgent(QString name, QObject *parent)
     : QObject(parent)
@@ -100,5 +86,3 @@ void QMdmmAgent::setSocket(QMdmmSocket *socket)
 {
     d->setSocket(socket);
 }
-
-#include "qmdmmagent.moc"

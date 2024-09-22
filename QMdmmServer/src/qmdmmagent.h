@@ -5,14 +5,15 @@
 
 #include "qmdmmserverglobal.h"
 
-#include <QMdmmCore/QMdmmProtocol>
+#include <QMdmmProtocol>
+
 #include <QObject>
 
 class QMdmmSocket;
 
 class QMdmmAgentPrivate;
 
-class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
+class QMDMMSERVER_EXPORT QMdmmAgent final : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)

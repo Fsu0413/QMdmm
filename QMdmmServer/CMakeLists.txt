@@ -6,6 +6,14 @@ set(QMDMMSERVER_HEADERS
     src/qmdmmagent.h
     src/qmdmmclient.h
     src/qmdmmlogicrunner.h
+    src/qmdmmsocket.h
+)
+
+set(QMDMMSERVER_PRIVATE_HEADERS
+    src/qmdmmserver_p.h
+    src/qmdmmagent_p.h
+    src/qmdmmlogicrunner_p.h
+    src/qmdmmsocket_p.h
 )
 
 set(QMDMMSERVER_SOURCES
@@ -13,13 +21,19 @@ set(QMDMMSERVER_SOURCES
     src/qmdmmagent.cpp
     src/qmdmmclient.cpp
     src/qmdmmlogicrunner.cpp
+    src/qmdmmsocket.cpp
 )
 
 add_custom_target(QMdmmServer)
 auto_generate_header_file_for_target(QMdmmServer "${QMDMMSERVER_HEADERS}")
+auto_generate_header_file_for_target_private(QMdmmServer "${QMDMMSERVER_PRIVATE_HEADERS}")
+add_library(QMdmmServerPrivate INTERFACE)
+target_include_directories(QMdmmServerPrivate
+    INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmServer/private/${QMdmm_VERSION}"
+)
 
 if (Qt6_FOUND)
-    qt6_add_library(QMdmmServer6 ${QMDMMSERVER_HEADERS} ${QMDMMSERVER_SOURCES})
+    qt6_add_library(QMdmmServer6 ${QMDMMSERVER_HEADERS} ${QMDMMSERVER_SOURCES} ${QMDMMSERVER_PRIVATE_HEADERS})
     add_dependencies(QMdmmServer QMdmmServer6)
 
     set_target_properties(QMdmmServer6 PROPERTIES
@@ -44,7 +58,7 @@ if (Qt6_FOUND)
     endif()
 
     target_include_directories(QMdmmServer6
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmServer"
         PRIVATE src
     )
 
@@ -58,10 +72,16 @@ if (Qt6_FOUND)
         ARCHIVE
         LIBRARY
     )
+
+    add_library(QMdmmServerPrivate6 INTERFACE)
+    target_link_libraries(QMdmmServerPrivate6
+        INTERFACE QMdmmServer6
+                  QMdmmServerPrivate
+    )
 endif()
 
 if (Qt5_FOUND)
-    add_library(QMdmmServer5 ${QMDMMSERVER_HEADERS} ${QMDMMSERVER_SOURCES})
+    add_library(QMdmmServer5 ${QMDMMSERVER_HEADERS} ${QMDMMSERVER_SOURCES} ${QMDMMSERVER_PRIVATE_HEADERS})
     add_dependencies(QMdmmServer QMdmmServer5)
 
     set_target_properties(QMdmmServer5 PROPERTIES
@@ -86,7 +106,7 @@ if (Qt5_FOUND)
     endif()
 
     target_include_directories(QMdmmServer5
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmServer"
         PRIVATE src
     )
 
@@ -99,5 +119,11 @@ if (Qt5_FOUND)
         RUNTIME
         ARCHIVE
         LIBRARY
+    )
+
+    add_library(QMdmmServerPrivate5 INTERFACE)
+    target_link_libraries(QMdmmServerPrivate5
+        INTERFACE QMdmmServer5
+                  QMdmmServerPrivate
     )
 endif()

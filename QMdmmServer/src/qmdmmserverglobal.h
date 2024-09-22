@@ -3,7 +3,7 @@
 #ifndef QMDMMSERVERGLOBAL_H
 #define QMDMMSERVERGLOBAL_H
 
-#include <QMdmmCore/QMdmmCoreGlobal>
+#include <QMdmmCoreGlobal>
 
 #if 0
 class QMDMMSERVER_EXPORT QMdmmServerGlobal

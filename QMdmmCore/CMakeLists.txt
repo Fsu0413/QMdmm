@@ -27,7 +27,7 @@ auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
 auto_generate_header_file_for_target_private(QMdmmCore "${QMDMMCORE_PRIVATE_HEADERS}")
 add_library(QMdmmCorePrivate INTERFACE)
 target_include_directories(QMdmmCorePrivate
-    INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore/private/${PROJECT_VERSION}"
+    INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore/private/${QMdmm_VERSION}"
 )
 
 if (Qt6_FOUND)
@@ -58,7 +58,8 @@ if (Qt6_FOUND)
     endif()
 
     target_include_directories(QMdmmCore6
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+        PUBLIC "${CMAKE_BINARY_DIR}/build/include"
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore"
         PRIVATE src
     )
 
@@ -107,7 +108,8 @@ if (Qt5_FOUND)
     endif()
 
     target_include_directories(QMdmmCore5
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+        PUBLIC "${CMAKE_BINARY_DIR}/build/include"
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore"
         PRIVATE src
     )
 

@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "qmdmmlogicrunner.h"
+#include "qmdmmlogicrunner_p.h"
+
 #include "qmdmmagent.h"
-
-#include <QMdmmCore/QMdmmLogic>
-
-#include <QPointer>
-
-struct QMdmmLogicRunnerPrivate
-{
-    QPointer<QMdmmLogic> logic;
-};
 
 QMdmmLogicRunner::QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
     : QThread(parent)
