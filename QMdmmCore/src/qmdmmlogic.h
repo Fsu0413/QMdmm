@@ -6,7 +6,7 @@
 #include "qmdmmcoreglobal.h"
 #include <QObject>
 
-struct QMDMMCORE_EXPORT QMdmmLogicConfiguration
+struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
 {
     int playerNumPerRoom = 3;
 
@@ -68,8 +68,8 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
     void operationOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void operationReply(const QString &playerName, const QString &operation, const QString &toPlayer, int toPosition);
-    void updateReply(const QString &playerName, const QList<int> &items);
+    void operationReply(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition);
+    void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
     void requestSscForOperation(const QStringList &playerNames, QPrivateSignal);
@@ -77,6 +77,10 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void requestOperationOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections, QPrivateSignal);
     void operationOrderResult(const QHash<int, QString> &result, QPrivateSignal);
     void requestSscForOperationOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
+    void requestOperation(const QString &playerName, int operationOrder, QPrivateSignal);
+    void operationResult(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition, QPrivateSignal);
+    void requestUpgrade(const QString &playerName, int upgradePoint, QPrivateSignal);
+    void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
 
 private:
     QMdmmLogicPrivate *const d;

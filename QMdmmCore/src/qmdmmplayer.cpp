@@ -257,7 +257,7 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
     if (!canSlash(to))
         return false;
 
-    to->damage(this, knifeDamage(), QMdmmData::Slash);
+    to->applyDamage(this, knifeDamage(), QMdmmData::Slashed);
 
     if (place() != QMdmmData::Country) {
         int punishHpModifier = room()->logic()->configuration().punishHpModifier;
@@ -281,7 +281,7 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
         }
 
         if (punishedHp > 0)
-            damage(to, punishedHp, QMdmmData::PunishHp);
+            applyDamage(to, punishedHp, QMdmmData::HpPunished);
     }
 
     return true;
@@ -292,7 +292,7 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
     if (!canKick(to))
         return false;
 
-    to->damage(this, horseDamage(), QMdmmData::Kick);
+    to->applyDamage(this, horseDamage(), QMdmmData::Kicked);
 
     if (!to->dead())
         letMove(to, QMdmmData::Country);
@@ -310,7 +310,7 @@ bool QMdmmPlayer::move(int toPlace)
     return false;
 }
 
-bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const)
+bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const): Operation is ought not to be const
 {
     // pull, push, kick(effect)
 
@@ -322,17 +322,19 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-ma
     return false;
 }
 
-bool QMdmmPlayer::doNothing(const QString & /*unused*/)
+bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought not to be const
 {
     return true;
 }
 
-void QMdmmPlayer::damage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
+void QMdmmPlayer::applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
 {
-    Q_UNUSED(reason);
     bool kills = false;
 
     setHp(hp() - damagePoint, &kills);
+    emit damaged(from, damagePoint, reason, QPrivateSignal());
+    emit damaged(from->objectName(), damagePoint, reason, QPrivateSignal());
+
     if (kills)
         from->setUpgradePoint(from->upgradePoint() + 1);
 }

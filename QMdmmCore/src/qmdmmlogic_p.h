@@ -7,7 +7,7 @@
 
 class QMdmmRoom;
 
-struct QMDMMCORE_EXPORT QMdmmLogicPrivate
+struct QMDMMCORE_EXPORT QMdmmLogicPrivate final
 {
     QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguration &logicConfiguration);
 
@@ -27,6 +27,12 @@ struct QMDMMCORE_EXPORT QMdmmLogicPrivate
     QHash<int, QString> confirmedOperationOrders;
     int currentStrivingOperationOrder;
     QHash<QString, QMdmmData::StoneScissorsCloth> sscForOperationOrderReplies;
+    int currentOperationOrder;
+    QHash<QString, QList<QMdmmData::UpgradeItem>> upgrades;
+
+    // helper functions
+    [[nodiscard]] bool operationFeasible(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace) const;
+    bool applyOperation(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace);
 
     // Functions:
     void startBeforeGameStart();
@@ -37,6 +43,8 @@ struct QMDMMCORE_EXPORT QMdmmLogicPrivate
     void startSscForOperationOrder();
     void sscForOperationOrder();
     void startOperation();
+    void startUpgrade();
+    void upgrade();
 };
 
 #endif

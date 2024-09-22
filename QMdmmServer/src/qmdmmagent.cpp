@@ -67,10 +67,8 @@ QMdmmAgent::QMdmmAgent(QString name, QObject *parent)
     setObjectName(name);
 }
 
-QMdmmAgent::~QMdmmAgent()
-{
-    // no need
-}
+// no need to delete d
+QMdmmAgent::~QMdmmAgent() = default;
 
 QString QMdmmAgent::screenName() const
 {

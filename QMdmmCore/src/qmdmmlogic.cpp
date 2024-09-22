@@ -10,7 +10,6 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QMultiHash>
-#include <QPointer>
 
 QJsonValue QMdmmLogicConfiguration::serialize() const
 {
@@ -74,7 +73,81 @@ QMdmmLogicPrivate::QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguratio
     , room(new QMdmmRoom(q))
     , state(QMdmmLogic::BeforeGameStart)
     , currentStrivingOperationOrder(0)
+    , currentOperationOrder(0)
 {
+}
+
+bool QMdmmLogicPrivate::operationFeasible(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace) const
+{
+    const QMdmmPlayer *from = room->player(fromPlayer);
+    switch (operation) {
+    case QMdmmData::DoNothing: {
+        return true;
+    }
+    case QMdmmData::BuyKnife: {
+        return from->canBuyKnife();
+    }
+    case QMdmmData::BuyHorse: {
+        return from->canBuyHorse();
+    }
+    case QMdmmData::Slash: {
+        const QMdmmPlayer *to = room->player(toPlayer);
+        return from->canSlash(to);
+    }
+    case QMdmmData::Kick: {
+        const QMdmmPlayer *to = room->player(toPlayer);
+        return from->canKick(to);
+    }
+    case QMdmmData::Move: {
+        return from->canMove(toPlace);
+    }
+    case QMdmmData::LetMove: {
+        const QMdmmPlayer *to = room->player(toPlayer);
+        return from->canLetMove(to, toPlace);
+    }
+    default:
+        break;
+    }
+
+    return false;
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const): Operation is ought not to be const
+bool QMdmmLogicPrivate::applyOperation(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace)
+{
+    emit q->operationResult(fromPlayer, operation, toPlayer, toPlace, QMdmmLogic::QPrivateSignal());
+
+    QMdmmPlayer *from = room->player(fromPlayer);
+    switch (operation) {
+    case QMdmmData::DoNothing: {
+        return from->doNothing();
+    }
+    case QMdmmData::BuyKnife: {
+        return from->buyKnife();
+    }
+    case QMdmmData::BuyHorse: {
+        return from->buyHorse();
+    }
+    case QMdmmData::Slash: {
+        QMdmmPlayer *to = room->player(toPlayer);
+        return from->slash(to);
+    }
+    case QMdmmData::Kick: {
+        QMdmmPlayer *to = room->player(toPlayer);
+        return from->kick(to);
+    }
+    case QMdmmData::Move: {
+        return from->move(toPlace);
+    }
+    case QMdmmData::LetMove: {
+        QMdmmPlayer *to = room->player(toPlayer);
+        return from->letMove(to, toPlace);
+    }
+    default:
+        break;
+    }
+
+    return false;
 }
 
 void QMdmmLogicPrivate::startBeforeGameStart()
@@ -138,6 +211,7 @@ void QMdmmLogicPrivate::startOperationOrder()
 
     if (remainingOperationCount.isEmpty()) {
         emit q->operationOrderResult(confirmedOperationOrders, QMdmmLogic::QPrivateSignal());
+        currentOperationOrder = 0;
         startOperation();
     } else {
         desiredOperationOrders.clear();
@@ -201,8 +275,69 @@ void QMdmmLogicPrivate::sscForOperationOrder()
 
 void QMdmmLogicPrivate::startOperation()
 {
-    // TODO
-    Q_UNIMPLEMENTED();
+    if (!room->isGameOver()) {
+        if (++currentOperationOrder <= sscForOperationWinners.length()) {
+            state = QMdmmLogic::Operation;
+            emit q->requestOperation(confirmedOperationOrders[currentOperationOrder], currentOperationOrder, QMdmmLogic::QPrivateSignal());
+        } else {
+            startSscForOperation();
+        }
+    } else {
+        startUpgrade();
+    }
+}
+
+void QMdmmLogicPrivate::startUpgrade()
+{
+    if (room->isGameOver()) {
+        upgrades.clear();
+        foreach (const QMdmmPlayer *p, room->players()) {
+            if (p->upgradePoint() > 0) {
+                state = QMdmmLogic::Upgrade;
+                emit q->requestUpgrade(p->objectName(), p->upgradePoint(), QMdmmLogic::QPrivateSignal());
+            }
+        }
+    } else {
+        // ??
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const, readability-function-cognitive-complexity)
+void QMdmmLogicPrivate::upgrade()
+{
+    if (room->isGameOver()) {
+        int n = 0;
+        foreach (const QMdmmPlayer *p, room->players()) {
+            if (p->upgradePoint() > 0)
+                ++n;
+        }
+        if (upgrades.count() == n) {
+            for (QHash<QString, QList<QMdmmData::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+                QMdmmPlayer *up = room->player(it.key());
+                const QList<QMdmmData::UpgradeItem> &items = it.value();
+                foreach (QMdmmData::UpgradeItem item, items) {
+                    bool success = false;
+                    switch (item) {
+                    case QMdmmData::UpgradeKnife:
+                        success = up->upgradeKnife();
+                        break;
+                    case QMdmmData::UpgradeHorse:
+                        success = up->upgradeHorse();
+                        break;
+                    case QMdmmData::UpgradeMaxHp:
+                        success = up->upgradeMaxHp();
+                        break;
+                    default:
+                        break;
+                    }
+                    Q_ASSERT(success);
+                    Q_UNUSED(success);
+                }
+            }
+            state = QMdmmLogic::GameFinish;
+            emit q->upgradeResult(upgrades, QMdmmLogic::QPrivateSignal());
+        }
+    }
 }
 
 QMdmmLogic::QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
@@ -282,10 +417,20 @@ void QMdmmLogic::operationOrderReply(const QString &playerName, const QList<int>
     }
 }
 
-void QMdmmLogic::operationReply(const QString &playerName, const QString &operation, const QString &toPlayer, int toPosition)
+void QMdmmLogic::operationReply(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition)
 {
+    if (d->state == Operation) {
+        if (d->operationFeasible(playerName, operation, toPlayer, toPosition)) {
+            d->applyOperation(playerName, operation, toPlayer, toPosition);
+            d->startOperation();
+        }
+    }
 }
 
-void QMdmmLogic::updateReply(const QString &playerName, const QList<int> &items)
+void QMdmmLogic::upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items)
 {
+    if (d->state == Upgrade) {
+        d->upgrades.insert(playerName, items);
+        d->upgrade();
+    }
 }

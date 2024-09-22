@@ -39,6 +39,8 @@ QMdmmPlayer *QMdmmRoom::addPlayer(const QString &playerName)
     QMdmmPlayer *ret = new QMdmmPlayer(playerName, this);
     d->players.insert(playerName, ret);
 
+    emit playerAdded(playerName, QPrivateSignal());
+
     return ret;
 }
 
@@ -47,6 +49,8 @@ bool QMdmmRoom::removePlayer(const QString &playerName)
     QMap<QString, QMdmmPlayer *>::iterator it = d->players.find(playerName);
 
     if (it != d->players.end()) {
+        emit playerRemoved(playerName, QPrivateSignal());
+
         delete it.value();
         d->players.erase(it);
         return true;
@@ -60,14 +64,28 @@ bool QMdmmRoom::full() const
     return d->players.size() >= logic()->configuration().playerNumPerRoom;
 }
 
-QMdmmPlayer *QMdmmRoom::player(const QString &playerName) const
+QMdmmPlayer *QMdmmRoom::player(const QString &playerName)
 {
     return d->players.value(playerName, nullptr);
 }
 
-QList<QMdmmPlayer *> QMdmmRoom::players() const
+const QMdmmPlayer *QMdmmRoom::player(const QString &playerName) const
+{
+    return d->players.value(playerName, nullptr);
+}
+
+QList<QMdmmPlayer *> QMdmmRoom::players()
 {
     return d->players.values();
+}
+
+QList<const QMdmmPlayer *> QMdmmRoom::players() const
+{
+    QList<const QMdmmPlayer *> res;
+    foreach (const QMdmmPlayer *player, d->players)
+        res << player;
+
+    return res;
 }
 
 QStringList QMdmmRoom::playerNames() const
@@ -75,12 +93,23 @@ QStringList QMdmmRoom::playerNames() const
     return d->players.keys();
 }
 
-QList<QMdmmPlayer *> QMdmmRoom::alivePlayers() const
+QList<QMdmmPlayer *> QMdmmRoom::alivePlayers()
 {
     QList<QMdmmPlayer *> res;
     foreach (QMdmmPlayer *player, d->players) {
         if (player->alive())
-            res.push_back(player);
+            res << player;
+    }
+
+    return res;
+}
+
+QList<const QMdmmPlayer *> QMdmmRoom::alivePlayers() const
+{
+    QList<const QMdmmPlayer *> res;
+    foreach (const QMdmmPlayer *player, d->players) {
+        if (player->alive())
+            res << player;
     }
 
     return res;
@@ -100,6 +129,11 @@ QStringList QMdmmRoom::alivePlayerNames() const
 int QMdmmRoom::alivePlayersCount() const
 {
     return alivePlayers().size();
+}
+
+bool QMdmmRoom::isGameOver() const
+{
+    return alivePlayersCount() <= 1;
 }
 
 void QMdmmRoom::prepareForGameStart()

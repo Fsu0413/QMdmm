@@ -28,17 +28,25 @@ public:
     bool removePlayer(const QString &playerName);
     [[nodiscard]] bool full() const;
 
-    [[nodiscard]] QMdmmPlayer *player(const QString &playerName) const;
+    [[nodiscard]] QMdmmPlayer *player(const QString &playerName);
+    [[nodiscard]] const QMdmmPlayer *player(const QString &playerName) const;
 
-    [[nodiscard]] QList<QMdmmPlayer *> players() const;
+    [[nodiscard]] QList<QMdmmPlayer *> players();
+    [[nodiscard]] QList<const QMdmmPlayer *> players() const;
     [[nodiscard]] QStringList playerNames() const;
 
-    [[nodiscard]] QList<QMdmmPlayer *> alivePlayers() const;
+    [[nodiscard]] QList<QMdmmPlayer *> alivePlayers();
+    [[nodiscard]] QList<const QMdmmPlayer *> alivePlayers() const;
     [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const;
+    [[nodiscard]] bool isGameOver() const;
 
     void prepareForGameStart();
     void resetUpgrades();
+
+signals:
+    void playerAdded(const QString &playerName, QPrivateSignal);
+    void playerRemoved(const QString &playerName, QPrivateSignal);
 
 private:
     QMdmmRoomPrivate *const d;
