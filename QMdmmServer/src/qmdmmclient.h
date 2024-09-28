@@ -5,8 +5,20 @@
 
 #include "qmdmmserverglobal.h"
 
-class QMDMMSERVER_EXPORT QMdmmClient
+#include <QObject>
+
+class QMdmmClientPrivate;
+
+class QMDMMSERVER_EXPORT QMdmmClient final : public QObject
 {
+    Q_OBJECT
+
+public:
+    QMdmmClient(QObject *parent = nullptr);
+    ~QMdmmClient() override;
+
+private:
+    QMdmmClientPrivate *const d;
 };
 
 #endif

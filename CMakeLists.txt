@@ -21,9 +21,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(AutoGenerateHeader)
 
 # find_package Qt6 must be called before Qt5 - QTBUG-97097
-
-find_package(Qt6      COMPONENTS Core Network)
-find_package(Qt5 5.15 COMPONENTS Core Network)
+find_package(Qt6      COMPONENTS Core Network WebSockets)
+find_package(Qt5 5.15 COMPONENTS Core Network WebSockets)
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))
     message(FATAL_ERROR "at least one of Qt 5 and Qt 6 is needed")

@@ -19,19 +19,14 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     : QObject(p)
     , serverConfiguration(serverConfiguration)
     , p(p)
-    , t(new QTcpServer(this))
-    , l(new QLocalServer(this))
+    , t(nullptr)
+    , l(nullptr)
+    , w(nullptr)
     , current(nullptr)
 {
-    // Local
-    {
-        l->setSocketOptions(QLocalServer::WorldAccessOption);
-        connect(l, &QLocalServer::newConnection, this, &QMdmmServerPrivate::serverNewConnection);
-        l->listen(serverConfiguration.localSocketName);
-    }
-
     // Tcp
-    {
+    if (serverConfiguration.tcpEnabled) {
+        t = new QTcpServer(this);
         connect(t,
 #if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
                 // Qt pre-6.3: old behavior
@@ -40,9 +35,24 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
                 // Qt post-6.4: new pendingConnectionAvailable signal, emitted after connection is added to pending connection queue instead of the connection is estabilished
                 &QTcpServer::pendingConnectionAvailable,
 #endif
-                this, &QMdmmServerPrivate::serverNewConnection);
+                this, &QMdmmServerPrivate::tcpServerNewConnection);
 
         t->listen(QHostAddress::Any, serverConfiguration.tcpPort);
+    }
+
+    // Local
+    if (serverConfiguration.localEnabled) {
+        l = new QLocalServer(this);
+        l->setSocketOptions(QLocalServer::WorldAccessOption);
+        connect(l, &QLocalServer::newConnection, this, &QMdmmServerPrivate::localServerNewConnection);
+        l->listen(serverConfiguration.localSocketName);
+    }
+
+    // WebSocket
+    if (serverConfiguration.websocketEnabled) {
+        w = new QWebSocketServer(QStringLiteral("QMdmm"), QWebSocketServer::NonSecureMode, this);
+        connect(w, &QWebSocketServer::newConnection, this, &QMdmmServerPrivate::websocketServerNewConnection);
+        w->listen(QHostAddress::Any, serverConfiguration.websocketPort);
     }
 }
 
@@ -77,19 +87,29 @@ void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readabil
     emit socket->sendPacket(packet);
 }
 
-void QMdmmServerPrivate::serverNewConnection() // NOLINT(readability-make-member-function-const)
+void QMdmmServerPrivate::tcpServerNewConnection() // NOLINT(readability-make-member-function-const)
 {
     while (t->hasPendingConnections()) {
         QTcpSocket *socket = t->nextPendingConnection();
-        connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
-        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, QMdmmSocket::TypeQTcpSocket, this);
+        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, this);
         introduceSocket(mdmmSocket);
     }
+}
 
+void QMdmmServerPrivate::localServerNewConnection()
+{
     while (l->hasPendingConnections()) {
         QLocalSocket *socket = l->nextPendingConnection();
-        connect(socket, &QLocalSocket::disconnected, socket, &QLocalSocket::deleteLater);
-        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, QMdmmSocket::TypeQLocalSocket, this);
+        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, this);
+        introduceSocket(mdmmSocket);
+    }
+}
+
+void QMdmmServerPrivate::websocketServerNewConnection()
+{
+    while (w->hasPendingConnections()) {
+        QWebSocket *socket = w->nextPendingConnection();
+        QMdmmSocket *mdmmSocket = new QMdmmSocket(socket, this);
         introduceSocket(mdmmSocket);
     }
 }

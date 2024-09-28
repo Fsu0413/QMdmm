@@ -14,8 +14,12 @@
 
 struct QMDMMSERVER_EXPORT QMdmmServerConfiguration final
 {
+    bool tcpEnabled = true;
     uint16_t tcpPort = 6366U;
+    bool localEnabled = true;
     QString localSocketName = QStringLiteral("QMdmm");
+    bool websocketEnabled = true;
+    uint16_t websocketPort = 6367U;
 };
 
 class QMdmmServerPrivate;

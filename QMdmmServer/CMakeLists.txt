@@ -12,6 +12,7 @@ set(QMDMMSERVER_HEADERS
 set(QMDMMSERVER_PRIVATE_HEADERS
     src/qmdmmserver_p.h
     src/qmdmmagent_p.h
+    src/qmdmmclient_p.h
     src/qmdmmlogicrunner_p.h
     src/qmdmmsocket_p.h
 )
@@ -65,7 +66,14 @@ if (Qt6_FOUND)
     target_link_libraries(QMdmmServer6
         PUBLIC QMdmmCore6
                Qt6::Network
+               Qt6::WebSockets
     )
+
+    if (NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+        target_link_libraries(QMdmmServer6
+            PUBLIC Qt6::Network
+        )
+    endif()
 
     install(TARGETS QMdmmServer6
         RUNTIME
@@ -113,6 +121,7 @@ if (Qt5_FOUND)
     target_link_libraries(QMdmmServer5
         PUBLIC QMdmmCore5
                Qt5::Network
+               Qt5::WebSockets
     )
 
     install(TARGETS QMdmmServer5

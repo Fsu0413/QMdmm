@@ -16,6 +16,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QTcpServer>
+#include <QWebSocketServer>
 
 class QMDMMSERVER_EXPORT QMdmmServerPrivate final : public QObject
 {
@@ -35,7 +36,9 @@ public:
     void introduceSocket(QMdmmSocket *socket);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void serverNewConnection();
+    void tcpServerNewConnection();
+    void localServerNewConnection();
+    void websocketServerNewConnection();
     void socketPacketReceived(QMdmmPacket packet);
 
 public: // NOLINT(readability-redundant-access-specifiers)
@@ -44,6 +47,7 @@ public: // NOLINT(readability-redundant-access-specifiers)
     QMdmmServer *p;
     QTcpServer *t;
     QLocalServer *l;
+    QWebSocketServer *w;
     QList<QMdmmLogicRunner *> runners;
     QMdmmLogicRunner *current;
 };
