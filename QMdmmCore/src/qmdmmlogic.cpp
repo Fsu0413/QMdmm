@@ -72,15 +72,15 @@ QMdmmLogicPrivate::QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguratio
     , conf(logicConfiguration)
     , room(new QMdmmRoom(q))
     , state(QMdmmLogic::BeforeGameStart)
-    , currentStrivingOperationOrder(0)
-    , currentOperationOrder(0)
+    , currentStrivingActionOrder(0)
+    , currentActionOrder(0)
 {
 }
 
-bool QMdmmLogicPrivate::operationFeasible(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace) const
+bool QMdmmLogicPrivate::actionFeasible(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace) const
 {
     const QMdmmPlayer *from = room->player(fromPlayer);
-    switch (operation) {
+    switch (action) {
     case QMdmmData::DoNothing: {
         return true;
     }
@@ -112,13 +112,13 @@ bool QMdmmLogicPrivate::operationFeasible(const QString &fromPlayer, QMdmmData::
     return false;
 }
 
-// NOLINTNEXTLINE(readability-make-member-function-const): Operation is ought not to be const
-bool QMdmmLogicPrivate::applyOperation(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace)
+// NOLINTNEXTLINE(readability-make-member-function-const): Action is ought not to be const
+bool QMdmmLogicPrivate::applyAction(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace)
 {
-    emit q->operationResult(fromPlayer, operation, toPlayer, toPlace, QMdmmLogic::QPrivateSignal());
+    emit q->actionResult(fromPlayer, action, toPlayer, toPlace, QMdmmLogic::QPrivateSignal());
 
     QMdmmPlayer *from = room->player(fromPlayer);
-    switch (operation) {
+    switch (action) {
     case QMdmmData::DoNothing: {
         return from->doNothing();
     }
@@ -156,131 +156,131 @@ void QMdmmLogicPrivate::startBeforeGameStart()
     state = QMdmmLogic::BeforeGameStart;
 }
 
-void QMdmmLogicPrivate::startSscForOperation()
+void QMdmmLogicPrivate::startSscForAction()
 {
-    sscForOperationReplies.clear();
-    sscForOperationWinners.clear();
-    state = QMdmmLogic::SscForOperation;
-    emit q->requestSscForOperation(room->alivePlayerNames(), QMdmmLogic::QPrivateSignal());
+    sscForActionReplies.clear();
+    sscForActionWinners.clear();
+    state = QMdmmLogic::SscForAction;
+    emit q->requestSscForAction(room->alivePlayerNames(), QMdmmLogic::QPrivateSignal());
 }
 
-void QMdmmLogicPrivate::sscForOperation()
+void QMdmmLogicPrivate::sscForAction()
 {
-    if (sscForOperationReplies.count() == room->alivePlayersCount()) {
-        emit q->sscResult(sscForOperationReplies, QMdmmLogic::QPrivateSignal());
-        sscForOperationWinners = QMdmmData::stoneScissorsClothWinners(sscForOperationReplies);
-        if (sscForOperationWinners.isEmpty()) {
+    if (sscForActionReplies.count() == room->alivePlayersCount()) {
+        emit q->sscResult(sscForActionReplies, QMdmmLogic::QPrivateSignal());
+        sscForActionWinners = QMdmmData::stoneScissorsClothWinners(sscForActionReplies);
+        if (sscForActionWinners.isEmpty()) {
             // restart due to tie
-            startSscForOperation();
+            startSscForAction();
         } else {
-            confirmedOperationOrders.clear();
-            startOperationOrder();
+            confirmedActionOrders.clear();
+            startActionOrder();
         }
     }
 }
 
-void QMdmmLogicPrivate::startOperationOrder()
+void QMdmmLogicPrivate::startActionOrder()
 {
-    QHash<QString, int> remainingOperationCount;
-    QList<int> remainingOperationOrders;
+    QHash<QString, int> remainingActionCount;
+    QList<int> remainingActionOrders;
 
     int i = 1;
-    foreach (const QString &player, sscForOperationWinners) {
-        remainingOperationCount[player] = remainingOperationCount.value(player, 0) + 1;
-        remainingOperationOrders << (i++);
+    foreach (const QString &player, sscForActionWinners) {
+        remainingActionCount[player] = remainingActionCount.value(player, 0) + 1;
+        remainingActionOrders << (i++);
     }
-    for (QHash<int, QString>::const_iterator it = confirmedOperationOrders.constBegin(); it != confirmedOperationOrders.constEnd(); ++it) {
-        --remainingOperationCount[it.value()];
-        remainingOperationOrders.removeAll(it.key());
+    for (QHash<int, QString>::const_iterator it = confirmedActionOrders.constBegin(); it != confirmedActionOrders.constEnd(); ++it) {
+        --remainingActionCount[it.value()];
+        remainingActionOrders.removeAll(it.key());
     }
 
-    for (QHash<QString, int>::iterator it = remainingOperationCount.begin(); it != remainingOperationCount.end();) {
+    for (QHash<QString, int>::iterator it = remainingActionCount.begin(); it != remainingActionCount.end();) {
         if (it.value() == 0)
-            it = remainingOperationCount.erase(it);
+            it = remainingActionCount.erase(it);
         else
             ++it;
     }
 
-    Q_ASSERT(remainingOperationCount.count() >= 0);
+    Q_ASSERT(remainingActionCount.count() >= 0);
 
-    if (remainingOperationCount.count() == 1) {
-        foreach (int n, remainingOperationOrders)
-            confirmedOperationOrders[n] = remainingOperationCount.constBegin().key();
-        remainingOperationCount.clear();
+    if (remainingActionCount.count() == 1) {
+        foreach (int n, remainingActionOrders)
+            confirmedActionOrders[n] = remainingActionCount.constBegin().key();
+        remainingActionCount.clear();
     }
 
-    if (remainingOperationCount.isEmpty()) {
-        emit q->operationOrderResult(confirmedOperationOrders, QMdmmLogic::QPrivateSignal());
-        currentOperationOrder = 0;
-        startOperation();
+    if (remainingActionCount.isEmpty()) {
+        emit q->actionOrderResult(confirmedActionOrders, QMdmmLogic::QPrivateSignal());
+        currentActionOrder = 0;
+        startAction();
     } else {
-        desiredOperationOrders.clear();
-        state = QMdmmLogic::OperationOrder;
-        for (QHash<QString, int>::const_iterator it = remainingOperationCount.constBegin(); it != remainingOperationCount.constEnd(); ++it)
-            emit q->requestOperationOrder(it.key(), remainingOperationOrders, sscForOperationWinners.length(), it.value(), QMdmmLogic::QPrivateSignal());
+        desiredActionOrders.clear();
+        state = QMdmmLogic::ActionOrder;
+        for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it)
+            emit q->requestActionOrder(it.key(), remainingActionOrders, sscForActionWinners.length(), it.value(), QMdmmLogic::QPrivateSignal());
     }
 }
 
-void QMdmmLogicPrivate::operationOrder()
+void QMdmmLogicPrivate::actionOrder()
 {
     // TODO: support 0 as yielding selection / accepting arbitrary order
-    if (desiredOperationOrders.size() + confirmedOperationOrders.size() == sscForOperationWinners.length())
-        startSscForOperationOrder();
+    if (desiredActionOrders.size() + confirmedActionOrders.size() == sscForActionWinners.length())
+        startSscForActionOrder();
 }
 
-void QMdmmLogicPrivate::startSscForOperationOrder()
+void QMdmmLogicPrivate::startSscForActionOrder()
 {
-    QList<int> orders = desiredOperationOrders.uniqueKeys();
+    QList<int> orders = desiredActionOrders.uniqueKeys();
     foreach (int order, orders) {
-        if (desiredOperationOrders.count(order) == 1) {
-            confirmedOperationOrders[order] = desiredOperationOrders.value(order);
-            desiredOperationOrders.remove(order);
+        if (desiredActionOrders.count(order) == 1) {
+            confirmedActionOrders[order] = desiredActionOrders.value(order);
+            desiredActionOrders.remove(order);
         }
     }
 
-    if (desiredOperationOrders.isEmpty()) {
-        startOperationOrder();
+    if (desiredActionOrders.isEmpty()) {
+        startActionOrder();
     } else {
-        currentStrivingOperationOrder = 0;
-        for (int i = 1; i <= sscForOperationWinners.length(); ++i) {
-            if (desiredOperationOrders.constFind(i) != desiredOperationOrders.constEnd()) {
-                currentStrivingOperationOrder = i;
+        currentStrivingActionOrder = 0;
+        for (int i = 1; i <= sscForActionWinners.length(); ++i) {
+            if (desiredActionOrders.constFind(i) != desiredActionOrders.constEnd()) {
+                currentStrivingActionOrder = i;
                 break;
             }
         }
 
-        Q_ASSERT(currentStrivingOperationOrder != 0);
-        QStringList striving = desiredOperationOrders.values(currentStrivingOperationOrder);
-        sscForOperationOrderReplies.clear();
-        state = QMdmmLogic::SscForOperationOrder;
-        emit q->requestSscForOperationOrder(striving, currentStrivingOperationOrder, QMdmmLogic::QPrivateSignal());
+        Q_ASSERT(currentStrivingActionOrder != 0);
+        QStringList striving = desiredActionOrders.values(currentStrivingActionOrder);
+        sscForActionOrderReplies.clear();
+        state = QMdmmLogic::SscForActionOrder;
+        emit q->requestSscForActionOrder(striving, currentStrivingActionOrder, QMdmmLogic::QPrivateSignal());
     }
 }
 
-void QMdmmLogicPrivate::sscForOperationOrder()
+void QMdmmLogicPrivate::sscForActionOrder()
 {
-    QStringList striving = desiredOperationOrders.values(currentStrivingOperationOrder);
-    if (sscForOperationOrderReplies.count() == striving.count()) {
-        emit q->sscResult(sscForOperationOrderReplies, QMdmmLogic::QPrivateSignal());
-        QStringList sscForOperationOrderWinners = QMdmmData::stoneScissorsClothWinners(sscForOperationOrderReplies);
-        if (!sscForOperationOrderWinners.isEmpty()) {
-            foreach (const QString &winner, sscForOperationOrderWinners)
+    QStringList striving = desiredActionOrders.values(currentStrivingActionOrder);
+    if (sscForActionOrderReplies.count() == striving.count()) {
+        emit q->sscResult(sscForActionOrderReplies, QMdmmLogic::QPrivateSignal());
+        QStringList sscForActionOrderWinners = QMdmmData::stoneScissorsClothWinners(sscForActionOrderReplies);
+        if (!sscForActionOrderWinners.isEmpty()) {
+            foreach (const QString &winner, sscForActionOrderWinners)
                 striving.removeAll(winner);
             foreach (const QString &loser, striving)
-                desiredOperationOrders.remove(currentStrivingOperationOrder, loser);
+                desiredActionOrders.remove(currentStrivingActionOrder, loser);
         }
-        startSscForOperationOrder();
+        startSscForActionOrder();
     }
 }
 
-void QMdmmLogicPrivate::startOperation()
+void QMdmmLogicPrivate::startAction()
 {
     if (!room->isGameOver()) {
-        if (++currentOperationOrder <= sscForOperationWinners.length()) {
-            state = QMdmmLogic::Operation;
-            emit q->requestOperation(confirmedOperationOrders[currentOperationOrder], currentOperationOrder, QMdmmLogic::QPrivateSignal());
+        if (++currentActionOrder <= sscForActionWinners.length()) {
+            state = QMdmmLogic::Action;
+            emit q->requestAction(confirmedActionOrders[currentActionOrder], currentActionOrder, QMdmmLogic::QPrivateSignal());
         } else {
-            startSscForOperation();
+            startSscForAction();
         }
     } else {
         startUpgrade();
@@ -393,36 +393,36 @@ void QMdmmLogic::gameStart()
 {
     if (d->state == BeforeGameStart || d->state == GameFinish) {
         d->room->prepareForGameStart();
-        d->startSscForOperation();
+        d->startSscForAction();
     }
 }
 
 void QMdmmLogic::sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc)
 {
-    if (d->state == SscForOperation) {
-        d->sscForOperationReplies.insert(playerName, ssc);
-        d->sscForOperation();
-    } else if (d->state == SscForOperationOrder) {
-        d->sscForOperationOrderReplies.insert(playerName, ssc);
-        d->sscForOperationOrder();
+    if (d->state == SscForAction) {
+        d->sscForActionReplies.insert(playerName, ssc);
+        d->sscForAction();
+    } else if (d->state == SscForActionOrder) {
+        d->sscForActionOrderReplies.insert(playerName, ssc);
+        d->sscForActionOrder();
     }
 }
 
-void QMdmmLogic::operationOrderReply(const QString &playerName, const QList<int> &desiredOrder)
+void QMdmmLogic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
-    if (d->state == OperationOrder) {
+    if (d->state == ActionOrder) {
         foreach (int order, desiredOrder)
-            d->desiredOperationOrders.insert(order, playerName);
-        d->operationOrder();
+            d->desiredActionOrders.insert(order, playerName);
+        d->actionOrder();
     }
 }
 
-void QMdmmLogic::operationReply(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition)
+void QMdmmLogic::actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition)
 {
-    if (d->state == Operation) {
-        if (d->operationFeasible(playerName, operation, toPlayer, toPosition)) {
-            d->applyOperation(playerName, operation, toPlayer, toPosition);
-            d->startOperation();
+    if (d->state == Action) {
+        if (d->actionFeasible(playerName, action, toPlayer, toPosition)) {
+            d->applyAction(playerName, action, toPlayer, toPosition);
+            d->startAction();
         }
     }
 }

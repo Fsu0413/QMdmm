@@ -18,7 +18,7 @@
 #include <QTcpServer>
 #include <QWebSocketServer>
 
-class QMDMMSERVER_EXPORT QMdmmServerPrivate final : public QObject
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
 {
     Q_OBJECT
 

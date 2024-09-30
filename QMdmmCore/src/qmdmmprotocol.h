@@ -20,8 +20,8 @@ enum RequestId
     RequestInvalid = 0,
 
     RequestStoneScissorsCloth, // request: N/A, reply: int ssc
-    RequestOperationOrder, // request: array {int remainedOrder}, int maximumOrder, int selectionNum, reply: array { int order }
-    RequestOperation, // request: int currentOrder, reply: string operation, optional string toPlayer, optional int toPosition
+    RequestActionOrder, // request: array {int remainedOrder}, int maximumOrder, int selectionNum, reply: array { int order }
+    RequestAction, // request: int currentOrder, reply: string action, optional string toPlayer, optional int toPosition
     RequestUpdate, // request: int remaningTimes, reply: int item
 };
 
@@ -43,8 +43,8 @@ enum NotifyId
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]
-    NotifyOperationOrder, // broadcast, array { string playerName } [totalOperationNum]
-    NotifyOperation, // broadcast, string playerName, string operation, optional string toPlayer, optional int toPlace, optional string reason
+    NotifyActionOrder, // broadcast, array { string playerName } [totalActionNum]
+    NotifyAction, // broadcast, string playerName, string action, optional string toPlayer, optional int toPlace, optional string reason
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
     NotifyGameOver, // broadcast, string winnerPlayerName

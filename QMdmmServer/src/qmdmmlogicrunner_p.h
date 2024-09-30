@@ -9,7 +9,7 @@
 
 #include <QPointer>
 
-struct QMDMMSERVER_EXPORT QMdmmLogicRunnerPrivate
+struct QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate
 {
     QPointer<QMdmmLogic> logic;
 };

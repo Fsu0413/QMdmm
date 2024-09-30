@@ -5,7 +5,7 @@
 
 #include "qmdmmplayer.h"
 
-struct QMDMMCORE_EXPORT QMdmmPlayerPrivate final
+struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
 {
     QMdmmPlayerPrivate(QMdmmRoom *room);
 

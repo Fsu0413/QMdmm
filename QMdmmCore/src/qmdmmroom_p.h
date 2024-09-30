@@ -7,7 +7,7 @@
 
 #include <QMap>
 
-struct QMDMMCORE_EXPORT QMdmmRoomPrivate final
+struct QMDMMCORE_PRIVATE_EXPORT QMdmmRoomPrivate final
 {
     QMap<QString, QMdmmPlayer *> players;
 };

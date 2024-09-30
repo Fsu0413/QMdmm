@@ -10,7 +10,7 @@
 #include <QPointer>
 #include <QTcpSocket>
 
-class QMDMMSERVER_EXPORT QMdmmClientPrivate final
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmClientPrivate final
 {
 public:
     QMdmmSocket *socket;

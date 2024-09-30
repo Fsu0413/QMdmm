@@ -7,7 +7,7 @@
 
 class QMdmmRoom;
 
-struct QMDMMCORE_EXPORT QMdmmLogicPrivate final
+struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 {
     QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguration &logicConfiguration);
 
@@ -18,31 +18,31 @@ struct QMDMMCORE_EXPORT QMdmmLogicPrivate final
 
     QMdmmLogic::State state;
 
-    QHash<QString, QMdmmData::StoneScissorsCloth> sscForOperationReplies;
-    QStringList sscForOperationWinners;
+    QHash<QString, QMdmmData::StoneScissorsCloth> sscForActionReplies;
+    QStringList sscForActionWinners;
     // QMultiMap / QMultiHash - Which one is faster?
     // QMultiMap provides O(logn) as time complexity, it depends on comparation
     // QMultiHash provides O(1) as time complexity, but it depends on qHash<int>
-    QMultiHash<int, QString> desiredOperationOrders;
-    QHash<int, QString> confirmedOperationOrders;
-    int currentStrivingOperationOrder;
-    QHash<QString, QMdmmData::StoneScissorsCloth> sscForOperationOrderReplies;
-    int currentOperationOrder;
+    QMultiHash<int, QString> desiredActionOrders;
+    QHash<int, QString> confirmedActionOrders;
+    int currentStrivingActionOrder;
+    QHash<QString, QMdmmData::StoneScissorsCloth> sscForActionOrderReplies;
+    int currentActionOrder;
     QHash<QString, QList<QMdmmData::UpgradeItem>> upgrades;
 
     // helper functions
-    [[nodiscard]] bool operationFeasible(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace) const;
-    bool applyOperation(const QString &fromPlayer, QMdmmData::Operation operation, const QString &toPlayer, int toPlace);
+    [[nodiscard]] bool actionFeasible(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace) const;
+    bool applyAction(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace);
 
     // Functions:
     void startBeforeGameStart();
-    void startSscForOperation();
-    void sscForOperation();
-    void startOperationOrder();
-    void operationOrder();
-    void startSscForOperationOrder();
-    void sscForOperationOrder();
-    void startOperation();
+    void startSscForAction();
+    void sscForAction();
+    void startActionOrder();
+    void actionOrder();
+    void startSscForActionOrder();
+    void sscForActionOrder();
+    void startAction();
     void startUpgrade();
     void upgrade();
 };

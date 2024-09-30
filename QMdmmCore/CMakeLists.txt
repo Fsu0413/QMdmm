@@ -6,12 +6,14 @@ set(QMDMMCORE_HEADERS
     src/qmdmmroom.h
     src/qmdmmplayer.h
     src/qmdmmlogic.h
+    src/qmdmmdebug.h
 )
 
 set(QMDMMCORE_PRIVATE_HEADERS
     src/qmdmmroom_p.h
     src/qmdmmplayer_p.h
     src/qmdmmlogic_p.h
+    src/qmdmmdebug_p.h
 )
 
 set(QMDMMCORE_SOURCES
@@ -20,6 +22,7 @@ set(QMDMMCORE_SOURCES
     src/qmdmmroom.cpp
     src/qmdmmplayer.cpp
     src/qmdmmlogic.cpp
+    src/qmdmmdebug.cpp
 )
 
 add_custom_target(QMdmmCore)
@@ -51,6 +54,11 @@ if (Qt6_FOUND)
         target_compile_definitions(QMdmmCore6
             PRIVATE QMDMMCORE_LIBRARY
         )
+        if (QMDMM_EXPORT_PRIVATE)
+            target_compile_definitions(QMdmmCore6
+                PUBLIC QMDMM_NEED_EXPORT_PRIVATE
+            )
+        endif()
     else()
         target_compile_definitions(QMdmmCore6
             PUBLIC QMDMM_STATIC
@@ -101,6 +109,11 @@ if (Qt5_FOUND)
         target_compile_definitions(QMdmmCore5
             PRIVATE QMDMMCORE_LIBRARY
         )
+        if (QMDMM_EXPORT_PRIVATE)
+            target_compile_definitions(QMdmmCore5
+                PUBLIC QMDMM_NEED_EXPORT_PRIVATE
+            )
+        endif()
     else()
         target_compile_definitions(QMdmmCore5
             PUBLIC QMDMM_STATIC

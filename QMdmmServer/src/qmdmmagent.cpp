@@ -3,7 +3,6 @@
 #include "qmdmmagent.h"
 #include "qmdmmagent_p.h"
 
-#include "qmdmmserver.h"
 #include "qmdmmsocket.h"
 
 QMdmmAgentPrivate::QMdmmAgentPrivate(QMdmmAgent *a)

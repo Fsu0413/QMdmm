@@ -3,6 +3,7 @@
 #ifndef QMDMMCOREGLOBAL_H
 #define QMDMMCOREGLOBAL_H
 
+#ifndef DOXYGEN
 #include <QHash>
 #include <QList>
 #include <QMetaType>
@@ -10,6 +11,11 @@
 #include <QStringList>
 #include <QVersionNumber>
 #include <QtGlobal>
+#else
+#define Q_NAMESPACE_EXPORT
+#define Q_FLAG_NS
+#define Q_DECLARE_METATYPE
+#endif
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmCoreGlobal
@@ -18,6 +24,7 @@ class QMDMMCORE_EXPORT QMdmmGlobal
 class QMDMMCORE_EXPORT QMdmmUtilities
 #endif
 
+#ifndef DOXYGEN
 #ifndef QMDMM_STATIC
 #ifdef QMDMMCORE_LIBRARY
 #define QMDMMCORE_EXPORT Q_DECL_EXPORT
@@ -27,8 +34,17 @@ class QMDMMCORE_EXPORT QMdmmUtilities
 #else
 #define QMDMMCORE_EXPORT
 #endif
+#ifdef QMDMM_NEED_EXPORT_PRIVATE
+#define QMDMMCORE_PRIVATE_EXPORT QMDMMCORE_EXPORT
+#else
+#define QMDMMCORE_PRIVATE_EXPORT
+#endif
+#else
+#define QMDMMCORE_EXPORT dll_interface_defined
+#define QMDMMCORE_PRIVATE_EXPORT dll_interface_defined
+#endif
 
-#define QMDMMCORE_EXPORT_NOHEADER QMDMMCORE_EXPORT
+#include "qmdmmdebug.h"
 
 namespace QMdmmData {
 Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
@@ -44,10 +60,10 @@ enum
 
 enum DamageReason
 {
-    Unknown,
+    DamageReasonUnknown,
     Slashed,
     Kicked,
-    HpPunished
+    HpPunished,
 };
 Q_FLAG_NS(DamageReason)
 
@@ -55,11 +71,11 @@ enum StoneScissorsCloth
 {
     Stone,
     Scissors,
-    Cloth
+    Cloth,
 };
 Q_FLAG_NS(StoneScissorsCloth)
 
-enum Operation
+enum Action
 {
     DoNothing,
     BuyKnife,
@@ -69,7 +85,7 @@ enum Operation
     Move,
     LetMove,
 };
-Q_FLAG_NS(Operation)
+Q_FLAG_NS(Action)
 
 enum UpgradeItem
 {
@@ -85,7 +101,7 @@ QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, Ston
 
 Q_DECLARE_METATYPE(QMdmmData::DamageReason)
 Q_DECLARE_METATYPE(QMdmmData::StoneScissorsCloth)
-Q_DECLARE_METATYPE(QMdmmData::Operation)
+Q_DECLARE_METATYPE(QMdmmData::Action)
 Q_DECLARE_METATYPE(QMdmmData::UpgradeItem)
 
 namespace QMdmmGlobal {

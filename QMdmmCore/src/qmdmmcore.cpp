@@ -1,6 +1,98 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+/**
+ * \file QMdmmCoreGlobal
+ * \brief Alternative include of "qmdmmcoreglobal.h". See \ref qmdmmcoreglobal.h for details.
+ * \ingroup QMdmmCore
+ */
+/**
+ * \file QMdmmData
+ * \brief Include all things from namespace \c QMdmmData. See \ref qmdmmcoreglobal.h for details.
+ * \ingroup QMdmmCore
+ */
+/**
+ * \file QMdmmGlobal
+ * \brief Include all things from namespace \c QMdmmGlobal. See \ref qmdmmcoreglobal.h for details.
+ * \ingroup QMdmmCore
+ */
+/**
+ * \file QMdmmUtilities
+ * \brief Include all things from namespace \c QMdmmUtilities. See \ref qmdmmcoreglobal.h for details.
+ * \ingroup QMdmmCore
+ */
+
 #include "qmdmmcoreglobal.h"
+
+/**
+ * \file qmdmmcoreglobal.h
+ * \brief Global definition of QMdmmCore library
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \def QMDMMCORE_EXPORT
+ * \brief Indicates this function is public and is exported from QMdmmCore library.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \def QMDMMCORE_PRIVATE_EXPORT
+ * \brief Indicates this function is private but will be exported from QMdmmCore library if specified during build.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \namespace QMdmmData
+ * \brief Various data definition of MDMM game
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \var int QMdmmData::Country
+ * \brief For use with \c QMdmmPlayer::place() , if it equals to \c QMdmmData::Country then this player is in Country.
+ * \ingroup QMdmmCore
+ *
+ * This enumeration variable equals to zero. Provided for readability.
+ */
+
+/**
+ * \enum QMdmmData::DamageReason
+ * \brief The reason for a damage.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \var QMdmmData::DamageReason QMdmmData::DamageReasonUnknown
+ * \brief Unknown / erroneous damage reason.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \var QMdmmData::DamageReason QMdmmData::Slashed
+ * \brief Damage is caused by a slash.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \var QMdmmData::DamageReason QMdmmData::Kicked
+ * \brief Damage is caused by a kick.
+ * \ingroup QMdmmCore
+ */
+
+/**
+ * \var QMdmmData::DamageReason QMdmmData::HpPunished
+ * \brief Damage is caused by HP punish.
+ * \ingroup QMdmmCore
+ *
+ * There is a mechanism in more modern version of MDMM game, where punishment is applied for slash in city.
+ * By default the punished HP is half of the maximum HP, rounded to nearest integer (since it can only be X.0 or X.5 so it is always rounded up)
+ */
+
+/**
+ * \enum QMdmmData::Action
+ * \brief Action executed at a time.
+ * \ingroup QMdmmCore
+ */
 
 #include <QMap>
 

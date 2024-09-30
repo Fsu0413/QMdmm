@@ -216,6 +216,9 @@ bool QMdmmPlayer::canMove(int toPlace) const
 
 bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
 {
+    if (!room()->logic()->configuration().enableLetMove)
+        return false;
+
     if (dead() || to->dead())
         return false;
 

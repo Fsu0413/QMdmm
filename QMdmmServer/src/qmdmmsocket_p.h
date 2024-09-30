@@ -8,9 +8,7 @@
 #include <QObject>
 #include <QPointer>
 
-#include <cstdint>
-
-class QMDMMSERVER_EXPORT QMdmmSocketPrivate : public QObject
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
 {
     Q_OBJECT
 
@@ -33,7 +31,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool packetReceived(const QByteArray &arr);
 };
 
-class QMDMMSERVER_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -57,7 +55,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void readyRead();
 };
 
-class QMDMMSERVER_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -81,7 +79,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void readyRead();
 };
 
-class QMDMMSERVER_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -105,10 +103,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 };
 
 namespace QMdmmSocketPrivateFactory {
-QMDMMSERVER_EXPORT QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p);
-QMDMMSERVER_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p);
-QMDMMSERVER_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
-QMDMMSERVER_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
+QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p);
+QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p);
+QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
+QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
 } // namespace QMdmmSocketPrivateFactory
 
 #endif

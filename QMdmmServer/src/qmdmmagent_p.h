@@ -10,7 +10,7 @@
 #include <QObject>
 #include <QPointer>
 
-class QMDMMSERVER_EXPORT QMdmmAgentPrivate final : public QObject
+class QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final : public QObject
 {
     Q_OBJECT
 

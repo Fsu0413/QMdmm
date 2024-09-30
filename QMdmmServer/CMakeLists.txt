@@ -69,12 +69,6 @@ if (Qt6_FOUND)
                Qt6::WebSockets
     )
 
-    if (NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-        target_link_libraries(QMdmmServer6
-            PUBLIC Qt6::Network
-        )
-    endif()
-
     install(TARGETS QMdmmServer6
         RUNTIME
         ARCHIVE

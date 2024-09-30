@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+// qmdmmglobal.h includes this header file
+#include "qmdmmcoreglobal.h"
+
+#ifndef QMDMMDEBUG_H
+#define QMDMMDEBUG_H
+
+#if 0
+class QMDMMCORE_EXPORT QMdmmDebug
+#endif
+
+#include <QDebug>
+#include <QIODevice>
+
+QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QIODevice *f);
+
+#endif

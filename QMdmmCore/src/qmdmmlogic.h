@@ -27,9 +27,10 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
         RoundUp, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
         PlusOne, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 3
     } punishHpRoundStrategy
-        = RoundDown;
+        = RoundToNearest;
 
-    bool zeroHpAsDead = true; // Treat one with hp value 0 as dead. If false only one with minus hp value are treated as dead
+    bool zeroHpAsDead = true; // Treat one with hp value 0 as dead, which is the case in early versions. If false only one with minus hp value are treated as dead
+    bool enableLetMove = true; // Let move is nonexistent in early versions
 
     [[nodiscard]] QJsonValue serialize() const;
     bool deserialize(const QJsonValue &value);
@@ -46,10 +47,10 @@ public:
     enum State
     {
         BeforeGameStart,
-        SscForOperation,
-        OperationOrder,
-        SscForOperationOrder,
-        Operation,
+        SscForAction,
+        ActionOrder,
+        SscForActionOrder,
+        Action,
         Upgrade,
         GameFinish,
     };
@@ -67,18 +68,18 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void gameStart();
 
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
-    void operationOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void operationReply(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition);
+    void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
+    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition);
     void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
-    void requestSscForOperation(const QStringList &playerNames, QPrivateSignal);
+    void requestSscForAction(const QStringList &playerNames, QPrivateSignal);
     void sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies, QPrivateSignal);
-    void requestOperationOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections, QPrivateSignal);
-    void operationOrderResult(const QHash<int, QString> &result, QPrivateSignal);
-    void requestSscForOperationOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
-    void requestOperation(const QString &playerName, int operationOrder, QPrivateSignal);
-    void operationResult(const QString &playerName, QMdmmData::Operation operation, const QString &toPlayer, int toPosition, QPrivateSignal);
+    void requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections, QPrivateSignal);
+    void actionOrderResult(const QHash<int, QString> &result, QPrivateSignal);
+    void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
+    void requestAction(const QString &playerName, int actionOrder, QPrivateSignal);
+    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition, QPrivateSignal);
     void requestUpgrade(const QString &playerName, int upgradePoint, QPrivateSignal);
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
 
