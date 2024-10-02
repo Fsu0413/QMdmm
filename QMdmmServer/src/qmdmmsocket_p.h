@@ -16,11 +16,9 @@ public:
     static QMdmmSocket::Type typeByConnectAddr(const QString &addr);
 
     explicit QMdmmSocketPrivate(QMdmmSocket *p);
-
     [[nodiscard]] virtual QMdmmSocket::Type type() const = 0;
 
-    virtual bool connectToHost(const QString &addr);
-
+    virtual bool connectToHost(const QString &addr) = 0;
     virtual bool disconnectFromHost() = 0;
 
     QMdmmSocket *p;
@@ -29,6 +27,8 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     virtual void sendPacket(QMdmmPacket packet) = 0;
     bool packetReceived(const QByteArray &arr);
+    void socketDisconnected();
+    void errorOccurred(const QString &errorString);
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
@@ -53,6 +53,7 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendPacket(QMdmmPacket packet) override;
     void readyRead();
+    void errorOccurredTcpSocket(QAbstractSocket::SocketError e);
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
@@ -77,6 +78,7 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendPacket(QMdmmPacket packet) override;
     void readyRead();
+    void errorOccurredLocalSocket(QLocalSocket::LocalSocketError e);
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
@@ -100,6 +102,7 @@ public:
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendPacket(QMdmmPacket packet) override;
+    void errorOccurredWebSocket(QAbstractSocket::SocketError e);
 };
 
 namespace QMdmmSocketPrivateFactory {

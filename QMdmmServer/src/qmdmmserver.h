@@ -5,6 +5,7 @@
 
 #include "qmdmmserverglobal.h"
 
+#include <QMdmmLogic>
 #include <QMdmmProtocol>
 
 #include <QObject>
@@ -19,7 +20,10 @@ struct QMDMMSERVER_EXPORT QMdmmServerConfiguration final
     bool localEnabled = true;
     QString localSocketName = QStringLiteral("QMdmm");
     bool websocketEnabled = true;
+    QString websocketName = QStringLiteral("QMdmm");
     uint16_t websocketPort = 6367U;
+
+    QMdmmLogicConfiguration logicConfiguration;
 };
 
 class QMdmmServerPrivate;
@@ -31,6 +35,11 @@ class QMDMMSERVER_EXPORT QMdmmServer : public QObject
 public:
     QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QObject *parent = nullptr);
     ~QMdmmServer() override;
+
+public slots: // NOLINT(readability-redundant-access-specifiers)
+    bool listenTcpServer();
+    bool listenLocalServer();
+    bool listenWebsocketServer();
 
 private:
     QMdmmServerPrivate *const d;

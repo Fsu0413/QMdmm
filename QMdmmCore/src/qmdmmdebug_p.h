@@ -5,14 +5,13 @@
 
 #include "qmdmmdebug.h"
 
-#include <QIODevice>
 #include <QMutex>
 #include <QPointer>
 
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmDebugLogPrivate
 {
     QMutex m;
-    QPointer<QIODevice> f;
+    QPointer<QFileDevice> f;
 
     static QtMessageHandler qtMessageHandler;
 };

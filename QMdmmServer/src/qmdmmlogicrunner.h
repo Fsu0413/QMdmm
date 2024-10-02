@@ -5,14 +5,12 @@
 
 #include "qmdmmserverglobal.h"
 
-#include <QThread>
-
 class QMdmmAgent;
+class QMdmmSocket;
 struct QMdmmLogicConfiguration;
+class QMdmmLogicRunnerPrivate;
 
-struct QMdmmLogicRunnerPrivate;
-
-class QMDMMSERVER_EXPORT QMdmmLogicRunner final : public QThread
+class QMDMMSERVER_EXPORT QMdmmLogicRunner final : public QObject
 {
     Q_OBJECT
 
@@ -23,8 +21,12 @@ public:
     ~QMdmmLogicRunner() override;
 
     // Functions to be called in Server thread
-    bool registerAgent(QMdmmAgent *agent);
-    bool deregisterAgent(QMdmmAgent *agent);
+    QMdmmAgent *addSocket(const QString &playerName, QMdmmSocket *socket);
+    bool removeSocket(const QString &playerName);
+
+    // TODO: property: full, gamerunning implementation
+    [[nodiscard]] bool full() const;
+    [[nodiscard]] bool gameRunning() const;
 
 private:
     QMdmmLogicRunnerPrivate *const d;

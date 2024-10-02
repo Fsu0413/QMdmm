@@ -3,14 +3,15 @@
 #include "qmdmmclient.h"
 #include "qmdmmclient_p.h"
 
-QMdmmClientPrivate::QMdmmClientPrivate()
-    : socket(nullptr)
+QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClient *p)
+    : p(p)
+    , socket(nullptr)
 {
 }
 
 QMdmmClient::QMdmmClient(QObject *parent)
     : QObject(parent)
-    , d(new QMdmmClientPrivate)
+    , d(new QMdmmClientPrivate(this))
 {
 }
 

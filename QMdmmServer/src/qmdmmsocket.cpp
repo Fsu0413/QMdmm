@@ -58,12 +58,6 @@ QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *p)
     connect(p, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
 }
 
-bool QMdmmSocketPrivate::connectToHost(const QString &addr)
-{
-    Q_UNUSED(addr);
-    return false;
-}
-
 // NOLINTNEXTLINE(readability-make-member-function-const)
 bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
 {
@@ -83,6 +77,18 @@ bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
     emit p->packetReceived(packet, QMdmmSocket::QPrivateSignal());
 
     return !hasError;
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void QMdmmSocketPrivate::socketDisconnected()
+{
+    emit p->socketDisconnected(QMdmmSocket::QPrivateSignal());
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void QMdmmSocketPrivate::errorOccurred(const QString &errorString)
+{
+    emit p->socketErrorOccurred(errorString, QMdmmSocket::QPrivateSignal());
 }
 
 QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *p)
@@ -127,8 +133,9 @@ void QMdmmSocketPrivateQTcpSocket::setupSocket()
 {
     connect(socket, &QTcpSocket::readyRead, this, &QMdmmSocketPrivateQTcpSocket::readyRead);
     connect(this, &QMdmmSocketPrivateQTcpSocket::destroyed, socket, &QTcpSocket::deleteLater);
-    connect(socket, &QTcpSocket::disconnected, p, &QMdmmSocket::disconnected);
-    connect(socket, &QTcpSocket::disconnected, p, &QTcpSocket::deleteLater);
+    connect(socket, &QTcpSocket::errorOccurred, this, &QMdmmSocketPrivateQTcpSocket::errorOccurredTcpSocket);
+    connect(socket, &QTcpSocket::disconnected, this, &QMdmmSocketPrivateQTcpSocket::socketDisconnected);
+    connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 }
 
 void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmPacket packet)
@@ -148,6 +155,12 @@ void QMdmmSocketPrivateQTcpSocket::readyRead()
                 break;
         }
     }
+}
+
+void QMdmmSocketPrivateQTcpSocket::errorOccurredTcpSocket(QAbstractSocket::SocketError /*e*/)
+{
+    if (socket != nullptr)
+        errorOccurred(socket->errorString());
 }
 
 QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *p)
@@ -188,8 +201,9 @@ void QMdmmSocketPrivateQLocalSocket::setupSocket()
 {
     connect(socket, &QLocalSocket::readyRead, this, &QMdmmSocketPrivateQLocalSocket::readyRead);
     connect(this, &QMdmmSocketPrivateQLocalSocket::destroyed, socket, &QLocalSocket::deleteLater);
-    connect(socket, &QLocalSocket::disconnected, p, &QMdmmSocket::disconnected);
-    connect(socket, &QLocalSocket::disconnected, p, &QLocalSocket::deleteLater);
+    connect(socket, &QLocalSocket::errorOccurred, this, &QMdmmSocketPrivateQLocalSocket::errorOccurredLocalSocket);
+    connect(socket, &QLocalSocket::disconnected, this, &QMdmmSocketPrivateQLocalSocket::socketDisconnected);
+    connect(socket, &QLocalSocket::disconnected, socket, &QLocalSocket::deleteLater);
 }
 
 void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmPacket packet)
@@ -209,6 +223,12 @@ void QMdmmSocketPrivateQLocalSocket::readyRead()
                 break;
         }
     }
+}
+
+void QMdmmSocketPrivateQLocalSocket::errorOccurredLocalSocket(QLocalSocket::LocalSocketError /*e*/)
+{
+    if (socket != nullptr)
+        errorOccurred(socket->errorString());
 }
 
 QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *p)
@@ -251,14 +271,29 @@ void QMdmmSocketPrivateQWebSocket::setupSocket()
 {
     connect(socket, &QWebSocket::binaryMessageReceived, this, &QMdmmSocketPrivateQWebSocket::packetReceived);
     connect(this, &QMdmmSocketPrivateQWebSocket::destroyed, socket, &QWebSocket::deleteLater);
-    connect(socket, &QWebSocket::disconnected, p, &QMdmmSocket::disconnected);
-    connect(socket, &QWebSocket::disconnected, p, &QWebSocket::deleteLater);
+    connect(socket,
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
+            // QTcpSocket and QLocalSocket introduced 'errorOccurred' signal in 5.15 and removed 'error' as a signal in 6.0
+            // but QWebSocket introduced 'errorOccurred' in 6.5 so overloaded 'error' can only be used back then.
+            qOverload<QAbstractSocket::SocketError>(&QWebSocket::error),
+#else
+            &QWebSocket::errorOccurred,
+#endif
+            this, &QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket);
+    connect(socket, &QWebSocket::disconnected, this, &QMdmmSocketPrivateQWebSocket::socketDisconnected);
+    connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 }
 
 void QMdmmSocketPrivateQWebSocket::sendPacket(QMdmmPacket packet)
 {
     if (socket != nullptr)
         socket->sendBinaryMessage(packet);
+}
+
+void QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e*/)
+{
+    if (socket != nullptr)
+        errorOccurred(socket->errorString());
 }
 
 QMdmmSocket::QMdmmSocket(QTcpSocket *t, QObject *parent)

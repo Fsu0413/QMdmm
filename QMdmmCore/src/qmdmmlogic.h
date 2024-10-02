@@ -6,6 +6,7 @@
 #include "qmdmmcoreglobal.h"
 #include <QObject>
 
+// TODO: consider make it binary compatible across versions
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
 {
     int playerNumPerRoom = 3;

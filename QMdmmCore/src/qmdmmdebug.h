@@ -11,8 +11,8 @@ class QMDMMCORE_EXPORT QMdmmDebug
 #endif
 
 #include <QDebug>
-#include <QIODevice>
+#include <QFileDevice>
 
-QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QIODevice *f);
+QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QFileDevice *f);
 
 #endif

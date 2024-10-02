@@ -45,9 +45,10 @@ public:
 
 signals:
     void sendPacket(QMdmmPacket);
-    void packetReceived(QMdmmPacket, QPrivateSignal);
 
-    void disconnected();
+    void packetReceived(QMdmmPacket, QPrivateSignal);
+    void socketErrorOccurred(const QString &errorString, QPrivateSignal);
+    void socketDisconnected(QPrivateSignal);
 
 private:
     friend class QMdmmSocketPrivate;

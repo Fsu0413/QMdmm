@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-set(QMDMMCORE_HEADERS
+set(QMDMMCORE_PCH
     src/qmdmmcoreglobal.h
+)
+
+set(QMDMMCORE_HEADERS
+    ${QMDMMCORE_PCH}
     src/qmdmmprotocol.h
     src/qmdmmroom.h
     src/qmdmmplayer.h
@@ -42,6 +46,10 @@ if (Qt6_FOUND)
         AUTOUIC ON
         AUTORCC ON
         VERSION "${QMdmm_VERSION}"
+    )
+
+    target_precompile_headers(QMdmmCore6
+        PRIVATE ${QMDMMCORE_PCH}
     )
 
     target_compile_definitions(QMdmmCore6
@@ -97,6 +105,10 @@ if (Qt5_FOUND)
         AUTOUIC ON
         AUTORCC ON
         VERSION "${QMdmm_VERSION}"
+    )
+
+    target_precompile_headers(QMdmmCore5
+        PRIVATE ${QMDMMCORE_PCH}
     )
 
     target_compile_definitions(QMdmmCore5

@@ -14,6 +14,20 @@ class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
 
 namespace QMdmmProtocol {
+enum AgentRole
+{
+    AgentHuman,
+    AgentBot,
+};
+
+enum AgentState
+{
+    StateOffline = 0x0,
+    StateOnline = 0x10,
+    StateOnlineTrust = 0x18,
+    StateOnlineBot = 0x19,
+};
+
 enum RequestId
 {
     // No requests is from server, all requests are from Logic
@@ -33,16 +47,16 @@ enum NotifyId
     NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
     NotifyVersion, // string versionNumber
-    NotifySignedIn, // string playerName, int connectionId
+    NotifySignedIn, // string playerName, string screenName, int(AgentRole) agentRole
 
-    NotifyFromLogicMask = 0x2000,
+    NotifyFromAgentMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
     NotifyPlayerAdded, // string playerName, string screenName, bool isReconnect
     NotifyPlayerRemoved, // string playerName
     NotifyReadyToggled, // string playerName, bool ready
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyStoneScissorsCloth, // broadcast, object { string playerName: int ssc } detail[playerNum]
+    NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc }
     NotifyActionOrder, // broadcast, array { string playerName } [totalActionNum]
     NotifyAction, // broadcast, string playerName, string action, optional string toPlayer, optional int toPlace, optional string reason
     NotifyRoundOver, // broadcast
@@ -54,11 +68,10 @@ enum NotifyId
     NotifyToServerMask = 0x4000,
     NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
-    NotifySignIn, // string screenName, bool isReconnect, optional int connectionId
+    NotifySignIn, // string playerName, string screenName, int(AgentRole) agentRole
     NotifyObserve, // string observerName, string playerName
 
-    NotifyToLogicMask = 0x8000,
-    NotifyReady, // bool ready
+    NotifyToAgentMask = 0x8000,
     NotifySpeak, // string contents
     NotifyOperating, // TODO: for ob
 };
@@ -112,6 +125,7 @@ private:
     QSharedDataPointer<QMdmmPacketData> d;
 };
 
+Q_DECLARE_METATYPE(QMdmmProtocol::AgentState)
 Q_DECLARE_METATYPE(QMdmmPacket)
 
 #endif // QMDMMPROTOCOL_H

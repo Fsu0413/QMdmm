@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-set(QMDMMSERVER_HEADERS
+set(QMDMMSERVER_PCH
     src/qmdmmserverglobal.h
+)
+
+set(QMDMMSERVER_HEADERS
+    ${QMDMMSERVER_PCH}
     src/qmdmmserver.h
     src/qmdmmagent.h
     src/qmdmmclient.h
@@ -42,6 +46,10 @@ if (Qt6_FOUND)
         AUTOUIC ON
         AUTORCC ON
         VERSION "${QMdmm_VERSION}"
+    )
+
+    target_precompile_headers(QMdmmServer6
+        PRIVATE ${QMDMMSERVER_PCH}
     )
 
     target_compile_definitions(QMdmmServer6
@@ -91,6 +99,10 @@ if (Qt5_FOUND)
         AUTOUIC ON
         AUTORCC ON
         VERSION "${QMdmm_VERSION}"
+    )
+
+    target_precompile_headers(QMdmmServer5
+        PRIVATE ${QMDMMSERVER_PCH}
     )
 
     target_compile_definitions(QMdmmServer5

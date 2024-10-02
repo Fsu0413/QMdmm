@@ -11,32 +11,28 @@
 
 class QMdmmSocket;
 
-class QMdmmAgentPrivate;
+struct QMdmmAgentPrivate;
 
-class QMDMMSERVER_EXPORT QMdmmAgent final : public QObject
+class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
-    Q_PROPERTY(bool ready READ ready WRITE setReady NOTIFY readyChanged FINAL)
+    Q_PROPERTY(QMdmmProtocol::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
 
 public:
-    explicit QMdmmAgent(QString name, QObject *parent = nullptr);
+    explicit QMdmmAgent(const QString &name, QObject *parent = nullptr);
     ~QMdmmAgent() override;
 
     // properties
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &name);
 
-    [[nodiscard]] bool ready() const;
-    void setReady(bool ready);
-
-    void setSocket(QMdmmSocket *socket);
+    [[nodiscard]] QMdmmProtocol::AgentState state() const;
+    void setState(QMdmmProtocol::AgentState state);
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
-    void readyChanged(bool, QPrivateSignal);
-
-    void sendPacket(QMdmmPacket packet);
+    void stateChanged(QMdmmProtocol::AgentState, QPrivateSignal);
 
 private:
     QMdmmAgentPrivate *const d;

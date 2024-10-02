@@ -36,8 +36,6 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
                 &QTcpServer::pendingConnectionAvailable,
 #endif
                 this, &QMdmmServerPrivate::tcpServerNewConnection);
-
-        t->listen(QHostAddress::Any, serverConfiguration.tcpPort);
     }
 
     // Local
@@ -45,14 +43,12 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
         l = new QLocalServer(this);
         l->setSocketOptions(QLocalServer::WorldAccessOption);
         connect(l, &QLocalServer::newConnection, this, &QMdmmServerPrivate::localServerNewConnection);
-        l->listen(serverConfiguration.localSocketName);
     }
 
     // WebSocket
     if (serverConfiguration.websocketEnabled) {
-        w = new QWebSocketServer(QStringLiteral("QMdmm"), QWebSocketServer::NonSecureMode, this);
+        w = new QWebSocketServer(serverConfiguration.websocketName, QWebSocketServer::NonSecureMode, this);
         connect(w, &QWebSocketServer::newConnection, this, &QMdmmServerPrivate::websocketServerNewConnection);
-        w->listen(QHostAddress::Any, serverConfiguration.websocketPort);
     }
 }
 
@@ -68,6 +64,57 @@ bool QMdmmServerPrivate::pingServer(QMdmmSocket *socket, const QJsonValue &packe
 
 bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
+    do {
+        if (!packetValue.isObject())
+            break;
+
+        QJsonObject ob = packetValue.toObject();
+
+#define CONVERTAGENTROLE() static_cast<QMdmmProtocol::AgentRole>(v.toInt())
+
+        // no do .. while (0) here since I'd like 'break' to exit outside this block
+        // where "socket->hasError(true)" should be done
+#define CONF(member, check, convert)                      \
+    {                                                     \
+        if (!ob.contains(QStringLiteral(#member)))        \
+            break;                                        \
+        QJsonValue v = ob.value(QStringLiteral(#member)); \
+        if (!v.check())                                   \
+            break;                                        \
+        member = convert();                               \
+    }
+
+        QString playerName;
+        CONF(playerName, isString, v.toString);
+
+        QString screenName;
+        CONF(screenName, isString, v.toString);
+
+        QMdmmProtocol::AgentRole agentRole;
+        CONF(agentRole, isDouble, CONVERTAGENTROLE);
+
+#undef CONF
+#undef CONVERTAGENTROLE
+
+        // TODO: check if reconnect
+
+        if (current == nullptr || current->full() || current->gameRunning())
+            current = new QMdmmLogicRunner(serverConfiguration.logicConfiguration, this);
+
+        QMdmmAgent *createdAgent = current->addSocket(playerName, socket);
+        if (createdAgent == nullptr)
+            break;
+
+        createdAgent->setScreenName(screenName);
+        if (agentRole == QMdmmProtocol::AgentHuman)
+            createdAgent->setState(QMdmmProtocol::StateOnline);
+        else if (agentRole == QMdmmProtocol::AgentBot)
+            createdAgent->setState(QMdmmProtocol::StateOnlineBot);
+
+        return true;
+    } while (false);
+
+    socket->setHasError(true);
     return false;
 }
 
@@ -87,7 +134,7 @@ void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readabil
     emit socket->sendPacket(packet);
 }
 
-void QMdmmServerPrivate::tcpServerNewConnection() // NOLINT(readability-make-member-function-const)
+void QMdmmServerPrivate::tcpServerNewConnection()
 {
     while (t->hasPendingConnections()) {
         QTcpSocket *socket = t->nextPendingConnection();
@@ -137,6 +184,30 @@ QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QO
     : QObject(parent)
     , d(new QMdmmServerPrivate(serverConfiguration, this))
 {
+}
+
+bool QMdmmServer::listenTcpServer()
+{
+    if (d->serverConfiguration.tcpEnabled)
+        return d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort);
+
+    return false;
+}
+
+bool QMdmmServer::listenLocalServer()
+{
+    if (d->serverConfiguration.localEnabled)
+        return d->l->listen(d->serverConfiguration.localSocketName);
+
+    return false;
+}
+
+bool QMdmmServer::listenWebsocketServer()
+{
+    if (d->serverConfiguration.websocketEnabled)
+        return d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort);
+
+    return false;
 }
 
 // No need to delete d.

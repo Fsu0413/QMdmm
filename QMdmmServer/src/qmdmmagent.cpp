@@ -3,49 +3,12 @@
 #include "qmdmmagent.h"
 #include "qmdmmagent_p.h"
 
-#include "qmdmmsocket.h"
-
 QMdmmAgentPrivate::QMdmmAgentPrivate(QMdmmAgent *a)
-    : QObject(a)
-    , a(a)
-    , ready(false)
-    , socket(nullptr)
-    , isReconnect(false)
+    : a(a)
 {
 }
 
-void QMdmmAgentPrivate::setSocket(QMdmmSocket *_socket)
-{
-    if (socket != nullptr) {
-        // not allowed but...
-
-        socket->deleteLater();
-    }
-
-    socket = _socket;
-    connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmAgentPrivate::packetReceived);
-    connect(socket, &QMdmmSocket::disconnected, this, &QMdmmAgentPrivate::socketDisconnected);
-    connect(a, &QMdmmAgent::sendPacket, socket, &QMdmmSocket::sendPacket);
-}
-
-void QMdmmAgentPrivate::packetReceived(QMdmmPacket packet)
-{
-    (void)packet;
-}
-
-void QMdmmAgentPrivate::socketDisconnected()
-{
-    isReconnect = true;
-    socket->deleteLater();
-    socket = nullptr;
-}
-
-void QMdmmAgentPrivate::socketReconnected()
-{
-    isReconnect = false;
-}
-
-QMdmmAgent::QMdmmAgent(QString name, QObject *parent)
+QMdmmAgent::QMdmmAgent(const QString &name, QObject *parent)
     : QObject(parent)
     , d(new QMdmmAgentPrivate(this))
 {
@@ -68,20 +31,15 @@ void QMdmmAgent::setScreenName(const QString &name)
     }
 }
 
-bool QMdmmAgent::ready() const
+QMdmmProtocol::AgentState QMdmmAgent::state() const
 {
-    return d->ready;
+    return d->state;
 }
 
-void QMdmmAgent::setReady(bool ready)
+void QMdmmAgent::setState(QMdmmProtocol::AgentState state)
 {
-    if (ready != d->ready) {
-        d->ready = ready;
-        emit readyChanged(ready, QPrivateSignal());
+    if (d->state != state) {
+        d->state = state;
+        emit stateChanged(state, QPrivateSignal());
     }
-}
-
-void QMdmmAgent::setSocket(QMdmmSocket *socket)
-{
-    d->setSocket(socket);
 }

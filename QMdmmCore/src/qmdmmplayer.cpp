@@ -183,6 +183,8 @@ bool QMdmmPlayer::canBuyHorse() const
 
 bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
 {
+    Q_ASSERT(room() == to->room());
+
     if (dead() || to->dead())
         return false;
 
@@ -197,6 +199,8 @@ bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
 
 bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
 {
+    Q_ASSERT(room() == to->room());
+
     if (dead() || to->dead())
         return false;
 
@@ -216,6 +220,8 @@ bool QMdmmPlayer::canMove(int toPlace) const
 
 bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
 {
+    Q_ASSERT(room() == to->room());
+
     if (!room()->logic()->configuration().enableLetMove)
         return false;
 
@@ -257,6 +263,8 @@ bool QMdmmPlayer::buyHorse()
 
 bool QMdmmPlayer::slash(QMdmmPlayer *to)
 {
+    Q_ASSERT(room() == to->room());
+
     if (!canSlash(to))
         return false;
 
@@ -292,6 +300,8 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
 
 bool QMdmmPlayer::kick(QMdmmPlayer *to)
 {
+    Q_ASSERT(room() == to->room());
+
     if (!canKick(to))
         return false;
 
@@ -317,6 +327,8 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-ma
 {
     // pull, push, kick(effect)
 
+    Q_ASSERT(room() == to->room());
+
     if (canLetMove(to, toPlace)) {
         to->setPlace(toPlace);
         return true;
@@ -332,6 +344,8 @@ bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const):
 
 void QMdmmPlayer::applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
 {
+    Q_ASSERT(room() == from->room());
+
     bool kills = false;
 
     setHp(hp() - damagePoint, &kills);

@@ -27,6 +27,7 @@ QJsonValue QMdmmLogicConfiguration::serialize() const
     CONF(punishHpModifier, int);
     CONF(punishHpRoundStrategy, int);
     CONF(zeroHpAsDead, bool);
+    CONF(enableLetMove, bool);
 
 #undef CONF
 
@@ -41,14 +42,18 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     QJsonObject ob = value.toObject();
     static const QMdmmLogicConfiguration defaults;
 
-#define CONVERTPUNISHHPROUNDSTRATEGY(defaultValue) static_cast<PunishHpRoundStrategy>(v.toInt(defaultValue))
-#define CONF(member, check, convert)                      \
-    do {                                                  \
-        QJsonValue v = ob.value(QStringLiteral(#member)); \
-        if (!v.check())                                   \
-            return false;                                 \
-        member = convert(defaults.member);                \
-    } while (false)
+#define CONVERTPUNISHHPROUNDSTRATEGY() static_cast<PunishHpRoundStrategy>(v.toInt())
+#define CONF(member, check, convert)                          \
+    {                                                         \
+        if (ob.contains(QStringLiteral(#member))) {           \
+            QJsonValue v = ob.value(QStringLiteral(#member)); \
+            if (!v.check())                                   \
+                return false;                                 \
+            member = convert();                               \
+        } else {                                              \
+            member = defaults.member;                         \
+        }                                                     \
+    }
 
     CONF(playerNumPerRoom, isDouble, v.toInt);
     CONF(initialKnifeDamage, isDouble, v.toInt);
@@ -60,6 +65,7 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     CONF(punishHpModifier, isDouble, v.toInt);
     CONF(punishHpRoundStrategy, isDouble, CONVERTPUNISHHPROUNDSTRATEGY);
     CONF(zeroHpAsDead, isBool, v.toBool);
+    CONF(enableLetMove, isBool, v.toBool);
 
 #undef CONF
 #undef CONVERTPUNISHHPROUNDSTRATEGY

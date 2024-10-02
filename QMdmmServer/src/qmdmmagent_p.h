@@ -10,25 +10,13 @@
 #include <QObject>
 #include <QPointer>
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final : public QObject
+struct QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final
 {
-    Q_OBJECT
-
-public:
     QMdmmAgentPrivate(QMdmmAgent *a);
 
-    void setSocket(QMdmmSocket *_socket);
-
     QMdmmAgent *a;
-    bool ready;
     QString screenName;
-    QPointer<QMdmmSocket> socket;
-    bool isReconnect;
-
-public slots: // NOLINT(readability-redundant-access-specifiers)
-    void packetReceived(QMdmmPacket packet);
-    void socketDisconnected();
-    void socketReconnected();
+    QMdmmProtocol::AgentState state;
 };
 
 #endif

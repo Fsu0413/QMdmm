@@ -13,9 +13,10 @@
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmClientPrivate final
 {
 public:
+    QMdmmClient *p;
     QMdmmSocket *socket;
 
-    QMdmmClientPrivate();
+    QMdmmClientPrivate(QMdmmClient *p);
 };
 
 #endif

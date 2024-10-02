@@ -65,7 +65,7 @@ enum DamageReason
     Kicked,
     HpPunished,
 };
-Q_FLAG_NS(DamageReason)
+Q_ENUM_NS(DamageReason)
 
 enum StoneScissorsCloth
 {
@@ -73,7 +73,7 @@ enum StoneScissorsCloth
     Scissors,
     Cloth,
 };
-Q_FLAG_NS(StoneScissorsCloth)
+Q_ENUM_NS(StoneScissorsCloth)
 
 enum Action
 {
@@ -85,7 +85,7 @@ enum Action
     Move,
     LetMove,
 };
-Q_FLAG_NS(Action)
+Q_ENUM_NS(Action)
 
 enum UpgradeItem
 {
@@ -93,16 +93,11 @@ enum UpgradeItem
     UpgradeHorse,
     UpgradeMaxHp,
 };
-Q_FLAG_NS(UpgradeItem)
+Q_ENUM_NS(UpgradeItem)
 
 QMDMMCORE_EXPORT bool isPlaceAdjecent(int p1, int p2);
 QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, StoneScissorsCloth> &judgers);
 } // namespace QMdmmData
-
-Q_DECLARE_METATYPE(QMdmmData::DamageReason)
-Q_DECLARE_METATYPE(QMdmmData::StoneScissorsCloth)
-Q_DECLARE_METATYPE(QMdmmData::Action)
-Q_DECLARE_METATYPE(QMdmmData::UpgradeItem)
 
 namespace QMdmmGlobal {
 QMDMMCORE_EXPORT QVersionNumber version();
