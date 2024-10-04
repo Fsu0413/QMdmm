@@ -5,6 +5,18 @@
 
 #include <QMetaType>
 
+QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::notifyCallback {
+    std::make_pair(QMdmmProtocol::NotifySpeak, &QMdmmServerAgentPrivate::notifySpeak),
+    std::make_pair(QMdmmProtocol::NotifyOperate, &QMdmmServerAgentPrivate::notifyOperate),
+};
+
+QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::replyCallback {
+    std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::replyStoneScissorsCloth),
+    std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmServerAgentPrivate::replyActionOrder),
+    std::make_pair(QMdmmProtocol::RequestAction, &QMdmmServerAgentPrivate::replyAction),
+    std::make_pair(QMdmmProtocol::RequestUpdate, &QMdmmServerAgentPrivate::replyUpdate),
+};
+
 QMdmmServerAgentPrivate::QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent)
     : QMdmmAgent(name, parent)
     , p(parent)
@@ -26,6 +38,22 @@ void QMdmmServerAgentPrivate::setSocket(QMdmmSocket *_socket)
     }
 }
 
+void QMdmmServerAgentPrivate::replyStoneScissorsCloth(const QJsonValue &value)
+{
+}
+
+void QMdmmServerAgentPrivate::replyActionOrder(const QJsonValue &value)
+{
+}
+
+void QMdmmServerAgentPrivate::replyAction(const QJsonValue &value)
+{
+}
+
+void QMdmmServerAgentPrivate::replyUpdate(const QJsonValue &value)
+{
+}
+
 void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
 {
     (void)packet;
@@ -34,6 +62,14 @@ void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
 void QMdmmServerAgentPrivate::notifyLogicConfiguration()
 {
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyLogicConfiguration, p->conf.serialize()));
+}
+
+void QMdmmServerAgentPrivate::notifyAgentStateChanged(const QString &playerName, const QMdmmData::AgentState &agentState)
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("playerName"), playerName);
+    ob.insert(QStringLiteral("agentState"), int(QMdmmData::AgentState::Int(agentState)));
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyAgentStateChanged, ob));
 }
 
 void QMdmmServerAgentPrivate::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState)
@@ -60,6 +96,21 @@ void QMdmmServerAgentPrivate::notifyGameStart()
 void QMdmmServerAgentPrivate::notifyRoundStart()
 {
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyRoundStart, {}));
+}
+
+void QMdmmServerAgentPrivate::notifySpoken(const QString &playerName, const QString &content)
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("playerName"), playerName);
+    ob.insert(QStringLiteral("content"), content);
+    QMdmmPacket p(QMdmmProtocol::NotifySpoken, ob);
+}
+
+void QMdmmServerAgentPrivate::notifyOperated(const QString &playerName, const QJsonValue &todo)
+{
+    Q_UNIMPLEMENTED();
+    Q_UNUSED(playerName);
+    Q_UNUSED(todo);
 }
 
 QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogicRunner *parent)
@@ -102,6 +153,35 @@ QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &
 
 void QMdmmLogicRunnerPrivate::agentStateChanged(const QMdmmData::AgentState &state)
 {
+    QMdmmServerAgentPrivate *changedAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    if (changedAgent == nullptr)
+        return;
+
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyAgentStateChanged(changedAgent->objectName(), state);
+}
+
+void QMdmmLogicRunnerPrivate::agentSpoken(const QJsonValue &value)
+{
+    QMdmmServerAgentPrivate *speakAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    if (speakAgent == nullptr)
+        return;
+
+    QString s = value.toString();
+    if (!s.isEmpty()) {
+        foreach (QMdmmServerAgentPrivate *agent, agents)
+            agent->notifySpoken(speakAgent->objectName(), s);
+    }
+}
+
+void QMdmmLogicRunnerPrivate::agentOperated(const QJsonValue &value)
+{
+    QMdmmServerAgentPrivate *operateAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    if (operateAgent == nullptr)
+        return;
+
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyOperated(operateAgent->objectName(), value);
 }
 
 void QMdmmLogicRunnerPrivate::socketDisconnected()
@@ -208,6 +288,8 @@ QMdmmAgent *QMdmmLogicRunner::addSocket(const QString &playerName, const QString
     d->agents.insert(playerName, addedAgent);
 
     connect(addedAgent, &QMdmmServerAgentPrivate::stateChanged, d, &QMdmmLogicRunnerPrivate::agentStateChanged);
+    connect(addedAgent, &QMdmmServerAgentPrivate::notifySpeak, d, &QMdmmLogicRunnerPrivate::agentSpoken);
+    connect(addedAgent, &QMdmmServerAgentPrivate::notifyOperate, d, &QMdmmLogicRunnerPrivate::agentOperated);
 
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data

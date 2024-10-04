@@ -22,7 +22,7 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> cb;
+    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
 
 public:
     QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *p);

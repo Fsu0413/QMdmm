@@ -8,7 +8,7 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
-QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::cb {
+QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::notifyCallback {
     std::make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
     std::make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signIn),
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
@@ -159,7 +159,7 @@ void QMdmmServerPrivate::socketPacketReceived(QMdmmPacket packet)
     if (packet.type() == QMdmmProtocol::TypeNotify) {
         if ((packet.notifyId() | QMdmmProtocol::NotifyToServerMask) != 0) {
             // These packages should be processed in Server
-            void (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = cb.value(packet.notifyId(), nullptr);
+            void (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(socket, packet.value());
             else

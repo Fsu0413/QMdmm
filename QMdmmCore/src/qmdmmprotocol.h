@@ -48,8 +48,8 @@ enum NotifyId
     NotifyRoundOver, // broadcast
     NotifyUpdate, // broadcast, string playerName, int item
     NotifyGameOver, // broadcast, string winnerPlayerName
-    NotifyOb, // TODO: for ob
-    NotifySpoken, // broadcast, string playerName, string contents
+    NotifySpoken, // broadcast, string playerName, string content
+    NotifyOperated, // TODO: for ob
 
     NotifyToServerMask = 0x4000,
     NotifyPingServer, // int ping-id
@@ -57,8 +57,8 @@ enum NotifyId
     NotifyObserve, // string observerName, string playerName
 
     NotifyToAgentMask = 0x8000,
-    NotifySpeak, // string contents
-    NotifyOperating, // TODO: for ob
+    NotifySpeak, // string
+    NotifyOperate, // TODO: for ob
 };
 
 enum PacketType

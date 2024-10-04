@@ -17,6 +17,9 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 {
     Q_OBJECT
 
+    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> replyCallback;
+
 public:
     QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent);
     ~QMdmmServerAgentPrivate() override;
@@ -26,7 +29,16 @@ public:
     QPointer<QMdmmSocket> socket;
     QMdmmLogicRunnerPrivate *p;
 
+    // callbacks
+    void replyStoneScissorsCloth(const QJsonValue &value);
+    void replyActionOrder(const QJsonValue &value);
+    void replyAction(const QJsonValue &value);
+    void replyUpdate(const QJsonValue &value);
+
 signals:
+    void notifySpeak(const QJsonValue &value);
+    void notifyOperate(const QJsonValue &value);
+
     void sendPacket(QMdmmPacket packet);
     void socketDisconnected();
 
@@ -37,10 +49,14 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     // notifications
     void notifyLogicConfiguration();
+    void notifyAgentStateChanged(const QString &playerName, const QMdmmData::AgentState &agentState);
     void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState);
     void notifyPlayerRemoved(const QString &playerName);
     void notifyGameStart();
     void notifyRoundStart();
+
+    void notifySpoken(const QString &playerName, const QString &content);
+    void notifyOperated(const QString &playerName, const QJsonValue &todo);
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
@@ -67,6 +83,8 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // slots called from agent
     void agentStateChanged(const QMdmmData::AgentState &state);
+    void agentSpoken(const QJsonValue &value);
+    void agentOperated(const QJsonValue &value);
     void socketDisconnected();
 
     // These slots are called from Logic
