@@ -35,7 +35,6 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
     bool applyAction(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace);
 
     // Functions:
-    void startBeforeGameStart();
     void startSscForAction();
     void sscForAction();
     void startActionOrder();

@@ -16,7 +16,7 @@ struct QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final
 
     QMdmmAgent *a;
     QString screenName;
-    QMdmmProtocol::AgentState state;
+    QMdmmData::AgentState state;
 };
 
 #endif

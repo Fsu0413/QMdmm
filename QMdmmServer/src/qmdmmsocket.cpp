@@ -63,9 +63,8 @@ bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
 {
     QMdmmPacket packet(arr);
     QString packetError;
-    bool packetHasError = packet.hasError(&packetError);
 
-    if (packetHasError) {
+    if (packet.hasError(&packetError)) {
         // TODO: make use of this error string
         (void)packetError;
 
@@ -75,7 +74,6 @@ bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
     }
 
     emit p->packetReceived(packet, QMdmmSocket::QPrivateSignal());
-
     return !hasError;
 }
 

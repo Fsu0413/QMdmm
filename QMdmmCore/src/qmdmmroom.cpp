@@ -46,9 +46,7 @@ QMdmmPlayer *QMdmmRoom::addPlayer(const QString &playerName)
 
 bool QMdmmRoom::removePlayer(const QString &playerName)
 {
-    QMap<QString, QMdmmPlayer *>::iterator it = d->players.find(playerName);
-
-    if (it != d->players.end()) {
+    if (QMap<QString, QMdmmPlayer *>::iterator it = d->players.find(playerName); it != d->players.end()) {
         emit playerRemoved(playerName, QPrivateSignal());
 
         delete it.value();
@@ -131,16 +129,33 @@ int QMdmmRoom::alivePlayersCount() const
     return alivePlayers().size();
 }
 
-bool QMdmmRoom::isGameOver() const
+bool QMdmmRoom::isRoundOver() const
 {
     return alivePlayersCount() <= 1;
 }
 
-void QMdmmRoom::prepareForGameStart()
+bool QMdmmRoom::isGameOver(QStringList *winnerPlayerNames) const
+{
+    if (winnerPlayerNames == nullptr) {
+        static QStringList _w;
+        winnerPlayerNames = &_w;
+    }
+
+    winnerPlayerNames->clear();
+
+    foreach (const QMdmmPlayer *player, d->players) {
+        if (!player->canUpdateHorse() && !player->canUpdateKnife() && !player->canUpdateMaxHp())
+            *winnerPlayerNames << player->objectName();
+    }
+
+    return !winnerPlayerNames->isEmpty();
+}
+
+void QMdmmRoom::prepareForRoundStart()
 {
     int i = 0;
     foreach (QMdmmPlayer *player, d->players)
-        player->prepareForGameStart(++i);
+        player->prepareForRoundStart(++i);
 }
 
 void QMdmmRoom::resetUpgrades()

@@ -12,7 +12,7 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
     int playerNumPerRoom = 3;
 
     int initialKnifeDamage = 1;
-    int maximumKnifeDamage = 5;
+    int maximumKnifeDamage = 10;
 
     int initialHorseDamage = 2;
     int maximumHorseDamage = 10;
@@ -23,12 +23,12 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
     int punishHpModifier = 2; // 1 / punishHpModifier for punished HP when slashed in city, 0 for disable.
     enum PunishHpRoundStrategy
     {
-        RoundDown, // 1.1 -> 1 1.4 -> 1, 1.5 -> 1, 1.9 -> 1, 2.0 -> 2
-        RoundToNearest, // 1.1 -> 1, 1.4 -> 1, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
+        RoundDown, // 1.1 -> 1, 1.4 -> 1, 1.5 -> 1, 1.9 -> 1, 2.0 -> 2
+        RoundToNearest45, // 1.1 -> 1, 1.4 -> 1, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
         RoundUp, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
         PlusOne, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 3
     } punishHpRoundStrategy
-        = RoundToNearest;
+        = RoundToNearest45;
 
     bool zeroHpAsDead = true; // Treat one with hp value 0 as dead, which is the case in early versions. If false only one with minus hp value are treated as dead
     bool enableLetMove = true; // Let move is nonexistent in early versions
@@ -42,18 +42,16 @@ struct QMdmmLogicPrivate;
 class QMDMMCORE_EXPORT QMdmmLogic final : public QObject
 {
     Q_OBJECT
-    friend struct QMdmmLogicPrivate;
 
 public:
     enum State
     {
-        BeforeGameStart,
+        BeforeRoundStart,
         SscForAction,
         ActionOrder,
         SscForActionOrder,
         Action,
         Upgrade,
-        GameFinish,
     };
     Q_ENUM(State)
 
@@ -66,7 +64,7 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void addPlayer(const QString &playerName);
     void removePlayer(const QString &playerName);
-    void gameStart();
+    void roundStart();
 
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
@@ -83,9 +81,12 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition, QPrivateSignal);
     void requestUpgrade(const QString &playerName, int upgradePoint, QPrivateSignal);
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
+    void gameOver(const QStringList &playerNames, QPrivateSignal);
 
 private:
+    friend struct QMdmmLogicPrivate;
     QMdmmLogicPrivate *const d;
+    Q_DISABLE_COPY_MOVE(QMdmmLogic);
 };
 
 #endif

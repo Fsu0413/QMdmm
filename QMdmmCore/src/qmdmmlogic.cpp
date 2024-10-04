@@ -77,7 +77,7 @@ QMdmmLogicPrivate::QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguratio
     : q(q)
     , conf(logicConfiguration)
     , room(new QMdmmRoom(q))
-    , state(QMdmmLogic::BeforeGameStart)
+    , state(QMdmmLogic::BeforeRoundStart)
     , currentStrivingActionOrder(0)
     , currentActionOrder(0)
 {
@@ -154,12 +154,6 @@ bool QMdmmLogicPrivate::applyAction(const QString &fromPlayer, QMdmmData::Action
     }
 
     return false;
-}
-
-void QMdmmLogicPrivate::startBeforeGameStart()
-{
-    room->resetUpgrades();
-    state = QMdmmLogic::BeforeGameStart;
 }
 
 void QMdmmLogicPrivate::startSscForAction()
@@ -265,11 +259,9 @@ void QMdmmLogicPrivate::startSscForActionOrder()
 
 void QMdmmLogicPrivate::sscForActionOrder()
 {
-    QStringList striving = desiredActionOrders.values(currentStrivingActionOrder);
-    if (sscForActionOrderReplies.count() == striving.count()) {
+    if (QStringList striving = desiredActionOrders.values(currentStrivingActionOrder); sscForActionOrderReplies.count() == striving.count()) {
         emit q->sscResult(sscForActionOrderReplies, QMdmmLogic::QPrivateSignal());
-        QStringList sscForActionOrderWinners = QMdmmData::stoneScissorsClothWinners(sscForActionOrderReplies);
-        if (!sscForActionOrderWinners.isEmpty()) {
+        if (QStringList sscForActionOrderWinners = QMdmmData::stoneScissorsClothWinners(sscForActionOrderReplies); !sscForActionOrderWinners.isEmpty()) {
             foreach (const QString &winner, sscForActionOrderWinners)
                 striving.removeAll(winner);
             foreach (const QString &loser, striving)
@@ -281,7 +273,7 @@ void QMdmmLogicPrivate::sscForActionOrder()
 
 void QMdmmLogicPrivate::startAction()
 {
-    if (!room->isGameOver()) {
+    if (!room->isRoundOver()) {
         if (++currentActionOrder <= sscForActionWinners.length()) {
             state = QMdmmLogic::Action;
             emit q->requestAction(confirmedActionOrders[currentActionOrder], currentActionOrder, QMdmmLogic::QPrivateSignal());
@@ -295,7 +287,7 @@ void QMdmmLogicPrivate::startAction()
 
 void QMdmmLogicPrivate::startUpgrade()
 {
-    if (room->isGameOver()) {
+    if (room->isRoundOver()) {
         upgrades.clear();
         foreach (const QMdmmPlayer *p, room->players()) {
             if (p->upgradePoint() > 0) {
@@ -311,7 +303,7 @@ void QMdmmLogicPrivate::startUpgrade()
 // NOLINTNEXTLINE(readability-make-member-function-const, readability-function-cognitive-complexity)
 void QMdmmLogicPrivate::upgrade()
 {
-    if (room->isGameOver()) {
+    if (room->isRoundOver()) {
         int n = 0;
         foreach (const QMdmmPlayer *p, room->players()) {
             if (p->upgradePoint() > 0)
@@ -340,8 +332,15 @@ void QMdmmLogicPrivate::upgrade()
                     Q_UNUSED(success);
                 }
             }
-            state = QMdmmLogic::GameFinish;
-            emit q->upgradeResult(upgrades, QMdmmLogic::QPrivateSignal());
+
+            state = QMdmmLogic::BeforeRoundStart;
+
+            if (QStringList winners; room->isGameOver(&winners)) {
+                room->resetUpgrades();
+                emit q->gameOver(winners, QMdmmLogic::QPrivateSignal());
+            } else {
+                emit q->upgradeResult(upgrades, QMdmmLogic::QPrivateSignal());
+            }
         }
     }
 }
@@ -369,13 +368,11 @@ QMdmmLogic::State QMdmmLogic::state() const
 
 void QMdmmLogic::addPlayer(const QString &playerName)
 {
-    if (d->state == BeforeGameStart || d->state == GameFinish) {
+    if (d->state == BeforeRoundStart) {
         if (!d->players.contains(playerName)) {
-            QMdmmPlayer *p = d->room->addPlayer(playerName);
-            if (p != nullptr) {
+            if (d->room->addPlayer(playerName) != nullptr) {
                 d->players << playerName;
-                if (d->state == GameFinish)
-                    d->startBeforeGameStart();
+                d->room->resetUpgrades();
             }
         }
     }
@@ -383,22 +380,20 @@ void QMdmmLogic::addPlayer(const QString &playerName)
 
 void QMdmmLogic::removePlayer(const QString &playerName)
 {
-    if (d->state == BeforeGameStart || d->state == GameFinish) {
+    if (d->state == BeforeRoundStart) {
         if (d->players.contains(playerName)) {
-            bool r = d->room->removePlayer(playerName);
-            if (r) {
+            if (d->room->removePlayer(playerName)) {
                 d->players.removeAll(playerName);
-                if (d->state == GameFinish)
-                    d->startBeforeGameStart();
+                d->room->resetUpgrades();
             }
         }
     }
 }
 
-void QMdmmLogic::gameStart()
+void QMdmmLogic::roundStart()
 {
-    if (d->state == BeforeGameStart || d->state == GameFinish) {
-        d->room->prepareForGameStart();
+    if (d->state == BeforeRoundStart) {
+        d->room->prepareForRoundStart();
         d->startSscForAction();
     }
 }

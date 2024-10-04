@@ -14,26 +14,13 @@ class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
 
 namespace QMdmmProtocol {
-enum AgentRole
-{
-    AgentHuman,
-    AgentBot,
-};
-
-enum AgentState
-{
-    StateOffline = 0x0,
-    StateOnline = 0x10,
-    StateOnlineTrust = 0x18,
-    StateOnlineBot = 0x19,
-};
 
 enum RequestId
 {
     // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
 
-    RequestStoneScissorsCloth, // request: N/A, reply: int ssc
+    RequestStoneScissorsCloth, // request: int strivedOrder (or 0 for action), array { string playerName } opponents, reply: int ssc
     RequestActionOrder, // request: array {int remainedOrder}, int maximumOrder, int selectionNum, reply: array { int order }
     RequestAction, // request: int currentOrder, reply: string action, optional string toPlayer, optional int toPosition
     RequestUpdate, // request: int remaningTimes, reply: int item
@@ -44,16 +31,15 @@ enum NotifyId
     NotifyInvalid = 0,
 
     NotifyFromServerMask = 0x1000,
-    NotifyPingClient, // int ping-id
     NotifyPongServer, // int ping-id
     NotifyVersion, // string versionNumber
-    NotifySignedIn, // string playerName, string screenName, int(AgentRole) agentRole
+    NotifySignedIn, // string playerName, string screenName, int(AgentState) agentState
 
     NotifyFromAgentMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
-    NotifyPlayerAdded, // string playerName, string screenName, bool isReconnect
+    NotifyAgentStateChanged, // string playerName, int (AgentState) state
+    NotifyPlayerAdded, // string playerName, string screenName, int(AgentState) agentState
     NotifyPlayerRemoved, // string playerName
-    NotifyReadyToggled, // string playerName, bool ready
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
     NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc }
@@ -66,9 +52,8 @@ enum NotifyId
     NotifySpoken, // broadcast, string playerName, string contents
 
     NotifyToServerMask = 0x4000,
-    NotifyPongClient, // int ping-id
     NotifyPingServer, // int ping-id
-    NotifySignIn, // string playerName, string screenName, int(AgentRole) agentRole
+    NotifySignIn, // string playerName, string screenName, int(AgentState) agentState
     NotifyObserve, // string observerName, string playerName
 
     NotifyToAgentMask = 0x8000,
@@ -125,7 +110,6 @@ private:
     QSharedDataPointer<QMdmmPacketData> d;
 };
 
-Q_DECLARE_METATYPE(QMdmmProtocol::AgentState)
 Q_DECLARE_METATYPE(QMdmmPacket)
 
 #endif // QMDMMPROTOCOL_H

@@ -24,15 +24,23 @@ public:
     void setSocket(QMdmmSocket *_socket);
 
     QPointer<QMdmmSocket> socket;
-    bool isReconnect;
+    QMdmmLogicRunnerPrivate *p;
 
 signals:
     void sendPacket(QMdmmPacket packet);
+    void socketDisconnected();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(QMdmmPacket packet);
-    void socketDisconnected();
-    void socketReconnected();
+
+    // requests
+
+    // notifications
+    void notifyLogicConfiguration();
+    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState);
+    void notifyPlayerRemoved(const QString &playerName);
+    void notifyGameStart();
+    void notifyRoundStart();
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
@@ -42,6 +50,8 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
 public:
     QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogicRunner *parent);
     ~QMdmmLogicRunnerPrivate() override;
+
+    QMdmmLogicRunner *p;
 
     QHash<QString, QMdmmServerAgentPrivate *> agents;
 
@@ -55,6 +65,11 @@ public:
     // I did a test of these combinations and found that all these types work without qRegisterMetaType<>() but it needs further testing
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
+    // slots called from agent
+    void agentStateChanged(const QMdmmData::AgentState &state);
+    void socketDisconnected();
+
+    // These slots are called from Logic
     void requestSscForAction(const QStringList &playerNames);
     void sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies);
     void requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections);
@@ -66,10 +81,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
+    // These signals are emitted to Logic
     void addPlayer(const QString &playerName);
     void removePlayer(const QString &playerName);
-    void gameStart();
-
+    void roundStart();
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
     void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition);

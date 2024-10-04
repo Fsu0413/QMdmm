@@ -13,11 +13,13 @@ class QMdmmSocket;
 
 struct QMdmmAgentPrivate;
 
+// no "final" here since it is inherited.
+
 class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
-    Q_PROPERTY(QMdmmProtocol::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
+    Q_PROPERTY(QMdmmData::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
 
 public:
     explicit QMdmmAgent(const QString &name, QObject *parent = nullptr);
@@ -27,16 +29,16 @@ public:
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &name);
 
-    [[nodiscard]] QMdmmProtocol::AgentState state() const;
-    void setState(QMdmmProtocol::AgentState state);
+    [[nodiscard]] QMdmmData::AgentState state() const;
+    void setState(const QMdmmData::AgentState &state);
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
-    void stateChanged(QMdmmProtocol::AgentState, QPrivateSignal);
+    void stateChanged(QMdmmData::AgentState, QPrivateSignal);
 
 private:
     QMdmmAgentPrivate *const d;
-    Q_DISABLE_COPY(QMdmmAgent)
+    Q_DISABLE_COPY_MOVE(QMdmmAgent);
 };
 
 #endif

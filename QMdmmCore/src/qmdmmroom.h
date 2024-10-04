@@ -39,9 +39,10 @@ public:
     [[nodiscard]] QList<const QMdmmPlayer *> alivePlayers() const;
     [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const;
-    [[nodiscard]] bool isGameOver() const;
+    [[nodiscard]] bool isRoundOver() const;
+    [[nodiscard]] bool isGameOver(QStringList *winnerPlayerNames = nullptr) const;
 
-    void prepareForGameStart();
+    void prepareForRoundStart();
     void resetUpgrades();
 
 signals:

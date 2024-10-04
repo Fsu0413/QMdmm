@@ -43,6 +43,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
 private:
     QMdmmServerPrivate *const d;
+    Q_DISABLE_COPY_MOVE(QMdmmServer);
 };
 
 #endif // QMDMMSERVER_H

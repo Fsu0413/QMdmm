@@ -8,8 +8,7 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
-QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::cb {
-    std::make_pair(QMdmmProtocol::NotifyPongClient, &QMdmmServerPrivate::pongClient),
+QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::cb {
     std::make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
     std::make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signIn),
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
@@ -52,17 +51,12 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     }
 }
 
-bool QMdmmServerPrivate::pongClient(QMdmmSocket *socket, const QJsonValue &packetValue)
+void QMdmmServerPrivate::pingServer(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
-    return true;
+    emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyPongServer, packetValue));
 }
 
-bool QMdmmServerPrivate::pingServer(QMdmmSocket *socket, const QJsonValue &packetValue)
-{
-    return true;
-}
-
-bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetValue)
+void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     do {
         if (!packetValue.isObject())
@@ -70,7 +64,7 @@ bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
 
         QJsonObject ob = packetValue.toObject();
 
-#define CONVERTAGENTROLE() static_cast<QMdmmProtocol::AgentRole>(v.toInt())
+#define CONVERTAGENTSTATE() QMdmmData::AgentState(v.toInt())
 
         // no do .. while (0) here since I'd like 'break' to exit outside this block
         // where "socket->hasError(true)" should be done
@@ -90,38 +84,32 @@ bool QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
         QString screenName;
         CONF(screenName, isString, v.toString);
 
-        QMdmmProtocol::AgentRole agentRole;
-        CONF(agentRole, isDouble, CONVERTAGENTROLE);
+        QMdmmData::AgentState agentState;
+        CONF(agentState, isDouble, CONVERTAGENTSTATE);
 
 #undef CONF
-#undef CONVERTAGENTROLE
+#undef CONVERTAGENTSTATE
 
         // TODO: check if reconnect
 
-        if (current == nullptr || current->full() || current->gameRunning())
+        if (current == nullptr || current->full()) {
             current = new QMdmmLogicRunner(serverConfiguration.logicConfiguration, this);
+            connect(current, &QMdmmLogicRunner::gameOver, this, &QMdmmServerPrivate::logicRunnerGameOver);
+        }
 
-        QMdmmAgent *createdAgent = current->addSocket(playerName, socket);
-        if (createdAgent == nullptr)
+        if (current->addSocket(playerName, screenName, agentState, socket) == nullptr)
             break;
 
-        createdAgent->setScreenName(screenName);
-        if (agentRole == QMdmmProtocol::AgentHuman)
-            createdAgent->setState(QMdmmProtocol::StateOnline);
-        else if (agentRole == QMdmmProtocol::AgentBot)
-            createdAgent->setState(QMdmmProtocol::StateOnlineBot);
-
-        return true;
+        return;
     } while (false);
 
     socket->setHasError(true);
-    return false;
 }
 
-bool QMdmmServerPrivate::observe(QMdmmSocket *socket, const QJsonValue &packetValue)
+void QMdmmServerPrivate::observe(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
-    // not implemented by now
-    return false;
+    // TODO
+    socket->setHasError(true);
 }
 
 void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readability-make-member-function-const)
@@ -171,12 +159,22 @@ void QMdmmServerPrivate::socketPacketReceived(QMdmmPacket packet)
     if (packet.type() == QMdmmProtocol::TypeNotify) {
         if ((packet.notifyId() | QMdmmProtocol::NotifyToServerMask) != 0) {
             // These packages should be processed in Server
-            bool (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = cb.value(packet.notifyId(), nullptr);
+            void (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = cb.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(socket, packet.value());
             else
                 socket->setHasError(true);
         }
+    }
+}
+
+void QMdmmServerPrivate::logicRunnerGameOver()
+{
+    if (QMdmmLogicRunner *runner = qobject_cast<QMdmmLogicRunner *>(sender()); runner != nullptr) {
+        if (current == runner)
+            current = nullptr;
+
+        runner->deleteLater();
     }
 }
 

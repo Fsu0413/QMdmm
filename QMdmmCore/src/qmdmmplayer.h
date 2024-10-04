@@ -62,6 +62,11 @@ public:
     [[nodiscard]] bool canMove(int toPlace) const;
     [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, int toPlace) const;
 
+    // upgrade checks
+    [[nodiscard]] bool canUpdateKnife() const;
+    [[nodiscard]] bool canUpdateHorse() const;
+    [[nodiscard]] bool canUpdateMaxHp() const;
+
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // actions
     bool buyKnife();
@@ -83,7 +88,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool upgradeHorse();
     bool upgradeMaxHp();
 
-    void prepareForGameStart(int playerNum);
+    void prepareForRoundStart(int playerNum);
     void resetUpgrades();
 
 signals:

@@ -19,6 +19,7 @@ public:
 
 private:
     QMdmmClientPrivate *const d;
+    Q_DISABLE_COPY_MOVE(QMdmmClient);
 };
 
 #endif

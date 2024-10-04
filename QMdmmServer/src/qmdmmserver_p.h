@@ -22,16 +22,15 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmProtocol::NotifyId, bool (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> cb;
+    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> cb;
 
 public:
     QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *p);
 
     // callbacks
-    bool pongClient(QMdmmSocket *socket, const QJsonValue &packetValue);
-    bool pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
-    bool signIn(QMdmmSocket *socket, const QJsonValue &packetValue);
-    bool observe(QMdmmSocket *socket, const QJsonValue &packetValue);
+    void pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
+    void signIn(QMdmmSocket *socket, const QJsonValue &packetValue);
+    void observe(QMdmmSocket *socket, const QJsonValue &packetValue);
 
     void introduceSocket(QMdmmSocket *socket);
 
@@ -41,6 +40,8 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void websocketServerNewConnection();
     void socketPacketReceived(QMdmmPacket packet);
 
+    void logicRunnerGameOver();
+
 public: // NOLINT(readability-redundant-access-specifiers)
     // variables
     QMdmmServerConfiguration serverConfiguration;
@@ -48,7 +49,6 @@ public: // NOLINT(readability-redundant-access-specifiers)
     QTcpServer *t;
     QLocalServer *l;
     QWebSocketServer *w;
-    QList<QMdmmLogicRunner *> runners;
     QMdmmLogicRunner *current;
 };
 

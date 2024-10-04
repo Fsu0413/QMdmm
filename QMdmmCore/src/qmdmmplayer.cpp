@@ -243,6 +243,21 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
     return false;
 }
 
+bool QMdmmPlayer::canUpdateKnife() const
+{
+    return knifeDamage() >= room()->logic()->configuration().maximumKnifeDamage;
+}
+
+bool QMdmmPlayer::canUpdateHorse() const
+{
+    return horseDamage() >= room()->logic()->configuration().maximumHorseDamage;
+}
+
+bool QMdmmPlayer::canUpdateMaxHp() const
+{
+    return maxHp() >= room()->logic()->configuration().maximumMaxHp;
+}
+
 bool QMdmmPlayer::buyKnife()
 {
     if (!canBuyKnife())
@@ -280,7 +295,7 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
         case QMdmmLogicConfiguration::RoundDown:
             punishedHp = maxHp() / punishHpModifier;
             break;
-        case QMdmmLogicConfiguration::RoundToNearest:
+        case QMdmmLogicConfiguration::RoundToNearest45:
             punishedHp = ((maxHp() * 2) / punishHpModifier + 1) / 2;
             break;
         case QMdmmLogicConfiguration::RoundUp:
@@ -358,7 +373,7 @@ void QMdmmPlayer::applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::Dam
 
 bool QMdmmPlayer::upgradeKnife()
 {
-    if (knifeDamage() >= room()->logic()->configuration().maximumKnifeDamage)
+    if (canUpdateKnife())
         return false;
 
     setKnifeDamage(knifeDamage() + 1);
@@ -367,7 +382,7 @@ bool QMdmmPlayer::upgradeKnife()
 
 bool QMdmmPlayer::upgradeHorse()
 {
-    if (horseDamage() >= room()->logic()->configuration().maximumHorseDamage)
+    if (canUpdateHorse())
         return false;
 
     setHorseDamage(horseDamage() + 1);
@@ -376,14 +391,14 @@ bool QMdmmPlayer::upgradeHorse()
 
 bool QMdmmPlayer::upgradeMaxHp()
 {
-    if (maxHp() >= room()->logic()->configuration().maximumMaxHp)
+    if (canUpdateMaxHp())
         return false;
 
     setMaxHp(maxHp() + 1);
     return true;
 }
 
-void QMdmmPlayer::prepareForGameStart(int playerNum)
+void QMdmmPlayer::prepareForRoundStart(int playerNum)
 {
     setHasKnife(false);
     setHasHorse(false);

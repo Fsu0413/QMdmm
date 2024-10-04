@@ -5,31 +5,43 @@
 
 #include "qmdmmserverglobal.h"
 
+#include <QMdmmProtocol>
+
 class QMdmmAgent;
 class QMdmmSocket;
 struct QMdmmLogicConfiguration;
 class QMdmmLogicRunnerPrivate;
 
+// for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
+// so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
+// If a player / agent exits mid-game, current practice would be to destoy this QMdmmLogicRunner and its children and disconnect all the agents
+// Players who wants to continue playing need rejoin.
+
+// TODO: Implement Lobby when other contents are ready
 class QMDMMSERVER_EXPORT QMdmmLogicRunner final : public QObject
 {
     Q_OBJECT
 
 public:
     // Constuctor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
-    // pay attention
     QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogicRunner() override;
 
     // Functions to be called in Server thread
-    QMdmmAgent *addSocket(const QString &playerName, QMdmmSocket *socket);
-    bool removeSocket(const QString &playerName);
+    QMdmmAgent *addSocket(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState, QMdmmSocket *socket);
 
-    // TODO: property: full, gamerunning implementation
+    QMdmmAgent *agent(const QString &playerName);
+    [[nodiscard]] const QMdmmAgent *agent(const QString &playerName) const;
+
     [[nodiscard]] bool full() const;
-    [[nodiscard]] bool gameRunning() const;
+
+signals: // NOLINT(readability-redundant-access-specifiers)
+    void gameOver(QPrivateSignal);
 
 private:
+    friend class QMdmmLogicRunnerPrivate;
     QMdmmLogicRunnerPrivate *const d;
+    Q_DISABLE_COPY_MOVE(QMdmmLogicRunner);
 };
 
 #endif // QMDMMLOGICRUNNER_H

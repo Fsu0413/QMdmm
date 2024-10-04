@@ -4,6 +4,7 @@
 #define QMDMMCOREGLOBAL_H
 
 #ifndef DOXYGEN
+#include <QFlags>
 #include <QHash>
 #include <QList>
 #include <QMetaType>
@@ -53,10 +54,12 @@ Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 // It is revealed that number of places should be same of number of players
 // So if we need City1, City2 and etc. we need as many Cities as the maximum supported player numbers
 // In theory the player numbers should be unlimitted since there is no difference between players
-enum
+// Added back of Enum Place but preserve the only "Country" value, for QMetaObject generation only
+enum Place
 {
     Country = 0,
 };
+Q_ENUM_NS(Place)
 
 enum DamageReason
 {
@@ -94,6 +97,21 @@ enum UpgradeItem
     UpgradeMaxHp,
 };
 Q_ENUM_NS(UpgradeItem)
+
+enum AgentStateEnum
+{
+    StateMaskOnline = 0x10,
+    StateMaskBot = 0x01,
+    StateMaskTrust = 0x08,
+
+    StateOffline = 0x0,
+    StateOfflineBot = 0x01,
+    StateOnline = 0x10,
+    StateOnlineBot = 0x11,
+    StateOnlineTrust = 0x18,
+};
+Q_DECLARE_FLAGS(AgentState, AgentStateEnum)
+Q_FLAG_NS(AgentState)
 
 QMDMMCORE_EXPORT bool isPlaceAdjecent(int p1, int p2);
 QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, StoneScissorsCloth> &judgers);

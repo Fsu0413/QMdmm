@@ -53,6 +53,7 @@ signals:
 private:
     friend class QMdmmSocketPrivate;
     QMdmmSocketPrivate *d;
+    Q_DISABLE_COPY_MOVE(QMdmmSocket);
 };
 
 #endif
