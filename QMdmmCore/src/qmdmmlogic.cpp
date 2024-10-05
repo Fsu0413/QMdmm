@@ -281,6 +281,7 @@ void QMdmmLogicPrivate::startAction()
             startSscForAction();
         }
     } else {
+        emit q->roundOver(QMdmmLogic::QPrivateSignal());
         startUpgrade();
     }
 }
@@ -418,11 +419,11 @@ void QMdmmLogic::actionOrderReply(const QString &playerName, const QList<int> &d
     }
 }
 
-void QMdmmLogic::actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition)
+void QMdmmLogic::actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
 {
     if (d->state == Action) {
-        if (d->actionFeasible(playerName, action, toPlayer, toPosition)) {
-            d->applyAction(playerName, action, toPlayer, toPosition);
+        if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
+            d->applyAction(playerName, action, toPlayer, toPlace);
             d->startAction();
         }
     }

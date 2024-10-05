@@ -3,6 +3,7 @@
 #include "qmdmmlogicrunner.h"
 #include "qmdmmlogicrunner_p.h"
 
+#include <QJsonArray>
 #include <QMetaType>
 
 QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::notifyCallback {
@@ -59,6 +60,36 @@ void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
     (void)packet;
 }
 
+void QMdmmServerAgentPrivate::requestStoneScissorsCloth(int strivedOrder, const QStringList &opponents)
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("strivedOrder"), strivedOrder);
+    ob.insert(QStringLiteral("opponents"), QJsonArray::fromStringList(opponents));
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, ob));
+}
+
+void QMdmmServerAgentPrivate::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+{
+    QJsonObject ob;
+    QJsonArray arr;
+    foreach (int remainedOrder, remainedOrders)
+        arr.append(remainedOrder);
+    ob.insert(QStringLiteral("remainedOrders"), arr);
+    ob.insert(QStringLiteral("maximumOrder"), maximumOrder);
+    ob.insert(QStringLiteral("selectionNum"), selectionNum);
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestActionOrder, ob));
+}
+
+void QMdmmServerAgentPrivate::requestAction(int currentOrder)
+{
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestAction, currentOrder));
+}
+
+void QMdmmServerAgentPrivate::requestUpdate(int remainingTimes)
+{
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestUpdate, remainingTimes));
+}
+
 void QMdmmServerAgentPrivate::notifyLogicConfiguration()
 {
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyLogicConfiguration, p->conf.serialize()));
@@ -96,6 +127,73 @@ void QMdmmServerAgentPrivate::notifyGameStart()
 void QMdmmServerAgentPrivate::notifyRoundStart()
 {
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyRoundStart, {}));
+}
+
+void QMdmmServerAgentPrivate::notifyStoneScissorsCloth(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies)
+{
+    QJsonObject ob;
+    for (QHash<QString, QMdmmData::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
+        ob.insert(it.key(), static_cast<int>(it.value()));
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyStoneScissorsCloth, ob));
+}
+
+void QMdmmServerAgentPrivate::notifyActionOrder(const QHash<int, QString> &result)
+{
+    QJsonArray arr;
+    for (int i = 1; i < result.count(); ++i)
+        arr.append(result.value(i));
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyActionOrder, arr));
+}
+
+void QMdmmServerAgentPrivate::notifyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("playerName"), playerName);
+    ob.insert(QStringLiteral("action"), static_cast<int>(action));
+
+    switch (action) {
+    case QMdmmData::Slash:
+    case QMdmmData::Kick:
+    case QMdmmData::LetMove:
+        ob.insert(QStringLiteral("toPlayer"), toPlayer);
+        break;
+    default:
+        break;
+    }
+
+    bool hasToPlace = false;
+    switch (action) {
+    case QMdmmData::Move:
+    case QMdmmData::LetMove:
+        ob.insert(QStringLiteral("toPlace"), toPlace);
+        break;
+    default:
+        break;
+    }
+
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyAction, ob));
+}
+
+void QMdmmServerAgentPrivate::notifyRoundOver()
+{
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyRoundOver, {}));
+}
+
+void QMdmmServerAgentPrivate::notifyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades)
+{
+    QJsonObject ob;
+    for (QHash<QString, QList<QMdmmData::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+        QJsonArray arr;
+        foreach (QMdmmData::UpgradeItem up, it.value())
+            arr.append(static_cast<int>(up));
+        ob.insert(it.key(), arr);
+    }
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyUpgrade, ob));
+}
+
+void QMdmmServerAgentPrivate::notifyGameOver(const QStringList &playerNames)
+{
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
 }
 
 void QMdmmServerAgentPrivate::notifySpoken(const QString &playerName, const QString &content)
@@ -255,7 +353,7 @@ void QMdmmLogicRunnerPrivate::requestAction(const QString &playerName, int actio
 {
 }
 
-void QMdmmLogicRunnerPrivate::actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition)
+void QMdmmLogicRunnerPrivate::actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
 {
 }
 

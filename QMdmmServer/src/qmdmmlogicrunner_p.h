@@ -46,6 +46,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(QMdmmPacket packet);
 
     // requests
+    void requestStoneScissorsCloth(int strivedOrder, const QStringList &opponents);
+    void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
+    void requestAction(int currentOrder);
+    void requestUpdate(int remainingTimes);
 
     // notifications
     void notifyLogicConfiguration();
@@ -54,7 +58,12 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifyPlayerRemoved(const QString &playerName);
     void notifyGameStart();
     void notifyRoundStart();
-
+    void notifyStoneScissorsCloth(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies);
+    void notifyActionOrder(const QHash<int, QString> &result);
+    void notifyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    void notifyRoundOver();
+    void notifyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
+    void notifyGameOver(const QStringList &playerNames);
     void notifySpoken(const QString &playerName, const QString &content);
     void notifyOperated(const QString &playerName, const QJsonValue &todo);
 };
@@ -94,7 +103,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void actionOrderResult(const QHash<int, QString> &result);
     void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder);
     void requestAction(const QString &playerName, int actionOrder);
-    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition);
+    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
     void requestUpgrade(const QString &playerName, int upgradePoint);
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
 
@@ -105,7 +114,7 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void roundStart();
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition);
+    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
     void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 };
 

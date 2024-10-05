@@ -68,7 +68,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition);
+    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
     void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
@@ -78,7 +78,8 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void actionOrderResult(const QHash<int, QString> &result, QPrivateSignal);
     void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
     void requestAction(const QString &playerName, int actionOrder, QPrivateSignal);
-    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPosition, QPrivateSignal);
+    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
+    void roundOver(QPrivateSignal);
     void requestUpgrade(const QString &playerName, int upgradePoint, QPrivateSignal);
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
     void gameOver(const QStringList &playerNames, QPrivateSignal);
