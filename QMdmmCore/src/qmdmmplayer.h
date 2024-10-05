@@ -4,6 +4,7 @@
 #define QMDMMPLAYER_H
 
 #include "qmdmmcoreglobal.h"
+
 #include <QObject>
 
 class QMdmmRoom;

@@ -5,6 +5,7 @@
 
 #include <QJsonArray>
 #include <QMetaType>
+#include <QRandomGenerator>
 
 QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::notifyCallback {
     std::make_pair(QMdmmProtocol::NotifySpeak, &QMdmmServerAgentPrivate::notifySpeak),
@@ -18,10 +19,24 @@ QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonVal
     std::make_pair(QMdmmProtocol::RequestUpdate, &QMdmmServerAgentPrivate::replyUpdate),
 };
 
+QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)()> QMdmmServerAgentPrivate::defaultReplyCallback {
+    std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth),
+    std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmServerAgentPrivate::defaultReplyActionOrder),
+    std::make_pair(QMdmmProtocol::RequestAction, &QMdmmServerAgentPrivate::defaultReplyAction),
+    std::make_pair(QMdmmProtocol::RequestUpdate, &QMdmmServerAgentPrivate::defaultReplyUpdate),
+};
+
+int QMdmmServerAgentPrivate::requestTimeoutGracePeriod = 60;
+
 QMdmmServerAgentPrivate::QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent)
     : QMdmmAgent(name, parent)
     , p(parent)
+    , currentRequest(QMdmmProtocol::RequestInvalid)
+    , requestTimer(new QTimer(this))
 {
+    requestTimer->setInterval(p->conf.requestTimeout + requestTimeoutGracePeriod);
+    requestTimer->setSingleShot(true);
+    connect(requestTimer, &QTimer::timeout, this, &QMdmmServerAgentPrivate::requestTimeout);
 }
 
 QMdmmServerAgentPrivate::~QMdmmServerAgentPrivate() = default;
@@ -36,6 +51,23 @@ void QMdmmServerAgentPrivate::setSocket(QMdmmSocket *_socket)
         connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmServerAgentPrivate::packetReceived);
         connect(socket, &QMdmmSocket::socketDisconnected, this, &QMdmmServerAgentPrivate::socketDisconnected);
         connect(this, &QMdmmServerAgentPrivate::sendPacket, socket, &QMdmmSocket::sendPacket);
+    }
+}
+
+void QMdmmServerAgentPrivate::addRequest(QMdmmProtocol::RequestId requestId, const QJsonValue &value)
+{
+    currentRequest = requestId;
+    currentRequestValue = value;
+
+    if (socket != nullptr) {
+        emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, requestId, value));
+        requestTimer->start();
+    } else {
+        // We'd make this default reply in the event queue
+        // reasons are:
+        // 1. introducing time-consuming task in the request function is bad.
+        // 2. reply should be called asynchoronous since this is the designed way for it
+        QTimer::singleShot(0, Qt::CoarseTimer, this, &QMdmmServerAgentPrivate::executeDefaultReply);
     }
 }
 
@@ -55,9 +87,62 @@ void QMdmmServerAgentPrivate::replyUpdate(const QJsonValue &value)
 {
 }
 
+void QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth()
+{
+    replyStoneScissorsCloth((int)(QRandomGenerator::global()->generate() % 3));
+}
+
+void QMdmmServerAgentPrivate::defaultReplyActionOrder()
+{
+    QJsonObject ob = currentRequestValue.toObject();
+    QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
+    int num = ob.value(QStringLiteral("selectionNum")).toInt();
+    QJsonArray rep;
+    while ((num--) != 0)
+        rep.append(arr.takeAt(0));
+    replyActionOrder(rep);
+}
+
+void QMdmmServerAgentPrivate::defaultReplyAction()
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("action"), (int)(QMdmmData::DoNothing));
+    replyAction(ob);
+}
+
+void QMdmmServerAgentPrivate::defaultReplyUpdate()
+{
+    int times = currentRequestValue.toInt(1);
+    QJsonArray rep;
+    while ((times--) != 0)
+        rep.append((int)(QMdmmData::UpgradeMaxHp));
+    replyUpdate(rep);
+}
+
 void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
 {
-    (void)packet;
+    if (socket == nullptr)
+        return;
+
+    if (packet.type() == QMdmmProtocol::TypeNotify) {
+        if ((packet.notifyId() | QMdmmProtocol::NotifyToAgentMask) != 0) {
+            void (QMdmmServerAgentPrivate::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            if (call != nullptr)
+                (this->*call)(packet.value());
+            else
+                socket->setHasError(true);
+        }
+    } else if (packet.type() == QMdmmProtocol::TypeReply) {
+        if (currentRequest == packet.requestId()) {
+            requestTimer->stop();
+            currentRequest = QMdmmProtocol::RequestInvalid;
+            void (QMdmmServerAgentPrivate::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+            if (call != nullptr)
+                (this->*call)(packet.value());
+            else
+                socket->setHasError(true);
+        }
+    }
 }
 
 void QMdmmServerAgentPrivate::requestStoneScissorsCloth(int strivedOrder, const QStringList &opponents)
@@ -65,7 +150,7 @@ void QMdmmServerAgentPrivate::requestStoneScissorsCloth(int strivedOrder, const 
     QJsonObject ob;
     ob.insert(QStringLiteral("strivedOrder"), strivedOrder);
     ob.insert(QStringLiteral("opponents"), QJsonArray::fromStringList(opponents));
-    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, ob));
+    addRequest(QMdmmProtocol::RequestStoneScissorsCloth, ob);
 }
 
 void QMdmmServerAgentPrivate::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
@@ -77,17 +162,17 @@ void QMdmmServerAgentPrivate::requestActionOrder(const QList<int> &remainedOrder
     ob.insert(QStringLiteral("remainedOrders"), arr);
     ob.insert(QStringLiteral("maximumOrder"), maximumOrder);
     ob.insert(QStringLiteral("selectionNum"), selectionNum);
-    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestActionOrder, ob));
+    addRequest(QMdmmProtocol::RequestActionOrder, ob);
 }
 
 void QMdmmServerAgentPrivate::requestAction(int currentOrder)
 {
-    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestAction, currentOrder));
+    addRequest(QMdmmProtocol::RequestAction, currentOrder);
 }
 
 void QMdmmServerAgentPrivate::requestUpdate(int remainingTimes)
 {
-    emit sendPacket(QMdmmPacket(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestUpdate, remainingTimes));
+    addRequest(QMdmmProtocol::RequestUpdate, remainingTimes);
 }
 
 void QMdmmServerAgentPrivate::notifyLogicConfiguration()
@@ -211,6 +296,23 @@ void QMdmmServerAgentPrivate::notifyOperated(const QString &playerName, const QJ
     Q_UNUSED(todo);
 }
 
+void QMdmmServerAgentPrivate::requestTimeout()
+{
+    if (socket != nullptr)
+        socket->setHasError(true);
+    executeDefaultReply();
+}
+
+void QMdmmServerAgentPrivate::executeDefaultReply()
+{
+    if (currentRequest != QMdmmProtocol::RequestInvalid) {
+        void (QMdmmServerAgentPrivate::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
+        currentRequest = QMdmmProtocol::RequestInvalid;
+        if (call != nullptr)
+            (this->*call)();
+    }
+}
+
 QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogicRunner *parent)
     : QObject(parent)
     , p(parent)
@@ -309,9 +411,15 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
                 break;
             }
         }
-        if (allDisconnected)
-            emit p->gameOver(QMdmmLogicRunner::QPrivateSignal());
 
+        if (allDisconnected) {
+            emit p->gameOver(QMdmmLogicRunner::QPrivateSignal());
+            return;
+        }
+
+        // If there is an active request, use default reply
+        // QMdmmServerAgentPrivate::executeDefaultReply handles it even if there is not active request
+        disconnectedAgent->executeDefaultReply();
     } else {
         // case 2: room is not full, so game hasn't started
         // Agent should be deleted.

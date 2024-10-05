@@ -12,6 +12,7 @@
 
 #include <QPointer>
 #include <QThread>
+#include <QTimer>
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 {
@@ -19,6 +20,9 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 
     static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> notifyCallback;
     static QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> replyCallback;
+    static QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)()> defaultReplyCallback;
+
+    static int requestTimeoutGracePeriod;
 
 public:
     QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent);
@@ -29,11 +33,22 @@ public:
     QPointer<QMdmmSocket> socket;
     QMdmmLogicRunnerPrivate *p;
 
+    QMdmmProtocol::RequestId currentRequest;
+    QJsonValue currentRequestValue;
+    QTimer *requestTimer;
+
+    void addRequest(QMdmmProtocol::RequestId requestId, const QJsonValue &value);
+
     // callbacks
     void replyStoneScissorsCloth(const QJsonValue &value);
     void replyActionOrder(const QJsonValue &value);
     void replyAction(const QJsonValue &value);
     void replyUpdate(const QJsonValue &value);
+
+    void defaultReplyStoneScissorsCloth();
+    void defaultReplyActionOrder();
+    void defaultReplyAction();
+    void defaultReplyUpdate();
 
 signals:
     void notifySpeak(const QJsonValue &value);
@@ -66,6 +81,9 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifyGameOver(const QStringList &playerNames);
     void notifySpoken(const QString &playerName, const QString &content);
     void notifyOperated(const QString &playerName, const QJsonValue &todo);
+
+    void requestTimeout();
+    void executeDefaultReply();
 };
 
 class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject

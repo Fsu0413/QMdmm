@@ -18,6 +18,7 @@ QJsonValue QMdmmLogicConfiguration::serialize() const
 #define CONF(member, type) ob.insert(QStringLiteral(#member), static_cast<type>(this->member))
 
     CONF(playerNumPerRoom, int);
+    CONF(requestTimeout, int);
     CONF(initialKnifeDamage, int);
     CONF(maximumKnifeDamage, int);
     CONF(initialHorseDamage, int);
@@ -56,6 +57,7 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     }
 
     CONF(playerNumPerRoom, isDouble, v.toInt);
+    CONF(requestTimeout, isDouble, v.toInt);
     CONF(initialKnifeDamage, isDouble, v.toInt);
     CONF(maximumKnifeDamage, isDouble, v.toInt);
     CONF(initialHorseDamage, isDouble, v.toInt);

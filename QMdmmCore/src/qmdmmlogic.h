@@ -4,12 +4,15 @@
 #define QMDMMLOGIC_H
 
 #include "qmdmmcoreglobal.h"
+
 #include <QObject>
 
 // TODO: consider make it binary compatible across versions
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final
 {
+    // These 2 should not be here, they are properties of QMdmmLogicRunner
     int playerNumPerRoom = 3;
+    int requestTimeout = 20;
 
     int initialKnifeDamage = 1;
     int maximumKnifeDamage = 10;

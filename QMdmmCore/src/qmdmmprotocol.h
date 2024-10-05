@@ -33,7 +33,6 @@ enum NotifyId
     NotifyFromServerMask = 0x1000,
     NotifyPongServer, // int ping-id
     NotifyVersion, // string versionNumber
-    NotifySignedIn, // string playerName, string screenName, int(AgentState) agentState
 
     NotifyFromAgentMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
