@@ -73,23 +73,160 @@ void QMdmmServerAgentPrivate::addRequest(QMdmmProtocol::RequestId requestId, con
 
 void QMdmmServerAgentPrivate::replyStoneScissorsCloth(const QJsonValue &value)
 {
+#define DEFAULTREPLY                      \
+    do {                                  \
+        defaultReplyStoneScissorsCloth(); \
+        return;                           \
+    } while (0)
+
+    if (!value.isDouble())
+        DEFAULTREPLY;
+
+    QMdmmData::StoneScissorsCloth ssc = static_cast<QMdmmData::StoneScissorsCloth>(value.toInt());
+    switch (ssc) {
+    case QMdmmData::Stone:
+    case QMdmmData::Scissors:
+    case QMdmmData::Cloth:
+        break;
+    default:
+        DEFAULTREPLY;
+    }
+
+    emit p->sscReply(objectName(), ssc);
+
+#undef DEFAULTREPLY
 }
 
 void QMdmmServerAgentPrivate::replyActionOrder(const QJsonValue &value)
 {
+#define DEFAULTREPLY               \
+    do {                           \
+        defaultReplyActionOrder(); \
+        return;                    \
+    } while (0)
+
+    if (!value.isArray())
+        DEFAULTREPLY;
+
+    QJsonArray arr = value.toArray();
+    QList<int> ao;
+    for (QJsonArray::const_iterator it = arr.constBegin(); it != arr.constEnd(); ++it) {
+        if (!it->isDouble())
+            DEFAULTREPLY;
+        ao << it->toInt();
+    }
+
+    emit p->actionOrderReply(objectName(), ao);
+
+#undef DEFAULTREPLY
 }
 
 void QMdmmServerAgentPrivate::replyAction(const QJsonValue &value)
 {
+#define DEFAULTREPLY          \
+    do {                      \
+        defaultReplyAction(); \
+        return;               \
+    } while (0)
+
+    if (!value.isObject())
+        DEFAULTREPLY;
+
+    QJsonObject arr = value.toObject();
+
+    if (!arr.contains(QStringLiteral("action")))
+        DEFAULTREPLY;
+    QJsonValue vaction = arr.value(QStringLiteral("action"));
+    if (!vaction.isDouble())
+        DEFAULTREPLY;
+    QMdmmData::Action action = static_cast<QMdmmData::Action>(vaction.toInt());
+    switch (action) {
+    case QMdmmData::DoNothing:
+    case QMdmmData::BuyKnife:
+    case QMdmmData::BuyHorse:
+    case QMdmmData::Slash:
+    case QMdmmData::Kick:
+    case QMdmmData::Move:
+    case QMdmmData::LetMove:
+        break;
+    default:
+        DEFAULTREPLY;
+    }
+
+    QString toPlayer;
+    switch (action) {
+    case QMdmmData::Slash:
+    case QMdmmData::Kick:
+    case QMdmmData::LetMove: {
+        if (!arr.contains(QStringLiteral("toPlayer")))
+            DEFAULTREPLY;
+        QJsonValue vtoPlayer = arr.value(QStringLiteral("toPlayer"));
+        if (!vtoPlayer.isString())
+            DEFAULTREPLY;
+        toPlayer = vtoPlayer.toString();
+        break;
+    }
+    default:
+        break;
+    }
+
+    int toPlace = 0;
+    switch (action) {
+    case QMdmmData::Move:
+    case QMdmmData::LetMove: {
+        if (!arr.contains(QStringLiteral("toPlace")))
+            DEFAULTREPLY;
+        QJsonValue vtoPlace = arr.value(QStringLiteral("toPlace"));
+        if (!vtoPlace.isDouble())
+            DEFAULTREPLY;
+        toPlace = vtoPlace.toInt();
+        break;
+    }
+    default:
+        break;
+    }
+
+    emit p->actionReply(objectName(), action, toPlayer, toPlace);
+
+#undef DEFAULTREPLY
 }
 
 void QMdmmServerAgentPrivate::replyUpdate(const QJsonValue &value)
 {
+#define DEFAULTREPLY          \
+    do {                      \
+        defaultReplyUpdate(); \
+        return;               \
+    } while (0)
+
+    if (!value.isArray())
+        DEFAULTREPLY;
+
+    QJsonArray arr = value.toArray();
+    QList<QMdmmData::UpgradeItem> ups;
+    for (QJsonArray::const_iterator it = arr.constBegin(); it != arr.constEnd(); ++it) {
+        if (!it->isDouble())
+            DEFAULTREPLY;
+        QMdmmData::UpgradeItem up = static_cast<QMdmmData::UpgradeItem>(it->toInt());
+        switch (up) {
+        case QMdmmData::UpgradeKnife:
+        case QMdmmData::UpgradeHorse:
+        case QMdmmData::UpgradeMaxHp:
+            break;
+        default:
+            DEFAULTREPLY;
+        }
+        ups << up;
+    }
+
+    emit p->upgradeReply(objectName(), ups);
+
+#undef DEFAULTREPLY
 }
 
 void QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth()
 {
-    replyStoneScissorsCloth((int)(QRandomGenerator::global()->generate() % 3));
+    replyStoneScissorsCloth(static_cast<int>(QRandomGenerator::global()->generate() % 3));
 }
 
 void QMdmmServerAgentPrivate::defaultReplyActionOrder()
@@ -106,7 +243,7 @@ void QMdmmServerAgentPrivate::defaultReplyActionOrder()
 void QMdmmServerAgentPrivate::defaultReplyAction()
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("action"), (int)(QMdmmData::DoNothing));
+    ob.insert(QStringLiteral("action"), static_cast<int>(QMdmmData::DoNothing));
     replyAction(ob);
 }
 
@@ -115,7 +252,7 @@ void QMdmmServerAgentPrivate::defaultReplyUpdate()
     int times = currentRequestValue.toInt(1);
     QJsonArray rep;
     while ((times--) != 0)
-        rep.append((int)(QMdmmData::UpgradeMaxHp));
+        rep.append(static_cast<int>(QMdmmData::UpgradeMaxHp));
     replyUpdate(rep);
 }
 

@@ -276,12 +276,20 @@ void QMdmmLogicPrivate::sscForActionOrder()
 void QMdmmLogicPrivate::startAction()
 {
     if (!room->isRoundOver()) {
-        if (++currentActionOrder <= sscForActionWinners.length()) {
-            state = QMdmmLogic::Action;
-            emit q->requestAction(confirmedActionOrders[currentActionOrder], currentActionOrder, QMdmmLogic::QPrivateSignal());
-        } else {
-            startSscForAction();
+        ++currentActionOrder;
+        while (++currentActionOrder <= sscForActionWinners.length()) {
+            // no copy since C++17 - QHash<T>::value returns const T
+            // If C++11 or C++14 is needed, we need const QString && as type of currentPlayer (somewhat uncomfortable)
+            QString currentPlayer = confirmedActionOrders.value(currentActionOrder);
+            QMdmmPlayer *p = room->player(currentPlayer);
+            if (p->alive()) {
+                state = QMdmmLogic::Action;
+                emit q->requestAction(currentPlayer, currentActionOrder, QMdmmLogic::QPrivateSignal());
+                return;
+            }
         }
+
+        startSscForAction();
     } else {
         emit q->roundOver(QMdmmLogic::QPrivateSignal());
         startUpgrade();

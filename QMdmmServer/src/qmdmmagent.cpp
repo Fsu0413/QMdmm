@@ -3,14 +3,9 @@
 #include "qmdmmagent.h"
 #include "qmdmmagent_p.h"
 
-QMdmmAgentPrivate::QMdmmAgentPrivate(QMdmmAgent *a)
-    : a(a)
-{
-}
-
 QMdmmAgent::QMdmmAgent(const QString &name, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmAgentPrivate(this))
+    , d(new QMdmmAgentPrivate)
 {
     setObjectName(name);
 }

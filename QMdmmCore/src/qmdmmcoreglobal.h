@@ -10,8 +10,11 @@
 #include <QMetaType>
 #include <QSet>
 #include <QStringList>
+#include <QVariant>
 #include <QVersionNumber>
 #include <QtGlobal>
+
+#include <type_traits>
 #else
 #define Q_NAMESPACE_EXPORT
 #define Q_FLAG_NS
@@ -113,7 +116,13 @@ enum AgentStateEnum
 Q_DECLARE_FLAGS(AgentState, AgentStateEnum)
 Q_FLAG_NS(AgentState)
 
-QMDMMCORE_EXPORT bool isPlaceAdjecent(int p1, int p2);
+constexpr bool isPlaceAdjecent(int p1, int p2)
+{
+    // simplifies to "only one of p1 and p2 is Country"
+    // simplifies again to "p1 is Country xor p2 is Country"
+    return (p1 == Country) != (p2 == Country);
+}
+
 QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, StoneScissorsCloth> &judgers);
 } // namespace QMdmmData
 
@@ -123,10 +132,34 @@ QMDMMCORE_EXPORT QVersionNumber version();
 
 namespace QMdmmUtilities {
 template<typename T>
-QSet<T> qList2QSet(const QList<T> &l)
+QSet<T> list2Set(const QList<T> &l)
 {
     return QSet<T>(l.constBegin(), l.constEnd());
 }
+template<typename T>
+QVariantList enumList2VariantList(const QList<T> &list)
+{
+    static_assert(std::is_enum_v<T>);
+
+    QVariantList ret;
+    ret.reserve(list.length());
+    foreach (T i, list)
+        ret << static_cast<int>(i);
+    return ret;
+}
+template<typename T>
+QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
+{
+    QVariantList ret;
+    ret.reserve(list.length());
+    foreach (const QFlags<T> &i, list)
+        ret << static_cast<int>(typename QFlags<T>::Int(i));
+    return ret;
+}
+QVariantList intList2VariantList(const QList<int> &list);
+QList<int> variantList2IntList(const QVariantList &list);
+QVariantList stringList2VariantList(const QList<QString> &list); // !!!: Qt 5 QStringList is not QList<QString> but Qt 6 is
+QStringList variantList2StrList(const QVariantList &list);
 } // namespace QMdmmUtilities
 
 #endif // QMDMMCOREGLOBAL_H

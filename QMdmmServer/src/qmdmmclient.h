@@ -14,7 +14,7 @@ class QMDMMSERVER_EXPORT QMdmmClient final : public QObject
     Q_OBJECT
 
 public:
-    QMdmmClient(QObject *parent = nullptr);
+    explicit QMdmmClient(QObject *parent = nullptr);
     ~QMdmmClient() override;
 
 private:

@@ -58,7 +58,7 @@ public:
     };
     Q_ENUM(State)
 
-    QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    explicit QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogic() override;
 
     [[nodiscard]] const QMdmmLogicConfiguration &configuration() const;

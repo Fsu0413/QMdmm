@@ -90,7 +90,6 @@ public:
     QMdmmPacket();
     QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value);
     QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
-    explicit QMdmmPacket(const QByteArray &serialized);
 
     [[nodiscard]] QMdmmProtocol::PacketType type() const;
     [[nodiscard]] QMdmmProtocol::RequestId requestId() const;
@@ -100,6 +99,7 @@ public:
     [[nodiscard]] QByteArray serialize() const;
     bool hasError(QString *errorString = nullptr) const;
 
+    static QMdmmPacket fromJson(const QByteArray &serialized, QString *errorString = nullptr);
     [[nodiscard]] inline operator QByteArray() const // NOLINT(readability-redundant-inline-specifier)
     {
         return serialize();

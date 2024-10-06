@@ -96,17 +96,6 @@
 
 #include <QMap>
 
-bool QMdmmData::isPlaceAdjecent(int p1, int p2)
-{
-    if (p1 == p2)
-        return false;
-
-    if ((p1 != Country) && (p2 != Country))
-        return false;
-
-    return true;
-}
-
 namespace {
 constexpr bool sscGreater(QMdmmData::StoneScissorsCloth op1, QMdmmData::StoneScissorsCloth op2)
 {
@@ -148,4 +137,40 @@ QStringList QMdmmData::stoneScissorsClothWinners(const QHash<QString, QMdmmData:
 QVersionNumber QMdmmGlobal::version()
 {
     return QVersionNumber::fromString(QStringLiteral(QMDMM_VERSION));
+}
+
+QVariantList QMdmmUtilities::intList2VariantList(const QList<int> &list)
+{
+    QVariantList ret;
+    ret.reserve(list.length());
+    foreach (int i, list)
+        ret << i;
+    return ret;
+}
+
+QList<int> QMdmmUtilities::variantList2IntList(const QVariantList &list)
+{
+    QList<int> ret;
+    ret.reserve(list.length());
+    foreach (const QVariant &i, list)
+        ret << i.toInt();
+    return ret;
+}
+
+QVariantList stringList2VariantList(const QList<QString> &list)
+{
+    QVariantList ret;
+    ret.reserve(list.length());
+    foreach (const QString &i, list)
+        ret << i;
+    return ret;
+}
+
+QStringList variantList2StrList(const QVariantList &list)
+{
+    QStringList ret;
+    ret.reserve(list.length());
+    foreach (const QVariant &i, list)
+        ret << i.toString();
+    return ret;
 }

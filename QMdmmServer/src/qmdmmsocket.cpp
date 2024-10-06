@@ -61,10 +61,10 @@ QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *p)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
 {
-    QMdmmPacket packet(arr);
     QString packetError;
+    QMdmmPacket packet = QMdmmPacket::fromJson(arr, &packetError);
 
-    if (packet.hasError(&packetError)) {
+    if (packet.hasError()) {
         // TODO: make use of this error string
         (void)packetError;
 

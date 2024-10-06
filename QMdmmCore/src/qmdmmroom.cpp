@@ -136,19 +136,19 @@ bool QMdmmRoom::isRoundOver() const
 
 bool QMdmmRoom::isGameOver(QStringList *winnerPlayerNames) const
 {
-    if (winnerPlayerNames == nullptr) {
-        static QStringList _w;
-        winnerPlayerNames = &_w;
-    }
-
-    winnerPlayerNames->clear();
+    bool ret = false;
+    if (winnerPlayerNames != nullptr)
+        winnerPlayerNames->clear();
 
     foreach (const QMdmmPlayer *player, d->players) {
-        if (!player->canUpdateHorse() && !player->canUpdateKnife() && !player->canUpdateMaxHp())
-            *winnerPlayerNames << player->objectName();
+        if (!player->canUpdateHorse() && !player->canUpdateKnife() && !player->canUpdateMaxHp()) {
+            ret = true;
+            if (winnerPlayerNames != nullptr)
+                *winnerPlayerNames << player->objectName();
+        }
     }
 
-    return !winnerPlayerNames->isEmpty();
+    return ret;
 }
 
 void QMdmmRoom::prepareForRoundStart()

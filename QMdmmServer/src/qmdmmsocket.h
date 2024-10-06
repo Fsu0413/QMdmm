@@ -30,12 +30,12 @@ public:
     };
 
     // ctor for Server: pass an already-open socket here
-    QMdmmSocket(QTcpSocket *t, QObject *parent = nullptr);
-    QMdmmSocket(QLocalSocket *l, QObject *parent = nullptr);
-    QMdmmSocket(QWebSocket *w, QObject *parent = nullptr);
+    explicit QMdmmSocket(QTcpSocket *t, QObject *parent = nullptr);
+    explicit QMdmmSocket(QLocalSocket *l, QObject *parent = nullptr);
+    explicit QMdmmSocket(QWebSocket *w, QObject *parent = nullptr);
 
     // ctor for Client: pass type here
-    QMdmmSocket(QObject *parent = nullptr);
+    explicit QMdmmSocket(QObject *parent = nullptr);
     ~QMdmmSocket() override;
 
     void setHasError(bool hasError);

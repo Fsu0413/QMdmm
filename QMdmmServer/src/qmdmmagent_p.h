@@ -5,18 +5,10 @@
 
 #include "qmdmmagent.h"
 
-#include <QMdmmProtocol>
-
-#include <QObject>
-#include <QPointer>
-
 struct QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final
 {
-    QMdmmAgentPrivate(QMdmmAgent *a);
-
-    QMdmmAgent *a;
     QString screenName;
-    QMdmmData::AgentState state;
+    QMdmmData::AgentState state = QMdmmData::StateOffline;
 };
 
 #endif

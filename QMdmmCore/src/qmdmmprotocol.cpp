@@ -48,57 +48,6 @@ QMdmmPacket::QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &val
 {
 }
 
-QMdmmPacket::QMdmmPacket(const QByteArray &serialized)
-    : d(new QMdmmPacketData)
-{
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(serialized, &err);
-
-    if (err.error != QJsonParseError::NoError) {
-        d->error = QStringLiteral("Json error: ").append(err.errorString());
-        return;
-    }
-
-    if (!doc.isObject()) {
-        d->error = QStringLiteral("Document is not object");
-        return;
-    }
-
-    *d = doc.object();
-
-    if (!d->contains(QStringLiteral("type"))) {
-        d->error = QStringLiteral("'type' is non-existent");
-        return;
-    }
-    if (!d->value(QStringLiteral("type")).isDouble()) {
-        d->error = QStringLiteral("'type' is not number");
-        return;
-    }
-
-    if (!d->contains(QStringLiteral("requestId"))) {
-        d->error = QStringLiteral("'requestId' is non-existent");
-        return;
-    }
-    if (!d->value(QStringLiteral("requestId")).isDouble()) {
-        d->error = QStringLiteral("'requestId' is not number");
-        return;
-    }
-
-    if (!d->contains(QStringLiteral("notifyId"))) {
-        d->error = QStringLiteral("'notifyId' is non-existent");
-        return;
-    }
-    if (!d->value(QStringLiteral("notifyId")).isDouble()) {
-        d->error = QStringLiteral("'notifyId' is not number");
-        return;
-    }
-
-    if (!d->contains(QStringLiteral("value"))) {
-        d->error = QStringLiteral("'value' is non-existent");
-        return;
-    }
-}
-
 QMdmmProtocol::PacketType QMdmmPacket::type() const
 {
     return static_cast<QMdmmProtocol::PacketType>(d->value(QStringLiteral("type")).toInt(QMdmmProtocol::TypeInvalid));
@@ -131,4 +80,74 @@ bool QMdmmPacket::hasError(QString *errorString) const
         *errorString = d->error;
 
     return !d->error.isEmpty();
+}
+
+QMdmmPacket QMdmmPacket::fromJson(const QByteArray &serialized, QString *errorString)
+{
+    if (errorString == nullptr) {
+        static QString _errorString;
+        errorString = &_errorString;
+    }
+
+    errorString->clear();
+
+    QMdmmPacket ret;
+
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(serialized, &err);
+
+    if (err.error != QJsonParseError::NoError) {
+        *errorString = QStringLiteral("Json error: ").append(err.errorString());
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    if (!doc.isObject()) {
+        *errorString = QStringLiteral("Document is not object");
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    *(ret.d) = doc.object();
+
+    if (!ret.d->contains(QStringLiteral("type"))) {
+        *errorString = QStringLiteral("'type' is non-existent");
+        ret.d->error = *errorString;
+        return ret;
+    }
+    if (!ret.d->value(QStringLiteral("type")).isDouble()) {
+        *errorString = QStringLiteral("'type' is not number");
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    if (!ret.d->contains(QStringLiteral("requestId"))) {
+        *errorString = QStringLiteral("'requestId' is non-existent");
+        ret.d->error = *errorString;
+        return ret;
+    }
+    if (!ret.d->value(QStringLiteral("requestId")).isDouble()) {
+        *errorString = QStringLiteral("'requestId' is not number");
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    if (!ret.d->contains(QStringLiteral("notifyId"))) {
+        *errorString = QStringLiteral("'notifyId' is non-existent");
+        ret.d->error = *errorString;
+        return ret;
+    }
+    if (!ret.d->value(QStringLiteral("notifyId")).isDouble()) {
+        *errorString = QStringLiteral("'notifyId' is not number");
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    if (!ret.d->contains(QStringLiteral("value"))) {
+        *errorString = QStringLiteral("'value' is non-existent");
+        ret.d->error = *errorString;
+        return ret;
+    }
+
+    return ret;
 }

@@ -33,7 +33,7 @@ class QMDMMSERVER_EXPORT QMdmmServer : public QObject
     Q_OBJECT
 
 public:
-    QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QObject *parent = nullptr);
+    explicit QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QObject *parent = nullptr);
     ~QMdmmServer() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)

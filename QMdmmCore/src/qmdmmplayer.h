@@ -64,9 +64,22 @@ public:
     [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, int toPlace) const;
 
     // upgrade checks
-    [[nodiscard]] bool canUpdateKnife() const;
-    [[nodiscard]] bool canUpdateHorse() const;
-    [[nodiscard]] bool canUpdateMaxHp() const;
+    [[nodiscard]] int upgradeKnifeRemainingTimes() const;
+    [[nodiscard]] int upgradeHorseRemainingTimes() const;
+    [[nodiscard]] int upgradeMaxHpRemainingTimes() const;
+
+    [[nodiscard]] constexpr bool canUpdateKnife() const
+    {
+        return upgradeKnifeRemainingTimes() > 0;
+    }
+    [[nodiscard]] constexpr bool canUpdateHorse() const
+    {
+        return upgradeHorseRemainingTimes() > 0;
+    }
+    [[nodiscard]] constexpr bool canUpdateMaxHp() const
+    {
+        return upgradeMaxHpRemainingTimes() > 0;
+    }
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // actions

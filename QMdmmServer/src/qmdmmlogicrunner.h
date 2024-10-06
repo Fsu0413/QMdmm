@@ -24,7 +24,7 @@ class QMDMMSERVER_EXPORT QMdmmLogicRunner final : public QObject
 
 public:
     // Constuctor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
-    QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    explicit QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogicRunner() override;
 
     // Functions to be called in Server thread

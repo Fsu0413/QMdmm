@@ -243,19 +243,19 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
     return false;
 }
 
-bool QMdmmPlayer::canUpdateKnife() const
+int QMdmmPlayer::upgradeKnifeRemainingTimes() const
 {
-    return knifeDamage() >= room()->logic()->configuration().maximumKnifeDamage;
+    return room()->logic()->configuration().maximumKnifeDamage - knifeDamage();
 }
 
-bool QMdmmPlayer::canUpdateHorse() const
+int QMdmmPlayer::upgradeHorseRemainingTimes() const
 {
-    return horseDamage() >= room()->logic()->configuration().maximumHorseDamage;
+    return room()->logic()->configuration().maximumHorseDamage - horseDamage();
 }
 
-bool QMdmmPlayer::canUpdateMaxHp() const
+int QMdmmPlayer::upgradeMaxHpRemainingTimes() const
 {
-    return maxHp() >= room()->logic()->configuration().maximumMaxHp;
+    return room()->logic()->configuration().maximumMaxHp - maxHp();
 }
 
 bool QMdmmPlayer::buyKnife()
@@ -338,7 +338,7 @@ bool QMdmmPlayer::move(int toPlace)
     return false;
 }
 
-bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const): Operation is ought not to be const
+bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const): Operation is ought to be not const
 {
     // pull, push, kick(effect)
 
@@ -352,7 +352,7 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-ma
     return false;
 }
 
-bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought not to be const
+bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought to be not const
 {
     return true;
 }

@@ -16,7 +16,9 @@ endif()
 
 option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private classes" false)
 
-set(CMAKE_CXX_STANDARD 17)
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
