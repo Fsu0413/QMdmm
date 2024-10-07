@@ -56,7 +56,7 @@ public:
 
     // calculated property
     [[nodiscard]] bool dead() const;
-    [[nodiscard]] constexpr bool alive() const
+    [[nodiscard]] bool alive() const
     {
         return !dead();
     }
@@ -74,15 +74,15 @@ public:
     [[nodiscard]] int upgradeHorseRemainingTimes() const;
     [[nodiscard]] int upgradeMaxHpRemainingTimes() const;
 
-    [[nodiscard]] constexpr bool canUpgradeKnife() const
+    [[nodiscard]] bool canUpgradeKnife() const
     {
         return upgradeKnifeRemainingTimes() > 0;
     }
-    [[nodiscard]] constexpr bool canUpgradeHorse() const
+    [[nodiscard]] bool canUpgradeHorse() const
     {
         return upgradeHorseRemainingTimes() > 0;
     }
-    [[nodiscard]] constexpr bool canUpgradeMaxHp() const
+    [[nodiscard]] bool canUpgradeMaxHp() const
     {
         return upgradeMaxHpRemainingTimes() > 0;
     }
