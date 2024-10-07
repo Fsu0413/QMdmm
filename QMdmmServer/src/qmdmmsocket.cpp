@@ -350,5 +350,7 @@ bool QMdmmSocket::connectToHost(const QString &host)
     }
 
     d = QMdmmSocketPrivateFactory::create(t, this);
+    if (d == nullptr)
+        return false;
     return d->connectToHost(host);
 }

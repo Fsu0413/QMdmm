@@ -10,6 +10,7 @@
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmRoomPrivate final
 {
     QMap<QString, QMdmmPlayer *> players;
+    QMdmmLogicConfiguration logicConfiguration;
 };
 
 #endif

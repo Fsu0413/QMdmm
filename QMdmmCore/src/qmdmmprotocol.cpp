@@ -6,6 +6,11 @@
 #include <QJsonValue>
 #include <QSharedData>
 
+int QMdmmProtocol::protocolVersion()
+{
+    return 0;
+}
+
 QMdmmPacketData::QMdmmPacketData()
 {
     insert(QStringLiteral("type"), static_cast<int>(QMdmmProtocol::TypeInvalid));

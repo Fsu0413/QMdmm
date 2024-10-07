@@ -9,10 +9,9 @@ class QMdmmRoom;
 
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 {
-    QMdmmLogicPrivate(QMdmmLogic *q, QMdmmLogicConfiguration logicConfiguration);
+    QMdmmLogicPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogic *q);
 
     QMdmmLogic *q;
-    QMdmmLogicConfiguration conf;
     QMdmmRoom *room;
     QStringList players;
 

@@ -9,11 +9,11 @@
 QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
     : knife(false)
     , horse(false)
-    , hp(room->logic()->configuration().initialMaxHp())
+    , hp(room->logicConfiguration().initialMaxHp())
     , place(QMdmmData::Country)
-    , knifeDamage(room->logic()->configuration().initialKnifeDamage())
-    , horseDamage(room->logic()->configuration().initialHorseDamage())
-    , maxHp(room->logic()->configuration().initialMaxHp())
+    , knifeDamage(room->logicConfiguration().initialKnifeDamage())
+    , horseDamage(room->logicConfiguration().initialHorseDamage())
+    , maxHp(room->logicConfiguration().initialMaxHp())
     , upgradePoint(0)
 {
 }
@@ -175,18 +175,18 @@ void QMdmmPlayer::setUpgradePoint(int u)
 
 bool QMdmmPlayer::dead() const
 {
-    bool zeroHpAsDead = room()->logic()->configuration().zeroHpAsDead();
+    bool zeroHpAsDead = room()->logicConfiguration().zeroHpAsDead();
     return zeroHpAsDead ? (d->hp <= 0) : (d->hp < 0);
 }
 
 bool QMdmmPlayer::canBuyKnife() const
 {
-    return alive() && !hasKnife() && (room()->logic()->configuration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
+    return alive() && !hasKnife() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
 }
 
 bool QMdmmPlayer::canBuyHorse() const
 {
-    return alive() && !hasHorse() && (room()->logic()->configuration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
+    return alive() && !hasHorse() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
 }
 
 bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
@@ -230,7 +230,7 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
 {
     Q_ASSERT(room() == to->room());
 
-    if (!room()->logic()->configuration().enableLetMove())
+    if (!room()->logicConfiguration().enableLetMove())
         return false;
 
     if (dead() || to->dead())
@@ -253,17 +253,17 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
 
 int QMdmmPlayer::upgradeKnifeRemainingTimes() const
 {
-    return room()->logic()->configuration().maximumKnifeDamage() - knifeDamage();
+    return room()->logicConfiguration().maximumKnifeDamage() - knifeDamage();
 }
 
 int QMdmmPlayer::upgradeHorseRemainingTimes() const
 {
-    return room()->logic()->configuration().maximumHorseDamage() - horseDamage();
+    return room()->logicConfiguration().maximumHorseDamage() - horseDamage();
 }
 
 int QMdmmPlayer::upgradeMaxHpRemainingTimes() const
 {
-    return room()->logic()->configuration().maximumMaxHp() - maxHp();
+    return room()->logicConfiguration().maximumMaxHp() - maxHp();
 }
 
 bool QMdmmPlayer::buyKnife()
@@ -294,9 +294,9 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
     to->applyDamage(this, knifeDamage(), QMdmmData::Slashed);
 
     if (place() != QMdmmData::Country) {
-        int punishHpModifier = room()->logic()->configuration().punishHpModifier();
+        int punishHpModifier = room()->logicConfiguration().punishHpModifier();
         if (punishHpModifier > 0) {
-            QMdmmLogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logic()->configuration().punishHpRoundStrategy();
+            QMdmmLogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
 
             int punishedHp;
             switch (punishHpRoundStrategy) {
@@ -385,7 +385,7 @@ void QMdmmPlayer::applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::Dam
 
 bool QMdmmPlayer::upgradeKnife()
 {
-    if (!canUpdateKnife())
+    if (!canUpgradeKnife())
         return false;
 
     setKnifeDamage(knifeDamage() + 1);
@@ -394,7 +394,7 @@ bool QMdmmPlayer::upgradeKnife()
 
 bool QMdmmPlayer::upgradeHorse()
 {
-    if (!canUpdateHorse())
+    if (!canUpgradeHorse())
         return false;
 
     setHorseDamage(horseDamage() + 1);
@@ -403,7 +403,7 @@ bool QMdmmPlayer::upgradeHorse()
 
 bool QMdmmPlayer::upgradeMaxHp()
 {
-    if (!canUpdateMaxHp())
+    if (!canUpgradeMaxHp())
         return false;
 
     setMaxHp(maxHp() + 1);
@@ -422,8 +422,8 @@ void QMdmmPlayer::prepareForRoundStart(int playerNum)
 
 void QMdmmPlayer::resetUpgrades()
 {
-    setMaxHp(room()->logic()->configuration().initialMaxHp());
-    setKnifeDamage(room()->logic()->configuration().initialKnifeDamage());
-    setHorseDamage(room()->logic()->configuration().initialHorseDamage());
+    setMaxHp(room()->logicConfiguration().initialMaxHp());
+    setKnifeDamage(room()->logicConfiguration().initialKnifeDamage());
+    setHorseDamage(room()->logicConfiguration().initialHorseDamage());
     setUpgradePoint(0);
 }

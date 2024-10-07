@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QMetaType>
 #include <QRandomGenerator>
+#include <utility>
 
 QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::notifyCallback {
     std::make_pair(QMdmmProtocol::NotifySpeak, &QMdmmServerAgentPrivate::notifySpeak),
@@ -16,14 +17,14 @@ QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonVal
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::replyStoneScissorsCloth),
     std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmServerAgentPrivate::replyActionOrder),
     std::make_pair(QMdmmProtocol::RequestAction, &QMdmmServerAgentPrivate::replyAction),
-    std::make_pair(QMdmmProtocol::RequestUpdate, &QMdmmServerAgentPrivate::replyUpdate),
+    std::make_pair(QMdmmProtocol::RequestUpgrade, &QMdmmServerAgentPrivate::replyUpgrade),
 };
 
 QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)()> QMdmmServerAgentPrivate::defaultReplyCallback {
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth),
     std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmServerAgentPrivate::defaultReplyActionOrder),
     std::make_pair(QMdmmProtocol::RequestAction, &QMdmmServerAgentPrivate::defaultReplyAction),
-    std::make_pair(QMdmmProtocol::RequestUpdate, &QMdmmServerAgentPrivate::defaultReplyUpdate),
+    std::make_pair(QMdmmProtocol::RequestUpgrade, &QMdmmServerAgentPrivate::defaultReplyUpgrade),
 };
 
 int QMdmmServerAgentPrivate::requestTimeoutGracePeriod = 60;
@@ -191,12 +192,12 @@ void QMdmmServerAgentPrivate::replyAction(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void QMdmmServerAgentPrivate::replyUpdate(const QJsonValue &value)
+void QMdmmServerAgentPrivate::replyUpgrade(const QJsonValue &value)
 {
-#define DEFAULTREPLY          \
-    do {                      \
-        defaultReplyUpdate(); \
-        return;               \
+#define DEFAULTREPLY           \
+    do {                       \
+        defaultReplyUpgrade(); \
+        return;                \
     } while (0)
 
     if (!value.isArray())
@@ -247,13 +248,13 @@ void QMdmmServerAgentPrivate::defaultReplyAction()
     replyAction(ob);
 }
 
-void QMdmmServerAgentPrivate::defaultReplyUpdate()
+void QMdmmServerAgentPrivate::defaultReplyUpgrade()
 {
     int times = currentRequestValue.toInt(1);
     QJsonArray rep;
     while ((times--) != 0)
         rep.append(static_cast<int>(QMdmmData::UpgradeMaxHp));
-    replyUpdate(rep);
+    replyUpgrade(rep);
 }
 
 void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
@@ -307,9 +308,9 @@ void QMdmmServerAgentPrivate::requestAction(int currentOrder)
     addRequest(QMdmmProtocol::RequestAction, currentOrder);
 }
 
-void QMdmmServerAgentPrivate::requestUpdate(int remainingTimes)
+void QMdmmServerAgentPrivate::requestUpgrade(int remainingTimes)
 {
-    addRequest(QMdmmProtocol::RequestUpdate, remainingTimes);
+    addRequest(QMdmmProtocol::RequestUpgrade, remainingTimes);
 }
 
 void QMdmmServerAgentPrivate::notifyLogicConfiguration()
@@ -321,7 +322,7 @@ void QMdmmServerAgentPrivate::notifyAgentStateChanged(const QString &playerName,
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("agentState"), int(QMdmmData::AgentState::Int(agentState)));
+    ob.insert(QStringLiteral("agentState"), static_cast<int>(QMdmmData::AgentState::Int(agentState)));
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyAgentStateChanged, ob));
 }
 
@@ -330,7 +331,7 @@ void QMdmmServerAgentPrivate::notifyPlayerAdded(const QString &playerName, const
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     ob.insert(QStringLiteral("screenName"), screenName);
-    ob.insert(QStringLiteral("agentState"), int(QMdmmData::AgentState::Int(agentState)));
+    ob.insert(QStringLiteral("agentState"), static_cast<int>(QMdmmData::AgentState::Int(agentState)));
     emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyPlayerAdded, ob));
 }
 
@@ -450,10 +451,10 @@ void QMdmmServerAgentPrivate::executeDefaultReply()
     }
 }
 
-QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogicRunner *parent)
+QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *parent)
     : QObject(parent)
     , p(parent)
-    , conf(logicConfiguration)
+    , conf(std::move(logicConfiguration))
 {
     logicThread = new QThread(this);
     logic = new QMdmmLogic(conf);
@@ -631,7 +632,7 @@ void QMdmmLogicRunnerPrivate::actionResult(const QString &playerName, QMdmmData:
 void QMdmmLogicRunnerPrivate::requestUpgrade(const QString &playerName, int upgradePoint)
 {
     QMdmmServerAgentPrivate *agent = agents.value(playerName);
-    agent->requestUpdate(upgradePoint);
+    agent->requestUpgrade(upgradePoint);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

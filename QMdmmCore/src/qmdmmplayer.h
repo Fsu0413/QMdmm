@@ -74,15 +74,15 @@ public:
     [[nodiscard]] int upgradeHorseRemainingTimes() const;
     [[nodiscard]] int upgradeMaxHpRemainingTimes() const;
 
-    [[nodiscard]] constexpr bool canUpdateKnife() const
+    [[nodiscard]] constexpr bool canUpgradeKnife() const
     {
         return upgradeKnifeRemainingTimes() > 0;
     }
-    [[nodiscard]] constexpr bool canUpdateHorse() const
+    [[nodiscard]] constexpr bool canUpgradeHorse() const
     {
         return upgradeHorseRemainingTimes() > 0;
     }
-    [[nodiscard]] constexpr bool canUpdateMaxHp() const
+    [[nodiscard]] constexpr bool canUpgradeMaxHp() const
     {
         return upgradeMaxHpRemainingTimes() > 0;
     }

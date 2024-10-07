@@ -9,6 +9,7 @@
 #include "qmdmmsocket.h"
 
 #include <QMdmmLogic>
+#include <QMdmmRoom>
 
 #include <QPointer>
 #include <QThread>
@@ -43,12 +44,12 @@ public:
     void replyStoneScissorsCloth(const QJsonValue &value);
     void replyActionOrder(const QJsonValue &value);
     void replyAction(const QJsonValue &value);
-    void replyUpdate(const QJsonValue &value);
+    void replyUpgrade(const QJsonValue &value);
 
     void defaultReplyStoneScissorsCloth();
     void defaultReplyActionOrder();
     void defaultReplyAction();
-    void defaultReplyUpdate();
+    void defaultReplyUpgrade();
 
 signals:
     void notifySpeak(const QJsonValue &value);
@@ -64,7 +65,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void requestAction(int currentOrder);
-    void requestUpdate(int remainingTimes);
+    void requestUpgrade(int remainingTimes);
 
     // notifications
     void notifyLogicConfiguration();
@@ -91,7 +92,7 @@ class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
     Q_OBJECT
 
 public:
-    QMdmmLogicRunnerPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogicRunner *parent);
+    QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *parent);
     ~QMdmmLogicRunnerPrivate() override;
 
     QMdmmLogicRunner *p;

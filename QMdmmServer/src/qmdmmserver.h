@@ -5,8 +5,8 @@
 
 #include "qmdmmserverglobal.h"
 
-#include <QMdmmLogic>
 #include <QMdmmProtocol>
+#include <QMdmmRoom>
 
 #include <QObject>
 #include <QString>

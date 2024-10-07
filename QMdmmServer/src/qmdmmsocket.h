@@ -52,6 +52,9 @@ signals:
 
 private:
     friend class QMdmmSocketPrivate;
+    // non-const d-ptr.
+    // QMdmmSocketPrivate is pv class and its internal implementation varies by socket type.
+    // function connectToHost alters this d-ptr with proper implementation.
     QMdmmSocketPrivate *d;
     Q_DISABLE_COPY_MOVE(QMdmmSocket);
 };

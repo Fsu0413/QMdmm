@@ -118,6 +118,7 @@ void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readabil
 
     QJsonObject ob;
     ob.insert(QStringLiteral("versionNumber"), QMdmmGlobal::version().toString());
+    ob.insert(QStringLiteral("protocolVersion"), QMdmmProtocol::protocolVersion());
     QMdmmPacket packet(QMdmmProtocol::NotifyVersion, ob);
     emit socket->sendPacket(packet);
 }

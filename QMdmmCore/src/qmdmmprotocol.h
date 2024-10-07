@@ -23,7 +23,7 @@ enum RequestId
     RequestStoneScissorsCloth, // request: array { string playerName } playerNames, int strivedOrder (or 0 for action) reply: int ssc
     RequestActionOrder, // request: array { int } remainedOrders, int maximumOrder, int selectionNum, reply: array { int } orders
     RequestAction, // request: int currentOrder, reply: int(Action) action, optional string toPlayer, optional int toPlace
-    RequestUpdate, // request: int remaningTimes, reply: array { int } item
+    RequestUpgrade, // request: int remaningTimes, reply: array { int } item
 };
 
 enum NotifyId
@@ -32,7 +32,7 @@ enum NotifyId
 
     NotifyFromServerMask = 0x1000,
     NotifyPongServer, // int ping-id
-    NotifyVersion, // string versionNumber
+    NotifyVersion, // string versionNumber, int protocolVersion
 
     NotifyFromAgentMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
@@ -68,6 +68,9 @@ enum PacketType
 
     TypeInvalid = -1
 };
+
+QMDMMCORE_EXPORT int protocolVersion();
+
 } // namespace QMdmmProtocol
 
 // Failed to pimpl following class since it inherits QSharedData
@@ -100,7 +103,7 @@ public:
     bool hasError(QString *errorString = nullptr) const;
 
     static QMdmmPacket fromJson(const QByteArray &serialized, QString *errorString = nullptr);
-    [[nodiscard]] inline operator QByteArray() const // NOLINT(readability-redundant-inline-specifier)
+    [[nodiscard]] operator QByteArray() const
     {
         return serialize();
     }
