@@ -31,14 +31,17 @@ set(QMDMMCORE_SOURCES
 
 add_custom_target(QMdmmCore)
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
-auto_generate_header_file_for_target_private(QMdmmCore "${QMDMMCORE_PRIVATE_HEADERS}")
-add_library(QMdmmCorePrivate INTERFACE)
-target_include_directories(QMdmmCorePrivate
-    INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore/private/${QMdmm_VERSION}"
-)
+if (QMDMM_EXPORT_PRIVATE)
+    auto_generate_header_file_for_target_private(QMdmmCore "${QMDMMCORE_PRIVATE_HEADERS}")
+    add_library(QMdmmCorePrivate INTERFACE)
+    target_include_directories(QMdmmCorePrivate
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore/private/${QMdmm_VERSION}"
+    )
+endif()
 
 if (Qt6_FOUND)
     qt6_add_library(QMdmmCore6 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS})
+    add_library(QMdmm6::Core ALIAS QMdmmCore6)
     add_dependencies(QMdmmCore QMdmmCore6)
 
     set_target_properties(QMdmmCore6 PROPERTIES
@@ -89,15 +92,19 @@ if (Qt6_FOUND)
         LIBRARY
     )
 
-    add_library(QMdmmCorePrivate6 INTERFACE)
-    target_link_libraries(QMdmmCorePrivate6
-        INTERFACE QMdmmCore6
-                  QMdmmCorePrivate
-    )
+    if (QMDMM_EXPORT_PRIVATE)
+        add_library(QMdmmCorePrivate6 INTERFACE)
+        add_library(QMdmm6::CorePrivate ALIAS QMdmmCorePrivate6)
+        target_link_libraries(QMdmmCorePrivate6
+            INTERFACE QMdmm6::Core
+                      QMdmmCorePrivate
+        )
+    endif()
 endif()
 
 if (Qt5_FOUND)
     add_library(QMdmmCore5 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS})
+    add_library(QMdmm5::Core ALIAS QMdmmCore5)
     add_dependencies(QMdmmCore QMdmmCore5)
 
     set_target_properties(QMdmmCore5 PROPERTIES
@@ -148,9 +155,12 @@ if (Qt5_FOUND)
         LIBRARY
     )
 
-    add_library(QMdmmCorePrivate5 INTERFACE)
-    target_link_libraries(QMdmmCorePrivate5
-        INTERFACE QMdmmCore5
-                  QMdmmCorePrivate
-    )
+    if (QMDMM_EXPORT_PRIVATE)
+        add_library(QMdmmCorePrivate5 INTERFACE)
+        add_library(QMdmm5::CorePrivate ALIAS QMdmmCorePrivate5)
+        target_link_libraries(QMdmmCorePrivate5
+            INTERFACE QMdmm5::Core
+                      QMdmmCorePrivate
+        )
+    endif()
 endif()

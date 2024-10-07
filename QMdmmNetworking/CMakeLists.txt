@@ -31,14 +31,17 @@ set(QMDMMNETWORKING_SOURCES
 
 add_custom_target(QMdmmNetworking)
 auto_generate_header_file_for_target(QMdmmNetworking "${QMDMMNETWORKING_HEADERS}")
-auto_generate_header_file_for_target_private(QMdmmNetworking "${QMDMMNETWORKING_PRIVATE_HEADERS}")
-add_library(QMdmmNetworkingPrivate INTERFACE)
-target_include_directories(QMdmmNetworkingPrivate
-    INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking/private/${QMdmm_VERSION}"
-)
+if (QMDMM_EXPORT_PRIVATE)
+    auto_generate_header_file_for_target_private(QMdmmNetworking "${QMDMMNETWORKING_PRIVATE_HEADERS}")
+    add_library(QMdmmNetworkingPrivate INTERFACE)
+    target_include_directories(QMdmmNetworkingPrivate
+        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking/private/${QMdmm_VERSION}"
+    )
+endif()
 
 if (Qt6_FOUND)
     qt6_add_library(QMdmmNetworking6 ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} ${QMDMMNETWORKING_PRIVATE_HEADERS})
+    add_library(QMdmm6::Networking ALIAS QMdmmNetworking6)
     add_dependencies(QMdmmNetworking QMdmmNetworking6)
 
     set_target_properties(QMdmmNetworking6 PROPERTIES
@@ -72,7 +75,7 @@ if (Qt6_FOUND)
     )
 
     target_link_libraries(QMdmmNetworking6
-        PUBLIC QMdmmCore6
+        PUBLIC QMdmm6::Core
                Qt6::Network
                Qt6::WebSockets
     )
@@ -83,15 +86,19 @@ if (Qt6_FOUND)
         LIBRARY
     )
 
-    add_library(QMdmmNetworkingPrivate6 INTERFACE)
-    target_link_libraries(QMdmmNetworkingPrivate6
-        INTERFACE QMdmmNetworking6
-                  QMdmmNetworkingPrivate
-    )
+    if (QMDMM_EXPORT_PRIVATE)
+        add_library(QMdmmNetworkingPrivate6 INTERFACE)
+        add_library(QMdmm6::NetworkingPrivate ALIAS QMdmmNetworkingPrivate6)
+        target_link_libraries(QMdmmNetworkingPrivate6
+            INTERFACE QMdmm6::Networking
+                      QMdmmNetworkingPrivate
+        )
+    endif()
 endif()
 
 if (Qt5_FOUND)
     add_library(QMdmmNetworking5 ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} ${QMDMMNETWORKING_PRIVATE_HEADERS})
+    add_library(QMdmm5::Networking ALIAS QMdmmNetworking5)
     add_dependencies(QMdmmNetworking QMdmmNetworking5)
 
     set_target_properties(QMdmmNetworking5 PROPERTIES
@@ -125,7 +132,7 @@ if (Qt5_FOUND)
     )
 
     target_link_libraries(QMdmmNetworking5
-        PUBLIC QMdmmCore5
+        PUBLIC QMdmm5::Core
                Qt5::Network
                Qt5::WebSockets
     )
@@ -136,9 +143,12 @@ if (Qt5_FOUND)
         LIBRARY
     )
 
-    add_library(QMdmmNetworkingPrivate5 INTERFACE)
-    target_link_libraries(QMdmmNetworkingPrivate5
-        INTERFACE QMdmmNetworking5
-                  QMdmmNetworkingPrivate
-    )
+    if (QMDMM_EXPORT_PRIVATE)
+        add_library(QMdmmNetworkingPrivate5 INTERFACE)
+        add_library(QMdmm5::NetworkingPrivate ALIAS QMdmmNetworkingPrivate5)
+        target_link_libraries(QMdmmNetworkingPrivate5
+            INTERFACE QMdmm5::Networking
+                      QMdmmNetworkingPrivate
+        )
+    endif()
 endif()
