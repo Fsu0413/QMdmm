@@ -15,7 +15,7 @@
 
 class QMdmmRoom;
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
 {
     Q_OBJECT
 

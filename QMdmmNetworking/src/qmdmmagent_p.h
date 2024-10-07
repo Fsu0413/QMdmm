@@ -5,7 +5,7 @@
 
 #include "qmdmmagent.h"
 
-struct QMDMMSERVER_PRIVATE_EXPORT QMdmmAgentPrivate final
+struct QMDMMNETWORKING_PRIVATE_EXPORT QMdmmAgentPrivate final
 {
     QString screenName;
     QMdmmData::AgentState state = QMdmmData::StateOffline;

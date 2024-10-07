@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QPointer>
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
 {
     Q_OBJECT
 
@@ -31,7 +31,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurred(const QString &errorString);
 };
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -56,7 +56,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurredTcpSocket(QAbstractSocket::SocketError e);
 };
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -81,7 +81,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurredLocalSocket(QLocalSocket::LocalSocketError e);
 };
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
 {
     Q_OBJECT
 
@@ -106,10 +106,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 };
 
 namespace QMdmmSocketPrivateFactory {
-QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p);
-QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p);
-QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
-QMDMMSERVER_PRIVATE_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
 } // namespace QMdmmSocketPrivateFactory
 
 #endif

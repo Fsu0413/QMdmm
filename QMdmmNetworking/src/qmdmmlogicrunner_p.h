@@ -15,7 +15,7 @@
 #include <QThread>
 #include <QTimer>
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 {
     Q_OBJECT
 
@@ -87,7 +87,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void executeDefaultReply();
 };
 
-class QMDMMSERVER_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
 {
     Q_OBJECT
 

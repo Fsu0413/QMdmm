@@ -19,9 +19,6 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 
     QHash<QString, QMdmmData::StoneScissorsCloth> sscForActionReplies;
     QStringList sscForActionWinners;
-    // QMultiMap / QMultiHash - Which one is faster?
-    // QMultiMap provides O(logn) as time complexity, it depends on comparation
-    // QMultiHash provides O(1) as time complexity, but it depends on qHash<int>
     QMultiHash<int, QString> desiredActionOrders;
     QHash<int, QString> confirmedActionOrders;
     int currentStrivingActionOrder;

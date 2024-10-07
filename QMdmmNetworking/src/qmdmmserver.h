@@ -3,7 +3,7 @@
 #ifndef QMDMMSERVER_H
 #define QMDMMSERVER_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmnetworkingglobal.h"
 
 #include <QMdmmProtocol>
 #include <QMdmmRoom>
@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-struct QMDMMSERVER_EXPORT QMdmmServerConfiguration final
+struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final
 {
     bool tcpEnabled = true;
     uint16_t tcpPort = 6366U;
@@ -28,7 +28,7 @@ struct QMDMMSERVER_EXPORT QMdmmServerConfiguration final
 
 class QMdmmServerPrivate;
 
-class QMDMMSERVER_EXPORT QMdmmServer : public QObject
+class QMDMMNETWORKING_EXPORT QMdmmServer : public QObject
 {
     Q_OBJECT
 

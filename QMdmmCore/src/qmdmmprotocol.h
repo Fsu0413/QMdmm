@@ -73,7 +73,7 @@ QMDMMCORE_EXPORT int protocolVersion();
 
 } // namespace QMdmmProtocol
 
-// Failed to pimpl following class since it inherits QSharedData
+// Cannot pimpl following class since it inherits QSharedData
 // So put it to header file and inherit QJsonObject, in order not to affect binary compatibility when more data come in
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
 struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJsonObject

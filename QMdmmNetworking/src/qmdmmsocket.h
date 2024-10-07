@@ -3,7 +3,7 @@
 #ifndef QMDMMSOCKET_H
 #define QMDMMSOCKET_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmnetworkingglobal.h"
 
 #include <QMdmmPacket>
 
@@ -16,7 +16,7 @@
 class QMdmmSocketPrivate;
 
 // For Server: This QMdmmSocket should be created when socket is in Open state!
-class QMDMMSERVER_EXPORT QMdmmSocket : public QObject
+class QMDMMNETWORKING_EXPORT QMdmmSocket : public QObject
 {
     Q_OBJECT
 

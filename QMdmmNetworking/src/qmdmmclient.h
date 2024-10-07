@@ -3,13 +3,13 @@
 #ifndef QMDMMCLIENT_H
 #define QMDMMCLIENT_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmnetworkingglobal.h"
 
 #include <QObject>
 
 class QMdmmClientPrivate;
 
-class QMDMMSERVER_EXPORT QMdmmClient final : public QObject
+class QMDMMNETWORKING_EXPORT QMdmmClient final : public QObject
 {
     Q_OBJECT
 

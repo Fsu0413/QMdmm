@@ -120,6 +120,7 @@ constexpr bool isPlaceAdjecent(int p1, int p2)
 {
     // simplifies to "only one of p1 and p2 is Country"
     // simplifies again to "p1 is Country xor p2 is Country"
+    // (boolean xor == notequal)
     return (p1 == Country) != (p2 == Country);
 }
 

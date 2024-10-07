@@ -3,7 +3,7 @@
 #ifndef QMDMMAGENT_H
 #define QMDMMAGENT_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmnetworkingglobal.h"
 
 #include <QMdmmProtocol>
 
@@ -15,7 +15,7 @@ struct QMdmmAgentPrivate;
 
 // no "final" here since it is inherited.
 
-class QMDMMSERVER_EXPORT QMdmmAgent : public QObject
+class QMDMMNETWORKING_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)

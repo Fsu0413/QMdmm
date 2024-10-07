@@ -3,7 +3,7 @@
 #ifndef QMDMMLOGICRUNNER_H
 #define QMDMMLOGICRUNNER_H
 
-#include "qmdmmserverglobal.h"
+#include "qmdmmnetworkingglobal.h"
 
 #include <QMdmmProtocol>
 
@@ -18,7 +18,7 @@ class QMdmmLogicRunnerPrivate;
 // Players who wants to continue playing need rejoin.
 
 // TODO: Implement Lobby when other contents are ready
-class QMDMMSERVER_EXPORT QMdmmLogicRunner final : public QObject
+class QMDMMNETWORKING_EXPORT QMdmmLogicRunner final : public QObject
 {
     Q_OBJECT
 

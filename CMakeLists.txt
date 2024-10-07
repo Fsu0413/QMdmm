@@ -64,4 +64,4 @@ endif()
 
 add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
-add_subdirectory(QMdmmServer)
+add_subdirectory(QMdmmNetworking)
