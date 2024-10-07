@@ -13,6 +13,7 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
     bool horse;
     int hp;
     int place;
+    int initialPlace;
 
     int knifeDamage;
     int horseDamage;

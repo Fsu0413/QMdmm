@@ -26,7 +26,6 @@ public:
 
     QMdmmPlayer *addPlayer(const QString &playerName);
     bool removePlayer(const QString &playerName);
-    [[nodiscard]] bool full() const;
 
     [[nodiscard]] QMdmmPlayer *player(const QString &playerName);
     [[nodiscard]] const QMdmmPlayer *player(const QString &playerName) const;

@@ -61,7 +61,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(QMdmmPacket packet);
 
     // requests
-    void requestStoneScissorsCloth(int strivedOrder, const QStringList &opponents);
+    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void requestAction(int currentOrder);
     void requestUpdate(int remainingTimes);

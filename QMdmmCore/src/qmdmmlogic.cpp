@@ -11,29 +11,64 @@
 #include <QJsonValue>
 #include <QMultiHash>
 
-QJsonValue QMdmmLogicConfiguration::serialize() const
+#include <utility>
+
+const QMdmmLogicConfiguration &QMdmmLogicConfiguration::defaults()
 {
-    QJsonObject ob;
+    // clang-format off
+    static const QMdmmLogicConfiguration defaultInstance {
+        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
+        qMakePair(QStringLiteral("requestTimeout"), 20),
+        qMakePair(QStringLiteral("initialKnifeDamage"), 1),
+        qMakePair(QStringLiteral("maximumKnifeDamage"), 10),
+        qMakePair(QStringLiteral("initialHorseDamage"), 2),
+        qMakePair(QStringLiteral("maximumHorseDamage"), 10),
+        qMakePair(QStringLiteral("initialMaxHp"), 10),
+        qMakePair(QStringLiteral("maximumMaxHp"), 20),
+        qMakePair(QStringLiteral("punishHpModifier"), 2),
+        qMakePair(QStringLiteral("punishHpRoundStrategy"), static_cast<int>(RoundToNearest45)),
+        qMakePair(QStringLiteral("zeroHpAsDead"), true),
+        qMakePair(QStringLiteral("enableLetMove"), true),
+        qMakePair(QStringLiteral("canBuyOnlyInInitialCity"), false),
+    };
+    // clang-format on
 
-#define CONF(member, type) ob.insert(QStringLiteral(#member), static_cast<type>(this->member))
-
-    CONF(playerNumPerRoom, int);
-    CONF(requestTimeout, int);
-    CONF(initialKnifeDamage, int);
-    CONF(maximumKnifeDamage, int);
-    CONF(initialHorseDamage, int);
-    CONF(maximumHorseDamage, int);
-    CONF(initialMaxHp, int);
-    CONF(maximumMaxHp, int);
-    CONF(punishHpModifier, int);
-    CONF(punishHpRoundStrategy, int);
-    CONF(zeroHpAsDead, bool);
-    CONF(enableLetMove, bool);
-
-#undef CONF
-
-    return ob;
+    return defaultInstance;
 }
+
+#define CONVERTTOTYPEBOOL(v) v.toBool()
+#define CONVERTTOTYPEINT(v) v.toInt()
+#define CONVERTTOTYPEPUNISHHPROUNDSTRATEGY(v) static_cast<QMdmmLogicConfiguration::PunishHpRoundStrategy>(v.toInt())
+#define REALIZE_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
+    type QMdmmLogicConfiguration::valueName() const                                          \
+    {                                                                                        \
+        if (contains(QStringLiteral(#valueName)))                                            \
+            return convertToType(value(QStringLiteral(#valueName)));                         \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                  \
+    }                                                                                        \
+    void QMdmmLogicConfiguration::set##ValueName(type valueName)                             \
+    {                                                                                        \
+        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                   \
+    }
+
+REALIZE_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, maximumKnifeDamage, MaximumKnifeDamage, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, initialHorseDamage, InitialHorseDamage, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, maximumHorseDamage, MaximumHorseDamage, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, initialMaxHp, InitialMaxHp, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, maximumMaxHp, MaximumMaxHp, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(int, punishHpModifier, PunishHpModifier, CONVERTTOTYPEINT, )
+REALIZE_CONFIGURATION(QMdmmLogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy, PunishHpRoundStrategy, CONVERTTOTYPEPUNISHHPROUNDSTRATEGY, static_cast<int>)
+REALIZE_CONFIGURATION(bool, zeroHpAsDead, ZeroHpAsDead, CONVERTTOTYPEBOOL, )
+REALIZE_CONFIGURATION(bool, enableLetMove, EnableLetMove, CONVERTTOTYPEBOOL, )
+REALIZE_CONFIGURATION(bool, canBuyOnlyInInitialCity, CanBuyOnlyInInitialCity, CONVERTTOTYPEBOOL, )
+
+#undef REALIZE_CONFIGURATION
+#undef CONVERTTOTYPEPUNISHHPROUNDSTRATEGY
+#undef CONVERTTOTYPEINT
+#undef CONVERTTOTYPEBOOL
 
 bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readability-function-cognitive-complexity)
 {
@@ -41,43 +76,45 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
         return false;
 
     QJsonObject ob = value.toObject();
-    static const QMdmmLogicConfiguration defaults;
+    QJsonObject result;
 
 #define CONVERTPUNISHHPROUNDSTRATEGY() static_cast<PunishHpRoundStrategy>(v.toInt())
-#define CONF(member, check, convert)                          \
-    {                                                         \
-        if (ob.contains(QStringLiteral(#member))) {           \
-            QJsonValue v = ob.value(QStringLiteral(#member)); \
-            if (!v.check())                                   \
-                return false;                                 \
-            member = convert();                               \
-        } else {                                              \
-            member = defaults.member;                         \
-        }                                                     \
+#define CONF(member, check)                                                                    \
+    {                                                                                          \
+        if (ob.contains(QStringLiteral(#member))) {                                            \
+            QJsonValue v = ob.value(QStringLiteral(#member));                                  \
+            if (v.check())                                                                     \
+                result.insert(QStringLiteral(#member), v);                                     \
+            else                                                                               \
+                return false;                                                                  \
+        } else {                                                                               \
+            result.insert(QStringLiteral(#member), defaults().value(QStringLiteral(#member))); \
+        }                                                                                      \
     }
 
-    CONF(playerNumPerRoom, isDouble, v.toInt);
-    CONF(requestTimeout, isDouble, v.toInt);
-    CONF(initialKnifeDamage, isDouble, v.toInt);
-    CONF(maximumKnifeDamage, isDouble, v.toInt);
-    CONF(initialHorseDamage, isDouble, v.toInt);
-    CONF(maximumHorseDamage, isDouble, v.toInt);
-    CONF(initialMaxHp, isDouble, v.toInt);
-    CONF(maximumMaxHp, isDouble, v.toInt);
-    CONF(punishHpModifier, isDouble, v.toInt);
-    CONF(punishHpRoundStrategy, isDouble, CONVERTPUNISHHPROUNDSTRATEGY);
-    CONF(zeroHpAsDead, isBool, v.toBool);
-    CONF(enableLetMove, isBool, v.toBool);
+    CONF(playerNumPerRoom, isDouble);
+    CONF(requestTimeout, isDouble);
+    CONF(initialKnifeDamage, isDouble);
+    CONF(maximumKnifeDamage, isDouble);
+    CONF(initialHorseDamage, isDouble);
+    CONF(maximumHorseDamage, isDouble);
+    CONF(initialMaxHp, isDouble);
+    CONF(maximumMaxHp, isDouble);
+    CONF(punishHpModifier, isDouble);
+    CONF(punishHpRoundStrategy, isDouble);
+    CONF(zeroHpAsDead, isBool);
+    CONF(enableLetMove, isBool);
 
 #undef CONF
 #undef CONVERTPUNISHHPROUNDSTRATEGY
 
+    *this = result;
     return true;
 }
 
-QMdmmLogicPrivate::QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguration &logicConfiguration)
+QMdmmLogicPrivate::QMdmmLogicPrivate(QMdmmLogic *q, QMdmmLogicConfiguration logicConfiguration)
     : q(q)
-    , conf(logicConfiguration)
+    , conf(std::move(logicConfiguration))
     , room(new QMdmmRoom(q))
     , state(QMdmmLogic::BeforeRoundStart)
     , currentStrivingActionOrder(0)

@@ -57,11 +57,6 @@ bool QMdmmRoom::removePlayer(const QString &playerName)
     return false;
 }
 
-bool QMdmmRoom::full() const
-{
-    return d->players.size() >= logic()->configuration().playerNumPerRoom;
-}
-
 QMdmmPlayer *QMdmmRoom::player(const QString &playerName)
 {
     return d->players.value(playerName, nullptr);

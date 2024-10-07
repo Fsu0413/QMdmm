@@ -34,7 +34,7 @@ QMdmmServerAgentPrivate::QMdmmServerAgentPrivate(const QString &name, QMdmmLogic
     , currentRequest(QMdmmProtocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
-    requestTimer->setInterval(p->conf.requestTimeout + requestTimeoutGracePeriod);
+    requestTimer->setInterval(p->conf.requestTimeout() + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &QMdmmServerAgentPrivate::requestTimeout);
 }
@@ -282,11 +282,11 @@ void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
     }
 }
 
-void QMdmmServerAgentPrivate::requestStoneScissorsCloth(int strivedOrder, const QStringList &opponents)
+void QMdmmServerAgentPrivate::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
+    ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
     ob.insert(QStringLiteral("strivedOrder"), strivedOrder);
-    ob.insert(QStringLiteral("opponents"), QJsonArray::fromStringList(opponents));
     addRequest(QMdmmProtocol::RequestStoneScissorsCloth, ob);
 }
 
@@ -314,7 +314,7 @@ void QMdmmServerAgentPrivate::requestUpdate(int remainingTimes)
 
 void QMdmmServerAgentPrivate::notifyLogicConfiguration()
 {
-    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyLogicConfiguration, p->conf.serialize()));
+    emit sendPacket(QMdmmPacket(QMdmmProtocol::NotifyLogicConfiguration, p->conf));
 }
 
 void QMdmmServerAgentPrivate::notifyAgentStateChanged(const QString &playerName, const QMdmmData::AgentState &agentState)
@@ -574,40 +574,71 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
 
 QMdmmLogicRunnerPrivate::~QMdmmLogicRunnerPrivate() = default;
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::requestSscForAction(const QStringList &playerNames)
 {
+    foreach (const QString &playerName, playerNames) {
+        QMdmmServerAgentPrivate *agent = agents.value(playerName);
+        agent->requestStoneScissorsCloth(playerNames, 0);
+    }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies)
 {
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyStoneScissorsCloth(replies);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections)
 {
+    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    agent->requestActionOrder(availableOrders, maximumOrderNum, selections);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::actionOrderResult(const QHash<int, QString> &result)
 {
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyActionOrder(result);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
 {
+    foreach (const QString &playerName, playerNames) {
+        QMdmmServerAgentPrivate *agent = agents.value(playerName);
+        agent->requestStoneScissorsCloth(playerNames, strivedOrder);
+    }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::requestAction(const QString &playerName, int actionOrder)
 {
+    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    agent->requestAction(actionOrder);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
 {
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyAction(playerName, action, toPlayer, toPlace);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::requestUpgrade(const QString &playerName, int upgradePoint)
 {
+    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    agent->requestUpdate(upgradePoint);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmLogicRunnerPrivate::upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades)
 {
+    foreach (QMdmmServerAgentPrivate *agent, agents)
+        agent->notifyUpgrade(upgrades);
 }
 
 QMdmmLogicRunner::QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
@@ -671,5 +702,5 @@ const QMdmmAgent *QMdmmLogicRunner::agent(const QString &playerName) const
 
 bool QMdmmLogicRunner::full() const
 {
-    return d->agents.count() >= d->conf.playerNumPerRoom;
+    return d->agents.count() >= d->conf.playerNumPerRoom();
 }

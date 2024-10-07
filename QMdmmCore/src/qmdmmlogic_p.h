@@ -9,7 +9,7 @@ class QMdmmRoom;
 
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 {
-    QMdmmLogicPrivate(QMdmmLogic *q, const QMdmmLogicConfiguration &logicConfiguration);
+    QMdmmLogicPrivate(QMdmmLogic *q, QMdmmLogicConfiguration logicConfiguration);
 
     QMdmmLogic *q;
     QMdmmLogicConfiguration conf;

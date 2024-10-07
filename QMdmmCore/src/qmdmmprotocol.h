@@ -20,7 +20,7 @@ enum RequestId
     // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
 
-    RequestStoneScissorsCloth, // request: int strivedOrder (or 0 for action), array { string playerName } opponents, reply: int ssc
+    RequestStoneScissorsCloth, // request: array { string playerName } playerNames, int strivedOrder (or 0 for action) reply: int ssc
     RequestActionOrder, // request: array { int } remainedOrders, int maximumOrder, int selectionNum, reply: array { int } orders
     RequestAction, // request: int currentOrder, reply: int(Action) action, optional string toPlayer, optional int toPlace
     RequestUpdate, // request: int remaningTimes, reply: array { int } item
