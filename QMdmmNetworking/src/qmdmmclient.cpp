@@ -744,6 +744,16 @@ bool QMdmmClient::connectToHost(const QString &host)
     return d->socket->connectToHost(host);
 }
 
+QMdmmRoom *QMdmmClient::room()
+{
+    return d->room;
+}
+
+const QMdmmRoom *QMdmmClient::room() const
+{
+    return d->room;
+}
+
 void QMdmmClient::notifySpeak(const QString &content)
 {
     // Although JSON is native UTF-8 we decided to use Base64 anyway.

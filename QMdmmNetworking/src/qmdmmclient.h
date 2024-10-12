@@ -8,6 +8,7 @@
 #include <QObject>
 
 class QMdmmClientPrivate;
+class QMdmmRoom;
 
 class QMDMMNETWORKING_EXPORT QMdmmClient final : public QObject
 {
@@ -18,6 +19,9 @@ public:
     ~QMdmmClient() override;
 
     bool connectToHost(const QString &host);
+
+    [[nodiscard]] QMdmmRoom *room();
+    [[nodiscard]] const QMdmmRoom *room() const;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifySpeak(const QString &content);

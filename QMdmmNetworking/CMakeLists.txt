@@ -29,11 +29,11 @@ set(QMDMMNETWORKING_SOURCES
     src/qmdmmsocket.cpp
 )
 
-add_custom_target(QMdmmNetworking)
+add_library(QMdmmNetworking INTERFACE)
 auto_generate_header_file_for_target(QMdmmNetworking "${QMDMMNETWORKING_HEADERS}")
 if (QMDMM_EXPORT_PRIVATE)
-    auto_generate_header_file_for_target_private(QMdmmNetworking "${QMDMMNETWORKING_PRIVATE_HEADERS}")
     add_library(QMdmmNetworkingPrivate INTERFACE)
+    auto_generate_header_file_for_target_private(QMdmmNetworking "${QMDMMNETWORKING_PRIVATE_HEADERS}")
     target_include_directories(QMdmmNetworkingPrivate
         INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking/private/${QMdmm_VERSION}"
     )
@@ -42,7 +42,6 @@ endif()
 if (Qt6_FOUND)
     qt6_add_library(QMdmmNetworking6 ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} ${QMDMMNETWORKING_PRIVATE_HEADERS})
     add_library(QMdmm6::Networking ALIAS QMdmmNetworking6)
-    add_dependencies(QMdmmNetworking QMdmmNetworking6)
 
     set_target_properties(QMdmmNetworking6 PROPERTIES
         AUTOMOC ON
@@ -55,17 +54,9 @@ if (Qt6_FOUND)
         PRIVATE ${QMDMMNETWORKING_PCH}
     )
 
-    target_compile_definitions(QMdmmNetworking6
-        PUBLIC QT_NO_CAST_FROM_ASCII
-    )
-
     if (BUILD_SHARED_LIBS)
         target_compile_definitions(QMdmmNetworking6
             PRIVATE QMDMMNETWORKING_LIBRARY
-        )
-    else()
-        target_compile_definitions(QMdmmNetworking6
-            PUBLIC QMDMM_STATIC
         )
     endif()
 
@@ -76,6 +67,7 @@ if (Qt6_FOUND)
 
     target_link_libraries(QMdmmNetworking6
         PUBLIC QMdmm6::Core
+               QMdmmNetworking
                Qt6::Network
                Qt6::WebSockets
     )
@@ -99,7 +91,6 @@ endif()
 if (Qt5_FOUND)
     add_library(QMdmmNetworking5 ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} ${QMDMMNETWORKING_PRIVATE_HEADERS})
     add_library(QMdmm5::Networking ALIAS QMdmmNetworking5)
-    add_dependencies(QMdmmNetworking QMdmmNetworking5)
 
     set_target_properties(QMdmmNetworking5 PROPERTIES
         AUTOMOC ON
@@ -112,17 +103,9 @@ if (Qt5_FOUND)
         PRIVATE ${QMDMMNETWORKING_PCH}
     )
 
-    target_compile_definitions(QMdmmNetworking5
-        PUBLIC QT_NO_CAST_FROM_ASCII
-    )
-
     if (BUILD_SHARED_LIBS)
         target_compile_definitions(QMdmmNetworking5
             PRIVATE QMDMMNETWORKING_LIBRARY
-        )
-    else()
-        target_compile_definitions(QMdmmNetworking5
-            PUBLIC QMDMM_STATIC
         )
     endif()
 
@@ -133,6 +116,7 @@ if (Qt5_FOUND)
 
     target_link_libraries(QMdmmNetworking5
         PUBLIC QMdmm5::Core
+               QMdmmNetworking
                Qt5::Network
                Qt5::WebSockets
     )

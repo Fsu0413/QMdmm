@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.19)
+
+if (DEFINED PROJECT_NAME)
+    message(FATAL_ERROR "Please build this project separately. add_subdirectory won't be supported.")
+endif()
 
 project(QMdmm
     VERSION 0.0.1
@@ -24,8 +28,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(AutoGenerateHeader)
 
+# Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
+# There are definitions to disable the versionless targets and functions, but!! But!! BUT!!!!! They DIDN'T WORK in Qt 6.2 / 5.15 combination!!!
+# set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
+# set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
+# It works in later Qt 6 / 5.15 combinations, but be careful to check which version since they are supported (probably Qt 6.5)
+
 # find_package Qt6 must be called before Qt5 - QTBUG-97097
-find_package(Qt6      COMPONENTS Core Network WebSockets)
+find_package(Qt6 6.2  COMPONENTS Core Network WebSockets)
 find_package(Qt5 5.15 COMPONENTS Core Network WebSockets)
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))

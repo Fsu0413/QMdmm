@@ -24,6 +24,10 @@ class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
     Q_PROPERTY(int maxHp READ maxHp WRITE setMaxHp NOTIFY maxHpChanged DESIGNABLE false FINAL)
     Q_PROPERTY(int upgradePoint READ upgradePoint WRITE setUpgradePoint NOTIFY upgradePointChanged DESIGNABLE false FINAL)
 
+    // Not-stored properties (i.e. calculated one)
+    Q_PROPERTY(bool dead READ dead NOTIFY die STORED false DESIGNABLE false FINAL)
+    Q_PROPERTY(bool alive READ alive NOTIFY die STORED false DESIGNABLE false FINAL)
+
 public:
     explicit QMdmmPlayer(const QString &name, QMdmmRoom *room /* or parent */);
     ~QMdmmPlayer() override;
@@ -115,8 +119,8 @@ signals:
     void hasKnifeChanged(bool hasKnife, QPrivateSignal);
     void hasHorseChanged(bool hasHorse, QPrivateSignal);
     void hpChanged(int hp, QPrivateSignal);
-    void initialPlaceChanged(int initialPlace, QPrivateSignal);
     void placeChanged(int place, QPrivateSignal);
+    void initialPlaceChanged(int initialPlace, QPrivateSignal);
     void knifeDamageChanged(int knifeDamage, QPrivateSignal);
     void horseDamageChanged(int horseDamage, QPrivateSignal);
     void maxHpChanged(int maxHp, QPrivateSignal);

@@ -77,7 +77,7 @@ if (DEFINED PROJECT_NAME)
                                DEPENDS "${AUTO_GENERATE_HEADER_CMAKE_FILE}"
                                COMMENT "Copying private header file \"${header_file_name}\"..."
             )
-            target_sources("${target}" PRIVATE "${header_generated_path}")
+            target_sources("${target}Private" PRIVATE "${header_generated_path}")
             install(FILES "${header_generated_path}"
                 DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}/private/${PROJECT_VERSION}"
                 OPTIONAL
