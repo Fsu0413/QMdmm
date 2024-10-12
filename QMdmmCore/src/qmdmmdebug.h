@@ -15,26 +15,4 @@ class QMDMMCORE_EXPORT QMdmmDebug
 
 QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QIODevice *f);
 
-struct QMDMMCORE_EXPORT QMdmmDebugLogOutputOnDestruct final
-{
-    explicit constexpr QMdmmDebugLogOutputOnDestruct(const char *outputContent)
-        : outputContent(outputContent)
-    {
-    }
-    ~QMdmmDebugLogOutputOnDestruct()
-    {
-        qDebug("%s", outputContent);
-    }
-    constexpr void setOutputContent(const char *outputContent)
-    {
-        this->outputContent = outputContent;
-    }
-
-    QMdmmDebugLogOutputOnDestruct() = delete;
-    Q_DISABLE_COPY_MOVE(QMdmmDebugLogOutputOnDestruct);
-
-private:
-    const char *outputContent;
-};
-
 #endif

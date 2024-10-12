@@ -451,9 +451,9 @@ void QMdmmServerAgentPrivate::executeDefaultReply()
     }
 }
 
-QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *parent)
-    : QObject(parent)
-    , p(parent)
+QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *q)
+    : QObject(q)
+    , q(q)
     , conf(std::move(logicConfiguration))
 {
     logicThread = new QThread(this);
@@ -531,7 +531,7 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
     disconnectedAgent->socket->deleteLater();
     disconnectedAgent->socket = nullptr;
 
-    if (p->full()) {
+    if (q->full()) {
         // case 1: room is full, so game has started
         // Agent should exit game if round over or logic runs pass round over, which makes game over and the logic quits
         // But if client is reconnected before round over, the game should continue
@@ -551,7 +551,7 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
         }
 
         if (allDisconnected) {
-            emit p->gameOver(QMdmmLogicRunner::QPrivateSignal());
+            emit q->gameOver(QMdmmLogicRunner::QPrivateSignal());
             return;
         }
 

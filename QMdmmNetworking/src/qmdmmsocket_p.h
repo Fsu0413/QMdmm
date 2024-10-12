@@ -15,13 +15,13 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
 public:
     static QMdmmSocket::Type typeByConnectAddr(const QString &addr);
 
-    explicit QMdmmSocketPrivate(QMdmmSocket *p);
+    explicit QMdmmSocketPrivate(QMdmmSocket *q);
     [[nodiscard]] virtual QMdmmSocket::Type type() const = 0;
 
     virtual bool connectToHost(const QString &addr) = 0;
     virtual bool disconnectFromHost() = 0;
 
-    QMdmmSocket *p;
+    QMdmmSocket *q;
     bool hasError;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
@@ -36,8 +36,8 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmm
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *p);
-    explicit QMdmmSocketPrivateQTcpSocket(QMdmmSocket *p);
+    QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *q);
+    explicit QMdmmSocketPrivateQTcpSocket(QMdmmSocket *q);
 
     [[nodiscard]] QMdmmSocket::Type type() const override
     {
@@ -61,8 +61,8 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMd
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *p);
-    explicit QMdmmSocketPrivateQLocalSocket(QMdmmSocket *p);
+    QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *q);
+    explicit QMdmmSocketPrivateQLocalSocket(QMdmmSocket *q);
 
     [[nodiscard]] QMdmmSocket::Type type() const override
     {
@@ -86,8 +86,8 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmm
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *p);
-    explicit QMdmmSocketPrivateQWebSocket(QMdmmSocket *p);
+    QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *q);
+    explicit QMdmmSocketPrivateQWebSocket(QMdmmSocket *q);
 
     [[nodiscard]] QMdmmSocket::Type type() const override
     {

@@ -14,7 +14,9 @@
 #include <QVersionNumber>
 #include <QtGlobal>
 
+#include <functional>
 #include <type_traits>
+
 #else
 #define Q_NAMESPACE_EXPORT
 #define Q_FLAG_NS
@@ -43,6 +45,7 @@ class QMDMMCORE_EXPORT QMdmmUtilities
 #else
 #define QMDMMCORE_PRIVATE_EXPORT
 #endif
+#define QMDMMCORE_EXPORT_NO_GENERATE_HEADER QMDMMCORE_EXPORT
 #else
 #define QMDMMCORE_EXPORT dll_interface_defined
 #define QMDMMCORE_PRIVATE_EXPORT dll_interface_defined
@@ -157,10 +160,31 @@ QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
         ret << static_cast<int>(typename QFlags<T>::Int(i));
     return ret;
 }
-QVariantList intList2VariantList(const QList<int> &list);
-QList<int> variantList2IntList(const QVariantList &list);
-QVariantList stringList2VariantList(const QList<QString> &list); // !!!: Qt 5 QStringList is not QList<QString> but Qt 6 is
-QStringList variantList2StrList(const QVariantList &list);
+QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
+QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
+QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list); // !!!: Qt 5 QStringList is not QList<QString> but Qt 6 is
+QMDMMCORE_EXPORT QStringList variantList2StrList(const QVariantList &list);
+
+struct QMDMMCORE_EXPORT_NO_GENERATE_HEADER OnReturn
+{
+    explicit OnReturn(std::function<void()> call)
+        : call(std::move(call))
+    {
+    }
+    ~OnReturn()
+    {
+        call();
+    }
+
+    std::function<void()> call;
+
+    OnReturn() = delete;
+    Q_DISABLE_COPY_MOVE(OnReturn);
+
+    static void *operator new(size_t) = delete;
+    static void *operator new[](size_t) = delete;
+};
+
 } // namespace QMdmmUtilities
 
 #endif // QMDMMCOREGLOBAL_H

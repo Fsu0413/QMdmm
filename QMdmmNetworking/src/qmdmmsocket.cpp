@@ -50,12 +50,12 @@ QMdmmSocket::Type QMdmmSocketPrivate::typeByConnectAddr(const QString &addr)
     return QMdmmSocket::TypeUnknown;
 }
 
-QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *p)
-    : QObject(p)
-    , p(p)
+QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *q)
+    : QObject(q)
+    , q(q)
     , hasError(false)
 {
-    connect(p, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
+    connect(q, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -69,36 +69,36 @@ bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
         (void)packetError;
 
         // Don't process more package for this connection. It is not guaranteed to be the desired client
-        p->setHasError(true);
+        q->setHasError(true);
         return false;
     }
 
-    emit p->packetReceived(packet, QMdmmSocket::QPrivateSignal());
+    emit q->packetReceived(packet, QMdmmSocket::QPrivateSignal());
     return !hasError;
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmSocketPrivate::socketDisconnected()
 {
-    emit p->socketDisconnected(QMdmmSocket::QPrivateSignal());
+    emit q->socketDisconnected(QMdmmSocket::QPrivateSignal());
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void QMdmmSocketPrivate::errorOccurred(const QString &errorString)
 {
-    emit p->socketErrorOccurred(errorString, QMdmmSocket::QPrivateSignal());
+    emit q->socketErrorOccurred(errorString, QMdmmSocket::QPrivateSignal());
 }
 
-QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *p)
-    : QMdmmSocketPrivate(p)
+QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *q)
+    : QMdmmSocketPrivate(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QMdmmSocket *p)
-    : QMdmmSocketPrivateQTcpSocket(nullptr, p)
+QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QMdmmSocket *q)
+    : QMdmmSocketPrivateQTcpSocket(nullptr, q)
 {
 }
 
@@ -161,16 +161,16 @@ void QMdmmSocketPrivateQTcpSocket::errorOccurredTcpSocket(QAbstractSocket::Socke
         errorOccurred(socket->errorString());
 }
 
-QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *p)
-    : QMdmmSocketPrivate(p)
+QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *q)
+    : QMdmmSocketPrivate(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QMdmmSocket *p)
-    : QMdmmSocketPrivateQLocalSocket(nullptr, p)
+QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QMdmmSocket *q)
+    : QMdmmSocketPrivateQLocalSocket(nullptr, q)
 {
 }
 
@@ -229,16 +229,16 @@ void QMdmmSocketPrivateQLocalSocket::errorOccurredLocalSocket(QLocalSocket::Loca
         errorOccurred(socket->errorString());
 }
 
-QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *p)
-    : QMdmmSocketPrivate(p)
+QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *q)
+    : QMdmmSocketPrivate(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QMdmmSocket *p)
-    : QMdmmSocketPrivateQWebSocket(nullptr, p)
+QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QMdmmSocket *q)
+    : QMdmmSocketPrivateQWebSocket(nullptr, q)
 {
 }
 

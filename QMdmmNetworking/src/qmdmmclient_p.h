@@ -25,9 +25,9 @@ public:
     static QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> requestCallback;
     static QHash<QMdmmProtocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> notifyCallback;
 
-    QMdmmClientPrivate(QMdmmClient *p);
+    QMdmmClientPrivate(QMdmmClient *q);
 
-    QMdmmClient *p;
+    QMdmmClient *q;
     QPointer<QMdmmSocket> socket;
     QMdmmRoom *room;
     QHash<QString, QMdmmAgent *> agents;
@@ -58,7 +58,14 @@ public:
     void notifySpoken(const QJsonValue &value);
     void notifyOperated(const QJsonValue &value);
 
+    bool applyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    bool applyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
+
 public slots: // NOLINT(readability-redundant-access-specifiers)
+    void socketPacketReceived(QMdmmPacket packet);
+    void socketErrorOccurred(const QString &errorString);
+    void socketDisconnected();
+
     void heartbeatTimeout();
 };
 

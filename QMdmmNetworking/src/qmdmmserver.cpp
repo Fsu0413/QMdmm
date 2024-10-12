@@ -14,10 +14,10 @@ QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
 };
 
-QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *p)
-    : QObject(p)
+QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *q)
+    : QObject(q)
     , serverConfiguration(serverConfiguration)
-    , p(p)
+    , q(q)
     , t(nullptr)
     , l(nullptr)
     , w(nullptr)

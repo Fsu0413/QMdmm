@@ -92,10 +92,10 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
     Q_OBJECT
 
 public:
-    QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *parent);
+    QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *q);
     ~QMdmmLogicRunnerPrivate() override;
 
-    QMdmmLogicRunner *p;
+    QMdmmLogicRunner *q;
 
     QHash<QString, QMdmmServerAgentPrivate *> agents;
 
