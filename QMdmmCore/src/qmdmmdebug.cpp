@@ -21,16 +21,21 @@ void qMdmmMessageOutput(QtMsgType type, const QMessageLogContext &context, const
         QString log = qFormatLogMessage(type, context, msg);
         QMutexLocker lock(&l->m);
         l->f->write(log.append(QStringLiteral("\n")).toUtf8());
-        l->f->flush();
+        if (l->f->inherits("QFileDevice")) {
+            QFileDevice *f = qobject_cast<QFileDevice *>(l->f.data());
+            if (f != nullptr)
+                f->flush();
+        }
     } else if (QMdmmDebugLogPrivate::qtMessageHandler != nullptr && QMdmmDebugLogPrivate::qtMessageHandler != &qMdmmMessageOutput) {
         (*QMdmmDebugLogPrivate::qtMessageHandler)(type, context, msg);
     } else {
         // Is this public API?
+        // But anyway it is declared as Q_CORE_EXPORT let's use it directly since we have no other good fallback
         qt_message_output(type, context, msg);
     }
 }
 
-void qMdmmDebugSetDevice(QFileDevice *f)
+void qMdmmDebugSetDevice(QIODevice *f)
 {
     if (f != nullptr) {
         if (!f->isOpen())

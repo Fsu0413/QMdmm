@@ -8,6 +8,8 @@
 #include "qmdmmagent.h"
 #include "qmdmmsocket.h"
 
+#include <QMdmmProtocol>
+
 #include <QLocalSocket>
 #include <QPointer>
 #include <QTcpSocket>
@@ -29,7 +31,10 @@ public:
     QPointer<QMdmmSocket> socket;
     QMdmmRoom *room;
     QHash<QString, QMdmmAgent *> agents;
+
     QTimer *heartbeatTimer;
+
+    QMdmmProtocol::RequestId currentRequest;
 
     void requestStoneScissorsCloth(const QJsonValue &value);
     void requestActionOrder(const QJsonValue &value);

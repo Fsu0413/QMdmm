@@ -11,7 +11,7 @@
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmDebugLogPrivate
 {
     QMutex m;
-    QPointer<QFileDevice> f;
+    QPointer<QIODevice> f;
 
     static QtMessageHandler qtMessageHandler;
 };

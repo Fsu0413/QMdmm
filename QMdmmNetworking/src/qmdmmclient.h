@@ -17,6 +17,9 @@ public:
     explicit QMdmmClient(QObject *parent = nullptr);
     ~QMdmmClient() override;
 
+public slots: // NOLINT(readability-redundant-access-specifiers)
+    void requestTimeout();
+
 signals:
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
@@ -33,7 +36,7 @@ signals:
     void notifyRoundOver();
     void notifyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
     void notifyGameOver(const QStringList &winners);
-    void notifySpoken();
+    void notifySpoken(const QString &playerName, const QString &content);
     void notifyOperated();
 
 private:
