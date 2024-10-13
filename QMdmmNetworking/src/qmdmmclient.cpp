@@ -644,6 +644,8 @@ bool QMdmmClientPrivate::applyAction(const QString &playerName, QMdmmData::Actio
     default:
         break;
     }
+
+    return false;
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

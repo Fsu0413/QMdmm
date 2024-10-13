@@ -8,15 +8,82 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
+// bool tcpEnabled = true;
+// uint16_t tcpPort = 6366U;
+// bool localEnabled = true;
+// QString localSocketName = QStringLiteral("QMdmm");
+// bool websocketEnabled = true;
+// QString websocketName = QStringLiteral("QMdmm");
+// uint16_t websocketPort = 6367U;
+
+const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
+{
+    // clang-format off
+    static const QMdmmServerConfiguration defaultInstance {
+        std::make_pair(QStringLiteral("tcpEnabled"), true),
+        std::make_pair(QStringLiteral("tcpPort"), 6366U),
+        std::make_pair(QStringLiteral("localEnabled"), true),
+        std::make_pair(QStringLiteral("localSocketName"), QStringLiteral("QMdmm")),
+        std::make_pair(QStringLiteral("websocketEnabled"), true),
+        std::make_pair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
+        std::make_pair(QStringLiteral("websocketPort"), 6367U),
+    };
+    // clang-format on
+
+    return defaultInstance;
+}
+
+#define CONVERTTOTYPEBOOL(v) v.toBool()
+#define CONVERTTOTYPEUINT16T(v) v.toUInt()
+#define CONVERTTOTYPEQSTRING(v) v.toString()
+#define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
+    type QMdmmServerConfiguration::valueName() const                                               \
+    {                                                                                              \
+        if (contains(QStringLiteral(#valueName)))                                                  \
+            return convertToType(value(QStringLiteral(#valueName)));                               \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
+    }                                                                                              \
+    void QMdmmServerConfiguration::set##ValueName(type value)                                      \
+    {                                                                                              \
+        insert(QStringLiteral(#valueName), convertToQVariant(value));                              \
+    }
+
+#define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
+    type QMdmmServerConfiguration::valueName() const                                                \
+    {                                                                                               \
+        if (contains(QStringLiteral(#valueName)))                                                   \
+            return convertToType(value(QStringLiteral(#valueName)));                                \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
+    }                                                                                               \
+    void QMdmmServerConfiguration::set##ValueName(const type &value)                                \
+    {                                                                                               \
+        insert(QStringLiteral(#valueName), convertToQVariant(value));                               \
+    }
+
+IMPLEMENTATION_CONFIGURATION(bool, tcpEnabled, TcpEnabled, CONVERTTOTYPEBOOL, )
+IMPLEMENTATION_CONFIGURATION(uint16_t, tcpPort, TcpPort, CONVERTTOTYPEUINT16T, )
+IMPLEMENTATION_CONFIGURATION(bool, localEnabled, LocalEnabled, CONVERTTOTYPEBOOL, )
+IMPLEMENTATION_CONFIGURATION2(QString, localSocketName, LocalSocketName, CONVERTTOTYPEQSTRING, )
+IMPLEMENTATION_CONFIGURATION(bool, websocketEnabled, WebsocketEnabled, CONVERTTOTYPEBOOL, )
+IMPLEMENTATION_CONFIGURATION2(QString, websocketName, WebsocketName, CONVERTTOTYPEQSTRING, )
+IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTYPEUINT16T, )
+
+#undef IMPLEMENTATION_CONFIGURATION2
+#undef IMPLEMENTATION_CONFIGURATION
+#undef CONVERTTOTYPEQSTRING
+#undef CONVERTTOTYPEUINT16T
+#undef CONVERTTOTYPEBOOL
+
 QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::notifyCallback {
     std::make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
     std::make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signIn),
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
 };
 
-QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, QMdmmServer *q)
+QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q)
     : QObject(q)
     , serverConfiguration(serverConfiguration)
+    , logicConfiguration(logicConfiguration)
     , q(q)
     , t(nullptr)
     , l(nullptr)
@@ -24,7 +91,7 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     , current(nullptr)
 {
     // Tcp
-    if (serverConfiguration.tcpEnabled) {
+    if (serverConfiguration.tcpEnabled()) {
         t = new QTcpServer(this);
         connect(t,
 #if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
@@ -38,15 +105,15 @@ QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverCon
     }
 
     // Local
-    if (serverConfiguration.localEnabled) {
+    if (serverConfiguration.localEnabled()) {
         l = new QLocalServer(this);
         l->setSocketOptions(QLocalServer::WorldAccessOption);
         connect(l, &QLocalServer::newConnection, this, &QMdmmServerPrivate::localServerNewConnection);
     }
 
     // WebSocket
-    if (serverConfiguration.websocketEnabled) {
-        w = new QWebSocketServer(serverConfiguration.websocketName, QWebSocketServer::NonSecureMode, this);
+    if (serverConfiguration.websocketEnabled()) {
+        w = new QWebSocketServer(serverConfiguration.websocketName(), QWebSocketServer::NonSecureMode, this);
         connect(w, &QWebSocketServer::newConnection, this, &QMdmmServerPrivate::websocketServerNewConnection);
     }
 }
@@ -93,7 +160,7 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
         // TODO: check if reconnect
 
         if (current == nullptr || current->full()) {
-            current = new QMdmmLogicRunner(serverConfiguration.logicConfiguration, this);
+            current = new QMdmmLogicRunner(logicConfiguration, this);
             connect(current, &QMdmmLogicRunner::gameOver, this, &QMdmmServerPrivate::logicRunnerGameOver);
         }
 
@@ -179,32 +246,32 @@ void QMdmmServerPrivate::logicRunnerGameOver()
     }
 }
 
-QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, QObject *parent)
+QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmServerPrivate(serverConfiguration, this))
+    , d(new QMdmmServerPrivate(serverConfiguration, logicConfiguration, this))
 {
 }
 
 bool QMdmmServer::listenTcpServer()
 {
-    if (d->serverConfiguration.tcpEnabled)
-        return d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort);
+    if (d->serverConfiguration.tcpEnabled())
+        return d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort());
 
     return false;
 }
 
 bool QMdmmServer::listenLocalServer()
 {
-    if (d->serverConfiguration.localEnabled)
-        return d->l->listen(d->serverConfiguration.localSocketName);
+    if (d->serverConfiguration.localEnabled())
+        return d->l->listen(d->serverConfiguration.localSocketName());
 
     return false;
 }
 
 bool QMdmmServer::listenWebsocketServer()
 {
-    if (d->serverConfiguration.websocketEnabled)
-        return d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort);
+    if (d->serverConfiguration.websocketEnabled())
+        return d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort());
 
     return false;
 }
