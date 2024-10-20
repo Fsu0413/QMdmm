@@ -252,28 +252,18 @@ QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, co
 {
 }
 
-bool QMdmmServer::listenTcpServer()
+bool QMdmmServer::listen()
 {
+    bool ret = true;
+
     if (d->serverConfiguration.tcpEnabled())
-        return d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort());
-
-    return false;
-}
-
-bool QMdmmServer::listenLocalServer()
-{
+        ret = d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort()) && ret;
     if (d->serverConfiguration.localEnabled())
-        return d->l->listen(d->serverConfiguration.localSocketName());
-
-    return false;
-}
-
-bool QMdmmServer::listenWebsocketServer()
-{
+        ret = d->l->listen(d->serverConfiguration.localSocketName()) && ret;
     if (d->serverConfiguration.websocketEnabled())
-        return d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort());
+        ret = d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort()) && ret;
 
-    return false;
+    return ret;
 }
 
 // No need to delete d.

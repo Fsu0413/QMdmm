@@ -65,9 +65,7 @@ public:
     ~QMdmmServer() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    bool listenTcpServer();
-    bool listenLocalServer();
-    bool listenWebsocketServer();
+    bool listen();
 
 private:
     QMdmmServerPrivate *const d;

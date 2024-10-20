@@ -10,6 +10,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
+#include <random>
+
 QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),
     std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmClientPrivate::requestActionOrder),
@@ -609,6 +611,7 @@ void QMdmmClientPrivate::notifySpoken(const QJsonValue &value)
 
 void QMdmmClientPrivate::notifyOperated(const QJsonValue &value)
 {
+    ONERRPRINTJSON(value);
     Q_UNIMPLEMENTED();
 }
 
@@ -726,10 +729,25 @@ void QMdmmClientPrivate::heartbeatTimeout()
         emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyPingServer, QDateTime::currentMSecsSinceEpoch()));
 }
 
+namespace {
+inline QString generateRandomString()
+{
+    std::random_device random1;
+    std::mt19937 random2(random1());
+
+    QByteArray arr;
+    for (int i = 0; i < 30; ++i)
+        arr.append(static_cast<char>(random2() % 255));
+
+    return QString::fromLatin1(arr.toBase64(QByteArray::OmitTrailingEquals));
+}
+} // namespace
+
 QMdmmClient::QMdmmClient(QObject *parent)
     : QObject(parent)
     , d(new QMdmmClientPrivate(this))
 {
+    setObjectName(generateRandomString());
 }
 
 bool QMdmmClient::connectToHost(const QString &host)
