@@ -9,13 +9,12 @@
 #include "qmdmmsocket.h"
 
 #include <QMdmmProtocol>
+#include <QMdmmRoom>
 
 #include <QLocalSocket>
 #include <QPointer>
 #include <QTcpSocket>
 #include <QTimer>
-
-class QMdmmRoom;
 
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
 {
@@ -25,9 +24,10 @@ public:
     static QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> requestCallback;
     static QHash<QMdmmProtocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> notifyCallback;
 
-    QMdmmClientPrivate(QMdmmClient *q);
+    QMdmmClientPrivate(QMdmmClientConfiguration clientConfiguration, QMdmmClient *q);
 
     QMdmmClient *q;
+    QMdmmClientConfiguration clientConfiguration;
     QPointer<QMdmmSocket> socket;
     QMdmmRoom *room;
     QHash<QString, QMdmmAgent *> agents;
@@ -35,6 +35,7 @@ public:
     QTimer *heartbeatTimer;
 
     QMdmmProtocol::RequestId currentRequest;
+    QMdmmData::AgentState initialState;
 
     void requestStoneScissorsCloth(const QJsonValue &value);
     void requestActionOrder(const QJsonValue &value);

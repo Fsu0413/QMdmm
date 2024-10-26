@@ -8,14 +8,6 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
-// bool tcpEnabled = true;
-// uint16_t tcpPort = 6366U;
-// bool localEnabled = true;
-// QString localSocketName = QStringLiteral("QMdmm");
-// bool websocketEnabled = true;
-// QString websocketName = QStringLiteral("QMdmm");
-// uint16_t websocketPort = 6367U;
-
 const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
     // clang-format off

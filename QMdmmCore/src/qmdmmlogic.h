@@ -8,6 +8,7 @@
 #include <QObject>
 
 struct QMdmmLogicConfiguration;
+
 struct QMdmmLogicPrivate;
 
 class QMDMMCORE_EXPORT QMdmmLogic final : public QObject

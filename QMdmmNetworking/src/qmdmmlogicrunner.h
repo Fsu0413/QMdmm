@@ -10,12 +10,13 @@
 class QMdmmAgent;
 class QMdmmSocket;
 struct QMdmmLogicConfiguration;
-class QMdmmLogicRunnerPrivate;
 
 // for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
 // If a player / agent exits mid-game, current practice would be to destoy this QMdmmLogicRunner and its children and disconnect all the agents
 // Players who wants to continue playing need rejoin.
+
+class QMdmmLogicRunnerPrivate;
 
 // TODO: Implement Lobby when other contents are ready
 class QMDMMNETWORKING_EXPORT QMdmmLogicRunner final : public QObject

@@ -12,6 +12,48 @@
 
 #include <random>
 
+const QMdmmClientConfiguration &QMdmmClientConfiguration::defaults()
+{
+    // clang-format off
+    static const QMdmmClientConfiguration defaultInstance {
+        std::make_pair(QStringLiteral("screenName"), QStringLiteral("QMdmm-Fans")),
+    };
+    // clang-format on
+
+    return defaultInstance;
+}
+
+#define CONVERTTOTYPEQSTRING(v) v.toString()
+#define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
+    type QMdmmClientConfiguration::valueName() const                                               \
+    {                                                                                              \
+        if (contains(QStringLiteral(#valueName)))                                                  \
+            return convertToType(value(QStringLiteral(#valueName)));                               \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
+    }                                                                                              \
+    void QMdmmClientConfiguration::set##ValueName(type value)                                      \
+    {                                                                                              \
+        insert(QStringLiteral(#valueName), convertToQVariant(value));                              \
+    }
+
+#define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
+    type QMdmmClientConfiguration::valueName() const                                                \
+    {                                                                                               \
+        if (contains(QStringLiteral(#valueName)))                                                   \
+            return convertToType(value(QStringLiteral(#valueName)));                                \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
+    }                                                                                               \
+    void QMdmmClientConfiguration::set##ValueName(const type &value)                                \
+    {                                                                                               \
+        insert(QStringLiteral(#valueName), convertToQVariant(value));                               \
+    }
+
+IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTRING, )
+
+#undef IMPLEMENTATION_CONFIGURATION2
+#undef IMPLEMENTATION_CONFIGURATION
+#undef CONVERTTOTYPEQSTRING
+
 QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),
     std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmClientPrivate::requestActionOrder),
@@ -41,28 +83,30 @@ QHash<QMdmmProtocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)>
     std::make_pair(QMdmmProtocol::NotifyOperated, &QMdmmClientPrivate::notifyOperated),
 };
 
-QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClient *q)
+QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClientConfiguration clientConfiguration, QMdmmClient *q)
     : QObject(q)
     , q(q)
+    , clientConfiguration(std::move(clientConfiguration))
     , socket(nullptr)
     , room(new QMdmmRoom(QMdmmLogicConfiguration(), this))
     , heartbeatTimer(new QTimer(this))
     , currentRequest(QMdmmProtocol::RequestInvalid)
+    , initialState(QMdmmData::StateOffline)
 {
     heartbeatTimer->setInterval(30000);
     heartbeatTimer->setSingleShot(false);
     connect(heartbeatTimer, &QTimer::timeout, this, &QMdmmClientPrivate::heartbeatTimeout);
 }
 
-#define ONERRPRINTJSON(value)                                                    \
-    bool succeed = false;                                                        \
-    QMdmmUtilities::OnReturn onRet_([this, value, &succeed, func = __func__]() { \
-        if (!succeed) {                                                          \
-            if (socket != nullptr)                                               \
-                socket->setHasError(true);                                       \
-        }                                                                        \
-        QByteArray json(QJsonDocument({value}).toJson());                        \
-        qDebug("%s fails with Json value: %s", func, json.constData());          \
+#define ONERRPRINTJSON(value)                                                        \
+    bool succeed = false;                                                            \
+    QMdmmUtilities::OnReturn onRet_([this, value, &succeed, func = __func__]() {     \
+        if (!succeed) {                                                              \
+            if (socket != nullptr)                                                   \
+                socket->setHasError(true);                                           \
+            QByteArray json(QJsonDocument({value}).toJson(QJsonDocument::Indented)); \
+            qDebug("%s fails with Json value: %s", func, json.constData());          \
+        }                                                                            \
     });
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -219,8 +263,11 @@ void QMdmmClientPrivate::notifyVersion(const QJsonValue &value)
     succeed = true;
 
     // sign in process
-    // signin();
-    Q_UNIMPLEMENTED();
+    QJsonObject signInOb;
+    signInOb.insert(QStringLiteral("playerName"), q->objectName());
+    signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
+    signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
+    emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifySignIn, signInOb));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -743,20 +790,23 @@ inline QString generateRandomString()
 }
 } // namespace
 
-QMdmmClient::QMdmmClient(QObject *parent)
+QMdmmClient::QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmClientPrivate(this))
+    , d(new QMdmmClientPrivate(std::move(clientConfiguration), this))
 {
     setObjectName(generateRandomString());
 }
 
-bool QMdmmClient::connectToHost(const QString &host)
+QMdmmClient::~QMdmmClient() = default;
+
+bool QMdmmClient::connectToHost(const QString &host, QMdmmData::AgentState initialState)
 {
     if (d->socket != nullptr) {
         d->socket->disconnect(d);
         d->socket->deleteLater();
     }
 
+    d->initialState = initialState;
     d->socket = new QMdmmSocket(d);
     connect(d->socket, &QMdmmSocket::socketDisconnected, d, &QMdmmClientPrivate::socketDisconnected);
     connect(d->socket, &QMdmmSocket::socketErrorOccurred, d, &QMdmmClientPrivate::socketErrorOccurred);
@@ -791,11 +841,56 @@ void QMdmmClient::notifyOperate(const void *todo)
         emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyOperate, {}));
 }
 
-QMdmmClient::~QMdmmClient() = default;
-
 void QMdmmClient::requestTimeout()
 {
     // This should be a definitely invalid reply, to trigger default reply logic implemented in server.
-    if (d->socket != nullptr)
+    if (d->socket != nullptr && d->currentRequest != QMdmmProtocol::RequestInvalid) {
+        d->currentRequest = QMdmmProtocol::RequestInvalid;
         emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, d->currentRequest, {}));
+    }
+}
+
+void QMdmmClient::replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneScissorsCloth)
+{
+    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestStoneScissorsCloth) {
+        d->currentRequest = QMdmmProtocol::RequestInvalid;
+        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestStoneScissorsCloth, static_cast<int>(stoneScissorsCloth)));
+    }
+}
+
+void QMdmmClient::replyActionOrder(QList<int> actionOrder)
+{
+    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestActionOrder) {
+        d->currentRequest = QMdmmProtocol::RequestInvalid;
+        QJsonArray arr;
+        foreach (int a, actionOrder)
+            arr.append(a);
+
+        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestActionOrder, arr));
+    }
+}
+
+void QMdmmClient::replyAction(QMdmmData::Action action, const QString &toPlayer, int toPlace)
+{
+    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestAction) {
+        d->currentRequest = QMdmmProtocol::RequestInvalid;
+        QJsonObject ob;
+        ob.insert(QStringLiteral("action"), static_cast<int>(action));
+        ob.insert(QStringLiteral("toPlayer"), toPlayer);
+        ob.insert(QStringLiteral("toPlace"), toPlace);
+
+        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestAction, ob));
+    }
+}
+
+void QMdmmClient::replyUpgrade(QList<QMdmmData::UpgradeItem> upgrades)
+{
+    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestUpgrade) {
+        d->currentRequest = QMdmmProtocol::RequestInvalid;
+        QJsonArray arr;
+        foreach (QMdmmData::UpgradeItem it, upgrades)
+            arr.append(static_cast<int>(it));
+
+        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestUpgrade, arr));
+    }
 }

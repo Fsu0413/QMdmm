@@ -12,8 +12,6 @@
 class QMdmmPlayer;
 class QMdmmLogic;
 
-struct QMdmmRoomPrivate;
-
 struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
 {
     Q_GADGET
@@ -93,6 +91,8 @@ public:
 
     bool deserialize(const QJsonValue &value);
 };
+
+struct QMdmmRoomPrivate;
 
 class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
 {

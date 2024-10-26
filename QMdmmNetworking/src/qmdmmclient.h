@@ -7,18 +7,48 @@
 
 #include <QObject>
 
-class QMdmmClientPrivate;
 class QMdmmRoom;
+
+struct QMDMMNETWORKING_EXPORT QMdmmClientConfiguration final : public QVariantMap
+{
+    Q_GADGET
+    Q_PROPERTY(QString screenName READ screenName WRITE setScreenName DESIGNABLE false FINAL)
+
+public:
+    static const QMdmmClientConfiguration &defaults();
+
+#ifdef Q_MOC_RUN
+    Q_INVOKABLE QMdmmClientConfiguration();
+    Q_INVOKABLE QMdmmClientConfiguration(const QMdmmClientConfiguration &);
+#else
+    using QVariantMap::QMap;
+    using QVariantMap::operator=;
+#endif
+
+#define DEFINE_CONFIGURATION(type, valueName, ValueName) \
+    [[nodiscard]] type valueName() const;                \
+    void set##ValueName(type valueName);
+#define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
+    [[nodiscard]] type valueName() const;                 \
+    void set##ValueName(const type &valueName);
+
+    DEFINE_CONFIGURATION2(QString, screenName, ScreenName)
+
+#undef DEFINE_CONFIGURATION2
+#undef DEFINE_CONFIGURATION
+};
+
+class QMdmmClientPrivate;
 
 class QMDMMNETWORKING_EXPORT QMdmmClient final : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QMdmmClient(QObject *parent = nullptr);
+    explicit QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *parent = nullptr);
     ~QMdmmClient() override;
 
-    bool connectToHost(const QString &host);
+    bool connectToHost(const QString &host, QMdmmData::AgentState initialState);
 
     [[nodiscard]] QMdmmRoom *room();
     [[nodiscard]] const QMdmmRoom *room() const;
@@ -27,7 +57,14 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifySpeak(const QString &content);
     void notifyOperate(const void *todo);
 
+    // There is no request timer called here. The timeout can be established in UI.
+    // This function can be called for a timeout request, to generate a default reply and reply to server
     void requestTimeout();
+
+    void replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneScissorsCloth);
+    void replyActionOrder(QList<int> actionOrder);
+    void replyAction(QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    void replyUpgrade(QList<QMdmmData::UpgradeItem> upgrades);
 
 signals:
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);
