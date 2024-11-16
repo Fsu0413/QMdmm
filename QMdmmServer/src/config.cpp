@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 
 static const QString helpText = QStringLiteral(R"help(
 

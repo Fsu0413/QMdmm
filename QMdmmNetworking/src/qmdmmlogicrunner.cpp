@@ -263,7 +263,7 @@ void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
         return;
 
     if (packet.type() == QMdmmProtocol::TypeNotify) {
-        if ((packet.notifyId() | QMdmmProtocol::NotifyToAgentMask) != 0) {
+        if ((packet.notifyId() & QMdmmProtocol::NotifyToAgentMask) != 0) {
             void (QMdmmServerAgentPrivate::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());

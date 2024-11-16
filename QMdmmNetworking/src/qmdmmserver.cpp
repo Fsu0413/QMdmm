@@ -218,7 +218,7 @@ void QMdmmServerPrivate::socketPacketReceived(QMdmmPacket packet)
         return;
 
     if (packet.type() == QMdmmProtocol::TypeNotify) {
-        if ((packet.notifyId() | QMdmmProtocol::NotifyToServerMask) != 0) {
+        if ((packet.notifyId() & QMdmmProtocol::NotifyToServerMask) != 0) {
             // These packages should be processed in Server
             void (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
