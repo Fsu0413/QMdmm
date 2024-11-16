@@ -75,9 +75,14 @@ if (Qt6_FOUND)
     )
 
     install(TARGETS QMdmmNetworking6
+        COMPONENT "6"
         RUNTIME
-        ARCHIVE
         LIBRARY
+    )
+
+    install(TARGETS QMdmmNetworking6
+        COMPONENT "dev"
+        ARCHIVE
     )
 
     if (QMDMM_EXPORT_PRIVATE)
@@ -124,9 +129,14 @@ if (Qt5_FOUND)
     )
 
     install(TARGETS QMdmmNetworking5
+        COMPONENT "5"
         RUNTIME
-        ARCHIVE
         LIBRARY
+    )
+
+    install(TARGETS QMdmmNetworking5
+        COMPONENT "dev"
+        ARCHIVE
     )
 
     if (QMDMM_EXPORT_PRIVATE)

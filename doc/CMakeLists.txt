@@ -45,4 +45,17 @@ if (DOXYGEN_FOUND)
         ALL
         USE_STAMP_FILE
     )
+
+    install(DIRECTORY
+        "${CMAKE_CURRENT_BINARY_DIR}/html"
+        "${CMAKE_CURRENT_BINARY_DIR}/rtf"
+        DESTINATION "${CMAKE_INSTALL_DOCDIR}"
+        COMPONENT "doc"
+    )
+
+    install(DIRECTORY
+        "${CMAKE_CURRENT_BINARY_DIR}/man"
+        DESTINATION "${CMAKE_INSTALL_MANDIR}/.."
+        COMPONENT "doc"
+    )
 endif()

@@ -6,6 +6,11 @@ if (DEFINED PROJECT_NAME)
     message(FATAL_ERROR "Please build this project separately. add_subdirectory won't be supported.")
 endif()
 
+if (POLICY CMP0177)
+    # no influence here
+    cmake_policy(SET CMP0177 NEW)
+endif()
+
 project(QMdmm
     VERSION 0.0.1
     LANGUAGES CXX
@@ -24,6 +29,10 @@ option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private cla
 if (NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
 endif()
+
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN true)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -78,3 +87,26 @@ add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
 add_subdirectory(QMdmmServer)
 add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory list
+
+set(CPACK_GENERATOR 7Z TGZ TXZ TZST ZIP)
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_SOURCE_GENERATOR 7Z TGZ TXZ TZST ZIP)
+set(CPACK_SOURCE_IGNORE_FILES
+    [[\\.git/]]
+    [[\\.DS_Store/]]
+    [[.*~$]]
+    [[.*\\.autosave$]]
+    [[build/]]
+)
+set(CPACK_RPM_PACKAGE_LICENSE "AGPLv3")
+
+if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
+    list(APPEND CPACK_GENERATOR RPM DEB)
+endif()
+
+include(CPack)
+cpack_add_component("5")
+cpack_add_component("6")
+cpack_add_component("dev" DEPENDS "5" "6")
+cpack_add_component("private-dev" DEPENDS "dev")
+cpack_add_component("doc" DEPENDS "dev")

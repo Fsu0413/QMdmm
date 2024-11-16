@@ -62,6 +62,7 @@ if (DEFINED PROJECT_NAME)
             install(FILES ${header_generated_paths}
                 DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
                 OPTIONAL
+                COMPONENT "dev"
             )
         endforeach()
     endfunction()
@@ -81,6 +82,7 @@ if (DEFINED PROJECT_NAME)
             install(FILES "${header_generated_path}"
                 DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}/private/${PROJECT_VERSION}"
                 OPTIONAL
+                COMPONENT "private-dev"
             )
         endforeach()
     endfunction()
