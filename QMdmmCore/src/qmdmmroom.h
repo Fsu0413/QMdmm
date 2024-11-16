@@ -30,7 +30,7 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
     Q_PROPERTY(bool canBuyOnlyInInitialCity READ canBuyOnlyInInitialCity WRITE setCanBuyOnlyInInitialCity DESIGNABLE false FINAL)
 
 public:
-    static const QMdmmLogicConfiguration &defaults();
+    static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &defaults();
 
     enum PunishHpRoundStrategy
     {

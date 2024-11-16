@@ -72,7 +72,7 @@ QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
 };
 
-QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q)
+QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QMdmmServer *q)
     : QObject(q)
     , serverConfiguration(serverConfiguration)
     , logicConfiguration(logicConfiguration)
@@ -168,6 +168,7 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
 void QMdmmServerPrivate::observe(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
     // TODO
+    Q_UNUSED(packetValue);
     socket->setHasError(true);
 }
 

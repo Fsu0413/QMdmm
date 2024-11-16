@@ -384,7 +384,6 @@ void QMdmmServerAgentPrivate::notifyAction(const QString &playerName, QMdmmData:
         break;
     }
 
-    bool hasToPlace = false;
     switch (action) {
     case QMdmmData::Move:
     case QMdmmData::LetMove:

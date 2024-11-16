@@ -25,7 +25,7 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
     static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
 
 public:
-    QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q);
+    QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QMdmmServer *q);
 
     // callbacks
     void pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);

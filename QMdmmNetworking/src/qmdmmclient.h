@@ -15,7 +15,7 @@ struct QMDMMNETWORKING_EXPORT QMdmmClientConfiguration final : public QVariantMa
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName DESIGNABLE false FINAL)
 
 public:
-    static const QMdmmClientConfiguration &defaults();
+    static QMDMMNETWORKING_EXPORT const QMdmmClientConfiguration &defaults();
 
 #ifdef Q_MOC_RUN
     Q_INVOKABLE QMdmmClientConfiguration();

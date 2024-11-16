@@ -25,7 +25,7 @@ struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QVariantMa
     Q_PROPERTY(uint16_t websocketPort READ websocketPort WRITE setWebsocketPort DESIGNABLE false FINAL)
 
 public:
-    static const QMdmmServerConfiguration &defaults();
+    static QMDMMNETWORKING_EXPORT const QMdmmServerConfiguration &defaults();
 
 #ifdef Q_MOC_RUN
     Q_INVOKABLE QMdmmServerConfiguration();

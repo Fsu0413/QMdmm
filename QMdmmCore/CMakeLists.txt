@@ -74,6 +74,18 @@ if (QMDMM_EXPORT_PRIVATE)
     )
 endif()
 
+if (MSVC)
+    target_compile_options(QMdmmCore
+        INTERFACE "-W4"
+                  "-wd4251"
+    )
+else()
+    target_compile_options(QMdmmCore
+        INTERFACE "-Wall"
+                  "-Wextra"
+    )
+endif()
+
 if (Qt6_FOUND)
     qt6_add_library(QMdmmCore6 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS})
     add_library(QMdmm6::Core ALIAS QMdmmCore6)
