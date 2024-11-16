@@ -13,7 +13,7 @@ struct QMdmmLogicConfiguration;
 
 // for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
-// If a player / agent exits mid-game, current practice would be to destoy this QMdmmLogicRunner and its children and disconnect all the agents
+// If a player / agent exits mid-game, current practice would be to destroy this QMdmmLogicRunner and its children and disconnect all the agents
 // Players who wants to continue playing need rejoin.
 
 class QMdmmLogicRunnerPrivate;
@@ -24,7 +24,7 @@ class QMDMMNETWORKING_EXPORT QMdmmLogicRunner final : public QObject
     Q_OBJECT
 
 public:
-    // Constuctor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
+    // Constructor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
     explicit QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogicRunner() override;
 

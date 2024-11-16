@@ -34,10 +34,10 @@ public:
 
     enum PunishHpRoundStrategy
     {
-        RoundDown, // 1.1 -> 1, 1.4 -> 1, 1.5 -> 1, 1.9 -> 1, 2.0 -> 2
-        RoundToNearest45, // 1.1 -> 1, 1.4 -> 1, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
-        RoundUp, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 2
-        PlusOne, // 1.1 -> 2, 1.4 -> 2, 1.5 -> 2, 1.9 -> 2, 2.0 -> 3
+        RoundDown,
+        RoundToNearest45,
+        RoundUp,
+        PlusOne,
     };
     Q_ENUM(PunishHpRoundStrategy);
 
@@ -56,21 +56,6 @@ public:
     // TODO: move to ServerConfiguration
     DEFINE_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom)
     DEFINE_CONFIGURATION(int, requestTimeout, RequestTimeout)
-
-    // I had experienced 2 versions of MDMM, they are mostly same but with minor differences.
-    // In both versions one can only buy k/h in city.
-    // In both versions one can slash only if knife is bought and kick only if horse is bought.
-    // In both versions one can only slash / kick other one when they are at same place.
-    // In both versions one can kick other one in city, and the kicked one will be force moved to country.
-    // In both versions one can only move to adjecent place at a time. Different cities are not adjecent, while country is adjecent to each city.
-    // Version 1 (Legacy): initial 7/1/3 mh/kd/hd, maximum 7/3/5 mh/kd/hd (Yeah, no maxHp upgrade). One with zero HP still alive. No "Let move"s, no punish HP.
-    // This is the version I had experienced in primary school.
-    // This version knife upgrades are more valuable. Horse is of no value since there is no HP punish.
-    // Version 2: initial 10/1/2 mh/kd/hd, maximum 20/10/10 mh/kd/hd. One with zero HP dies. With "Let move"s (pull sb. in / push sb. out of city stuff), with punish HP.
-    // This is the version I had experienced in junior high school.
-    // This version horse can be effectly used in multi-player. pull - kick loop is fun!
-
-    // Default configurations matches rules of Version 2 and can be tweaked.
 
     // standard configuration
     DEFINE_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage)
@@ -118,8 +103,15 @@ public:
     [[nodiscard]] QList<QMdmmPlayer *> alivePlayers();
     [[nodiscard]] QList<const QMdmmPlayer *> alivePlayers() const;
     [[nodiscard]] QStringList alivePlayerNames() const;
-    [[nodiscard]] int alivePlayersCount() const;
-    [[nodiscard]] bool isRoundOver() const;
+    [[nodiscard]] int alivePlayersCount() const
+    {
+        return alivePlayers().size();
+    }
+    [[nodiscard]] bool isRoundOver() const
+    {
+        return alivePlayersCount() <= 1;
+    }
+
     [[nodiscard]] bool isGameOver(QStringList *winnerPlayerNames = nullptr) const;
 
     void prepareForRoundStart();

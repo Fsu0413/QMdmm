@@ -9,6 +9,7 @@ endif()
 project(QMdmm
     VERSION 0.0.1
     LANGUAGES CXX
+    DESCRIPTION "A game which is played in primary / high school"
 )
 
 include(.FsEnv.cmake OPTIONAL)
@@ -76,3 +77,4 @@ add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
 add_subdirectory(QMdmmServer)
+add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory list

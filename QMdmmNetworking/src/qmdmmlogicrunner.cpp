@@ -67,7 +67,7 @@ void QMdmmServerAgentPrivate::addRequest(QMdmmProtocol::RequestId requestId, con
         // We'd make this default reply in the event queue
         // reasons are:
         // 1. introducing time-consuming task in the request function is bad.
-        // 2. reply should be called asynchoronous since this is the designed way for it
+        // 2. reply should be called asynchronous since this is the designed way for it
         QTimer::singleShot(0, Qt::CoarseTimer, this, &QMdmmServerAgentPrivate::executeDefaultReply);
     }
 }

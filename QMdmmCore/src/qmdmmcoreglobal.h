@@ -3,7 +3,6 @@
 #ifndef QMDMMCOREGLOBAL_H
 #define QMDMMCOREGLOBAL_H
 
-#ifndef DOXYGEN
 #include <QFlags>
 #include <QHash>
 #include <QList>
@@ -16,12 +15,6 @@
 
 #include <functional>
 #include <type_traits>
-
-#else
-#define Q_NAMESPACE_EXPORT
-#define Q_FLAG_NS
-#define Q_DECLARE_METATYPE
-#endif
 
 #if 0
 class QMDMMCORE_EXPORT QMdmmCoreGlobal
@@ -47,8 +40,9 @@ class QMDMMCORE_EXPORT QMdmmUtilities
 #endif
 #define QMDMMCORE_EXPORT_NO_GENERATE_HEADER QMDMMCORE_EXPORT
 #else
-#define QMDMMCORE_EXPORT dll_interface_defined
-#define QMDMMCORE_PRIVATE_EXPORT dll_interface_defined
+#define QMDMMCORE_EXPORT
+#define QMDMMCORE_EXPORT_NO_GENERATE_HEADER
+#define QMDMMCORE_PRIVATE_EXPORT
 #endif
 
 #include "qmdmmdebug.h"
@@ -119,7 +113,7 @@ enum AgentStateEnum
 Q_DECLARE_FLAGS(AgentState, AgentStateEnum)
 Q_FLAG_NS(AgentState)
 
-constexpr bool isPlaceAdjecent(int p1, int p2)
+constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
 {
     // simplifies to "only one of p1 and p2 is Country"
     // simplifies again to "p1 is Country xor p2 is Country"
@@ -127,7 +121,7 @@ constexpr bool isPlaceAdjecent(int p1, int p2)
     return (p1 == Country) != (p2 == Country);
 }
 
-QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, StoneScissorsCloth> &judgers);
+QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, QMdmmData::StoneScissorsCloth> &judgers);
 } // namespace QMdmmData
 
 namespace QMdmmGlobal {
@@ -136,7 +130,7 @@ QMDMMCORE_EXPORT QVersionNumber version();
 
 namespace QMdmmUtilities {
 template<typename T>
-QSet<T> list2Set(const QList<T> &l)
+QSet<T> list2Set(const QList<T> &l) noexcept(noexcept(QSet<T>(l.constBegin(), l.constEnd())))
 {
     return QSet<T>(l.constBegin(), l.constEnd());
 }
@@ -162,29 +156,8 @@ QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
 }
 QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
 QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
-QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list); // !!!: Qt 5 QStringList is not QList<QString> but Qt 6 is
+QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
 QMDMMCORE_EXPORT QStringList variantList2StrList(const QVariantList &list);
-
-struct QMDMMCORE_EXPORT_NO_GENERATE_HEADER OnReturn
-{
-    explicit OnReturn(std::function<void()> call)
-        : call(std::move(call))
-    {
-    }
-    ~OnReturn()
-    {
-        call();
-    }
-
-    std::function<void()> call;
-
-    OnReturn() = delete;
-    Q_DISABLE_COPY_MOVE(OnReturn);
-
-    static void *operator new(size_t) = delete;
-    static void *operator new[](size_t) = delete;
-};
-
 } // namespace QMdmmUtilities
 
 #endif // QMDMMCOREGLOBAL_H

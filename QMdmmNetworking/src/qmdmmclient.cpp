@@ -9,6 +9,7 @@
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QScopeGuard>
 
 #include <random>
 
@@ -98,15 +99,14 @@ QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClientConfiguration clientConfigurat
     connect(heartbeatTimer, &QTimer::timeout, this, &QMdmmClientPrivate::heartbeatTimeout);
 }
 
-#define ONERRPRINTJSON(value)                                                        \
-    bool succeed = false;                                                            \
-    QMdmmUtilities::OnReturn onRet_([this, value, &succeed, func = __func__]() {     \
-        if (!succeed) {                                                              \
-            if (socket != nullptr)                                                   \
-                socket->setHasError(true);                                           \
-            QByteArray json(QJsonDocument({value}).toJson(QJsonDocument::Indented)); \
-            qDebug("%s fails with Json value: %s", func, json.constData());          \
-        }                                                                            \
+// TODO: replace auto with the real type
+// Qt documentation only mentioned "auto" here
+#define ONERRPRINTJSON(value)                                                    \
+    auto onRet_ = qScopeGuard([this, value, func = __func__]() {                 \
+        if (socket != nullptr)                                                   \
+            socket->setHasError(true);                                           \
+        QByteArray json(QJsonDocument({value}).toJson(QJsonDocument::Indented)); \
+        qDebug("%s fails with Json value: %s", func, json.constData());          \
     });
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -138,7 +138,7 @@ void QMdmmClientPrivate::requestStoneScissorsCloth(const QJsonValue &value)
         return;
     int strivedOrder = vstrivedOrder.toInt();
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->requestStoneScissorsCloth(playerNames, strivedOrder, QMdmmClient::QPrivateSignal());
 }
 
@@ -178,7 +178,7 @@ void QMdmmClientPrivate::requestActionOrder(const QJsonValue &value)
         return;
     int selectionNum = vselectionNum.toInt();
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->requestActionOrder(remainedOrders, maximumOrder, selectionNum, QMdmmClient::QPrivateSignal());
 }
 
@@ -191,7 +191,7 @@ void QMdmmClientPrivate::requestAction(const QJsonValue &value)
         return;
     int currentOrder = value.toInt();
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->requestAction(currentOrder, QMdmmClient::QPrivateSignal());
 }
 
@@ -204,7 +204,7 @@ void QMdmmClientPrivate::requestUpgrade(const QJsonValue &value)
         return;
     int remainedTimes = value.toInt();
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->requestUpgrade(remainedTimes, QMdmmClient::QPrivateSignal());
 }
 
@@ -220,7 +220,7 @@ void QMdmmClientPrivate::notifyPongServer(const QJsonValue &value)
         return;
     }
 
-    succeed = true;
+    onRet_.dismiss();
 
     int64_t currentTime = QDateTime::currentMSecsSinceEpoch();
     int64_t elapsed = currentTime - pongTime;
@@ -260,7 +260,7 @@ void QMdmmClientPrivate::notifyVersion(const QJsonValue &value)
         // noop for now....
     }
 
-    succeed = true;
+    onRet_.dismiss();
 
     // sign in process
     QJsonObject signInOb;
@@ -279,7 +279,7 @@ void QMdmmClientPrivate::notifyLogicConfiguration(const QJsonValue &value)
     if (!conf.deserialize(value))
         return;
 
-    succeed = true;
+    onRet_.dismiss();
     room->setLogicConfiguration(conf);
 }
 
@@ -311,7 +311,7 @@ void QMdmmClientPrivate::notifyAgentStateChanged(const QJsonValue &value)
         return;
     QMdmmData::AgentState agentState = QMdmmData::AgentState(static_cast<QMdmmData::AgentState::Int>(vagentState.toInt()));
 
-    succeed = true;
+    onRet_.dismiss();
     agent->setState(agentState);
 }
 
@@ -351,7 +351,7 @@ void QMdmmClientPrivate::notifyPlayerAdded(const QJsonValue &value)
     if (room->addPlayer(playerName) == nullptr)
         return;
 
-    succeed = true;
+    onRet_.dismiss();
 
     QMdmmAgent *agent = new QMdmmAgent(playerName, this);
     agent->setScreenName(screenName);
@@ -380,7 +380,7 @@ void QMdmmClientPrivate::notifyPlayerRemoved(const QJsonValue &value)
     if (!room->removePlayer(playerName))
         return;
 
-    succeed = true;
+    onRet_.dismiss();
 
     emit q->notifyPlayerRemoved(playerName, QMdmmClient::QPrivateSignal());
 
@@ -431,7 +431,7 @@ void QMdmmClientPrivate::notifyStoneScissorsCloth(const QJsonValue &value)
         replies.insert(playerName, ssc);
     }
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->notifyStoneScissorsCloth(replies, QMdmmClient::QPrivateSignal());
 }
 
@@ -455,7 +455,7 @@ void QMdmmClientPrivate::notifyActionOrder(const QJsonValue &value)
         result.insert(++i, playerName);
     }
 
-    succeed = true;
+    onRet_.dismiss();
     emit q->notifyActionOrder(result, QMdmmClient::QPrivateSignal());
 }
 
@@ -536,7 +536,7 @@ void QMdmmClientPrivate::notifyAction(const QJsonValue &value)
         break;
     }
 
-    succeed = true;
+    onRet_.dismiss();
 
     emit q->notifyAction(playerName, action, toPlayer, toPlace, QMdmmClient::QPrivateSignal());
     applyAction(playerName, action, toPlayer, toPlace);
@@ -585,7 +585,7 @@ void QMdmmClientPrivate::notifyUpgrade(const QJsonValue &value)
         replies.insert(playerName, upgrades);
     }
 
-    succeed = true;
+    onRet_.dismiss();
 
     emit q->notifyUpgrade(replies, QMdmmClient::QPrivateSignal());
     applyUpgrade(replies);
@@ -621,7 +621,7 @@ void QMdmmClientPrivate::notifyGameOver(const QJsonValue &value)
         winners << winner;
     }
 
-    succeed = true;
+    onRet_.dismiss();
 
     emit q->notifyGameOver(winners, QMdmmClient::QPrivateSignal());
 }
@@ -651,7 +651,7 @@ void QMdmmClientPrivate::notifySpoken(const QJsonValue &value)
         return;
     QString content = QString::fromUtf8(QByteArray::fromBase64(vContent.toString().toLatin1()));
 
-    succeed = true;
+    onRet_.dismiss();
 
     emit q->notifySpoken(playerName, content, QMdmmClient::QPrivateSignal());
 }

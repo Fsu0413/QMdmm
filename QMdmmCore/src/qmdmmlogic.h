@@ -30,7 +30,7 @@ public:
     explicit QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogic() override;
 
-    [[nodiscard]] State state() const;
+    [[nodiscard]] State state() const noexcept;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void addPlayer(const QString &playerName);

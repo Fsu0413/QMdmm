@@ -29,6 +29,8 @@ set(QMDMMNETWORKING_SOURCES
     src/qmdmmsocket.cpp
 )
 
+set(QMDMMNETWORKING_DOC_FILES ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} PARENT_SCOPE)
+
 add_library(QMdmmNetworking INTERFACE)
 auto_generate_header_file_for_target(QMdmmNetworking "${QMDMMNETWORKING_HEADERS}")
 if (QMDMM_EXPORT_PRIVATE)

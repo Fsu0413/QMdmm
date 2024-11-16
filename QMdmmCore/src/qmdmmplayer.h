@@ -37,25 +37,25 @@ public:
     [[nodiscard]] const QMdmmRoom *room() const;
 
     // current property
-    [[nodiscard]] bool hasKnife() const;
+    [[nodiscard]] bool hasKnife() const noexcept;
     void setHasKnife(bool k);
-    [[nodiscard]] bool hasHorse() const;
+    [[nodiscard]] bool hasHorse() const noexcept;
     void setHasHorse(bool h);
-    [[nodiscard]] int hp() const;
+    [[nodiscard]] int hp() const noexcept;
     void setHp(int h, bool *kills = nullptr);
-    [[nodiscard]] int place() const;
+    [[nodiscard]] int place() const noexcept;
     void setPlace(int toPlace);
-    [[nodiscard]] int initialPlace() const;
+    [[nodiscard]] int initialPlace() const noexcept;
     void setInitialPlace(int initialPlace);
 
     // upgradeable property
-    [[nodiscard]] int knifeDamage() const;
+    [[nodiscard]] int knifeDamage() const noexcept;
     void setKnifeDamage(int k);
-    [[nodiscard]] int horseDamage() const;
+    [[nodiscard]] int horseDamage() const noexcept;
     void setHorseDamage(int h);
-    [[nodiscard]] int maxHp() const;
+    [[nodiscard]] int maxHp() const noexcept;
     void setMaxHp(int m);
-    [[nodiscard]] int upgradePoint() const;
+    [[nodiscard]] int upgradePoint() const noexcept;
     void setUpgradePoint(int u);
 
     // calculated property

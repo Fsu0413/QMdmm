@@ -5,6 +5,13 @@
 
 #include <QMutexLocker>
 
+/**
+ * @file qmdmmdebug.h
+ * @brief QMdmm Debug stuff
+ */
+
+#ifndef DOXYGEN
+
 QtMessageHandler QMdmmDebugLogPrivate::qtMessageHandler = nullptr;
 
 QMdmmDebugLogPrivate *qMdmmDebugLogPrivateInstance()
@@ -35,6 +42,14 @@ void qMdmmMessageOutput(QtMsgType type, const QMessageLogContext &context, const
     }
 }
 
+#endif
+
+/**
+ * @brief Set the device where QDebug outputs log to.
+ * @param f The target output device
+ *
+ * By default Qt outputs log to a Qt defined buffer. This changes the buffer to our one, for collecting the log we generates
+ */
 void qMdmmDebugSetDevice(QIODevice *f)
 {
     if (f != nullptr) {

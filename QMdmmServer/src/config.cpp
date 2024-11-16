@@ -62,7 +62,7 @@ AB DEFGHIJ NO Q TUV XYZ
 Config::Config()
 {
     QSettings::setDefaultFormat(QSettings::IniFormat);
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX "/QMdmm"));
+    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
 
     // global configuration -> per-user configuration -> command line

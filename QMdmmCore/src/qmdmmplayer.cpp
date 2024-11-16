@@ -6,17 +6,22 @@
 #include "qmdmmlogic.h"
 #include "qmdmmroom.h"
 
+#ifndef DOXYGEN
+
 QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
     : knife(false)
     , horse(false)
     , hp(room->logicConfiguration().initialMaxHp())
     , place(QMdmmData::Country)
+    , initialPlace(QMdmmData::Country)
     , knifeDamage(room->logicConfiguration().initialKnifeDamage())
     , horseDamage(room->logicConfiguration().initialHorseDamage())
     , maxHp(room->logicConfiguration().initialMaxHp())
     , upgradePoint(0)
 {
 }
+
+#endif
 
 QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
     : QObject(room)
@@ -42,7 +47,7 @@ const QMdmmRoom *QMdmmPlayer::room() const
     return static_cast<const QMdmmRoom *>(parent());
 }
 
-bool QMdmmPlayer::hasKnife() const
+bool QMdmmPlayer::hasKnife() const noexcept
 {
     return d->knife;
 }
@@ -55,7 +60,7 @@ void QMdmmPlayer::setHasKnife(bool k)
     }
 }
 
-bool QMdmmPlayer::hasHorse() const
+bool QMdmmPlayer::hasHorse() const noexcept
 {
     return d->horse;
 }
@@ -68,7 +73,7 @@ void QMdmmPlayer::setHasHorse(bool h)
     }
 }
 
-int QMdmmPlayer::hp() const
+int QMdmmPlayer::hp() const noexcept
 {
     return d->hp;
 }
@@ -95,7 +100,7 @@ void QMdmmPlayer::setHp(int h, bool *kills)
     }
 }
 
-int QMdmmPlayer::place() const
+int QMdmmPlayer::place() const noexcept
 {
     return d->place;
 }
@@ -108,7 +113,7 @@ void QMdmmPlayer::setPlace(int toPlace)
     }
 }
 
-int QMdmmPlayer::initialPlace() const
+int QMdmmPlayer::initialPlace() const noexcept
 {
     return d->initialPlace;
 }
@@ -121,7 +126,7 @@ void QMdmmPlayer::setInitialPlace(int initialPlace)
     }
 }
 
-int QMdmmPlayer::knifeDamage() const
+int QMdmmPlayer::knifeDamage() const noexcept
 {
     return d->knifeDamage;
 }
@@ -134,7 +139,7 @@ void QMdmmPlayer::setKnifeDamage(int k)
     }
 }
 
-int QMdmmPlayer::horseDamage() const
+int QMdmmPlayer::horseDamage() const noexcept
 {
     return d->horseDamage;
 }
@@ -147,7 +152,7 @@ void QMdmmPlayer::setHorseDamage(int h)
     }
 }
 
-int QMdmmPlayer::maxHp() const
+int QMdmmPlayer::maxHp() const noexcept
 {
     return d->maxHp;
 }
@@ -160,7 +165,7 @@ void QMdmmPlayer::setMaxHp(int m)
     }
 }
 
-int QMdmmPlayer::upgradePoint() const
+int QMdmmPlayer::upgradePoint() const noexcept
 {
     return d->upgradePoint;
 }
@@ -223,7 +228,7 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
 
 bool QMdmmPlayer::canMove(int toPlace) const
 {
-    return alive() && QMdmmData::isPlaceAdjecent(place(), toPlace);
+    return alive() && QMdmmData::isPlaceAdjacent(place(), toPlace);
 }
 
 bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
@@ -236,15 +241,15 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
     if (dead() || to->dead())
         return false;
 
-    // one movement should move player to adjecent place only
-    if (!QMdmmData::isPlaceAdjecent(to->place(), toPlace))
+    // one movement should move player to adjacent place only
+    if (!QMdmmData::isPlaceAdjacent(to->place(), toPlace))
         return false;
 
-    // case 1: pull a player in adjecent place to self's place
-    if (QMdmmData::isPlaceAdjecent(place(), to->place()) && toPlace == place())
+    // case 1: pull a player in adjacent place to self's place
+    if (QMdmmData::isPlaceAdjacent(place(), to->place()) && toPlace == place())
         return true;
 
-    // case 2: push a player in same place to adjecent place
+    // case 2: push a player in same place to adjacent place
     if (place() == to->place())
         return true;
 

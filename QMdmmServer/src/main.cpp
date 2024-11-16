@@ -6,6 +6,9 @@
 #include <QMdmmServer>
 
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
 #include <QScopedPointer>
 
 int main(int argc, char *argv[])
@@ -14,6 +17,19 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QStringLiteral("Fsu0413.me"));
     QCoreApplication::setApplicationName(QStringLiteral("QMdmmServer"));
     QCoreApplication::setApplicationVersion(QMdmmGlobal::version().toString());
+
+    QString logDirectory = QStringLiteral(QMDMM_RUNTIME_DATA_PREFIX "/log");
+
+    if (!QDir().mkpath(logDirectory))
+        qFatal("Unable to create log directory %s, exiting.", qPrintable(logDirectory));
+
+    QString logFilePath = QDir(logDirectory).absoluteFilePath(QString::number(QDateTime::currentMSecsSinceEpoch()));
+    QFile logFile(logFilePath);
+
+    if (!logFile.open(QIODevice::WriteOnly))
+        qFatal("Unable to create log file %s, exiting.", qPrintable(logFilePath));
+
+    qMdmmDebugSetDevice(&logFile);
 
     Config config;
 

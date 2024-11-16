@@ -69,23 +69,27 @@ enum PacketType
     TypeInvalid = -1
 };
 
-QMDMMCORE_EXPORT int protocolVersion();
+QMDMMCORE_EXPORT int protocolVersion() noexcept;
 
 } // namespace QMdmmProtocol
 
+#ifndef DOXYGEN
 // Cannot pimpl following class since it inherits QSharedData
 // So put it to header file and inherit QJsonObject, in order not to affect binary compatibility when more data come in
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
+
+// documentation is not needed since it is purely internal to QMdmmPacket
 struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJsonObject
 {
     QMdmmPacketData();
     QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
 
-    QMdmmPacketData(const QJsonObject &ob);
-    QMdmmPacketData &operator=(const QJsonObject &ob);
+    QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
+    QMdmmPacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
 
     QString error;
 };
+#endif
 
 class QMDMMCORE_EXPORT QMdmmPacket final
 {
@@ -100,16 +104,18 @@ public:
     [[nodiscard]] QJsonValue value() const;
 
     [[nodiscard]] QByteArray serialize() const;
-    bool hasError(QString *errorString = nullptr) const;
-
-    static QMdmmPacket fromJson(const QByteArray &serialized, QString *errorString = nullptr);
     [[nodiscard]] operator QByteArray() const
     {
         return serialize();
     }
+    bool hasError(QString *errorString = nullptr) const;
 
+    static QMdmmPacket fromJson(const QByteArray &serialized, QString *errorString = nullptr);
+
+#ifndef DOXYGEN
 private:
     QSharedDataPointer<QMdmmPacketData> d;
+#endif
 };
 
 Q_DECLARE_METATYPE(QMdmmPacket)

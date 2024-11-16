@@ -29,6 +29,8 @@ set(QMDMMCORE_SOURCES
     src/qmdmmdebug.cpp
 )
 
+set(QMDMMCORE_DOC_FILES ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} PARENT_SCOPE)
+
 add_library(QMdmmCore INTERFACE)
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
 if (NOT BUILD_SHARED_LIBS)
@@ -44,6 +46,11 @@ target_compile_definitions(QMdmmCore
 target_include_directories(QMdmmCore
     INTERFACE "${CMAKE_BINARY_DIR}/build/include"
 )
+get_target_property(QMDMMCORE_GENERATED_FILES QMdmmCore SOURCES)
+if (NOT QMDMMCORE_GENERATED_FILES)
+    unset(QMDMMCORE_GENERATED_FILES)
+endif()
+
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html#unicode-support-in-windows
 if (WIN32)
     target_compile_definitions(QMdmmCore
