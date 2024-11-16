@@ -93,14 +93,18 @@ set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_SOURCE_GENERATOR 7Z TGZ TXZ TZST ZIP)
 set(CPACK_SOURCE_IGNORE_FILES
     [[\\.git/]]
-    [[\\.DS_Store/]]
+    [[\\.DS_Store]]
     [[.*~$]]
     [[.*\\.autosave$]]
     [[build/]]
+    [[/\\.FsEnv\\.cmake$]]
+    [[CMakeLists\\.txt\\.user]]
 )
 set(CPACK_RPM_PACKAGE_LICENSE "AGPLv3")
+set(CPACK_PACKAGE_CONTACT "Frank Su <fsu0413@vip.qq.com>")
 
 if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
+    # TODO: add deb package dependencies
     list(APPEND CPACK_GENERATOR RPM DEB)
 endif()
 
