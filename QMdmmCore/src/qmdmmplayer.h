@@ -112,7 +112,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool upgradeHorse();
     bool upgradeMaxHp();
 
-    void prepareForRoundStart(int playerNum);
+    void prepareForRoundStart(int seat);
     void resetUpgrades();
 
 signals:

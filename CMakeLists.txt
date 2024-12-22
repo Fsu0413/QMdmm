@@ -36,6 +36,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN true)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+include(GNUInstallDirs)
 include(AutoGenerateHeader)
 
 # Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
@@ -43,6 +44,7 @@ include(AutoGenerateHeader)
 # set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
 # set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
 # It works in later Qt 6 / 5.15 combinations, but be careful to check which version since they are supported (probably Qt 6.5)
+# TODO: uncomment above when we require Qt 6.5
 
 # find_package Qt6 must be called before Qt5 - QTBUG-97097
 find_package(Qt6 6.2  COMPONENTS Core Network WebSockets)
@@ -67,8 +69,6 @@ if (Qt6_FOUND)
 endif()
 
 # modify the default output location
-
-include(GNUInstallDirs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build/${CMAKE_INSTALL_LIBDIR}")
@@ -90,6 +90,8 @@ add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory l
 
 set(CPACK_GENERATOR 7Z TGZ TXZ TZST ZIP)
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_DEP_COMPONENT_INSTALL ON)
+set(CPACK_RPM_COMPONENT_INSTALL ON)
 set(CPACK_SOURCE_GENERATOR 7Z TGZ TXZ TZST ZIP)
 set(CPACK_SOURCE_IGNORE_FILES
     [[\\.git/]]
@@ -104,7 +106,7 @@ set(CPACK_RPM_PACKAGE_LICENSE "AGPLv3")
 set(CPACK_PACKAGE_CONTACT "Frank Su <fsu0413@vip.qq.com>")
 
 if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
-    # TODO: add deb package dependencies
+    # TODO: add DEB / RPM package dependencies
     list(APPEND CPACK_GENERATOR RPM DEB)
 endif()
 
