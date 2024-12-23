@@ -1,0 +1,32 @@
+
+add_custom_target(QMdmmCore_Test)
+if (BUILD_TESTING)
+    set_target_properties(QMdmmCore_Test PROPERTIES
+        EXCLUDE_FROM_ALL false
+    )
+endif()
+
+function(add_qmdmmcore_test testname)
+    if (Qt6_FOUND)
+        add_executable("tst_qmdmmcore6_${testname}" EXCLUDE_FROM_ALL ${ARGN})
+        add_dependencies(QMdmmCore_Test "tst_qmdmmcore6_${testname}")
+        target_link_libraries("tst_qmdmmcore6_${testname}" PUBLIC QMdmmCore6)
+        if (BUILD_TESTING)
+            target_link_libraries("tst_qmdmmcore6_${testname}" PUBLIC Qt6::Test)
+        endif()
+        set_target_properties("tst_qmdmmcore6_${testname}" PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
+        add_test(NAME "${testname} - Qt6" COMMAND "tst_qmdmmcore6_${testname}" "-o" "-,txt" "-vs")
+    endif()
+    if (Qt5_FOUND)
+        add_executable("tst_qmdmmcore5_${testname}" EXCLUDE_FROM_ALL ${ARGN})
+        add_dependencies(QMdmmCore_Test "tst_qmdmmcore5_${testname}")
+        target_link_libraries("tst_qmdmmcore5_${testname}" PUBLIC QMdmmCore5)
+        if (BUILD_TESTING)
+            target_link_libraries("tst_qmdmmcore5_${testname}" PUBLIC Qt5::Test)
+        endif()
+        set_target_properties("tst_qmdmmcore5_${testname}" PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
+        add_test(NAME "${testname} - Qt5" COMMAND "tst_qmdmmcore5_${testname}" "-o" "-,txt" "-vs")
+    endif()
+endfunction()
+
+add_qmdmmcore_test(qmdmmcore tst_qmdmmcore.cpp)

@@ -307,7 +307,7 @@ QVariantList QMdmmUtilities::intList2VariantList(const QList<int> &list)
 }
 
 /**
- * @brief Convenience function of converting QList<int> to QVariantList
+ * @brief Convenience function of converting QVariantList to QList<int>
  */
 QList<int> QMdmmUtilities::variantList2IntList(const QVariantList &list)
 {
@@ -319,7 +319,7 @@ QList<int> QMdmmUtilities::variantList2IntList(const QVariantList &list)
 }
 
 /**
- * @brief Convenience function of converting QList<int> to QStringList
+ * @brief Convenience function of converting QStringList to QVariantList
  * @note Qt 5 QStringList is not QList<QString> but Qt 6 is. Use parameter type QList<QString> for compatible with Qt 5
  */
 QVariantList QMdmmUtilities::stringList2VariantList(const QList<QString> &list)
@@ -332,9 +332,9 @@ QVariantList QMdmmUtilities::stringList2VariantList(const QList<QString> &list)
 }
 
 /**
- * @brief Convenience function of converting QList<int> to QVariantList
+ * @brief Convenience function of converting QList<int> to QStringList
  */
-QStringList QMdmmUtilities::variantList2StrList(const QVariantList &list)
+QStringList QMdmmUtilities::variantList2StringList(const QVariantList &list)
 {
     QStringList ret;
     ret.reserve(list.length());

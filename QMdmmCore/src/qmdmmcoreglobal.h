@@ -157,7 +157,7 @@ QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
 QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
 QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
 QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
-QMDMMCORE_EXPORT QStringList variantList2StrList(const QVariantList &list);
+QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
 } // namespace QMdmmUtilities
 
 #endif // QMDMMCOREGLOBAL_H

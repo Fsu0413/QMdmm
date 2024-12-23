@@ -33,6 +33,10 @@ set(QMDMMCORE_DOC_FILES ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} PARENT_SCOPE)
 
 add_library(QMdmmCore INTERFACE)
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
+install(FILES ${QMDMMCORE_HEADERS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore"
+    COMPONENT "dev"
+)
 if (NOT BUILD_SHARED_LIBS)
     target_compile_definitions(QMdmmCore
         INTERFACE QMDMM_STATIC
@@ -45,7 +49,16 @@ target_compile_definitions(QMdmmCore
 )
 target_include_directories(QMdmmCore
     INTERFACE "${CMAKE_BINARY_DIR}/build/include"
+              src
 )
+if (NOT MSVC)
+    target_compile_options(QMdmmCore
+        INTERFACE "$<$<CONFIG:Debug>:--coverage>"
+    )
+    target_link_options(QMdmmCore
+        INTERFACE "$<$<CONFIG:Debug>:--coverage>"
+    )
+endif()
 get_target_property(QMDMMCORE_GENERATED_FILES QMdmmCore SOURCES)
 if (NOT QMDMMCORE_GENERATED_FILES)
     unset(QMDMMCORE_GENERATED_FILES)
@@ -65,9 +78,10 @@ if (QMDMM_EXPORT_PRIVATE)
         )
     endif()
     add_library(QMdmmCorePrivate INTERFACE)
-    auto_generate_header_file_for_target_private(QMdmmCore "${QMDMMCORE_PRIVATE_HEADERS}")
-    target_include_directories(QMdmmCorePrivate
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore/private/${QMdmm_VERSION}"
+    target_sources(QMdmmCorePrivate PRIVATE ${QMDMMCORE_PRIVATE_HEADERS})
+    install(FILES ${QMDMMCORE_PRIVATE_HEADERS}
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore/private/${PROJECT_VERSION}"
+        COMPONENT "private-dev"
     )
     target_link_libraries(QMdmmCorePrivate
         INTERFACE QMdmmCore
@@ -78,6 +92,7 @@ if (MSVC)
     target_compile_options(QMdmmCore
         INTERFACE "-W4"
                   "-wd4251"
+                  "-we4596"
     )
 else()
     target_compile_options(QMdmmCore
@@ -109,7 +124,6 @@ if (Qt6_FOUND)
 
     target_include_directories(QMdmmCore6
         INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore"
-        PRIVATE src
     )
 
     target_link_libraries(QMdmmCore6
@@ -161,7 +175,6 @@ if (Qt5_FOUND)
 
     target_include_directories(QMdmmCore5
         INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore"
-        PRIVATE src
     )
 
     target_link_libraries(QMdmmCore5
@@ -189,3 +202,5 @@ if (Qt5_FOUND)
         )
     endif()
 endif()
+
+add_subdirectory(test)
