@@ -47,7 +47,6 @@ if (DEFINED PROJECT_NAME)
             get_filename_component(header_path_absolute "${header_file}" ABSOLUTE)
             auto_generate_header_file_list("${header_path_absolute}" header_generated_file_names)
             get_filename_component(header_file_name "${header_file}" NAME)
-            list(PREPEND header_generated_file_names "${header_file_name}")
             set(header_generated_paths)
             foreach (header_generated_file_name IN LISTS header_generated_file_names)
                 list(APPEND header_generated_paths "${CMAKE_BINARY_DIR}/build/include/${target}/${header_generated_file_name}")
@@ -63,26 +62,6 @@ if (DEFINED PROJECT_NAME)
                 DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
                 OPTIONAL
                 COMPONENT "dev"
-            )
-        endforeach()
-    endfunction()
-
-    function (auto_generate_header_file_for_target_private target header_files)
-        foreach (header_file IN LISTS header_files)
-            get_filename_component(header_path_absolute "${header_file}" ABSOLUTE)
-            get_filename_component(header_file_name "${header_file}" NAME)
-            set(header_generated_path "${CMAKE_BINARY_DIR}/build/include/${target}/private/${PROJECT_VERSION}/${header_file_name}")
-            add_custom_command(OUTPUT ${header_generated_path}
-                               COMMAND "${CMAKE_COMMAND}" -E copy "${header_path_absolute}" "${header_generated_path}"
-                               MAIN_DEPENDENCY "${header_file}"
-                               DEPENDS "${AUTO_GENERATE_HEADER_CMAKE_FILE}"
-                               COMMENT "Copying private header file \"${header_file_name}\"..."
-            )
-            target_sources("${target}Private" PRIVATE "${header_generated_path}")
-            install(FILES "${header_generated_path}"
-                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}/private/${PROJECT_VERSION}"
-                OPTIONAL
-                COMPONENT "private-dev"
             )
         endforeach()
     endfunction()

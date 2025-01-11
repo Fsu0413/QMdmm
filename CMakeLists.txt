@@ -24,6 +24,8 @@ if (BUILD_SHARED_LIBS)
     set(CMAKE_POSITION_INDEPENDENT_CODE true)
 endif()
 
+option(BUILD_TESTING "Build test binaries" true)
+
 option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private classes" false)
 
 if (NOT DEFINED CMAKE_CXX_STANDARD)
@@ -39,6 +41,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
 include(AutoGenerateHeader)
 
+set(QT5_EXTRA_COMPONENTS_NEEDED)
+set(QT6_EXTRA_COMPONENTS_NEEDED)
+
+if (BUILD_TESTING)
+    list(APPEND QT5_EXTRA_COMPONENTS_NEEDED Test)
+    list(APPEND QT6_EXTRA_COMPONENTS_NEEDED Test)
+endif()
+
 # Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
 # There are definitions to disable the versionless targets and functions, but!! But!! BUT!!!!! They DIDN'T WORK in Qt 6.2 / 5.15 combination!!!
 # set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
@@ -47,8 +57,8 @@ include(AutoGenerateHeader)
 # TODO: uncomment above when we require Qt 6.5
 
 # find_package Qt6 must be called before Qt5 - QTBUG-97097
-find_package(Qt6 6.2  COMPONENTS Core Network WebSockets)
-find_package(Qt5 5.15 COMPONENTS Core Network WebSockets)
+find_package(Qt6 6.2  COMPONENTS Core Network WebSockets ${QT6_EXTRA_COMPONENTS_NEEDED})
+find_package(Qt5 5.15 COMPONENTS Core Network WebSockets ${QT5_EXTRA_COMPONENTS_NEEDED})
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))
     message(FATAL_ERROR "at least one of Qt 5 and Qt 6 is needed")
@@ -82,6 +92,8 @@ if (WIN32)
     endif()
 endif()
 
+include(CTest)
+
 add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
@@ -89,7 +101,6 @@ add_subdirectory(QMdmmServer)
 add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory list
 
 set(CPACK_GENERATOR 7Z TGZ TXZ TZST ZIP)
-set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_DEP_COMPONENT_INSTALL ON)
 set(CPACK_RPM_COMPONENT_INSTALL ON)
 set(CPACK_SOURCE_GENERATOR 7Z TGZ TXZ TZST ZIP)

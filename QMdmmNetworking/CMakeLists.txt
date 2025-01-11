@@ -33,11 +33,22 @@ set(QMDMMNETWORKING_DOC_FILES ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURC
 
 add_library(QMdmmNetworking INTERFACE)
 auto_generate_header_file_for_target(QMdmmNetworking "${QMDMMNETWORKING_HEADERS}")
+install(FILES ${QMDMMNETWORKING_HEADERS}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking"
+    COMPONENT "dev"
+)
+target_include_directories(QMdmmNetworking
+    INTERFACE src
+)
 if (QMDMM_EXPORT_PRIVATE)
     add_library(QMdmmNetworkingPrivate INTERFACE)
-    auto_generate_header_file_for_target_private(QMdmmNetworking "${QMDMMNETWORKING_PRIVATE_HEADERS}")
-    target_include_directories(QMdmmNetworkingPrivate
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking/private/${QMdmm_VERSION}"
+    target_sources(QMdmmNetworkingPrivate PRIVATE ${QMDMMNETWORKING_PRIVATE_HEADERS})
+    install(FILES ${QMDMMNETWORKING_PRIVATE_HEADERS}
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking/private/${PROJECT_VERSION}"
+        COMPONENT "private-dev"
+    )
+    target_link_libraries(QMdmmNetworkingPrivate
+        INTERFACE QMdmmNetworking
     )
 endif()
 
@@ -64,7 +75,6 @@ if (Qt6_FOUND)
 
     target_include_directories(QMdmmNetworking6
         INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking"
-        PRIVATE src
     )
 
     target_link_libraries(QMdmmNetworking6
@@ -118,7 +128,6 @@ if (Qt5_FOUND)
 
     target_include_directories(QMdmmNetworking5
         INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking"
-        PRIVATE src
     )
 
     target_link_libraries(QMdmmNetworking5
