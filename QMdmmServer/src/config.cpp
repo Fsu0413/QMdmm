@@ -97,6 +97,16 @@ Config::Config()
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("P"), QStringLiteral("websocket-port")}, {}, QStringLiteral("port")));
 
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("n"), QStringLiteral("players")}, {}, QStringLiteral("2~")));
+
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("2")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("3")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("4")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("5")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("6")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("7")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("8")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("9")}));
+
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("o"), QStringLiteral("timeout")}, {}, QStringLiteral("0,15~")));
 
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("s"), QStringLiteral("slash"), QStringLiteral("knife")}, {}, QStringLiteral("1~")));
@@ -154,6 +164,7 @@ inline std::optional<bool> stringToBool(const QString &value)
         QStringLiteral("0"),
         QStringLiteral("false"),
         QStringLiteral("no"),
+        QStringLiteral("n"),
         QStringLiteral("off"),
         QStringLiteral("disable"),
         QStringLiteral("disabled"),
@@ -162,6 +173,7 @@ inline std::optional<bool> stringToBool(const QString &value)
         QStringLiteral("1"),
         QStringLiteral("true"),
         QStringLiteral("yes"),
+        QStringLiteral("y"),
         QStringLiteral("on"),
         QStringLiteral("enable"),
         QStringLiteral("enabled"),
@@ -250,25 +262,37 @@ inline QString punishHpRoundStrategyToString(QMdmmLogicConfiguration::PunishHpRo
 // NOLINTNEXTLINE(readability-function-cognitive-complexity,readability-function-size)
 void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineParser *parser)
 {
-#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)       \
-    do {                                                                     \
-        QString s;                                                           \
-        bool f = false;                                                      \
-        if (parser->isSet(QStringLiteral(settingName))) {                    \
-            f = true;                                                        \
-            s = parser->value(QStringLiteral(settingName));                  \
-        } else if (userConfig->contains(QStringLiteral(settingName))) {      \
-            f = true;                                                        \
-            s = userConfig->value(QStringLiteral(settingName)).toString();   \
-        } else if (systemConfig->contains(QStringLiteral(settingName))) {    \
-            f = true;                                                        \
-            s = systemConfig->value(QStringLiteral(settingName)).toString(); \
-        }                                                                    \
-        if (f) {                                                             \
-            std::optional<type> v = parserConvert(s);                        \
-            if (v.has_value())                                               \
-                conf.set##ValueName(v.value());                              \
-        }                                                                    \
+#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                  \
+    do {                                                                                \
+        QString s;                                                                      \
+        int f = 0;                                                                      \
+        if (parser->isSet(QStringLiteral(settingName))) {                               \
+            f = 1;                                                                      \
+            s = parser->value(QStringLiteral(settingName));                             \
+        } else if (userConfig->contains(QStringLiteral(settingName))) {                 \
+            f = 2;                                                                      \
+            s = userConfig->value(QStringLiteral(settingName)).toString();              \
+        } else if (systemConfig->contains(QStringLiteral(settingName))) {               \
+            f = 3;                                                                      \
+            s = systemConfig->value(QStringLiteral(settingName)).toString();            \
+        }                                                                               \
+        if (f != 0) {                                                                   \
+            std::optional<type> v = parserConvert(s);                                   \
+            if (v.has_value()) {                                                        \
+                conf.set##ValueName(v.value());                                         \
+            } else {                                                                    \
+                const char *from = nullptr;                                             \
+                if (f == 1)                                                             \
+                    from = "command line";                                              \
+                else if (f == 2)                                                        \
+                    from = "user config file";                                          \
+                else if (f == 3)                                                        \
+                    from = "system config file";                                        \
+                else                                                                    \
+                    from = "unknown config";                                            \
+                qFatal("Config item %s (from %s) can't be parsed.", settingName, from); \
+            }                                                                           \
+        }                                                                               \
     } while (false)
 
     systemConfig->beginGroup(QStringLiteral("server"));
@@ -288,7 +312,41 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
     systemConfig->beginGroup(QStringLiteral("logic"));
     userConfig->beginGroup(QStringLiteral("logic"));
 
-    CONFIG_ITEM(int, logicConfiguration_, "players", stringToInt, PlayerNumPerRoom);
+    {
+        int players = 0;
+
+        // clang-format off
+        static const std::initializer_list<QString> shortForms {
+            QStringLiteral("2"),
+            QStringLiteral("3"),
+            QStringLiteral("4"),
+            QStringLiteral("5"),
+            QStringLiteral("6"),
+            QStringLiteral("7"),
+            QStringLiteral("8"),
+            QStringLiteral("9"),
+        };
+        // clang-format on
+
+        for (size_t i = 0; i < shortForms.size(); ++i) {
+            if (parser->isSet(std::data(shortForms)[i])) {
+                if (players != 0)
+                    players = i + 2;
+                else
+                    qFatal("-%d can't be specified alongwith -%d", (int)(i + 2), players);
+            }
+        }
+
+        if (players != 0) {
+            if (parser->isSet(QStringLiteral("players")))
+                qFatal("-%d can't be specified alongwith -n / --players", players);
+
+            logicConfiguration_.setPlayerNumPerRoom(players);
+        } else {
+            CONFIG_ITEM(int, logicConfiguration_, "players", stringToInt, PlayerNumPerRoom);
+        }
+    }
+
     CONFIG_ITEM(int, logicConfiguration_, "timeout", stringToInt, RequestTimeout);
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", stringToInt, MaximumKnifeDamage);
@@ -344,6 +402,8 @@ void Config::save_(QSettings *config)
     CONFIG_ITEM(bool, logicConfiguration_, "zero-hp-as-dead", boolToString, zeroHpAsDead);
     CONFIG_ITEM(bool, logicConfiguration_, "enable-let-move", boolToString, enableLetMove);
     CONFIG_ITEM(bool, logicConfiguration_, "can-buy-only-in-initial-city", boolToString, canBuyOnlyInInitialCity);
+
+    config->endGroup();
 
 #undef CONFIG_ITEM
 

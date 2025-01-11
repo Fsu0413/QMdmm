@@ -404,17 +404,14 @@ void QMdmmLogicPrivate::upgrade()
  */
 QMdmmLogic::QMdmmLogic(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmLogicPrivate(logicConfiguration, this))
+    , d(std::make_unique<QMdmmLogicPrivate>(logicConfiguration, this))
 {
 }
 
 /**
  * @brief dtor.
  */
-QMdmmLogic::~QMdmmLogic()
-{
-    delete d;
-}
+QMdmmLogic::~QMdmmLogic() = default;
 
 /**
  * @brief Return current state of the logic.

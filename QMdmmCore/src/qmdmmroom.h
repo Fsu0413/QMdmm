@@ -122,7 +122,7 @@ signals:
     void playerRemoved(const QString &playerName, QPrivateSignal);
 
 private:
-    QMdmmRoomPrivate *const d;
+    const std::unique_ptr<QMdmmRoomPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmRoom)
 };
 

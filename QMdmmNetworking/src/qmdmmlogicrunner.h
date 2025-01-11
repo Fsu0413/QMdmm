@@ -41,6 +41,7 @@ signals: // NOLINT(readability-redundant-access-specifiers)
 
 private:
     friend class QMdmmLogicRunnerPrivate;
+    // QMdmmLogicRunnerPrivate is QObject. QPointer can't be used since it is incomplete here
     QMdmmLogicRunnerPrivate *const d;
     Q_DISABLE_COPY_MOVE(QMdmmLogicRunner);
 };

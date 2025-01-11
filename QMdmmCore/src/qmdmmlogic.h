@@ -57,7 +57,7 @@ signals: // NOLINT(readability-redundant-access-specifiers)
 
 private:
     friend struct QMdmmLogicPrivate;
-    QMdmmLogicPrivate *const d;
+    const std::unique_ptr<QMdmmLogicPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmLogic);
 };
 

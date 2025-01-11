@@ -55,6 +55,7 @@ private:
     // non-const d-ptr.
     // QMdmmSocketPrivate is pv class and its internal implementation varies by socket type.
     // function connectToHost alters this d-ptr with proper implementation.
+    // QMdmmSocketPrivate is QObject. QPointer can't be used since it is incomplete here
     QMdmmSocketPrivate *d;
     Q_DISABLE_COPY_MOVE(QMdmmSocket);
 };

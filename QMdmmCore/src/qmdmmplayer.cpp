@@ -108,7 +108,7 @@ QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
  */
 QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
     : QObject(room)
-    , d(new QMdmmPlayerPrivate(room))
+    , d(std::make_unique<QMdmmPlayerPrivate>(room))
 {
     setObjectName(name);
 }
@@ -116,10 +116,7 @@ QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
 /**
  * @brief dtor
  */
-QMdmmPlayer::~QMdmmPlayer()
-{
-    delete d;
-}
+QMdmmPlayer::~QMdmmPlayer() = default;
 
 /**
  * @brief Get the room the player is in

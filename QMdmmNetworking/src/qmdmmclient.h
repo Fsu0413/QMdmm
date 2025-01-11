@@ -89,6 +89,7 @@ signals:
 
 private:
     friend class QMdmmClientPrivate;
+    // QMdmmClientPrivate is QObject. QPointer can't be used since it is incomplete here
     QMdmmClientPrivate *const d;
     Q_DISABLE_COPY_MOVE(QMdmmClient);
 };

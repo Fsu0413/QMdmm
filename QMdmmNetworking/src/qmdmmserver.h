@@ -68,6 +68,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool listen();
 
 private:
+    // QMdmmServerPrivate is QObject. QPointer can't be used since it is incomplete here
     QMdmmServerPrivate *const d;
     Q_DISABLE_COPY_MOVE(QMdmmServer);
 };

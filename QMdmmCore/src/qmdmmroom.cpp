@@ -423,7 +423,7 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
  */
 QMdmmRoom::QMdmmRoom(QMdmmLogicConfiguration logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmRoomPrivate)
+    , d(std::make_unique<QMdmmRoomPrivate>())
 {
     d->logicConfiguration = std::move(logicConfiguration);
 }
@@ -431,10 +431,7 @@ QMdmmRoom::QMdmmRoom(QMdmmLogicConfiguration logicConfiguration, QObject *parent
 /**
  * @brief dtor.
  */
-QMdmmRoom::~QMdmmRoom()
-{
-    delete d;
-}
+QMdmmRoom::~QMdmmRoom() = default;
 
 /**
  * @brief Get the configuration of current logic

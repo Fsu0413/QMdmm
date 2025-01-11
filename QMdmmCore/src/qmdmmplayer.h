@@ -133,7 +133,7 @@ signals:
     void die(QPrivateSignal);
 
 private:
-    QMdmmPlayerPrivate *const d;
+    const std::unique_ptr<QMdmmPlayerPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmPlayer)
 };
 

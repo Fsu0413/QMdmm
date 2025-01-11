@@ -14,6 +14,7 @@
 #include <QtGlobal>
 
 #include <functional>
+#include <memory>
 #include <type_traits>
 
 #if 0

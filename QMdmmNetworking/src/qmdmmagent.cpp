@@ -5,12 +5,11 @@
 
 QMdmmAgent::QMdmmAgent(const QString &name, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmAgentPrivate)
+    , d(std::make_unique<QMdmmAgentPrivate>())
 {
     setObjectName(name);
 }
 
-// no need to delete d
 QMdmmAgent::~QMdmmAgent() = default;
 
 QString QMdmmAgent::screenName() const

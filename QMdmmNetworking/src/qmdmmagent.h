@@ -37,7 +37,7 @@ signals:
     void stateChanged(QMdmmData::AgentState, QPrivateSignal);
 
 private:
-    QMdmmAgentPrivate *const d;
+    const std::unique_ptr<QMdmmAgentPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmAgent);
 };
 
