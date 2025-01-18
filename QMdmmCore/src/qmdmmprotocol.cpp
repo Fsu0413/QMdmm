@@ -242,7 +242,8 @@ QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::
 }
 
 QMdmmPacketData::QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)))
-    : QJsonObject(ob)
+    : QSharedData()
+    , QJsonObject(ob)
 {
 }
 
@@ -305,7 +306,11 @@ QMdmmProtocol::PacketType QMdmmPacket::type() const
  */
 QMdmmProtocol::RequestId QMdmmPacket::requestId() const
 {
-    return static_cast<QMdmmProtocol::RequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
+    QMdmmProtocol::PacketType t = type();
+    if (t == QMdmmProtocol::TypeRequest || t == QMdmmProtocol::TypeReply)
+        return static_cast<QMdmmProtocol::RequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
+
+    return QMdmmProtocol::RequestInvalid;
 }
 
 /**
@@ -314,7 +319,11 @@ QMdmmProtocol::RequestId QMdmmPacket::requestId() const
  */
 QMdmmProtocol::NotifyId QMdmmPacket::notifyId() const
 {
-    return static_cast<QMdmmProtocol::NotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
+    QMdmmProtocol::PacketType t = type();
+    if (t == QMdmmProtocol::TypeNotify)
+        return static_cast<QMdmmProtocol::NotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
+
+    return QMdmmProtocol::NotifyInvalid;
 }
 
 /**
@@ -334,6 +343,7 @@ QJsonValue QMdmmPacket::value() const
  */
 QByteArray QMdmmPacket::serialize() const
 {
+    // TODO: abnormal case
     QJsonDocument doc(*d);
     return doc.toJson(QJsonDocument::Compact).append('\n');
 }

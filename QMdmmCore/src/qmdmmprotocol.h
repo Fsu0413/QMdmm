@@ -62,11 +62,11 @@ enum NotifyId
 
 enum PacketType
 {
+    TypeInvalid = 0,
+
     TypeRequest,
     TypeReply,
     TypeNotify,
-
-    TypeInvalid = -1
 };
 
 QMDMMCORE_EXPORT int protocolVersion() noexcept;

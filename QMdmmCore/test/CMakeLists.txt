@@ -30,3 +30,8 @@ function(add_qmdmmcore_test testname)
 endfunction()
 
 add_qmdmmcore_test(qmdmmcore tst_qmdmmcore.cpp)
+add_qmdmmcore_test(qmdmmlogic tst_qmdmmlogic.cpp)
+add_qmdmmcore_test(qmdmmplayer tst_qmdmmplayer.cpp)
+add_qmdmmcore_test(qmdmmroom tst_qmdmmroom.cpp)
+add_qmdmmcore_test(qmdmmprotocol tst_qmdmmprotocol.cpp)
+# add_qmdmmcore_test(qmdmmdebug tst_qmdmmdebug.cpp)

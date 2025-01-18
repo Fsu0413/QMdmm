@@ -11,6 +11,8 @@ struct QMdmmLogicConfiguration;
 
 struct QMdmmLogicPrivate;
 
+class tst_QMdmmLogic;
+
 class QMDMMCORE_EXPORT QMdmmLogic final : public QObject
 {
     Q_OBJECT
@@ -59,6 +61,8 @@ private:
     friend struct QMdmmLogicPrivate;
     const std::unique_ptr<QMdmmLogicPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmLogic);
+
+    friend class tst_QMdmmLogic;
 };
 
 #endif
