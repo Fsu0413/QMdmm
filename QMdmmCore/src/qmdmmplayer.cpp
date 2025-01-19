@@ -699,12 +699,13 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-ma
 
 /**
  * @brief Action: Do nothing
- * @return @c true (always succeed)
+ * @return @c true if succeed, @c false if not
  */
 bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought to be not const
 {
-    return true;
+    return alive();
 }
+
 /**
  * @brief upgrade knife damage by one point
  * @return @c true if succeed, @c false if not

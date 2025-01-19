@@ -25,8 +25,8 @@ class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
     Q_PROPERTY(int upgradePoint READ upgradePoint WRITE setUpgradePoint NOTIFY upgradePointChanged DESIGNABLE false FINAL)
 
     // Not-stored properties (i.e. calculated one)
-    Q_PROPERTY(bool dead READ dead NOTIFY die STORED false DESIGNABLE false FINAL)
-    Q_PROPERTY(bool alive READ alive NOTIFY die STORED false DESIGNABLE false FINAL)
+    Q_PROPERTY(bool dead READ dead STORED false DESIGNABLE false FINAL)
+    Q_PROPERTY(bool alive READ alive STORED false DESIGNABLE false FINAL)
 
 public:
     explicit QMdmmPlayer(const QString &name, QMdmmRoom *room /* or parent */);
