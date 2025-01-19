@@ -20,6 +20,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
     int maxHp;
 
     int upgradePoint;
+
+    static void applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int damagePoint, QMdmmData::DamageReason reason);
 };
 
 #endif

@@ -139,7 +139,7 @@ void QMdmmSocketPrivateQTcpSocket::setupSocket()
 void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmPacket packet)
 {
     if (socket != nullptr) {
-        socket->write(packet);
+        socket->write(QByteArray(packet).append("\n"));
         socket->flush();
     }
 }
@@ -207,7 +207,7 @@ void QMdmmSocketPrivateQLocalSocket::setupSocket()
 void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmPacket packet)
 {
     if (socket != nullptr) {
-        socket->write(packet);
+        socket->write(QByteArray(packet).append("\n"));
         socket->flush();
     }
 }

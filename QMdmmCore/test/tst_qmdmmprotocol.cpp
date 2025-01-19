@@ -121,8 +121,8 @@ private slots:
             QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {1});
             QByteArray arr = p;
 
-            QByteArray d = R"json({"notifyId":0,"requestId":1,"type":1,"value":1}
-)json";
+            // The Json object created by Qt is sorted by key
+            QByteArray d = R"json({"notifyId":0,"requestId":1,"type":1,"value":1})json";
 
             QCOMPARE(arr, d);
         }

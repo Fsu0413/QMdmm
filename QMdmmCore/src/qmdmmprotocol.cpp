@@ -345,7 +345,7 @@ QByteArray QMdmmPacket::serialize() const
 {
     // TODO: abnormal case
     QJsonDocument doc(*d);
-    return doc.toJson(QJsonDocument::Compact).append('\n');
+    return doc.toJson(QJsonDocument::Compact);
 }
 
 /**

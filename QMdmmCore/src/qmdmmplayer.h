@@ -104,9 +104,6 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     bool doNothing();
 
-    // action runs
-    void applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason);
-
     // upgrades
     bool upgradeKnife();
     bool upgradeHorse();
@@ -133,6 +130,7 @@ signals:
     void die(QPrivateSignal);
 
 private:
+    friend struct QMdmmPlayerPrivate;
     const std::unique_ptr<QMdmmPlayerPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmPlayer)
 };

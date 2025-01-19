@@ -21,6 +21,20 @@ QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
 {
 }
 
+void QMdmmPlayerPrivate::applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int damagePoint, QMdmmData::DamageReason reason)
+{
+    Q_ASSERT(from->room() == to->room());
+
+    bool kills = false;
+
+    to->setHp(to->hp() - damagePoint, &kills);
+    emit to->damaged(from, damagePoint, reason, QMdmmPlayer::QPrivateSignal());
+    emit to->damaged(from->objectName(), damagePoint, reason, QMdmmPlayer::QPrivateSignal());
+
+    if (kills)
+        from->setUpgradePoint(from->upgradePoint() + 1);
+}
+
 #endif
 
 /**
@@ -105,6 +119,8 @@ QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
  * @brief ctor.
  * @param name The internal name of the player
  * @param room The room the player is in (or parent as QObject hierarchy)
+ *
+ * Note: This ctor is meant to be called from Room
  */
 QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
     : QObject(room)
@@ -115,6 +131,8 @@ QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
 
 /**
  * @brief dtor
+ *
+ * Note: This dtor is meant to be called from Room
  */
 QMdmmPlayer::~QMdmmPlayer() = default;
 
@@ -582,7 +600,7 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
     if (!canSlash(to))
         return false;
 
-    to->applyDamage(this, knifeDamage(), QMdmmData::Slashed);
+    QMdmmPlayerPrivate::applyDamage(this, to, knifeDamage(), QMdmmData::Slashed);
 
     if (place() != QMdmmData::Country) {
         int punishHpModifier = room()->logicConfiguration().punishHpModifier();
@@ -608,7 +626,7 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
             }
 
             if (punishedHp > 0)
-                applyDamage(to, punishedHp, QMdmmData::HpPunished);
+                QMdmmPlayerPrivate::applyDamage(to, this, punishedHp, QMdmmData::HpPunished);
         }
     }
 
@@ -629,7 +647,7 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
     if (!canKick(to))
         return false;
 
-    to->applyDamage(this, horseDamage(), QMdmmData::Kicked);
+    QMdmmPlayerPrivate::applyDamage(this, to, horseDamage(), QMdmmData::Kicked);
 
     if (!to->dead())
         to->setPlace(QMdmmData::Country);
@@ -687,29 +705,6 @@ bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const):
 {
     return true;
 }
-
-/**
- * @brief apply damage for various reason during action
- * @param from the source player of damage
- * @param damagePoint the damage point of the damage
- * @param reason the reason of damage
- *
- * @note signal @c die() will be emitted earlier than @c damaged()
- */
-void QMdmmPlayer::applyDamage(QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason)
-{
-    Q_ASSERT(room() == from->room());
-
-    bool kills = false;
-
-    setHp(hp() - damagePoint, &kills);
-    emit damaged(from, damagePoint, reason, QPrivateSignal());
-    emit damaged(from->objectName(), damagePoint, reason, QPrivateSignal());
-
-    if (kills)
-        from->setUpgradePoint(from->upgradePoint() + 1);
-}
-
 /**
  * @brief upgrade knife damage by one point
  * @return @c true if succeed, @c false if not
