@@ -29,6 +29,12 @@ set(QMDMMCORE_SOURCES
     src/qmdmmdebug.cpp
 )
 
+set(QMDMMCORE_PRIVATE_SOURCES
+    src/qmdmmdebug_p.cpp
+    src/qmdmmlogic_p.cpp
+    src/qmdmmplayer_p.cpp
+)
+
 set(QMDMMCORE_DOC_FILES ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} PARENT_SCOPE)
 
 add_library(QMdmmCore INTERFACE)
@@ -102,7 +108,7 @@ else()
 endif()
 
 if (Qt6_FOUND)
-    qt6_add_library(QMdmmCore6 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS})
+    qt6_add_library(QMdmmCore6 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS} ${QMDMMCORE_PRIVATE_SOURCES})
     add_library(QMdmm6::Core ALIAS QMdmmCore6)
 
     set_target_properties(QMdmmCore6 PROPERTIES
@@ -153,7 +159,7 @@ if (Qt6_FOUND)
 endif()
 
 if (Qt5_FOUND)
-    add_library(QMdmmCore5 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS})
+    add_library(QMdmmCore5 ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} ${QMDMMCORE_PRIVATE_HEADERS} ${QMDMMCORE_PRIVATE_SOURCES})
     add_library(QMdmm5::Core ALIAS QMdmmCore5)
 
     set_target_properties(QMdmmCore5 PROPERTIES
