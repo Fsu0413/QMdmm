@@ -660,7 +660,7 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
  * @param toPlace the target place
  * @return @c true if succeed, @c false if not
  *
- * Not to confuse with @c setPlace() .
+ * Not to confuse with @c setPlace() where it sets the place forcefully. This function does checks before place is set.
  *
  * @sa @c canMove()
  */

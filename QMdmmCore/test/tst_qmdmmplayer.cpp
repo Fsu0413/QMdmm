@@ -2,6 +2,7 @@
 #include <QMdmmCore/QMdmmPlayer>
 #include <QMdmmCore/QMdmmRoom>
 
+#include <QPointer>
 #include <QSignalSpy>
 #include <QTest>
 
@@ -10,8 +11,8 @@ class tst_QMdmmPlayer : public QObject
     Q_OBJECT
 
     std::unique_ptr<QMdmmRoom> r;
-    QMdmmPlayer *p1;
-    QMdmmPlayer *p2;
+    QPointer<QMdmmPlayer> p1;
+    QPointer<QMdmmPlayer> p2;
 
 private slots:
     // https://doc.qt.io/qt-5/qtest-overview.html#creating-a-test
@@ -185,7 +186,6 @@ private slots:
         QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
         conf.setZeroHpAsDead(false);
 
-        p1 = nullptr;
         r.reset(new QMdmmRoom(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
@@ -449,6 +449,332 @@ private slots:
 
             QCOMPARE(s.length(), 0);
             QCOMPARE(p1->upgradePoint(), 0);
+        }
+    }
+
+    void QMdmmPlayercanBuyKnife()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: initial state - can buy knife in any city
+        {
+            QVERIFY(p1->canBuyKnife());
+            p1->setPlace(p2->place());
+            QVERIFY(p1->canBuyKnife());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: dead player - cannot buy knife
+        {
+            p1->setHp(-1);
+            QVERIFY(!p1->canBuyKnife());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: has knife - cannot buy knife
+        {
+            p1->setHasKnife(true);
+            QVERIFY(!p1->canBuyKnife());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: in country - cannot buy knife
+        {
+            p1->setPlace(QMdmmData::Country);
+            QVERIFY(!p1->canBuyKnife());
+        }
+
+        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        conf.setCanBuyOnlyInInitialCity(true);
+
+        r.reset(new QMdmmRoom(conf, this));
+
+        p1 = r->addPlayer(QStringLiteral("test1"));
+        p2 = r->addPlayer(QStringLiteral("test2"));
+        r->prepareForRoundStart();
+
+        // case 5: canBuyOnlyInInitialCity = true
+        {
+            p1->setPlace(p2->place());
+            QVERIFY(!p1->canBuyKnife());
+        }
+    }
+
+    void QMdmmPlayercanBuyHorse()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: initial state - can buy knife in any city
+        {
+            QVERIFY(p1->canBuyHorse());
+            p1->setPlace(p2->place());
+            QVERIFY(p1->canBuyHorse());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: dead player - cannot buy knife
+        {
+            p1->setHp(-1);
+            QVERIFY(!p1->canBuyHorse());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: has knife - cannot buy knife
+        {
+            p1->setHasHorse(true);
+            QVERIFY(!p1->canBuyHorse());
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: in country - cannot buy knife
+        {
+            p1->setPlace(QMdmmData::Country);
+            QVERIFY(!p1->canBuyHorse());
+        }
+
+        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        conf.setCanBuyOnlyInInitialCity(true);
+
+        r.reset(new QMdmmRoom(conf, this));
+
+        p1 = r->addPlayer(QStringLiteral("test1"));
+        p2 = r->addPlayer(QStringLiteral("test2"));
+        r->prepareForRoundStart();
+
+        // case 5: canBuyOnlyInInitialCity = true
+        {
+            p1->setPlace(p2->place());
+            QVERIFY(!p1->canBuyHorse());
+        }
+    }
+
+    void QMdmmPlayercanSlash()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: can't slash if place is different
+        {
+            p1->setHasKnife(true);
+
+            QVERIFY(!p1->canSlash(p2));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: can't slash without knife
+        {
+            p1->setPlace(p2->place());
+
+            QVERIFY(!p1->canSlash(p2));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: dead player can't slash, can't slash dead player
+        {
+            p1->setHasKnife(true);
+            p1->setPlace(p2->place());
+            p2->setHp(-1);
+
+            QVERIFY(!p1->canSlash(p2));
+            QVERIFY(!p2->canSlash(p1));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: can't slash himself / herself
+        {
+            p1->setHasKnife(true);
+
+            QVERIFY(!p1->canSlash(p1));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 5: can slash with knife, both healthy state, and same place
+        {
+            p1->setHasKnife(true);
+            p1->setPlace(p2->place());
+
+            QVERIFY(p1->canSlash(p2));
+        }
+    }
+
+    void QMdmmPlayercanKick()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: can't kick if place is different
+        {
+            p1->setHasHorse(true);
+
+            QVERIFY(!p1->canKick(p2));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: can't kick without horse
+        {
+            p1->setPlace(p2->place());
+
+            QVERIFY(!p1->canKick(p2));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: dead player can't kick, can't kick dead player
+        {
+            p1->setHasHorse(true);
+            p1->setPlace(p2->place());
+            p2->setHp(-1);
+
+            QVERIFY(!p1->canKick(p2));
+            QVERIFY(!p2->canKick(p1));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: can't kick himself / herself
+        {
+            p1->setHasHorse(true);
+
+            QVERIFY(!p1->canKick(p1));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 5: can kick with horse, both healthy state, and same place in city
+        {
+            p1->setHasHorse(true);
+            p1->setPlace(p2->place());
+
+            QVERIFY(p1->canKick(p2));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 6: can't kick in country
+        {
+            p1->setHasHorse(true);
+            p1->setPlace(QMdmmData::Country);
+            p2->setPlace(QMdmmData::Country);
+
+            QVERIFY(!p1->canKick(p2));
+        }
+    }
+
+    void QMdmmPlayercanMove()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: can move to country when in city
+        {
+            QVERIFY(p1->canMove(QMdmmData::Country));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: can't move to another city when in a city
+        {
+            QVERIFY(!p1->canMove(p2->place()));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: can move to any city when in a country
+        {
+            p1->setPlace(QMdmmData::Country);
+
+            QVERIFY(p1->canMove(p1->initialPlace()));
+            QVERIFY(p1->canMove(p2->place()));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: dead player can't move
+        {
+            p1->setHp(-1);
+            QVERIFY(!p1->canMove(QMdmmData::Country));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 5: can't move to current place
+        {
+            QVERIFY(!p1->canMove(p1->place()));
+        }
+    }
+
+    void QMdmmPlayercanLetMove()
+    {
+        r->prepareForRoundStart();
+
+        // coverage for this == to
+        {
+            QVERIFY(p1->canLetMove(p1, QMdmmData::Country));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 1: dead players can't be push / pull to / from
+        {
+            p1->setPlace(p2->place());
+            p2->setHp(-1);
+
+            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p2->canLetMove(p1, QMdmmData::Country));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: push stuff - if p1 and p2 place is same
+        {
+            p1->setPlace(p2->place());
+
+            QVERIFY(p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
+            QVERIFY(!p1->canLetMove(p2, p1->initialPlace()));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: pull stuff - if p1 and p2 place is adjacent
+        {
+            p2->setPlace(QMdmmData::Country);
+            QVERIFY(p1->canLetMove(p2, p1->place()));
+            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
+        }
+
+        r->prepareForRoundStart();
+
+        // case 4: ??? - if p1 and p2 place is not same nor adjacent
+        {
+            QVERIFY(!p1->canLetMove(p2, p1->place()));
+            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
+        }
+
+        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        conf.setEnableLetMove(false);
+
+        r.reset(new QMdmmRoom(conf, this));
+
+        p1 = r->addPlayer(QStringLiteral("test1"));
+        p2 = r->addPlayer(QStringLiteral("test2"));
+        r->prepareForRoundStart();
+
+        // case 5: disabled let move
+        {
+            p1->setPlace(p2->place());
+
+            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
         }
     }
 };
