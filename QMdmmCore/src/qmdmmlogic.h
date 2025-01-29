@@ -7,7 +7,7 @@
 
 #include <QObject>
 
-struct QMdmmLogicConfiguration;
+class QMdmmLogicConfiguration;
 
 struct QMdmmLogicPrivate;
 
@@ -57,12 +57,14 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
     void gameOver(const QStringList &playerNames, QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     friend struct QMdmmLogicPrivate;
     const std::unique_ptr<QMdmmLogicPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmLogic);
 
     friend class tst_QMdmmLogic;
+#endif
 };
 
 #endif

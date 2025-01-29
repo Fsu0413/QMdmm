@@ -292,7 +292,7 @@
  * In both versions one can slash only if knife is bought and kick only if horse is bought. <br />
  * In both versions one can only slash / kick other one when they are at same place. <br />
  * In both versions one can kick other one in city, and the kicked one will be force moved to country. <br />
- * In both versions one can only move to adjacent place at a time. Different cities are not adjacent, while country is adjacent to each city. <br />
+ * In both versions one can only move to adjacent place at a time. Different cities are not adjacent, while country is adjacent to every city. <br />
  *
  * Version 1 (Legacy): initial 7/1/3 mh/kd/hd, maximum 7/3/5 mh/kd/hd (Yeah, no maxHp upgrade). One with zero HP is still alive. No "Let move"s, no punish HP. <br />
  * This is the version I had experienced in primary school. <br />
@@ -320,6 +320,35 @@ const QMdmmLogicConfiguration &QMdmmLogicConfiguration::defaults()
         qMakePair(QStringLiteral("punishHpRoundStrategy"), static_cast<int>(RoundToNearest45)),
         qMakePair(QStringLiteral("zeroHpAsDead"), true),
         qMakePair(QStringLiteral("enableLetMove"), true),
+        qMakePair(QStringLiteral("canBuyOnlyInInitialCity"), false),
+    };
+    // clang-format on
+
+    return defaultInstance;
+}
+
+/**
+ * @brief Get Version 1 configuration
+ * @return Version 1 configuration
+ *
+ * @sa @c QMdmmLogicConfiguration::defaults()
+ */
+const QMdmmLogicConfiguration &QMdmmLogicConfiguration::v1()
+{
+    // clang-format off
+    static const QMdmmLogicConfiguration defaultInstance {
+        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
+        qMakePair(QStringLiteral("requestTimeout"), 20),
+        qMakePair(QStringLiteral("initialKnifeDamage"), 1),
+        qMakePair(QStringLiteral("maximumKnifeDamage"), 3),
+        qMakePair(QStringLiteral("initialHorseDamage"), 3),
+        qMakePair(QStringLiteral("maximumHorseDamage"), 5),
+        qMakePair(QStringLiteral("initialMaxHp"), 7),
+        qMakePair(QStringLiteral("maximumMaxHp"), 7),
+        qMakePair(QStringLiteral("punishHpModifier"), 0),
+        qMakePair(QStringLiteral("punishHpRoundStrategy"), static_cast<int>(RoundToNearest45)),
+        qMakePair(QStringLiteral("zeroHpAsDead"), false),
+        qMakePair(QStringLiteral("enableLetMove"), false),
         qMakePair(QStringLiteral("canBuyOnlyInInitialCity"), false),
     };
     // clang-format on

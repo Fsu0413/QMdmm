@@ -9,7 +9,7 @@
 
 class QMdmmAgent;
 class QMdmmSocket;
-struct QMdmmLogicConfiguration;
+class QMdmmLogicConfiguration;
 
 // for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.

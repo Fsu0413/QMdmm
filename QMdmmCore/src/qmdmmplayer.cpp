@@ -618,8 +618,11 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
 
     QMdmmPlayerPrivate::applyDamage(this, to, horseDamage(), QMdmmData::Kicked);
 
-    if (!to->dead())
+    if (!to->dead()) {
+        // bypass the canMove check, directly set place.
+        // Since it is effect of the kick action
         to->setPlace(QMdmmData::Country);
+    }
 
     return true;
 }

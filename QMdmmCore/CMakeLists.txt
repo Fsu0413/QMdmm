@@ -64,6 +64,19 @@ if (NOT MSVC)
     target_link_options(QMdmmCore
         INTERFACE "$<$<CONFIG:Debug>:--coverage>"
     )
+else()
+    if ( ( Debug IN LISTS CMAKE_CONFIGURATION_TYPES ) OR ( CMAKE_BUILD_TYPE STREQUAL Debug ) )
+        message(AUTHOR_WARNING "Coverage generation is not supported in MSVC")
+    endif()
+endif()
+if (NOT MSVC)
+    target_compile_options(QMdmmCore
+        INTERFACE -Wall -Wextra
+    )
+else()
+    target_compile_options(QMdmmCore
+        INTERFACE -W4 -wd4251
+    )
 endif()
 get_target_property(QMDMMCORE_GENERATED_FILES QMdmmCore SOURCES)
 if (NOT QMDMMCORE_GENERATED_FILES)

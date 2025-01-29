@@ -28,9 +28,8 @@ option(BUILD_TESTING "Build test binaries" true)
 
 option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private classes" false)
 
-if (NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)

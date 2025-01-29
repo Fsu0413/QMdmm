@@ -129,10 +129,12 @@ signals:
     void damaged(const QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason, QPrivateSignal);
     void die(QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     friend struct QMdmmPlayerPrivate;
     const std::unique_ptr<QMdmmPlayerPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmPlayer)
+#endif
 };
 
 #endif // QMDMMPLAYER_H

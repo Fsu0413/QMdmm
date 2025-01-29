@@ -12,7 +12,7 @@
 class QMdmmPlayer;
 class QMdmmLogic;
 
-struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
+class QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
 {
     Q_GADGET
     Q_PROPERTY(int playerNumPerRoom READ playerNumPerRoom WRITE setPlayerNumPerRoom DESIGNABLE false FINAL)
@@ -31,6 +31,7 @@ struct QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
 
 public:
     static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &defaults();
+    static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &v1();
 
     enum PunishHpRoundStrategy
     {

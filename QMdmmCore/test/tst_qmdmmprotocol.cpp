@@ -195,6 +195,15 @@ private slots:
             }
         }
     }
+
+    void QMdmmPacketQ_DECLARE_METATYPE()
+    {
+        // coverage for Q_DECLARE_METATYPE
+
+        QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {});
+        QVariant v = QVariant::fromValue<QMdmmPacket>(p);
+        QCOMPARE(v.value<QMdmmPacket>().serialize(), p.serialize());
+    }
 };
 
 QTEST_GUILESS_MAIN(tst_QMdmmProtocol)
