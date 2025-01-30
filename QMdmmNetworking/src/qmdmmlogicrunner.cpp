@@ -227,7 +227,7 @@ void QMdmmServerAgentPrivate::replyUpgrade(const QJsonValue &value)
 
 void QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth()
 {
-    replyStoneScissorsCloth(static_cast<int>(QRandomGenerator::global()->generate() % 3));
+    emit p->sscReply(objectName(), static_cast<QMdmmData::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
 }
 
 void QMdmmServerAgentPrivate::defaultReplyActionOrder()
@@ -235,26 +235,27 @@ void QMdmmServerAgentPrivate::defaultReplyActionOrder()
     QJsonObject ob = currentRequestValue.toObject();
     QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
     int num = ob.value(QStringLiteral("selectionNum")).toInt();
-    QJsonArray rep;
+    QList<int> ao;
+    ao.reserve(num);
     while ((num--) != 0)
-        rep.append(arr.takeAt(0));
-    replyActionOrder(rep);
+        ao.append(arr.takeAt(0).toInt());
+
+    emit p->actionOrderReply(objectName(), ao);
 }
 
 void QMdmmServerAgentPrivate::defaultReplyAction()
 {
-    QJsonObject ob;
-    ob.insert(QStringLiteral("action"), static_cast<int>(QMdmmData::DoNothing));
-    replyAction(ob);
+    emit p->actionReply(objectName(), QMdmmData::DoNothing, {}, 0);
 }
 
 void QMdmmServerAgentPrivate::defaultReplyUpgrade()
 {
     int times = currentRequestValue.toInt(1);
-    QJsonArray rep;
+    QList<QMdmmData::UpgradeItem> ups;
+    ups.reserve(times);
     while ((times--) != 0)
-        rep.append(static_cast<int>(QMdmmData::UpgradeMaxHp));
-    replyUpgrade(rep);
+        ups << QMdmmData::UpgradeMaxHp;
+    emit p->upgradeReply(objectName(), ups);
 }
 
 void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)

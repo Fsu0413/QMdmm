@@ -57,7 +57,7 @@ Configuration saves (Only one of following can be specified):
 #if 0
 ab de g  j    q  u  xy
 AB DEFGHIJ NO Q TUV XYZ
-0123456789
+01
 #endif
 
 Config::Config()
