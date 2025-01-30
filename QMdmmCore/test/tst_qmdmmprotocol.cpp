@@ -1,3 +1,4 @@
+#include "test.h"
 
 #include <QMdmmCore/QMdmmProtocol>
 
@@ -7,6 +8,9 @@
 class tst_QMdmmProtocol : public QObject
 {
     Q_OBJECT
+
+public:
+    Q_INVOKABLE tst_QMdmmProtocol() = default;
 
 private slots:
     // coverage for QMdmmPacketData::QMdmmPacketData
@@ -206,5 +210,7 @@ private slots:
     }
 };
 
-QTEST_GUILESS_MAIN(tst_QMdmmProtocol)
+namespace {
+RegisterTestObject<tst_QMdmmProtocol> _;
+}
 #include "tst_qmdmmprotocol.moc"

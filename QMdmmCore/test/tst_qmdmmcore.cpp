@@ -1,3 +1,4 @@
+#include "test.h"
 
 #include <QMdmmCore/QMdmmCoreGlobal>
 
@@ -8,6 +9,9 @@
 class tst_QMdmmCore : public QObject
 {
     Q_OBJECT
+
+public:
+    Q_INVOKABLE tst_QMdmmCore() = default;
 
 private slots:
     void QMdmmDataisPlaceAdjacent_data()
@@ -157,5 +161,7 @@ private slots:
     }
 };
 
-QTEST_GUILESS_MAIN(tst_QMdmmCore)
+namespace {
+RegisterTestObject<tst_QMdmmCore> _;
+}
 #include "tst_qmdmmcore.moc"

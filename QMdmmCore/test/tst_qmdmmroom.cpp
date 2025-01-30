@@ -1,3 +1,4 @@
+#include "test.h"
 
 #include <QMdmmCore/QMdmmRoom>
 
@@ -7,9 +8,14 @@ class tst_QMdmmRoom : public QObject
 {
     Q_OBJECT
 
+public:
+    Q_INVOKABLE tst_QMdmmRoom() = default;
+
 private slots:
     // TBD
 };
 
-QTEST_GUILESS_MAIN(tst_QMdmmRoom)
+namespace {
+RegisterTestObject<tst_QMdmmRoom> _;
+}
 #include "tst_qmdmmroom.moc"

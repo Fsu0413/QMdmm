@@ -1,3 +1,4 @@
+#include "test.h"
 
 #include <QMdmmCore/QMdmmPlayer>
 #include <QMdmmCore/QMdmmRoom>
@@ -9,6 +10,9 @@
 class tst_QMdmmPlayer : public QObject
 {
     Q_OBJECT
+
+public:
+    Q_INVOKABLE tst_QMdmmPlayer() = default;
 
     std::unique_ptr<QMdmmRoom> r;
     QPointer<QMdmmPlayer> p1;
@@ -1098,5 +1102,7 @@ private slots:
     }
 };
 
-QTEST_GUILESS_MAIN(tst_QMdmmPlayer)
+namespace {
+RegisterTestObject<tst_QMdmmPlayer> _;
+}
 #include "tst_qmdmmplayer.moc"
