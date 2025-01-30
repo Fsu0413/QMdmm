@@ -356,6 +356,8 @@ const QMdmmLogicConfiguration &QMdmmLogicConfiguration::v1()
     return defaultInstance;
 }
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
+
 #define CONVERTTOTYPEBOOL(v) v.toBool()
 #define CONVERTTOTYPEINT(v) v.toInt()
 #define CONVERTTOTYPEPUNISHHPROUNDSTRATEGY(v) static_cast<QMdmmLogicConfiguration::PunishHpRoundStrategy>(v.toInt())
@@ -370,6 +372,8 @@ const QMdmmLogicConfiguration &QMdmmLogicConfiguration::v1()
     {                                                                                               \
         insert(QStringLiteral(#valueName), convertToJsonValue(value));                              \
     }
+
+// NOLINTEND(bugprone-macro-parentheses)
 
 IMPLEMENTATION_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEINT, )

@@ -134,7 +134,7 @@ void QMdmmClient::replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneSci
     }
 }
 
-void QMdmmClient::replyActionOrder(QList<int> actionOrder)
+void QMdmmClient::replyActionOrder(const QList<int> &actionOrder)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestActionOrder) {
         d->currentRequest = QMdmmProtocol::RequestInvalid;
@@ -159,7 +159,7 @@ void QMdmmClient::replyAction(QMdmmData::Action action, const QString &toPlayer,
     }
 }
 
-void QMdmmClient::replyUpgrade(QList<QMdmmData::UpgradeItem> upgrades)
+void QMdmmClient::replyUpgrade(const QList<QMdmmData::UpgradeItem> &upgrades)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestUpgrade) {
         d->currentRequest = QMdmmProtocol::RequestInvalid;

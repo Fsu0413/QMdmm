@@ -35,12 +35,16 @@ public:
     using QVariantMap::operator=;
 #endif
 
+    // NOLINTBEGIN(bugprone-macro-parentheses)
+
 #define DEFINE_CONFIGURATION(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                \
     void set##ValueName(type valueName);
 #define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                 \
     void set##ValueName(const type &valueName);
+
+    // NOLINTEND(bugprone-macro-parentheses)
 
     DEFINE_CONFIGURATION(bool, tcpEnabled, TcpEnabled)
     DEFINE_CONFIGURATION(uint16_t, tcpPort, TcpPort)
@@ -61,7 +65,7 @@ class QMDMMNETWORKING_EXPORT QMdmmServer : public QObject
     Q_OBJECT
 
 public:
-    explicit QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    explicit QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QObject *parent = nullptr);
     ~QMdmmServer() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)

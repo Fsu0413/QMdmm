@@ -258,7 +258,7 @@ void QMdmmServerAgentPrivate::defaultReplyUpgrade()
     emit p->upgradeReply(objectName(), ups);
 }
 
-void QMdmmServerAgentPrivate::packetReceived(QMdmmPacket packet)
+void QMdmmServerAgentPrivate::packetReceived(const QMdmmPacket &packet)
 {
     if (socket == nullptr)
         return;

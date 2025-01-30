@@ -151,7 +151,7 @@ void QMdmmLogicPrivate::startActionOrder()
         desiredActionOrders.clear();
         state = QMdmmLogic::ActionOrder;
         for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it)
-            emit q->requestActionOrder(it.key(), remainingActionOrders, sscForActionWinners.length(), it.value(), QMdmmLogic::QPrivateSignal());
+            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(sscForActionWinners.length()), it.value(), QMdmmLogic::QPrivateSignal());
     }
 }
 

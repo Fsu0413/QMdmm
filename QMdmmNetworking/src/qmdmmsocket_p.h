@@ -8,6 +8,8 @@
 #include <QObject>
 #include <QPointer>
 
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
+
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
 {
     Q_OBJECT
@@ -111,5 +113,7 @@ QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSo
 QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
 QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
 } // namespace QMdmmSocketPrivateFactory
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

@@ -54,6 +54,7 @@ Configuration saves (Only one of following can be specified):
 
 )help");
 
+// NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
 #if 0
 ab de g  j    q  u  xy
 AB DEFGHIJ NO Q TUV XYZ
@@ -127,7 +128,7 @@ Config::Config()
     parser.process(*qApp);
 
     if (parser.isSet(QStringLiteral("h"))) {
-        std::cout << helpText.toLocal8Bit().constData() << std::endl;
+        std::cout << qPrintable(helpText) << std::flush;
         ::exit(0);
     }
 
@@ -279,7 +280,7 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
         if (f != 0) {                                                                   \
             std::optional<type> v = parserConvert(s);                                   \
             if (v.has_value()) {                                                        \
-                conf.set##ValueName(v.value());                                         \
+                (conf).set##ValueName(v.value());                                       \
             } else {                                                                    \
                 const char *from = nullptr;                                             \
                 if (f == 1)                                                             \
@@ -331,7 +332,7 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
         for (size_t i = 0; i < shortForms.size(); ++i) {
             if (parser->isSet(std::data(shortForms)[i])) {
                 if (players != 0)
-                    players = i + 2;
+                    players = (int)(i + 2);
                 else
                     qFatal("-%d can't be specified alongwith -%d", (int)(i + 2), players);
             }
@@ -368,12 +369,16 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
 
 void Config::save_(QSettings *config)
 {
+    // NOLINTBEGIN(bugprone-macro-parentheses)
+
 #define CONFIG_ITEM(type, conf, settingName, settingConvert, valueName) \
     do {                                                                \
         type v = conf.valueName();                                      \
         QString s = settingConvert(v);                                  \
         config->setValue(QStringLiteral(settingName), s);               \
     } while (false)
+
+    // NOLINTEND(bugprone-macro-parentheses)
 
     config->beginGroup(QStringLiteral("server"));
 

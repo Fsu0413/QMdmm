@@ -25,12 +25,16 @@ public:
     using QVariantMap::operator=;
 #endif
 
+    // NOLINTBEGIN(bugprone-macro-parentheses)
+
 #define DEFINE_CONFIGURATION(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                \
     void set##ValueName(type valueName);
 #define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                 \
     void set##ValueName(const type &valueName);
+
+    // NOLINTEND(bugprone-macro-parentheses)
 
     DEFINE_CONFIGURATION2(QString, screenName, ScreenName)
 
@@ -62,9 +66,9 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void requestTimeout();
 
     void replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneScissorsCloth);
-    void replyActionOrder(QList<int> actionOrder);
+    void replyActionOrder(const QList<int> &actionOrder);
     void replyAction(QMdmmData::Action action, const QString &toPlayer, int toPlace);
-    void replyUpgrade(QList<QMdmmData::UpgradeItem> upgrades);
+    void replyUpgrade(const QList<QMdmmData::UpgradeItem> &upgrades);
 
 signals:
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);

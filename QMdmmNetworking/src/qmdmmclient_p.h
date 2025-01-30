@@ -16,6 +16,8 @@
 #include <QTcpSocket>
 #include <QTimer>
 
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
+
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
 {
     Q_OBJECT
@@ -63,11 +65,13 @@ public:
     bool applyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void socketPacketReceived(QMdmmPacket packet);
+    void socketPacketReceived(const QMdmmPacket &packet);
     void socketErrorOccurred(const QString &errorString);
     void socketDisconnected();
 
     void heartbeatTimeout();
 };
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

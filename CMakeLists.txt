@@ -24,7 +24,7 @@ if (BUILD_SHARED_LIBS)
     set(CMAKE_POSITION_INDEPENDENT_CODE true)
 endif()
 
-option(BUILD_TESTING "Build test binaries" true)
+option(BUILD_TESTING "Build test binaries" false)
 
 option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private classes" false)
 

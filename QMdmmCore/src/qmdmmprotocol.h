@@ -9,13 +9,16 @@
 #include <QJsonObject>
 #include <QSharedData>
 
+#include <cstdint>
+
+// NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
 #if 0
 class QMDMMCORE_EXPORT QMdmmProtocol
 #endif
 
 namespace QMdmmProtocol {
 
-enum RequestId
+enum RequestId : uint8_t
 {
     // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
@@ -26,7 +29,7 @@ enum RequestId
     RequestUpgrade, // request: int remaningTimes, reply: array { int } item
 };
 
-enum NotifyId
+enum NotifyId : uint16_t
 {
     NotifyInvalid = 0,
 
@@ -60,7 +63,7 @@ enum NotifyId
     NotifyOperate, // TODO: for ob
 };
 
-enum PacketType
+enum PacketType : uint8_t
 {
     TypeInvalid = 0,
 
@@ -69,7 +72,7 @@ enum PacketType
     TypeNotify,
 };
 
-QMDMMCORE_EXPORT int protocolVersion() noexcept;
+QMDMMCORE_EXPORT extern int protocolVersion() noexcept;
 
 } // namespace QMdmmProtocol
 
@@ -87,6 +90,7 @@ struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJson
     QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
     QMdmmPacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
 
+    // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
     QString error;
 };
 #endif

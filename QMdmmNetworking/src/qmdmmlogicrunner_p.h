@@ -15,6 +15,8 @@
 #include <QThread>
 #include <QTimer>
 
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
+
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 {
     Q_OBJECT
@@ -59,7 +61,7 @@ signals:
     void socketDisconnected();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void packetReceived(QMdmmPacket packet);
+    void packetReceived(const QMdmmPacket &packet);
 
     // requests
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
@@ -136,5 +138,7 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
     void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 };
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

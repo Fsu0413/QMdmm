@@ -18,6 +18,8 @@
 #include <QTcpServer>
 #include <QWebSocketServer>
 
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
+
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
 {
     Q_OBJECT
@@ -25,7 +27,7 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
     static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
 
 public:
-    QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QMdmmServer *q);
+    QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q);
 
     // callbacks
     void pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
@@ -38,7 +40,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void tcpServerNewConnection();
     void localServerNewConnection();
     void websocketServerNewConnection();
-    void socketPacketReceived(QMdmmPacket packet);
+    void socketPacketReceived(const QMdmmPacket &packet);
 
     void logicRunnerGameOver();
 
@@ -52,5 +54,7 @@ public: // NOLINT(readability-redundant-access-specifiers)
     QWebSocketServer *w;
     QMdmmLogicRunner *current;
 };
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

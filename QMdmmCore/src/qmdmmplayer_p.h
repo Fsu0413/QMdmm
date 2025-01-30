@@ -5,6 +5,8 @@
 
 #include "qmdmmplayer.h"
 
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
+
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
 {
     QMdmmPlayerPrivate(QMdmmRoom *room);
@@ -23,5 +25,7 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
 
     static void applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int damagePoint, QMdmmData::DamageReason reason);
 };
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

@@ -79,7 +79,7 @@ void QMdmmClientPrivate::requestStoneScissorsCloth(const QJsonValue &value)
         return;
     QJsonArray vaplayerNames = vplayerNames.toArray();
     QStringList playerNames;
-    for (const QJsonValue &vplayerName : vaplayerNames) {
+    for (const QJsonValueRef &vplayerName : vaplayerNames) {
         if (!vplayerName.isString())
             return;
         playerNames << vplayerName.toString();
@@ -112,7 +112,7 @@ void QMdmmClientPrivate::requestActionOrder(const QJsonValue &value)
         return;
     QJsonArray varemainedOrders = vremainedOrders.toArray();
     QList<int> remainedOrders;
-    for (const QJsonValue &vremainedOrder : varemainedOrders) {
+    for (const QJsonValueRef &vremainedOrder : varemainedOrders) {
         if (!vremainedOrder.isDouble())
             return;
         remainedOrders << vremainedOrder.toInt();
@@ -397,7 +397,7 @@ void QMdmmClientPrivate::notifyActionOrder(const QJsonValue &value)
 
     QHash<int, QString> result;
     int i = 0;
-    for (const QJsonValue &val : arr) {
+    for (const QJsonValueRef &val : arr) {
         if (!value.isString())
             return;
         QString playerName = val.toString();
@@ -521,7 +521,7 @@ void QMdmmClientPrivate::notifyUpgrade(const QJsonValue &value)
             return;
         QJsonArray vaupgrades = vupgrades.toArray();
         QList<QMdmmData::UpgradeItem> upgrades;
-        for (const QJsonValue &vupgrade : vaupgrades) {
+        for (const QJsonValueRef &vupgrade : vaupgrades) {
             if (!vupgrade.isDouble())
                 return;
             QMdmmData::UpgradeItem upgrade = static_cast<QMdmmData::UpgradeItem>(vupgrade.toInt());
@@ -568,7 +568,7 @@ void QMdmmClientPrivate::notifyGameOver(const QJsonValue &value)
     QJsonArray arr = value.toArray();
 
     QStringList winners;
-    for (const QJsonValue &vwinner : arr) {
+    for (const QJsonValueRef &vwinner : arr) {
         if (!vwinner.isString())
             return;
         QString winner = vwinner.toString();
@@ -684,7 +684,7 @@ bool QMdmmClientPrivate::applyUpgrade(const QHash<QString, QList<QMdmmData::Upgr
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmClientPrivate::socketPacketReceived(QMdmmPacket packet)
+void QMdmmClientPrivate::socketPacketReceived(const QMdmmPacket &packet)
 {
     if (socket == nullptr)
         return;

@@ -7,6 +7,8 @@
 
 #include <QObject>
 
+#include <cstdint>
+
 class QMdmmLogicConfiguration;
 
 struct QMdmmLogicPrivate;
@@ -18,7 +20,7 @@ class QMDMMCORE_EXPORT QMdmmLogic final : public QObject
     Q_OBJECT
 
 public:
-    enum State
+    enum State : uint8_t
     {
         BeforeRoundStart,
         SscForAction,

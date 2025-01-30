@@ -9,6 +9,8 @@
 #include <QList>
 #include <QObject>
 
+#include <cstdint>
+
 class QMdmmPlayer;
 class QMdmmLogic;
 
@@ -33,7 +35,7 @@ public:
     static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &defaults();
     static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &v1();
 
-    enum PunishHpRoundStrategy
+    enum PunishHpRoundStrategy : uint8_t
     {
         RoundDown,
         RoundToNearest45,
@@ -106,7 +108,7 @@ public:
     [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const
     {
-        return alivePlayers().size();
+        return (int)(alivePlayers().size());
     }
     [[nodiscard]] bool isRoundOver() const
     {

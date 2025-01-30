@@ -5,7 +5,9 @@
 
 #include "qmdmmlogic.h"
 
-class QMdmmRoom;
+#include "qmdmmroom.h"
+
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 {
@@ -41,5 +43,7 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
     void startUpgrade();
     void upgrade();
 };
+
+// NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
 #endif

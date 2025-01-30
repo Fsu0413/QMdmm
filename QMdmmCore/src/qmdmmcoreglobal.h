@@ -13,6 +13,7 @@
 #include <QVersionNumber>
 #include <QtGlobal>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <type_traits>
@@ -56,13 +57,13 @@ Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 // So if we need City1, City2 and etc. we need as many Cities as the maximum supported player numbers
 // In theory the player numbers should be unlimitted since there is no difference between players
 // Added back of Enum Place but preserve the only "Country" value, for QMetaObject generation only
-enum Place
+enum Place : uint8_t
 {
     Country = 0,
 };
 Q_ENUM_NS(Place)
 
-enum DamageReason
+enum DamageReason : uint8_t
 {
     DamageReasonUnknown,
     Slashed,
@@ -71,7 +72,7 @@ enum DamageReason
 };
 Q_ENUM_NS(DamageReason)
 
-enum StoneScissorsCloth
+enum StoneScissorsCloth : uint8_t
 {
     Stone,
     Scissors,
@@ -79,7 +80,7 @@ enum StoneScissorsCloth
 };
 Q_ENUM_NS(StoneScissorsCloth)
 
-enum Action
+enum Action : uint8_t
 {
     DoNothing,
     BuyKnife,
@@ -91,7 +92,7 @@ enum Action
 };
 Q_ENUM_NS(Action)
 
-enum UpgradeItem
+enum UpgradeItem : uint8_t
 {
     UpgradeKnife,
     UpgradeHorse,
@@ -99,7 +100,7 @@ enum UpgradeItem
 };
 Q_ENUM_NS(UpgradeItem)
 
-enum AgentStateEnum
+enum AgentStateEnum : uint8_t
 {
     StateMaskOnline = 0x10,
     StateMaskBot = 0x01,

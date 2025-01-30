@@ -242,8 +242,7 @@ QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::
 }
 
 QMdmmPacketData::QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)))
-    : QSharedData()
-    , QJsonObject(ob)
+    : QJsonObject(ob)
 {
 }
 

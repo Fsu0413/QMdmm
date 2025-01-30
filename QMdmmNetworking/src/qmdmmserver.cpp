@@ -7,6 +7,7 @@
 
 #include <QLocalSocket>
 #include <QTcpSocket>
+#include <utility>
 
 const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
@@ -72,10 +73,10 @@ QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const
     std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
 };
 
-QMdmmServerPrivate::QMdmmServerPrivate(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QMdmmServer *q)
+QMdmmServerPrivate::QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration_, QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q)
     : QObject(q)
-    , serverConfiguration(serverConfiguration)
-    , logicConfiguration(logicConfiguration)
+    , serverConfiguration(std::move(serverConfiguration_))
+    , logicConfiguration(std::move(logicConfiguration))
     , q(q)
     , t(nullptr)
     , l(nullptr)
@@ -125,6 +126,8 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
 
 #define CONVERTAGENTSTATE() QMdmmData::AgentState(v.toInt())
 
+        // NOLINTBEGIN(bugprone-macro-parentheses)
+
         // no do .. while (0) here since I'd like 'break' to exit outside this block
         // where "socket->hasError(true)" should be done
 #define CONF(member, check, convert)                      \
@@ -136,6 +139,8 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
             break;                                        \
         member = convert();                               \
     }
+
+        // NOLINTEND(bugprone-macro-parentheses)
 
         QString playerName;
         CONF(playerName, isString, v.toString);
@@ -210,7 +215,7 @@ void QMdmmServerPrivate::websocketServerNewConnection()
     }
 }
 
-void QMdmmServerPrivate::socketPacketReceived(QMdmmPacket packet)
+void QMdmmServerPrivate::socketPacketReceived(const QMdmmPacket &packet)
 {
     QMdmmSocket *socket = qobject_cast<QMdmmSocket *>(sender());
 
@@ -239,9 +244,9 @@ void QMdmmServerPrivate::logicRunnerGameOver()
     }
 }
 
-QMdmmServer::QMdmmServer(const QMdmmServerConfiguration &serverConfiguration, const QMdmmLogicConfiguration &logicConfiguration, QObject *parent)
+QMdmmServer::QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmServerPrivate(serverConfiguration, logicConfiguration, this))
+    , d(new QMdmmServerPrivate(std::move(serverConfiguration), std::move(logicConfiguration), this))
 {
 }
 

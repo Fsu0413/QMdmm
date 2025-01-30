@@ -3,6 +3,9 @@
 #include "qmdmmdebug.h"
 #include "qmdmmdebug_p.h"
 
+#include <QDebug>
+#include <QIODevice>
+
 /**
  * @file qmdmmdebug.h
  * @brief QMdmm Debug stuff

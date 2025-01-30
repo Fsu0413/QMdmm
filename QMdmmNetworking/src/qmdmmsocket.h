@@ -12,6 +12,8 @@
 #include <QTcpSocket>
 #include <QWebSocket>
 
+#include <cstdint>
+
 // QMdmmSocket should be a wrapper for QObject, and do serialize / deserialize work of received data
 class QMdmmSocketPrivate;
 
@@ -21,7 +23,7 @@ class QMDMMNETWORKING_EXPORT QMdmmSocket : public QObject
     Q_OBJECT
 
 public:
-    enum Type
+    enum Type : uint8_t
     {
         TypeUnknown,
         TypeQTcpSocket,
