@@ -5,6 +5,8 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSettings>
 
 #include <cinttypes>
@@ -48,15 +50,16 @@ Logic configurations:
 -f --enable-let-move=<true/false> enable "let move"
 -i --can-buy-only-in-initial-city=<true/false> can buy only in initial city
 
-Configuration saves (Only one of following can be specified):
+Configuration saves / examining (Only one of following can be specified):
 -c --save-configuration Save configuration specified in command line and exits
 -C --save-global-configuration Save configuration specified in command line to system global and exits
+-d --show-current-configuration Show current configuration as JSON
 
 )help");
 
 // NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
 #if 0
-ab de g  j    q  u  xy
+ab  e g  j    q  u  xy
 AB DEFGHIJ NO Q TUV XYZ
 01
 #endif
@@ -124,8 +127,15 @@ Config::Config()
 
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("c"), QStringLiteral("save-configuration")}));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("C"), QStringLiteral("save-global-configuration")}));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("d"), QStringLiteral("show-current-configuration")}));
 
     parser.process(*qApp);
+
+    if (!parser.unknownOptionNames().isEmpty())
+        qFatal("Unknown option: %s", qPrintable(parser.unknownOptionNames().join(QStringLiteral(", "))));
+
+    if (!parser.positionalArguments().isEmpty())
+        qFatal("Unknown argument: %s", qPrintable(parser.positionalArguments().join(QStringLiteral(", "))));
 
     if (parser.isSet(QStringLiteral("h"))) {
         std::cout << qPrintable(helpText) << std::flush;
@@ -154,6 +164,8 @@ Config::Config()
     read_(&systemConfig, &userConfig, &parser);
     if (settingsToBeSaved != nullptr)
         save_(settingsToBeSaved);
+    if (parser.isSet(QStringLiteral("d")))
+        show_();
 }
 
 namespace {
@@ -331,7 +343,7 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
 
         for (size_t i = 0; i < shortForms.size(); ++i) {
             if (parser->isSet(std::data(shortForms)[i])) {
-                if (players != 0)
+                if (players == 0)
                     players = (int)(i + 2);
                 else
                     qFatal("-%d can't be specified alongwith -%d", (int)(i + 2), players);
@@ -415,6 +427,18 @@ void Config::save_(QSettings *config)
     config->sync();
 
     ::exit(static_cast<int>(config->status()));
+}
+
+void Config::show_()
+{
+    QJsonObject ob;
+    ob.insert(QStringLiteral("ServerConfiguration"), serverConfiguration_);
+    ob.insert(QStringLiteral("LogicConfiguration"), logicConfiguration_);
+
+    QByteArray arr = QJsonDocument(ob).toJson(QJsonDocument::Indented);
+    std::cout << arr.constData() << '\n' << std::flush;
+
+    ::exit(0);
 }
 
 const QMdmmServerConfiguration &Config::serverConfiguration() const

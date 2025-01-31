@@ -8,12 +8,13 @@
 #include <QMdmmProtocol>
 #include <QMdmmRoom>
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 
 #include <cstdint>
 
-struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QVariantMap
+struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObject
 {
     Q_GADGET
     Q_PROPERTY(bool tcpEnabled READ tcpEnabled WRITE setTcpEnabled DESIGNABLE false FINAL)
@@ -31,8 +32,8 @@ public:
     Q_INVOKABLE QMdmmServerConfiguration();
     Q_INVOKABLE QMdmmServerConfiguration(const QMdmmServerConfiguration &);
 #else
-    using QVariantMap::QMap;
-    using QVariantMap::operator=;
+    using QJsonObject::QJsonObject;
+    using QJsonObject::operator=;
 #endif
 
     // NOLINTBEGIN(bugprone-macro-parentheses)

@@ -13,55 +13,55 @@ const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
     // clang-format off
     static const QMdmmServerConfiguration defaultInstance {
-        std::make_pair(QStringLiteral("tcpEnabled"), true),
-        std::make_pair(QStringLiteral("tcpPort"), 6366U),
-        std::make_pair(QStringLiteral("localEnabled"), true),
-        std::make_pair(QStringLiteral("localSocketName"), QStringLiteral("QMdmm")),
-        std::make_pair(QStringLiteral("websocketEnabled"), true),
-        std::make_pair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
-        std::make_pair(QStringLiteral("websocketPort"), 6367U),
+        qMakePair(QStringLiteral("tcpEnabled"), true),
+        qMakePair(QStringLiteral("tcpPort"), (int)(6366U)),
+        qMakePair(QStringLiteral("localEnabled"), true),
+        qMakePair(QStringLiteral("localSocketName"), QStringLiteral("QMdmm")),
+        qMakePair(QStringLiteral("websocketEnabled"), true),
+        qMakePair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
+        qMakePair(QStringLiteral("websocketPort"), (int)(6367U)),
     };
     // clang-format on
 
     return defaultInstance;
 }
 
-#define CONVERTTOTYPEBOOL(v) v.toBool()
-#define CONVERTTOTYPEUINT16T(v) v.toUInt()
-#define CONVERTTOTYPEQSTRING(v) v.toString()
-#define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
-    type QMdmmServerConfiguration::valueName() const                                               \
-    {                                                                                              \
-        if (contains(QStringLiteral(#valueName)))                                                  \
-            return convertToType(value(QStringLiteral(#valueName)));                               \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
-    }                                                                                              \
-    void QMdmmServerConfiguration::set##ValueName(type value)                                      \
-    {                                                                                              \
-        insert(QStringLiteral(#valueName), convertToQVariant(value));                              \
-    }
-
-#define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
+#define CONVERTTOTYPEBOOL(v) ((v).toBool())
+#define CONVERTTOTYPEUINT16T(v) ((uint16_t)((v).toInt()))
+#define CONVERTTOTYPEQSTRING(v) ((v).toString())
+#define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type QMdmmServerConfiguration::valueName() const                                                \
     {                                                                                               \
         if (contains(QStringLiteral(#valueName)))                                                   \
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void QMdmmServerConfiguration::set##ValueName(const type &value)                                \
+    void QMdmmServerConfiguration::set##ValueName(type value)                                       \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToQVariant(value));                               \
+        insert(QStringLiteral(#valueName), convertToJsonValue(value));                              \
+    }
+
+#define IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(type, valueName, ValueName, convertToType, convertToJsonValue) \
+    type QMdmmServerConfiguration::valueName() const                                                                       \
+    {                                                                                                                      \
+        if (contains(QStringLiteral(#valueName)))                                                                          \
+            return convertToType(value(QStringLiteral(#valueName)));                                                       \
+        return convertToType(defaults().value(QStringLiteral(#valueName)));                                                \
+    }                                                                                                                      \
+    void QMdmmServerConfiguration::set##ValueName(const type &value)                                                       \
+    {                                                                                                                      \
+        insert(QStringLiteral(#valueName), convertToJsonValue(value));                                                     \
     }
 
 IMPLEMENTATION_CONFIGURATION(bool, tcpEnabled, TcpEnabled, CONVERTTOTYPEBOOL, )
 IMPLEMENTATION_CONFIGURATION(uint16_t, tcpPort, TcpPort, CONVERTTOTYPEUINT16T, )
 IMPLEMENTATION_CONFIGURATION(bool, localEnabled, LocalEnabled, CONVERTTOTYPEBOOL, )
-IMPLEMENTATION_CONFIGURATION2(QString, localSocketName, LocalSocketName, CONVERTTOTYPEQSTRING, )
+IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, localSocketName, LocalSocketName, CONVERTTOTYPEQSTRING, )
 IMPLEMENTATION_CONFIGURATION(bool, websocketEnabled, WebsocketEnabled, CONVERTTOTYPEBOOL, )
-IMPLEMENTATION_CONFIGURATION2(QString, websocketName, WebsocketName, CONVERTTOTYPEQSTRING, )
+IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, websocketName, WebsocketName, CONVERTTOTYPEQSTRING, )
 IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTYPEUINT16T, )
 
-#undef IMPLEMENTATION_CONFIGURATION2
+#undef IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE
 #undef IMPLEMENTATION_CONFIGURATION
 #undef CONVERTTOTYPEQSTRING
 #undef CONVERTTOTYPEUINT16T

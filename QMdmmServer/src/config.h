@@ -23,6 +23,7 @@ private:
 
     void read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineParser *parser);
     [[noreturn]] void save_(QSettings *config);
+    [[noreturn]] void show_();
 };
 
 #endif
