@@ -7,6 +7,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+// NOLINTBEGIN
+
 class tst_QMdmmPlayer : public QObject
 {
     Q_OBJECT
@@ -1098,6 +1100,210 @@ private slots:
                 QCOMPARE(s2.first().first().toInt(), punishedHp);
                 QCOMPARE(p1->hp(), punishedHp);
             }
+        }
+    }
+
+    void QMdmmPlayerkick()
+    {
+        r->prepareForRoundStart();
+
+        // case 1: kick in different place / i.e. canKick returns false
+        {
+            p1->setHasHorse(true);
+
+            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
+
+            QVERIFY(!p1->kick(p2));
+            QCOMPARE(s.length(), 0);
+        }
+
+        r->prepareForRoundStart();
+
+        // case 2: normal case
+        {
+            p1->setHasHorse(true);
+            p1->setPlace(p2->place());
+
+            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
+            QSignalSpy s2(p2, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(p1->kick(p2));
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), 8);
+                QCOMPARE(p2->hp(), 8);
+            }
+            QCOMPARE(s2.length(), 1);
+            if (s2.length() > 0) {
+                QCOMPARE(s2.first().first().toInt(), QMdmmData::Country);
+                QCOMPARE(p2->place(), QMdmmData::Country);
+            }
+        }
+
+        r->prepareForRoundStart();
+
+        // case 3: kick kills
+        {
+            p1->setHasHorse(true);
+            p1->setPlace(p2->place());
+            p2->setHp(1);
+
+            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
+            QSignalSpy s2(p2, &QMdmmPlayer::die);
+            QSignalSpy s3(p1, &QMdmmPlayer::upgradePointChanged);
+            QSignalSpy s4(p2, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(p1->kick(p2));
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), -1);
+                QCOMPARE(p2->hp(), -1);
+            }
+            QCOMPARE(s2.length(), 1);
+            QCOMPARE(s3.length(), 1);
+            if (s3.length() > 0) {
+                QCOMPARE(s3.first().first().toInt(), 1);
+                QCOMPARE(p1->upgradePoint(), 1);
+            }
+            QCOMPARE(s4.length(), 0);
+        }
+    }
+
+    void QMdmmPlayermove()
+    {
+        r->prepareForRoundStart();
+
+        {
+            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(!p1->move(p2->place()));
+            QCOMPARE(s.length(), 0);
+        }
+
+        r->prepareForRoundStart();
+
+        {
+            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(p1->move(QMdmmData::Country));
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
+                QCOMPARE(p1->place(), QMdmmData::Country);
+            }
+        }
+    }
+
+    void QMdmmPlayerletMove()
+    {
+        r->prepareForRoundStart();
+
+        {
+            QSignalSpy s(p2, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(!p1->letMove(p2, p1->place()));
+            QCOMPARE(s.length(), 0);
+        }
+
+        r->prepareForRoundStart();
+
+        {
+            p1->setPlace(QMdmmData::Country);
+            QSignalSpy s(p2, &QMdmmPlayer::placeChanged);
+
+            QVERIFY(p1->letMove(p2, QMdmmData::Country));
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
+                QCOMPARE(p2->place(), QMdmmData::Country);
+            }
+        }
+    }
+
+    void QMdmmPlayerdoNothing()
+    {
+        r->prepareForRoundStart();
+        QVERIFY(p1->doNothing());
+    }
+
+    void QMdmmPlayerupgradeKnife()
+    {
+        r->resetUpgrades();
+
+        {
+            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+
+            QVERIFY(p1->upgradeKnife());
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), 2);
+                QCOMPARE(p1->knifeDamage(), 2);
+            }
+        }
+
+        r->resetUpgrades();
+
+        {
+            p1->setKnifeDamage(10);
+
+            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+
+            QVERIFY(!p1->upgradeKnife());
+            QCOMPARE(s.length(), 0);
+        }
+    }
+
+    void QMdmmPlayerupgradeHorse()
+    {
+        r->resetUpgrades();
+
+        {
+            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+
+            QVERIFY(p1->upgradeHorse());
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), 3);
+                QCOMPARE(p1->horseDamage(), 3);
+            }
+        }
+
+        r->resetUpgrades();
+
+        {
+            p1->setHorseDamage(10);
+
+            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+
+            QVERIFY(!p1->upgradeHorse());
+            QCOMPARE(s.length(), 0);
+        }
+    }
+
+    void QMdmmPlayerupgradeMaxHp()
+    {
+        r->resetUpgrades();
+
+        {
+            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+
+            QVERIFY(p1->upgradeMaxHp());
+            QCOMPARE(s.length(), 1);
+            if (s.length() > 0) {
+                QCOMPARE(s.first().first().toInt(), 11);
+                QCOMPARE(p1->maxHp(), 11);
+            }
+        }
+
+        r->resetUpgrades();
+
+        {
+            p1->setMaxHp(20);
+
+            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+
+            QVERIFY(!p1->upgradeMaxHp());
+            QCOMPARE(s.length(), 0);
         }
     }
 };

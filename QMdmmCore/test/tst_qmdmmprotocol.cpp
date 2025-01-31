@@ -5,6 +5,8 @@
 #include <QJsonObject>
 #include <QTest>
 
+// NOLINTBEGIN
+
 class tst_QMdmmProtocol : public QObject
 {
     Q_OBJECT

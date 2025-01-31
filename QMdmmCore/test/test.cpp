@@ -3,7 +3,9 @@
 #include <QGlobalStatic>
 #include <QTest>
 
+namespace {
 Q_GLOBAL_STATIC(QList<const QMetaObject *>, testObjects)
+}
 
 void registerTestObjectImpl(const QMetaObject *metaObject)
 {
@@ -30,6 +32,7 @@ int main(int argc, char *argv[])
         };
 
         ret += QTest::qExec(toBeTested, args);
+        delete toBeTested;
     }
 
     return ret;

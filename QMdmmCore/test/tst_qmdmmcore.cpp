@@ -6,6 +6,8 @@
 #include <QString>
 #include <QTest>
 
+// NOLINTBEGIN
+
 class tst_QMdmmCore : public QObject
 {
     Q_OBJECT

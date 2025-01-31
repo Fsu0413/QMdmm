@@ -5,6 +5,8 @@
 
 #include <QTest>
 
+// NOLINTBEGIN
+
 class tst_QMdmmLogic : public QObject
 {
     Q_OBJECT

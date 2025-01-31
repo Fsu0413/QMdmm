@@ -408,18 +408,17 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     QJsonObject ob = value.toObject();
     QJsonObject result;
 
-#define CONVERTPUNISHHPROUNDSTRATEGY() static_cast<PunishHpRoundStrategy>(v.toInt())
-#define CONF(member, check)                                                                    \
-    {                                                                                          \
-        if (ob.contains(QStringLiteral(#member))) {                                            \
-            QJsonValue v = ob.value(QStringLiteral(#member));                                  \
-            if (v.check())                                                                     \
-                result.insert(QStringLiteral(#member), v);                                     \
-            else                                                                               \
-                return false;                                                                  \
-        } else {                                                                               \
-            result.insert(QStringLiteral(#member), defaults().value(QStringLiteral(#member))); \
-        }                                                                                      \
+#define CONF(member, check)                                   \
+    {                                                         \
+        if (ob.contains(QStringLiteral(#member))) {           \
+            QJsonValue v = ob.value(QStringLiteral(#member)); \
+            if (v.check())                                    \
+                result.insert(QStringLiteral(#member), v);    \
+            else                                              \
+                return false;                                 \
+        } else {                                              \
+            return false;                                     \
+        }                                                     \
     }
 
     CONF(playerNumPerRoom, isDouble);
@@ -434,9 +433,9 @@ bool QMdmmLogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(rea
     CONF(punishHpRoundStrategy, isDouble);
     CONF(zeroHpAsDead, isBool);
     CONF(enableLetMove, isBool);
+    CONF(canBuyOnlyInInitialCity, isBool);
 
 #undef CONF
-#undef CONVERTPUNISHHPROUNDSTRATEGY
 
     *this = result;
     return true;
