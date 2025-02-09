@@ -11,6 +11,7 @@ set(QMDMMCORE_HEADERS
     src/qmdmmplayer.h
     src/qmdmmlogic.h
     src/qmdmmdebug.h
+    src/qmdmmsettings.h
 )
 
 set(QMDMMCORE_PRIVATE_HEADERS
@@ -18,6 +19,7 @@ set(QMDMMCORE_PRIVATE_HEADERS
     src/qmdmmplayer_p.h
     src/qmdmmlogic_p.h
     src/qmdmmdebug_p.h
+    src/qmdmmsettings_p.h
 )
 
 set(QMDMMCORE_SOURCES
@@ -27,15 +29,25 @@ set(QMDMMCORE_SOURCES
     src/qmdmmplayer.cpp
     src/qmdmmlogic.cpp
     src/qmdmmdebug.cpp
+    src/qmdmmsettings.cpp
 )
 
 set(QMDMMCORE_PRIVATE_SOURCES
     src/qmdmmdebug_p.cpp
     src/qmdmmlogic_p.cpp
     src/qmdmmplayer_p.cpp
+    src/qmdmmsettings_p.cpp
 )
 
 set(QMDMMCORE_DOC_FILES ${QMDMMCORE_HEADERS} ${QMDMMCORE_SOURCES} PARENT_SCOPE)
+
+if (UNIX AND ( ( CMAKE_INSTALL_PREFIX STREQUAL "/usr" ) OR ( CMAKE_INSTALL_PREFIX STREQUAL "/" ) ) )
+    set(QMDMM_CONFIGURATION_PREFIX "/etc/${PROJECT_NAME}")
+    set(QMDMM_RUNTIME_DATA_PREFIX "/var/${PROJECT_NAME}")
+else()
+    set(QMDMM_CONFIGURATION_PREFIX "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}")
+    set(QMDMM_RUNTIME_DATA_PREFIX "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LOCALSTATEDIR}/${PROJECT_NAME}")
+endif()
 
 add_library(QMdmmCore INTERFACE)
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
@@ -90,6 +102,10 @@ if (WIN32)
                   _UNICODE
     )
 endif()
+target_compile_definitions(QMdmmCore
+    INTERFACE QMDMM_CONFIGURATION_PREFIX="${QMDMM_CONFIGURATION_PREFIX}"
+              QMDMM_RUNTIME_DATA_PREFIX="${QMDMM_RUNTIME_DATA_PREFIX}"
+)
 if (QMDMM_EXPORT_PRIVATE)
     if (BUILD_SHARED_LIBS)
         target_compile_definitions(QMdmmCore

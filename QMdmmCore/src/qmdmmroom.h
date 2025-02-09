@@ -17,6 +17,7 @@ class QMdmmLogic;
 class QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
 {
     Q_GADGET
+
     Q_PROPERTY(int playerNumPerRoom READ playerNumPerRoom WRITE setPlayerNumPerRoom DESIGNABLE false FINAL)
     Q_PROPERTY(int requestTimeout READ requestTimeout WRITE setRequestTimeout DESIGNABLE false FINAL)
     Q_PROPERTY(int initialKnifeDamage READ initialKnifeDamage WRITE setInitialKnifeDamage DESIGNABLE false FINAL)

@@ -50,13 +50,12 @@ endif()
 
 # Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
 # There are definitions to disable the versionless targets and functions, but!! But!! BUT!!!!! They DIDN'T WORK in Qt 6.2 / 5.15 combination!!!
-# set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
-# set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
-# It works in later Qt 6 / 5.15 combinations, but be careful to check which version since they are supported (probably Qt 6.5)
-# TODO: uncomment above when we require Qt 6.5
+# Currently we are requiring Qt 6.5 and things work
+set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
+set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
 
 # find_package Qt6 must be called before Qt5 - QTBUG-97097
-find_package(Qt6 6.2  COMPONENTS Core Network WebSockets ${QT6_EXTRA_COMPONENTS_NEEDED})
+find_package(Qt6 6.5  COMPONENTS Core Network WebSockets Gui Qml Quick ${QT6_EXTRA_COMPONENTS_NEEDED})
 find_package(Qt5 5.15 COMPONENTS Core Network WebSockets ${QT5_EXTRA_COMPONENTS_NEEDED})
 
 if (NOT (Qt5_FOUND OR Qt6_FOUND))
@@ -64,16 +63,18 @@ if (NOT (Qt5_FOUND OR Qt6_FOUND))
 endif()
 
 if (Qt6_FOUND)
-    if (Qt6_VERSION VERSION_GREATER_EQUAL 6.3.0)
-        qt6_standard_project_setup()
-        # we don't need them to be set by default
-        unset(CMAKE_AUTOMOC)
-        unset(CMAKE_AUTOUIC)
-        unset(CMAKE_AUTORCC)
-    endif()
+    qt6_standard_project_setup(REQUIRES 6.5)
+    # we don't need them to be set by default
+    unset(CMAKE_AUTOMOC)
+    unset(CMAKE_AUTOUIC)
+    unset(CMAKE_AUTORCC)
     if (QT_KNOWN_POLICY_QTP0003)
         # Consider the BUILD_SHARED_LIBS value when creating Qt libraries.
         qt6_policy(SET QTP0003 NEW)
+    endif()
+    if (QT_KNOWN_POLICY_QTP0004)
+        # Extra directories with QML files in a QML module need extra qmldir files.
+        qt6_policy(SET QTP0004 OLD)
     endif()
 endif()
 
@@ -97,6 +98,9 @@ add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
 add_subdirectory(QMdmmServer)
+if (Qt6_FOUND)
+    add_subdirectory(QMdmmGui)
+endif()
 add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory list
 
 set(CPACK_GENERATOR 7Z TGZ TXZ TZST ZIP)

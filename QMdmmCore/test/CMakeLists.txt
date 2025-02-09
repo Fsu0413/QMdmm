@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 add_custom_target(QMdmmCore_Test)
 if (BUILD_TESTING)

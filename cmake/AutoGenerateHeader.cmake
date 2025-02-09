@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 # This file has different logic of original .sh or .vbs files.
 # It can produce output file list as well as final output files.
@@ -46,23 +47,25 @@ if (DEFINED PROJECT_NAME)
         foreach (header_file IN LISTS header_files)
             get_filename_component(header_path_absolute "${header_file}" ABSOLUTE)
             auto_generate_header_file_list("${header_path_absolute}" header_generated_file_names)
-            get_filename_component(header_file_name "${header_file}" NAME)
-            set(header_generated_paths)
-            foreach (header_generated_file_name IN LISTS header_generated_file_names)
-                list(APPEND header_generated_paths "${CMAKE_BINARY_DIR}/build/include/${target}/${header_generated_file_name}")
-            endforeach()
-            add_custom_command(OUTPUT ${header_generated_paths}
-                               COMMAND "${CMAKE_COMMAND}" -P "${AUTO_GENERATE_HEADER_CMAKE_FILE}" "${header_path_absolute}" ${header_generated_paths}
-                               MAIN_DEPENDENCY "${header_file}"
-                               DEPENDS "${AUTO_GENERATE_HEADER_CMAKE_FILE}"
-                               COMMENT "Generating header files for \"${header_file_name}\"..."
-            )
-            target_sources("${target}" PRIVATE ${header_generated_paths})
-            install(FILES ${header_generated_paths}
-                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
-                OPTIONAL
-                COMPONENT "dev"
-            )
+            if (header_generated_file_names)
+                get_filename_component(header_file_name "${header_file}" NAME)
+                set(header_generated_paths)
+                foreach (header_generated_file_name IN LISTS header_generated_file_names)
+                    list(APPEND header_generated_paths "${CMAKE_BINARY_DIR}/build/include/${target}/${header_generated_file_name}")
+                endforeach()
+                add_custom_command(OUTPUT ${header_generated_paths}
+                                   COMMAND "${CMAKE_COMMAND}" -P "${AUTO_GENERATE_HEADER_CMAKE_FILE}" "${header_path_absolute}" ${header_generated_paths}
+                                   MAIN_DEPENDENCY "${header_file}"
+                                   DEPENDS "${AUTO_GENERATE_HEADER_CMAKE_FILE}"
+                                   COMMENT "Generating header files for \"${header_file_name}\"..."
+                )
+                target_sources("${target}" PRIVATE ${header_generated_paths})
+                install(FILES ${header_generated_paths}
+                    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
+                    OPTIONAL
+                    COMPONENT "dev"
+                )
+            endif()
         endforeach()
     endfunction()
 else()

@@ -14,6 +14,7 @@ struct QMdmmPlayerPrivate;
 class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(bool hasKnife READ hasKnife WRITE setHasKnife NOTIFY hasKnifeChanged DESIGNABLE false FINAL)
     Q_PROPERTY(bool hasHorse READ hasHorse WRITE setHasHorse NOTIFY hasHorseChanged DESIGNABLE false FINAL)
     Q_PROPERTY(int hp READ hp WRITE setHp NOTIFY hpChanged DESIGNABLE false FINAL)

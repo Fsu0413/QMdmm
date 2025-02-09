@@ -2,12 +2,13 @@
 
 #include "config.h"
 
+#include <QMdmmSettings>
+
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QSettings>
 
 #include <cinttypes>
 #include <cstdint>
@@ -66,22 +67,7 @@ AB DEFGHIJ NO Q TUV XYZ
 
 Config::Config()
 {
-    QSettings::setDefaultFormat(QSettings::IniFormat);
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
-
-    // global configuration -> per-user configuration -> command line
-    // for reading system / per-user configuration, QSettings are enough
-
-    QSettings systemConfig(QSettings::SystemScope);
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    systemConfig.setIniCodec("UTF-8");
-#endif
-
-    QSettings userConfig(QSettings::UserScope);
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    userConfig.setIniCodec("UTF-8");
-#endif
+    QMdmmSettings setting;
 
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsCompactedShortOptions);
@@ -142,28 +128,19 @@ Config::Config()
         ::exit(0);
     }
 
-    QSettings *settingsToBeSaved = nullptr;
+    QMdmmSettings::Instance toSave = QMdmmSettings::Specified;
+
     if (parser.isSet(QStringLiteral("c"))) {
         if (parser.isSet(QStringLiteral("C")))
-            qFatal("It is not supported to save both user configuration and system configuration at one time. Exiting.");
-        settingsToBeSaved = &userConfig;
+            qFatal("It is not supported to save both per-user configuration and global configuration at one time. Exiting.");
+        toSave = QMdmmSettings::PerUser;
     } else if (parser.isSet(QStringLiteral("C"))) {
-        settingsToBeSaved = &systemConfig;
+        toSave = QMdmmSettings::Global;
     }
 
-    if (settingsToBeSaved != nullptr) {
-        if (!settingsToBeSaved->isWritable()) {
-            qWarning("Setting file is not writable. Saving the file may fail."
-#ifndef Q_OS_WIN
-                     " Please try running this program with 'sudo'."
-#endif
-            );
-        }
-    }
-
-    read_(&systemConfig, &userConfig, &parser);
-    if (settingsToBeSaved != nullptr)
-        save_(settingsToBeSaved);
+    read_(&setting, &parser);
+    if (toSave != QMdmmSettings::Specified)
+        save_(&setting, toSave);
     if (parser.isSet(QStringLiteral("d")))
         show_();
 }
@@ -273,7 +250,7 @@ inline QString punishHpRoundStrategyToString(QMdmmLogicConfiguration::PunishHpRo
 } // namespace
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity,readability-function-size)
-void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineParser *parser)
+void Config::read_(QMdmmSettings *setting, QCommandLineParser *parser)
 {
 #define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                  \
     do {                                                                                \
@@ -282,12 +259,9 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
         if (parser->isSet(QStringLiteral(settingName))) {                               \
             f = 1;                                                                      \
             s = parser->value(QStringLiteral(settingName));                             \
-        } else if (userConfig->contains(QStringLiteral(settingName))) {                 \
+        } else if (setting->contains(QStringLiteral(settingName))) {                    \
             f = 2;                                                                      \
-            s = userConfig->value(QStringLiteral(settingName)).toString();              \
-        } else if (systemConfig->contains(QStringLiteral(settingName))) {               \
-            f = 3;                                                                      \
-            s = systemConfig->value(QStringLiteral(settingName)).toString();            \
+            s = setting->value(QStringLiteral(settingName)).toString();                 \
         }                                                                               \
         if (f != 0) {                                                                   \
             std::optional<type> v = parserConvert(s);                                   \
@@ -298,9 +272,7 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
                 if (f == 1)                                                             \
                     from = "command line";                                              \
                 else if (f == 2)                                                        \
-                    from = "user config file";                                          \
-                else if (f == 3)                                                        \
-                    from = "system config file";                                        \
+                    from = "config file";                                               \
                 else                                                                    \
                     from = "unknown config";                                            \
                 qFatal("Config item %s (from %s) can't be parsed.", settingName, from); \
@@ -308,8 +280,7 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
         }                                                                               \
     } while (false)
 
-    systemConfig->beginGroup(QStringLiteral("server"));
-    userConfig->beginGroup(QStringLiteral("server"));
+    setting->beginGroup(QStringLiteral("server"));
 
     CONFIG_ITEM(bool, serverConfiguration_, "tcp", stringToBool, TcpEnabled);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "tcp-port", stringToUint16, TcpPort);
@@ -319,11 +290,9 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
     CONFIG_ITEM(QString, serverConfiguration_, "websocket-name", , WebsocketName);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", stringToUint16, WebsocketPort);
 
-    userConfig->endGroup();
-    systemConfig->endGroup();
+    setting->endGroup();
 
-    systemConfig->beginGroup(QStringLiteral("logic"));
-    userConfig->beginGroup(QStringLiteral("logic"));
+    setting->beginGroup(QStringLiteral("logic"));
 
     {
         int players = 0;
@@ -373,13 +342,12 @@ void Config::read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineP
     CONFIG_ITEM(bool, logicConfiguration_, "enable-let-move", stringToBool, EnableLetMove);
     CONFIG_ITEM(bool, logicConfiguration_, "can-buy-only-in-initial-city", stringToBool, CanBuyOnlyInInitialCity);
 
-    userConfig->endGroup();
-    systemConfig->endGroup();
+    setting->endGroup();
 
 #undef CONFIG_ITEM
 }
 
-void Config::save_(QSettings *config)
+void Config::save_(QMdmmSettings *setting, QMdmmSettings::Instance toSave)
 {
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
@@ -387,12 +355,12 @@ void Config::save_(QSettings *config)
     do {                                                                \
         type v = conf.valueName();                                      \
         QString s = settingConvert(v);                                  \
-        config->setValue(QStringLiteral(settingName), s);               \
+        setting->setValue(QStringLiteral(settingName), s);              \
     } while (false)
 
     // NOLINTEND(bugprone-macro-parentheses)
 
-    config->beginGroup(QStringLiteral("server"));
+    setting->beginGroup(QStringLiteral("server"));
 
     CONFIG_ITEM(bool, serverConfiguration_, "tcp", boolToString, tcpEnabled);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "tcp-port", uint16ToString, tcpPort);
@@ -402,9 +370,9 @@ void Config::save_(QSettings *config)
     CONFIG_ITEM(QString, serverConfiguration_, "websocket-name", , websocketName);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", uint16ToString, websocketPort);
 
-    config->endGroup();
+    setting->endGroup();
 
-    config->beginGroup(QStringLiteral("logic"));
+    setting->beginGroup(QStringLiteral("logic"));
 
     CONFIG_ITEM(int, logicConfiguration_, "players", intToString, playerNumPerRoom);
     CONFIG_ITEM(int, logicConfiguration_, "timeout", intToString, requestTimeout);
@@ -420,13 +388,11 @@ void Config::save_(QSettings *config)
     CONFIG_ITEM(bool, logicConfiguration_, "enable-let-move", boolToString, enableLetMove);
     CONFIG_ITEM(bool, logicConfiguration_, "can-buy-only-in-initial-city", boolToString, canBuyOnlyInInitialCity);
 
-    config->endGroup();
+    setting->endGroup();
 
 #undef CONFIG_ITEM
 
-    config->sync();
-
-    ::exit(static_cast<int>(config->status()));
+    ::exit(static_cast<int>(setting->saveConfig(toSave)));
 }
 
 void Config::show_()

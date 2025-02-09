@@ -5,9 +5,10 @@
 
 #include <QMdmmRoom>
 #include <QMdmmServer>
+#include <QMdmmSettings>
 
-class QSettings;
-class QCommandLineParser;
+#include <QCommandLineParser>
+#include <QSettings>
 
 class Config
 {
@@ -21,8 +22,8 @@ private:
     QMdmmServerConfiguration serverConfiguration_;
     QMdmmLogicConfiguration logicConfiguration_;
 
-    void read_(QSettings *systemConfig, QSettings *userConfig, QCommandLineParser *parser);
-    [[noreturn]] void save_(QSettings *config);
+    void read_(QMdmmSettings *setting, QCommandLineParser *parser);
+    [[noreturn]] void save_(QMdmmSettings *setting, QMdmmSettings::Instance toSave);
     [[noreturn]] void show_();
 };
 
