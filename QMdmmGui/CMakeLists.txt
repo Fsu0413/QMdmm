@@ -18,6 +18,7 @@ set(QMDMMGUI_QML_FILES
     qml/Button.qml
     qml/StartScene.qml
     qml/Window.qml
+    qml/RootItem.qml
 )
 set(QMDMMGUI_RESOURCES
     assets/1.jpg

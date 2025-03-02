@@ -14,26 +14,13 @@ Item {
         transformOrigin: Item.TopLeft
         scale: parent.height / 1024
 
-        Image {
-            id: rootItem
+        RootItem {
+            // This item has:
+            // fixed height 1024
+            // width scaled with height, with 800 as minimum
 
-            signal startGameButtonClicked()
-            signal configureButtonClicked()
-            signal aboutButtonClicked()
-
-            anchors.fill: parent
-
-            source: "../assets/1.jpg"
-
-            // Component.onCompleted: cppif.testSlot()
-            StartScene{
-                anchors.fill: parent
-            }
-
-            Window {
-                id: resizableWindow
-                visible: false
-            }
+            // All visual children can assume the height is never changed
+            // only horizontal position / width may be considered when resizing
         }
     }
 }
