@@ -136,15 +136,7 @@ QMdmmSettingsPrivate::QMdmmSettingsPrivate()
     std::call_once(qSettingsInitialized, &initializeQSettings);
 
     globalConfig = new QMdmmQSettingsWrapperPrivate(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    globalConfig->settings.setIniCodec("UTF-8");
-#endif
-
     userConfig = new QMdmmQSettingsWrapperPrivate(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    userConfig->settings.setIniCodec("UTF-8");
-#endif
-
     specifiedConfig = new QMdmmQVariantMapWrapperPrivate;
 }
 

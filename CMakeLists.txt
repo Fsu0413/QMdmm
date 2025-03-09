@@ -28,7 +28,9 @@ option(BUILD_TESTING "Build test binaries" false)
 
 option(QMDMM_EXPORT_PRIVATE "Export private symbols, copy headers of private classes" false)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED true)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
@@ -40,11 +42,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
 include(AutoGenerateHeader)
 
-set(QT5_EXTRA_COMPONENTS_NEEDED)
 set(QT6_EXTRA_COMPONENTS_NEEDED)
 
 if (BUILD_TESTING)
-    list(APPEND QT5_EXTRA_COMPONENTS_NEEDED Test)
     list(APPEND QT6_EXTRA_COMPONENTS_NEEDED Test)
 endif()
 
@@ -54,13 +54,7 @@ endif()
 set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
 set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
 
-# find_package Qt6 must be called before Qt5 - QTBUG-97097
-find_package(Qt6 6.5  COMPONENTS Core Network WebSockets Gui Qml Quick ${QT6_EXTRA_COMPONENTS_NEEDED})
-find_package(Qt5 5.15 COMPONENTS Core Network WebSockets ${QT5_EXTRA_COMPONENTS_NEEDED})
-
-if (NOT (Qt5_FOUND OR Qt6_FOUND))
-    message(FATAL_ERROR "at least one of Qt 5 and Qt 6 is needed")
-endif()
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network WebSockets Gui Qml Quick ${QT6_EXTRA_COMPONENTS_NEEDED})
 
 if (Qt6_FOUND)
     qt6_standard_project_setup(REQUIRES 6.5)
@@ -74,6 +68,7 @@ if (Qt6_FOUND)
     endif()
     if (QT_KNOWN_POLICY_QTP0004)
         # Extra directories with QML files in a QML module need extra qmldir files.
+        # Migrate as long as possible!
         qt6_policy(SET QTP0004 OLD)
     endif()
 endif()
@@ -125,7 +120,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
 endif()
 
 include(CPack)
-cpack_add_component("5")
 cpack_add_component("6")
 cpack_add_component("dev" DEPENDS "5" "6")
 cpack_add_component("private-dev" DEPENDS "dev")

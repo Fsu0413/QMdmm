@@ -269,15 +269,7 @@ void QMdmmSocketPrivateQWebSocket::setupSocket()
 {
     connect(socket, &QWebSocket::binaryMessageReceived, this, &QMdmmSocketPrivateQWebSocket::packetReceived);
     connect(this, &QMdmmSocketPrivateQWebSocket::destroyed, socket, &QWebSocket::deleteLater);
-    connect(socket,
-#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
-            // QTcpSocket and QLocalSocket introduced 'errorOccurred' signal in 5.15 and removed 'error' as a signal in 6.0
-            // but QWebSocket introduced 'errorOccurred' in 6.5 so overloaded 'error' can only be used back then.
-            qOverload<QAbstractSocket::SocketError>(&QWebSocket::error),
-#else
-            &QWebSocket::errorOccurred,
-#endif
-            this, &QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket);
+    connect(socket, &QWebSocket::errorOccurred, this, &QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket);
     connect(socket, &QWebSocket::disconnected, this, &QMdmmSocketPrivateQWebSocket::socketDisconnected);
     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 }

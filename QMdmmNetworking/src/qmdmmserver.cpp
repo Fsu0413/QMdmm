@@ -86,15 +86,10 @@ QMdmmServerPrivate::QMdmmServerPrivate(QMdmmServerConfiguration serverConfigurat
     // Tcp
     if (serverConfiguration.tcpEnabled()) {
         t = new QTcpServer(this);
-        connect(t,
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-                // Qt pre-6.3: old behavior
-                &QTcpServer::newConnection,
-#else
-                // Qt post-6.4: new pendingConnectionAvailable signal, emitted after connection is added to pending connection queue instead of the connection is established
-                &QTcpServer::pendingConnectionAvailable,
-#endif
-                this, &QMdmmServerPrivate::tcpServerNewConnection);
+
+        // Qt post-6.4: new pendingConnectionAvailable signal, emitted after connection is added to pending connection queue
+        // instead of the connection is established (Pre 6.3 behavior)
+        connect(t, &QTcpServer::pendingConnectionAvailable, this, &QMdmmServerPrivate::tcpServerNewConnection);
     }
 
     // Local

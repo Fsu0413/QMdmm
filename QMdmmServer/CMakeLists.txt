@@ -27,25 +27,3 @@ if (Qt6_FOUND)
         LIBRARY
     )
 endif()
-
-if (Qt5_FOUND)
-    add_executable(QMdmmServer5 ${QMDMMSERVER_SOURCES})
-
-    set_target_properties(QMdmmServer5 PROPERTIES
-        AUTOMOC ON
-        AUTOUIC ON
-        AUTORCC ON
-        VERSION "${QMdmm_VERSION}"
-    )
-
-    target_link_libraries(QMdmmServer5
-        PUBLIC QMdmm5::Core
-               QMdmm5::Networking
-    )
-
-    install(TARGETS QMdmmServer5
-        COMPONENT "5"
-        RUNTIME
-        LIBRARY
-    )
-endif()
