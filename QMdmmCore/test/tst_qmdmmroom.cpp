@@ -6,6 +6,8 @@
 
 // NOLINTBEGIN
 
+using namespace QMdmmCore;
+
 class tst_QMdmmLogicConfiguration : public QObject
 {
     Q_OBJECT

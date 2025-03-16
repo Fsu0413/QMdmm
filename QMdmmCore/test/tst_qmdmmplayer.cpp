@@ -9,6 +9,8 @@
 
 // NOLINTBEGIN
 
+using namespace QMdmmCore;
+
 class tst_QMdmmPlayer : public QObject
 {
     Q_OBJECT

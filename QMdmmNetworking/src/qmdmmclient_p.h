@@ -18,6 +18,8 @@
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
+namespace QMdmmProtocol = QMdmmCore::QMdmmProtocol;
+
 class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
 {
     Q_OBJECT

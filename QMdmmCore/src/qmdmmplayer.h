@@ -7,9 +7,13 @@
 
 #include <QObject>
 
-class QMdmmRoom;
+namespace QMdmmCore {
 
 struct QMdmmPlayerPrivate;
+
+namespace v0 {
+
+class QMdmmRoom;
 
 class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
 {
@@ -132,10 +136,18 @@ signals:
 
 #ifndef DOXYGEN
 private:
-    friend struct QMdmmPlayerPrivate;
-    const std::unique_ptr<QMdmmPlayerPrivate> d;
+    friend struct QMdmmCore::QMdmmPlayerPrivate;
+    const std::unique_ptr<QMdmmCore::QMdmmPlayerPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmPlayer)
 #endif
 };
+
+} // namespace v0
+
+inline namespace v1 {
+using v0::QMdmmPlayer;
+}
+
+} // namespace QMdmmCore
 
 #endif // QMDMMPLAYER_H

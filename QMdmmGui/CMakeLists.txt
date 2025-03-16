@@ -22,7 +22,9 @@ set(QMDMMGUI_QML_FILES
 )
 set(QMDMMGUI_RESOURCES
     assets/1.jpg
-    assets/btn.jpg
+    assets/btn.png
+    assets/horse.png
+    assets/knife.png
 )
 
 qt6_add_executable(QMdmm6 WIN32 MACOSX_BUNDLE ${QMDMMGUI_SOURCES})

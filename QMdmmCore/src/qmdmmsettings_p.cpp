@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QSettings>
 
+namespace QMdmmCore {
+
 // for reading global / per-user configuration, QSettings is the suitable way
 // for specified configuration, QVariantMap is more proper since QSettings always autosaves configuration (This is not desired behavior!)
 
@@ -185,3 +187,4 @@ QSettings::Status QMdmmSettingsPrivate::saveConfig(QMdmmSettings::Instance insta
 
     return toBeSaved->status();
 }
+} // namespace QMdmmCore

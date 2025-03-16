@@ -8,6 +8,9 @@
 #include <QSettings>
 #include <memory>
 
+namespace QMdmmCore {
+namespace v0 {
+
 class QMDMMCORE_EXPORT QMdmmSettings
 {
     Q_GADGET
@@ -39,5 +42,12 @@ public:
 private:
     Q_DISABLE_COPY_MOVE(QMdmmSettings);
 };
+} // namespace v0
+
+inline namespace v1 {
+using v0::QMdmmSettings;
+}
+
+} // namespace QMdmmCore
 
 #endif

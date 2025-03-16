@@ -14,6 +14,8 @@
 
 #include <cstdint>
 
+using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
+
 struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObject
 {
     Q_GADGET

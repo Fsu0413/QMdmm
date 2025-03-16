@@ -11,6 +11,12 @@
 
 #include <cstdint>
 
+namespace QMdmmCore {
+
+struct QMdmmRoomPrivate;
+
+namespace v0 {
+
 class QMdmmPlayer;
 class QMdmmLogic;
 
@@ -81,7 +87,8 @@ public:
     bool deserialize(const QJsonValue &value);
 };
 
-struct QMdmmRoomPrivate;
+inline namespace priv {
+}
 
 class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
 {
@@ -129,5 +136,13 @@ private:
     const std::unique_ptr<QMdmmRoomPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmRoom)
 };
+} // namespace v0
+
+inline namespace v1 {
+using v0::QMdmmLogicConfiguration;
+using v0::QMdmmRoom;
+} // namespace v1
+
+} // namespace QMdmmCore
 
 #endif // QMDMMROOM_H

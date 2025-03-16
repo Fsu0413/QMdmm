@@ -5,11 +5,13 @@
 
 #include "qmdmmnetworkingglobal.h"
 
+#include <QMdmmLogicConfiguration>
 #include <QMdmmProtocol>
 
 class QMdmmAgent;
 class QMdmmSocket;
-class QMdmmLogicConfiguration;
+using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
+namespace QMdmmData = QMdmmCore::QMdmmData;
 
 // for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.

@@ -11,6 +11,9 @@
  * @brief QMdmm protocol definitions
  */
 
+namespace QMdmmCore {
+namespace v0 {
+
 /**
  * @namespace QMdmmProtocol
  * @brief The namespace for protocol
@@ -445,3 +448,5 @@ QMdmmPacket QMdmmPacket::fromJson(const QByteArray &serialized, QString *errorSt
 
     return ret;
 }
+} // namespace v0
+} // namespace QMdmmCore

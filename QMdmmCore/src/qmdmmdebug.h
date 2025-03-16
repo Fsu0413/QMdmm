@@ -13,6 +13,15 @@ class QMDMMCORE_EXPORT QMdmmDebug
 #include <QDebug>
 #include <QFileDevice>
 
+namespace QMdmmCore {
+namespace v0 {
 QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QIODevice *f);
+} // namespace v0
+
+inline namespace v1 {
+using v0::qMdmmDebugSetDevice;
+} // namespace v1
+
+} // namespace QMdmmCore
 
 #endif

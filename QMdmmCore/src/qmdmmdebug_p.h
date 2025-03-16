@@ -8,6 +8,8 @@
 #include <QMutex>
 #include <QPointer>
 
+namespace QMdmmCore {
+
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmDebugLogPrivate
 {
     QMutex m;
@@ -18,5 +20,7 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmDebugLogPrivate
 
 QMDMMCORE_PRIVATE_EXPORT QMdmmDebugLogPrivate *qMdmmDebugLogPrivateInstance();
 QMDMMCORE_PRIVATE_EXPORT void qMdmmMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+
+} // namespace QMdmmCore
 
 #endif

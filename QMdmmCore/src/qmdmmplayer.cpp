@@ -11,6 +11,9 @@
  * @brief This is the file where MDMM player is defined.
  */
 
+namespace QMdmmCore {
+namespace v0 {
+
 /**
  * @class QMdmmPlayer
  * @brief The player playing MDMM Game
@@ -811,3 +814,5 @@ void QMdmmPlayer::resetUpgrades()
  *
  * Acts as the notify signal for property @c alive and @c dead
  */
+} // namespace v0
+} // namespace QMdmmCore

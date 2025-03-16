@@ -6,6 +6,9 @@
 #include <QGlobalStatic>
 #include <QSettings>
 
+namespace QMdmmCore {
+namespace v0 {
+
 #ifndef DOXYGEN
 
 // This can't be simply put into the private source file, since the instance is static so...
@@ -189,3 +192,6 @@ bool QMdmmSettings::contains(Instance instance, const QString &key) const
 
     return c->contains(key);
 }
+
+} // namespace v0
+} // namespace QMdmmCore

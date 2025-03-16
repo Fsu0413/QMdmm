@@ -10,6 +10,8 @@
 #include <QCommandLineParser>
 #include <QSettings>
 
+using QMdmmSettings = QMdmmCore::QMdmmSettings;
+
 class Config
 {
 public:

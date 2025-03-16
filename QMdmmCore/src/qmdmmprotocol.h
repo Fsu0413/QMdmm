@@ -11,6 +11,9 @@
 
 #include <cstdint>
 
+namespace QMdmmCore {
+namespace v0 {
+
 // NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
 #if 0
 class QMDMMCORE_EXPORT QMdmmProtocol
@@ -122,6 +125,15 @@ private:
 #endif
 };
 
-Q_DECLARE_METATYPE(QMdmmPacket)
+} // namespace v0
+
+inline namespace v1 {
+using v0::QMdmmPacket;
+using v0::QMdmmPacketData;
+namespace QMdmmProtocol = v0::QMdmmProtocol;
+} // namespace v1
+} // namespace QMdmmCore
+
+Q_DECLARE_METATYPE(QMdmmCore::QMdmmPacket)
 
 #endif // QMDMMPROTOCOL_H

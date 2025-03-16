@@ -5,6 +5,8 @@
 
 #include <QMutexLocker>
 
+namespace QMdmmCore {
+
 QtMessageHandler QMdmmDebugLogPrivate::qtMessageHandler = nullptr;
 
 QMdmmDebugLogPrivate *qMdmmDebugLogPrivateInstance()
@@ -32,3 +34,5 @@ void qMdmmMessageOutput(QtMsgType type, const QMessageLogContext &context, const
         qt_message_output(type, context, msg);
     }
 }
+
+} // namespace QMdmmCore

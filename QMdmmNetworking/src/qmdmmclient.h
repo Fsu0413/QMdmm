@@ -5,9 +5,12 @@
 
 #include "qmdmmnetworkingglobal.h"
 
+#include <QMdmmRoom>
+
 #include <QObject>
 
-class QMdmmRoom;
+using QMdmmRoom = QMdmmCore::QMdmmRoom;
+namespace QMdmmData = QMdmmCore::QMdmmData;
 
 struct QMDMMNETWORKING_EXPORT QMdmmClientConfiguration final : public QVariantMap
 {

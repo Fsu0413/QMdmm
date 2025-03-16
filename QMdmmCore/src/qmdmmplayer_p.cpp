@@ -5,6 +5,8 @@
 
 #include "qmdmmroom.h"
 
+namespace QMdmmCore {
+
 QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
     : knife(false)
     , horse(false)
@@ -31,3 +33,5 @@ void QMdmmPlayerPrivate::applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int dam
     if (kills)
         from->setUpgradePoint(from->upgradePoint() + 1);
 }
+
+} // namespace QMdmmCore

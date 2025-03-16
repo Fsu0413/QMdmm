@@ -3,9 +3,13 @@
 #include <QMdmmCore/QMdmmLogic>
 #include <QMdmmCore/QMdmmLogicConfiguration>
 
+#include "qmdmmlogic_p.h"
+
 #include <QTest>
 
 // NOLINTBEGIN
+
+using namespace QMdmmCore;
 
 class tst_QMdmmLogic : public QObject
 {
@@ -14,14 +18,111 @@ class tst_QMdmmLogic : public QObject
 public:
     Q_INVOKABLE tst_QMdmmLogic() = default;
 
-private:
-    static QMdmmLogicConfiguration defaultConf;
+    std::unique_ptr<QMdmmLogic> l;
 
 private slots:
-    // TBD
-};
+    // https://doc.qt.io/qt-5/qtest-overview.html#creating-a-test
+    // called before each test case is run
 
-QMdmmLogicConfiguration tst_QMdmmLogic::defaultConf = QMdmmLogicConfiguration::defaults();
+    void init()
+    {
+        l.reset(new QMdmmLogic(QMdmmLogicConfiguration::defaults(), this));
+    }
+
+    void QMdmmLogicstate()
+    {
+        QCOMPARE(l->state(), QMdmmLogic::BeforeRoundStart);
+    }
+
+    void QMdmmLogicaddPlayer()
+    {
+        // case 1
+        {
+            bool r = l->addPlayer(QStringLiteral("test1"));
+            QVERIFY(r);
+        }
+
+        // case 2
+        {
+            l->d->state = QMdmmLogic::SscForAction;
+            bool r = l->addPlayer(QStringLiteral("test2"));
+            QVERIFY(!r);
+        }
+
+        // case 3
+        {
+            l->d->state = QMdmmLogic::BeforeRoundStart;
+            bool r = l->addPlayer(QStringLiteral("test1"));
+            QVERIFY(!r);
+        }
+
+        // case 4: d->players.contains(playerName) returns false, d->room->addPlayer(playerName) returns nullptr
+        // This is Q_UNREACHABLE so do not test
+    }
+
+    void QMdmmLogicremovePlayer()
+    {
+        // preparation
+        {
+            l->addPlayer(QStringLiteral("test1"));
+            l->addPlayer(QStringLiteral("test2"));
+            l->addPlayer(QStringLiteral("test3"));
+        }
+
+        // case 1
+        {
+            bool r = l->removePlayer(QStringLiteral("test1"));
+            QVERIFY(r);
+        }
+
+        // case 2
+        {
+            l->d->state = QMdmmLogic::SscForAction;
+            bool r = l->removePlayer(QStringLiteral("test2"));
+            QVERIFY(!r);
+        }
+
+        // case 3
+        {
+            l->d->state = QMdmmLogic::BeforeRoundStart;
+            bool r = l->removePlayer(QStringLiteral("test1"));
+            QVERIFY(!r);
+        }
+
+        // case 4: d->players.contains(playerName) returns true, d->room->removePlayer(playerName) returns false
+        // This is Q_UNREACHABLE so do not test
+    }
+
+    void QMdmmLogicroundStart()
+    {
+        // preparation
+        {
+            l->addPlayer(QStringLiteral("test1"));
+            l->addPlayer(QStringLiteral("test2"));
+            l->addPlayer(QStringLiteral("test3"));
+        }
+
+        // case 1
+        {
+            bool r = l->roundStart();
+            QVERIFY(r);
+        }
+
+        // case 2
+        {
+            bool r = l->roundStart();
+            QVERIFY(!r);
+        }
+
+        init();
+
+        // case 3
+        {
+            bool r = l->roundStart();
+            QVERIFY(!r);
+        }
+    }
+};
 
 namespace {
 RegisterTestObject<tst_QMdmmLogic> _;

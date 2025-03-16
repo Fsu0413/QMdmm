@@ -5,9 +5,12 @@
 
 #include "qmdmmnetworkingglobal.h"
 
+#include <QMdmmData>
 #include <QMdmmProtocol>
 
 #include <QObject>
+
+namespace QMdmmData = QMdmmCore::QMdmmData;
 
 class QMdmmSocket;
 

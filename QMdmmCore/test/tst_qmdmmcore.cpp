@@ -8,6 +8,8 @@
 
 // NOLINTBEGIN
 
+using namespace QMdmmCore;
+
 class tst_QMdmmCore : public QObject
 {
     Q_OBJECT

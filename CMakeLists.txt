@@ -69,7 +69,7 @@ if (Qt6_FOUND)
     if (QT_KNOWN_POLICY_QTP0004)
         # Extra directories with QML files in a QML module need extra qmldir files.
         # Migrate as long as possible!
-        qt6_policy(SET QTP0004 OLD)
+        qt6_policy(SET QTP0004 NEW)
     endif()
 endif()
 

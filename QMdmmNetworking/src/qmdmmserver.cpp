@@ -9,6 +9,8 @@
 #include <QTcpSocket>
 #include <utility>
 
+namespace QMdmmGlobal = QMdmmCore::QMdmmGlobal;
+
 const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
     // clang-format off

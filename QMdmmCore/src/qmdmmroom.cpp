@@ -15,6 +15,9 @@
  * @brief Contains definitions of room.
  */
 
+namespace QMdmmCore {
+namespace v0 {
+
 /**
  * @class QMdmmLogicConfiguration
  * @brief Contains configurations of logic
@@ -683,3 +686,5 @@ void QMdmmRoom::resetUpgrades()
  * @brief emitted when a player is removed
  * @param playerName the internal name of the removed player
  */
+} // namespace v0
+} // namespace QMdmmCore

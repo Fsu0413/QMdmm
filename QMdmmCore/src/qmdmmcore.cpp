@@ -9,6 +9,9 @@
  * @brief Global definition of QMdmmCore library
  */
 
+namespace QMdmmCore {
+namespace v0 {
+
 /**
  * @def QMDMMCORE_EXPORT
  * @brief Indicates this function is public and is exported from QMdmmCore library.
@@ -342,3 +345,5 @@ QStringList QMdmmUtilities::variantList2StringList(const QVariantList &list)
         ret << i.toString();
     return ret;
 }
+} // namespace v0
+} // namespace QMdmmCore

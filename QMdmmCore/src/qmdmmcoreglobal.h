@@ -49,6 +49,9 @@ class QMDMMCORE_EXPORT QMdmmUtilities
 
 #include "qmdmmdebug.h"
 
+namespace QMdmmCore {
+namespace v0 {
+
 namespace QMdmmData {
 Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 
@@ -161,5 +164,14 @@ QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
 QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
 QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
 } // namespace QMdmmUtilities
+} // namespace v0
+
+inline namespace v1 {
+namespace QMdmmData = v0::QMdmmData;
+namespace QMdmmGlobal = v0::QMdmmGlobal;
+namespace QMdmmUtilities = v0::QMdmmUtilities;
+} // namespace v1
+
+} // namespace QMdmmCore
 
 #endif // QMDMMCOREGLOBAL_H

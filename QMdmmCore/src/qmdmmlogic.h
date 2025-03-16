@@ -9,11 +9,15 @@
 
 #include <cstdint>
 
-class QMdmmLogicConfiguration;
+class tst_QMdmmLogic;
+
+namespace QMdmmCore {
 
 struct QMdmmLogicPrivate;
 
-class tst_QMdmmLogic;
+namespace v0 {
+
+class QMdmmLogicConfiguration;
 
 class QMDMMCORE_EXPORT QMdmmLogic final : public QObject
 {
@@ -37,14 +41,14 @@ public:
     [[nodiscard]] State state() const noexcept;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void addPlayer(const QString &playerName);
-    void removePlayer(const QString &playerName);
-    void roundStart();
+    bool addPlayer(const QString &playerName);
+    bool removePlayer(const QString &playerName);
+    bool roundStart();
 
-    void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
-    void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
-    void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
+    bool sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
+    bool actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
+    bool actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    bool upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
     void requestSscForAction(const QStringList &playerNames, QPrivateSignal);
@@ -61,12 +65,20 @@ signals: // NOLINT(readability-redundant-access-specifiers)
 
 #ifndef DOXYGEN
 private:
-    friend struct QMdmmLogicPrivate;
-    const std::unique_ptr<QMdmmLogicPrivate> d;
+    friend struct QMdmmCore::QMdmmLogicPrivate;
+    const std::unique_ptr<QMdmmCore::QMdmmLogicPrivate> d;
     Q_DISABLE_COPY_MOVE(QMdmmLogic);
 
-    friend class tst_QMdmmLogic;
+    friend class ::tst_QMdmmLogic;
 #endif
 };
+
+} // namespace v0
+
+inline namespace v1 {
+using v0::QMdmmLogic;
+}
+
+} // namespace QMdmmCore
 
 #endif

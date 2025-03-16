@@ -3,11 +3,18 @@
 #include "qmdmmclient_p.h"
 #include "qmdmmclient.h"
 
+#include <QMdmmLogicConfiguration>
 #include <QMdmmPlayer>
 
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QScopeGuard>
+
+namespace QMdmmProtocol = QMdmmCore::QMdmmProtocol;
+namespace QMdmmGlobal = QMdmmCore::QMdmmGlobal;
+using QMdmmRoom = QMdmmCore::QMdmmRoom;
+using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
+using QMdmmPlayer = QMdmmCore::QMdmmPlayer;
 
 QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),

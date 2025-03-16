@@ -3,7 +3,12 @@
 import QtQuick 6.5
 
 Item {
+    id: scene
     anchors.fill: parent
+
+    signal startGameClicked
+    signal configureClicked
+    signal aboutClicked
 
     Item {
         y: 512
@@ -20,30 +25,30 @@ Item {
                 height: parent.height / 3
                 width: parent.width
 
-                source: "../assets/btn.jpg"
+                source: "../assets/btn.png"
                 text: qsTr("Start game")
 
-                onClicked: rootItem.startGameButtonClicked()
+                onClicked: scene.startGameClicked()
             }
 
             Button {
                 height: parent.height / 3
                 width: parent.width
 
-                source: "../assets/btn.jpg"
+                source: "../assets/btn.png"
                 text: qsTr("Configuration")
 
-                onClicked: rootItem.configureButtonClicked()
+                onClicked: scene.configureClicked()
             }
 
             Button {
                 height: parent.height / 3
                 width: parent.width
 
-                source: "../assets/btn.jpg"
+                source: "../assets/btn.png"
                 text: qsTr("About")
 
-                onClicked: rootItem.aboutButtonClicked()
+                onClicked: scene.aboutClicked()
             }
         }
     }

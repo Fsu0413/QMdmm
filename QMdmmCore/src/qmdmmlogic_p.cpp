@@ -8,6 +8,8 @@
 
 #include <QHash>
 
+namespace QMdmmCore {
+
 QMdmmLogicPrivate::QMdmmLogicPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogic *q)
     : q(q)
     , room(new QMdmmRoom(logicConfiguration, q))
@@ -287,3 +289,5 @@ void QMdmmLogicPrivate::upgrade()
         }
     }
 }
+
+} // namespace QMdmmCore

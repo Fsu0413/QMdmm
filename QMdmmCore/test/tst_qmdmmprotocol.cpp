@@ -7,6 +7,8 @@
 
 // NOLINTBEGIN
 
+using namespace QMdmmCore;
+
 class tst_QMdmmProtocol : public QObject
 {
     Q_OBJECT

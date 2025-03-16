@@ -16,6 +16,9 @@
  * @brief This is the file where MDMM Game logic is defined.
  */
 
+namespace QMdmmCore {
+namespace v0 {
+
 /**
  * @class QMdmmLogic
  * @brief The MDMM Game logic.
@@ -141,84 +144,120 @@ QMdmmLogic::State QMdmmLogic::state() const noexcept
 /**
  * @brief Add a player to the logic
  * @param playerName the internal name of the player
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::BeforeRoundStart state.
  */
-void QMdmmLogic::addPlayer(const QString &playerName)
+bool QMdmmLogic::addPlayer(const QString &playerName)
 {
     if (d->state == BeforeRoundStart) {
         if (!d->players.contains(playerName)) {
             if (d->room->addPlayer(playerName) != nullptr) {
                 d->players << playerName;
                 d->room->resetUpgrades();
+
+                return true;
             }
+
+            Q_UNREACHABLE();
         }
     }
+
+    return false;
 }
 
 /**
  * @brief Remove a player from the logic
  * @param playerName the internal name of the player
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::BeforeRoundStart state.
  */
-void QMdmmLogic::removePlayer(const QString &playerName)
+bool QMdmmLogic::removePlayer(const QString &playerName)
 {
     if (d->state == BeforeRoundStart) {
         if (d->players.contains(playerName)) {
             if (d->room->removePlayer(playerName)) {
                 d->players.removeAll(playerName);
                 d->room->resetUpgrades();
+
+                return true;
             }
+
+            Q_UNREACHABLE();
         }
     }
+
+    return false;
 }
 
 /**
  * @brief Round start
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::BeforeRoundStart state.
  */
-void QMdmmLogic::roundStart()
+bool QMdmmLogic::roundStart()
 {
     if (d->state == BeforeRoundStart) {
-        d->room->prepareForRoundStart();
-        d->startSscForAction();
+        // a game must be started for player number >= 2
+        if (d->players.length() >= 2) {
+            d->room->prepareForRoundStart();
+            d->startSscForAction();
+
+            return true;
+        }
     }
+
+    return false;
 }
 
 /**
  * @brief Receive Stone-Scissors-Cloth result
  * @param playerName the internal name of the player
  * @param ssc the Stone-Scissors-Cloth of the player
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::SscForAction or @c QMdmmLogic::SscForActionOrder state.
  */
-void QMdmmLogic::sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc)
+bool QMdmmLogic::sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc)
 {
     if (d->state == SscForAction) {
         d->sscForActionReplies.insert(playerName, ssc);
         d->sscForAction();
-    } else if (d->state == SscForActionOrder) {
+
+        return true;
+    }
+
+    if (d->state == SscForActionOrder) {
         d->sscForActionOrderReplies.insert(playerName, ssc);
         d->sscForActionOrder();
+
+        return true;
     }
+
+    return false;
 }
 
 /**
  * @brief Receive the desired action order result
  * @param playerName the internal name of the player
  * @param desiredOrder the desired action order of the player
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::ActionOrder state.
  */
-void QMdmmLogic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
+bool QMdmmLogic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
     if (d->state == ActionOrder) {
         foreach (int order, desiredOrder)
             d->desiredActionOrders.insert(order, playerName);
         d->actionOrder();
+
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -227,32 +266,42 @@ void QMdmmLogic::actionOrderReply(const QString &playerName, const QList<int> &d
  * @param action the action to do by the player
  * @param toPlayer the internal name of the target player
  * @param toPlace the target place
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::Action state.
  */
-void QMdmmLogic::actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
+bool QMdmmLogic::actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
 {
     if (d->state == Action) {
         if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
             d->applyAction(playerName, action, toPlayer, toPlace);
             d->startAction();
+
+            return true;
         }
     }
+
+    return false;
 }
 
 /**
  * @brief Receive the upgrade items of a player
  * @param playerName the internal name of the player
  * @param items the upgrade items
+ * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c QMdmmLogic::Upgrade state.
  */
-void QMdmmLogic::upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items)
+bool QMdmmLogic::upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items)
 {
     if (d->state == Upgrade) {
         d->upgrades.insert(playerName, items);
         d->upgrade();
+
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -350,3 +399,5 @@ void QMdmmLogic::upgradeReply(const QString &playerName, const QList<QMdmmData::
  *
  * Can be only emitted in @c QMdmmLogic::Upgrade state.
  */
+} // namespace v0
+} // namespace QMdmmCore

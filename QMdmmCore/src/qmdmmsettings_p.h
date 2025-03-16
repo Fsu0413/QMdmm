@@ -7,6 +7,8 @@
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
+namespace QMdmmCore {
+
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmSettingsWrapperPrivate
 {
     virtual ~QMdmmSettingsWrapperPrivate();
@@ -69,6 +71,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmSettingsPrivate
 
     QSettings::Status saveConfig(QMdmmSettings::Instance toBeSaved);
 };
+
+} // namespace QMdmmCore
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 

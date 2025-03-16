@@ -9,6 +9,8 @@
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
+namespace QMdmmCore {
+
 struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
 {
     QMdmmLogicPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogic *q);
@@ -43,6 +45,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
     void startUpgrade();
     void upgrade();
 };
+
+} // namespace QMdmmCore
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
