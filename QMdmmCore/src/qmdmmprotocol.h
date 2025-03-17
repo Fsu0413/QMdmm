@@ -11,15 +11,13 @@
 
 #include <cstdint>
 
+QMDMM_EXPORT_NAME(QMdmmProtocol)
+QMDMM_EXPORT_NAME(QMdmmPacket)
+
 namespace QMdmmCore {
 namespace v0 {
 
-// NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
-#if 0
-class QMDMMCORE_EXPORT QMdmmProtocol
-#endif
-
-namespace QMdmmProtocol {
+namespace Protocol {
 
 enum RequestId : uint8_t
 {
@@ -75,9 +73,9 @@ enum PacketType : uint8_t
     TypeNotify,
 };
 
-QMDMMCORE_EXPORT extern int protocolVersion() noexcept;
+QMDMMCORE_EXPORT extern int version() noexcept;
 
-} // namespace QMdmmProtocol
+} // namespace Protocol
 
 #ifndef DOXYGEN
 // Cannot pimpl following class since it inherits QSharedData
@@ -85,29 +83,29 @@ QMDMMCORE_EXPORT extern int protocolVersion() noexcept;
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
 
 // documentation is not needed since it is purely internal to QMdmmPacket
-struct QMDMMCORE_EXPORT QMdmmPacketData final : public QSharedData, public QJsonObject
+struct QMDMMCORE_EXPORT PacketData final : public QSharedData, public QJsonObject
 {
-    QMdmmPacketData();
-    QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
+    PacketData();
+    PacketData(Protocol::PacketType type, Protocol::RequestId requestId, Protocol::NotifyId notifyId, const QJsonValue &value);
 
-    QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
-    QMdmmPacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
+    PacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
+    PacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
 
     // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
     QString error;
 };
 #endif
 
-class QMDMMCORE_EXPORT QMdmmPacket final
+class QMDMMCORE_EXPORT Packet final
 {
 public:
-    QMdmmPacket();
-    QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value);
-    QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value);
+    Packet();
+    Packet(Protocol::PacketType type, Protocol::RequestId requestId, const QJsonValue &value);
+    Packet(Protocol::NotifyId notifyId, const QJsonValue &value);
 
-    [[nodiscard]] QMdmmProtocol::PacketType type() const;
-    [[nodiscard]] QMdmmProtocol::RequestId requestId() const;
-    [[nodiscard]] QMdmmProtocol::NotifyId notifyId() const;
+    [[nodiscard]] Protocol::PacketType type() const;
+    [[nodiscard]] Protocol::RequestId requestId() const;
+    [[nodiscard]] Protocol::NotifyId notifyId() const;
     [[nodiscard]] QJsonValue value() const;
 
     [[nodiscard]] QByteArray serialize() const;
@@ -117,23 +115,23 @@ public:
     }
     bool hasError(QString *errorString = nullptr) const;
 
-    static QMDMMCORE_EXPORT QMdmmPacket fromJson(const QByteArray &serialized, QString *errorString = nullptr);
+    static QMDMMCORE_EXPORT Packet fromJson(const QByteArray &serialized, QString *errorString = nullptr);
 
 #ifndef DOXYGEN
 private:
-    QSharedDataPointer<QMdmmPacketData> d;
+    QSharedDataPointer<PacketData> d;
 #endif
 };
 
 } // namespace v0
 
 inline namespace v1 {
-using v0::QMdmmPacket;
-using v0::QMdmmPacketData;
-namespace QMdmmProtocol = v0::QMdmmProtocol;
+using v0::Packet;
+using v0::PacketData;
+namespace Protocol = v0::Protocol;
 } // namespace v1
 } // namespace QMdmmCore
 
-Q_DECLARE_METATYPE(QMdmmCore::QMdmmPacket)
+Q_DECLARE_METATYPE(QMdmmCore::Packet)
 
 #endif // QMDMMPROTOCOL_H

@@ -15,203 +15,203 @@ namespace QMdmmCore {
 namespace v0 {
 
 /**
- * @namespace QMdmmProtocol
+ * @namespace Protocol
  * @brief The namespace for protocol
  */
 
 /**
- * @enum QMdmmProtocol::RequestId
+ * @enum Protocol::RequestId
  * @brief The IDs for requests and replies
  */
 
 /**
- * @var QMdmmProtocol::RequestId QMdmmProtocol::RequestInvalid
+ * @var Protocol::RequestId Protocol::RequestInvalid
  * @brief An invalid request / reply
  */
 
 /**
- * @var QMdmmProtocol::RequestId QMdmmProtocol::RequestStoneScissorsCloth
+ * @var Protocol::RequestId Protocol::RequestStoneScissorsCloth
  * @brief A request of Stone-Scissors-Cloth
  */
 
 /**
- * @var QMdmmProtocol::RequestId QMdmmProtocol::RequestActionOrder
+ * @var Protocol::RequestId Protocol::RequestActionOrder
  * @brief A request of action order
  */
 
 /**
- * @var QMdmmProtocol::RequestId QMdmmProtocol::RequestAction
+ * @var Protocol::RequestId Protocol::RequestAction
  * @brief A request of action
  */
 
 /**
- * @var QMdmmProtocol::RequestId QMdmmProtocol::RequestUpgrade
+ * @var Protocol::RequestId Protocol::RequestUpgrade
  * @brief A request of upgrade
  */
 
 /**
- * @enum QMdmmProtocol::NotifyId
+ * @enum Protocol::NotifyId
  * @brief The IDs for notifies
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyInvalid
+ * @var Protocol::NotifyId Protocol::NotifyInvalid
  * @brief An invalid notify
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyFromServerMask
+ * @var Protocol::NotifyId Protocol::NotifyFromServerMask
  * @brief A mask of notify from server
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyPongServer
+ * @var Protocol::NotifyId Protocol::NotifyPongServer
  * @brief A notify from server of a ping-pong (heartbeat)
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyVersion
+ * @var Protocol::NotifyId Protocol::NotifyVersion
  * @brief A notify from server of version number
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyFromAgentMask
+ * @var Protocol::NotifyId Protocol::NotifyFromAgentMask
  * @brief A mask of notify from agent
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyLogicConfiguration
+ * @var Protocol::NotifyId Protocol::NotifyLogicConfiguration
  * @brief A notify from agent of logic configuration
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyAgentStateChanged
+ * @var Protocol::NotifyId Protocol::NotifyAgentStateChanged
  * @brief A notify from agent of agent state
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyPlayerAdded
+ * @var Protocol::NotifyId Protocol::NotifyPlayerAdded
  * @brief A notify from agent of player added
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyPlayerRemoved
+ * @var Protocol::NotifyId Protocol::NotifyPlayerRemoved
  * @brief A notify from agent of player removed
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyGameStart
+ * @var Protocol::NotifyId Protocol::NotifyGameStart
  * @brief A notify from agent of game started
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyRoundStart
+ * @var Protocol::NotifyId Protocol::NotifyRoundStart
  * @brief A notify from agent of round started
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyStoneScissorsCloth
+ * @var Protocol::NotifyId Protocol::NotifyStoneScissorsCloth
  * @brief A notify from agent of Stone-Scissors-Cloth
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyActionOrder
+ * @var Protocol::NotifyId Protocol::NotifyActionOrder
  * @brief A notify from agent of action order
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyAction
+ * @var Protocol::NotifyId Protocol::NotifyAction
  * @brief A notify from agent of action
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyRoundOver
+ * @var Protocol::NotifyId Protocol::NotifyRoundOver
  * @brief A notify from agent of round over
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyUpgrade
+ * @var Protocol::NotifyId Protocol::NotifyUpgrade
  * @brief A notify from agent of upgrade
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyGameOver
+ * @var Protocol::NotifyId Protocol::NotifyGameOver
  * @brief A notify from agent of game over
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifySpoken
+ * @var Protocol::NotifyId Protocol::NotifySpoken
  * @brief A notify from agent of agent spoken
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyOperated
+ * @var Protocol::NotifyId Protocol::NotifyOperated
  * @brief A notify from agent of agent operated
  *
  * @todo OB functionality
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyToServerMask
+ * @var Protocol::NotifyId Protocol::NotifyToServerMask
  * @brief A mask of notify to server
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyPingServer
+ * @var Protocol::NotifyId Protocol::NotifyPingServer
  * @brief A notify to server of a ping-pong (heartbeat)
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifySignIn
+ * @var Protocol::NotifyId Protocol::NotifySignIn
  * @brief A notify to server of sign in
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyObserve
+ * @var Protocol::NotifyId Protocol::NotifyObserve
  * @brief A notify to server of observe
  *
  * @todo OB functionality
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyToAgentMask
+ * @var Protocol::NotifyId Protocol::NotifyToAgentMask
  * @brief A mask of notify to agent
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifySpeak
+ * @var Protocol::NotifyId Protocol::NotifySpeak
  * @brief A notify to agent of speaking
  */
 
 /**
- * @var QMdmmProtocol::NotifyId QMdmmProtocol::NotifyOperate
+ * @var Protocol::NotifyId Protocol::NotifyOperate
  * @brief A notify to agent of operating
  *
  * @todo OB functionality
  */
 
 /**
- * @enum QMdmmProtocol::PacketType
+ * @enum Protocol::PacketType
  * @brief The type of a packet
  */
 
 /**
- * @var QMdmmProtocol::PacketType QMdmmProtocol::TypeInvalid
+ * @var Protocol::PacketType Protocol::TypeInvalid
  * @brief An invalid packet
  */
 
 /**
- * @var QMdmmProtocol::PacketType QMdmmProtocol::TypeRequest
+ * @var Protocol::PacketType Protocol::TypeRequest
  * @brief A request packet
  */
 
 /**
- * @var QMdmmProtocol::PacketType QMdmmProtocol::TypeReply
+ * @var Protocol::PacketType Protocol::TypeReply
  * @brief A reply packet
  */
 
 /**
- * @var QMdmmProtocol::PacketType QMdmmProtocol::TypeNotify
+ * @var Protocol::PacketType Protocol::TypeNotify
  * @brief A notify packet
  */
 
@@ -221,22 +221,22 @@ namespace v0 {
  *
  * Currently only version 0 is implemented. Different protocol version is incompatible.
  */
-int QMdmmProtocol::protocolVersion() noexcept
+int Protocol::version() noexcept
 {
     return 0;
 }
 
 #ifndef DOXYGEN
 
-QMdmmPacketData::QMdmmPacketData()
+PacketData::PacketData()
 {
-    insert(QStringLiteral("type"), static_cast<int>(QMdmmProtocol::TypeInvalid));
-    insert(QStringLiteral("requestId"), static_cast<int>(QMdmmProtocol::RequestInvalid));
-    insert(QStringLiteral("notifyId"), static_cast<int>(QMdmmProtocol::NotifyInvalid));
+    insert(QStringLiteral("type"), static_cast<int>(Protocol::TypeInvalid));
+    insert(QStringLiteral("requestId"), static_cast<int>(Protocol::RequestInvalid));
+    insert(QStringLiteral("notifyId"), static_cast<int>(Protocol::NotifyInvalid));
     insert(QStringLiteral("value"), QJsonValue());
 }
 
-QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, QMdmmProtocol::NotifyId notifyId, const QJsonValue &v)
+PacketData::PacketData(Protocol::PacketType type, Protocol::RequestId requestId, Protocol::NotifyId notifyId, const QJsonValue &v)
 {
     insert(QStringLiteral("type"), static_cast<int>(type));
     insert(QStringLiteral("requestId"), static_cast<int>(requestId));
@@ -244,12 +244,12 @@ QMdmmPacketData::QMdmmPacketData(QMdmmProtocol::PacketType type, QMdmmProtocol::
     insert(QStringLiteral("value"), v);
 }
 
-QMdmmPacketData::QMdmmPacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)))
+PacketData::PacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)))
     : QJsonObject(ob)
 {
 }
 
-QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)))
+PacketData &PacketData::operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)))
 {
     QJsonObject::operator=(ob);
     return *this;
@@ -258,7 +258,7 @@ QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob) noexcept(noex
 #endif
 
 /**
- * @class QMdmmPacket
+ * @class Packet
  * @brief A packet for QMdmm protocol
  *
  * A packet of QMdmm Protocol is a JSON object, encoded in a single line.
@@ -267,8 +267,8 @@ QMdmmPacketData &QMdmmPacketData::operator=(const QJsonObject &ob) noexcept(noex
 /**
  * @brief ctor.
  */
-QMdmmPacket::QMdmmPacket()
-    : d(new QMdmmPacketData)
+Packet::Packet()
+    : d(new PacketData)
 {
 }
 
@@ -278,8 +278,8 @@ QMdmmPacket::QMdmmPacket()
  * @param requestId the request ID
  * @param value the value / payload of the packet
  */
-QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestId requestId, const QJsonValue &value)
-    : d(new QMdmmPacketData(type, requestId, QMdmmProtocol::NotifyInvalid, value))
+Packet::Packet(Protocol::PacketType type, Protocol::RequestId requestId, const QJsonValue &value)
+    : d(new PacketData(type, requestId, Protocol::NotifyInvalid, value))
 {
 }
 
@@ -288,8 +288,8 @@ QMdmmPacket::QMdmmPacket(QMdmmProtocol::PacketType type, QMdmmProtocol::RequestI
  * @param notifyId the notify ID
  * @param value the value / payload of the packet
  */
-QMdmmPacket::QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &value)
-    : d(new QMdmmPacketData(QMdmmProtocol::TypeNotify, QMdmmProtocol::RequestInvalid, notifyId, value))
+Packet::Packet(Protocol::NotifyId notifyId, const QJsonValue &value)
+    : d(new PacketData(Protocol::TypeNotify, Protocol::RequestInvalid, notifyId, value))
 {
 }
 
@@ -297,42 +297,42 @@ QMdmmPacket::QMdmmPacket(QMdmmProtocol::NotifyId notifyId, const QJsonValue &val
  * @brief get the type of this packet
  * @return packet type
  */
-QMdmmProtocol::PacketType QMdmmPacket::type() const
+Protocol::PacketType Packet::type() const
 {
-    return static_cast<QMdmmProtocol::PacketType>(d->value(QStringLiteral("type")).toInt(QMdmmProtocol::TypeInvalid));
+    return static_cast<Protocol::PacketType>(d->value(QStringLiteral("type")).toInt(Protocol::TypeInvalid));
 }
 
 /**
  * @brief get the request ID of this packet
  * @return request ID
  */
-QMdmmProtocol::RequestId QMdmmPacket::requestId() const
+Protocol::RequestId Packet::requestId() const
 {
-    QMdmmProtocol::PacketType t = type();
-    if (t == QMdmmProtocol::TypeRequest || t == QMdmmProtocol::TypeReply)
-        return static_cast<QMdmmProtocol::RequestId>(d->value(QStringLiteral("requestId")).toInt(QMdmmProtocol::RequestInvalid));
+    Protocol::PacketType t = type();
+    if (t == Protocol::TypeRequest || t == Protocol::TypeReply)
+        return static_cast<Protocol::RequestId>(d->value(QStringLiteral("requestId")).toInt(Protocol::RequestInvalid));
 
-    return QMdmmProtocol::RequestInvalid;
+    return Protocol::RequestInvalid;
 }
 
 /**
  * @brief get the notify ID of this packet
  * @return notify ID
  */
-QMdmmProtocol::NotifyId QMdmmPacket::notifyId() const
+Protocol::NotifyId Packet::notifyId() const
 {
-    QMdmmProtocol::PacketType t = type();
-    if (t == QMdmmProtocol::TypeNotify)
-        return static_cast<QMdmmProtocol::NotifyId>(d->value(QStringLiteral("notifyId")).toInt(QMdmmProtocol::NotifyInvalid));
+    Protocol::PacketType t = type();
+    if (t == Protocol::TypeNotify)
+        return static_cast<Protocol::NotifyId>(d->value(QStringLiteral("notifyId")).toInt(Protocol::NotifyInvalid));
 
-    return QMdmmProtocol::NotifyInvalid;
+    return Protocol::NotifyInvalid;
 }
 
 /**
  * @brief get the value / payload of this packet
  * @return value / payload
  */
-QJsonValue QMdmmPacket::value() const
+QJsonValue Packet::value() const
 {
     return d->value(QStringLiteral("value"));
 }
@@ -341,9 +341,9 @@ QJsonValue QMdmmPacket::value() const
  * @brief serialize the packet
  * @return serialized byte array for sending
  *
- * To deserialize the returned QByteArray, use @c QMdmmPacket::fromJson() function.
+ * To deserialize the returned QByteArray, use @c Packet::fromJson() function.
  */
-QByteArray QMdmmPacket::serialize() const
+QByteArray Packet::serialize() const
 {
     // TODO: abnormal case
     QJsonDocument doc(*d);
@@ -351,7 +351,7 @@ QByteArray QMdmmPacket::serialize() const
 }
 
 /**
- * @fn QMdmmPacket::operator QByteArray() const
+ * @fn Packet::operator QByteArray() const
  * @brief serialize the packet
  * @return serialized byte array for sending
  *
@@ -363,7 +363,7 @@ QByteArray QMdmmPacket::serialize() const
  * @param errorString (out) the optional error string
  * @return if the packet has error
  */
-bool QMdmmPacket::hasError(QString *errorString) const
+bool Packet::hasError(QString *errorString) const
 {
     if (errorString != nullptr)
         *errorString = d->error;
@@ -377,9 +377,9 @@ bool QMdmmPacket::hasError(QString *errorString) const
  * @param errorString (out) the optional error string
  * @return the deserialized packet
  *
- * This does the opposite of @c QMdmmPacket::serialize() function.
+ * This does the opposite of @c Packet::serialize() function.
  */
-QMdmmPacket QMdmmPacket::fromJson(const QByteArray &serialized, QString *errorString)
+Packet Packet::fromJson(const QByteArray &serialized, QString *errorString)
 {
     if (errorString == nullptr) {
         static QString _errorString;
@@ -388,7 +388,7 @@ QMdmmPacket QMdmmPacket::fromJson(const QByteArray &serialized, QString *errorSt
 
     errorString->clear();
 
-    QMdmmPacket ret;
+    Packet ret;
 
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(serialized, &err);

@@ -10,41 +10,43 @@
 
 namespace QMdmmCore {
 
-QMdmmLogicPrivate::QMdmmLogicPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogic *q)
+namespace p {
+
+LogicP::LogicP(const LogicConfiguration &logicConfiguration, Logic *q)
     : q(q)
-    , room(new QMdmmRoom(logicConfiguration, q))
-    , state(QMdmmLogic::BeforeRoundStart)
+    , room(new Room(logicConfiguration, q))
+    , state(Logic::BeforeRoundStart)
     , currentStrivingActionOrder(0)
     , currentActionOrder(0)
 {
 }
 
-bool QMdmmLogicPrivate::actionFeasible(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace) const
+bool LogicP::actionFeasible(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace) const
 {
-    const QMdmmPlayer *from = room->player(fromPlayer);
+    const Player *from = room->player(fromPlayer);
     switch (action) {
-    case QMdmmData::DoNothing: {
+    case Data::DoNothing: {
         return true;
     }
-    case QMdmmData::BuyKnife: {
+    case Data::BuyKnife: {
         return from->canBuyKnife();
     }
-    case QMdmmData::BuyHorse: {
+    case Data::BuyHorse: {
         return from->canBuyHorse();
     }
-    case QMdmmData::Slash: {
-        const QMdmmPlayer *to = room->player(toPlayer);
+    case Data::Slash: {
+        const Player *to = room->player(toPlayer);
         return from->canSlash(to);
     }
-    case QMdmmData::Kick: {
-        const QMdmmPlayer *to = room->player(toPlayer);
+    case Data::Kick: {
+        const Player *to = room->player(toPlayer);
         return from->canKick(to);
     }
-    case QMdmmData::Move: {
+    case Data::Move: {
         return from->canMove(toPlace);
     }
-    case QMdmmData::LetMove: {
-        const QMdmmPlayer *to = room->player(toPlayer);
+    case Data::LetMove: {
+        const Player *to = room->player(toPlayer);
         return from->canLetMove(to, toPlace);
     }
     default:
@@ -55,34 +57,34 @@ bool QMdmmLogicPrivate::actionFeasible(const QString &fromPlayer, QMdmmData::Act
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const): Action is ought not to be const
-bool QMdmmLogicPrivate::applyAction(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace)
+bool LogicP::applyAction(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace)
 {
-    emit q->actionResult(fromPlayer, action, toPlayer, toPlace, QMdmmLogic::QPrivateSignal());
+    emit q->actionResult(fromPlayer, action, toPlayer, toPlace, Logic::QPrivateSignal());
 
-    QMdmmPlayer *from = room->player(fromPlayer);
+    Player *from = room->player(fromPlayer);
     switch (action) {
-    case QMdmmData::DoNothing: {
+    case Data::DoNothing: {
         return from->doNothing();
     }
-    case QMdmmData::BuyKnife: {
+    case Data::BuyKnife: {
         return from->buyKnife();
     }
-    case QMdmmData::BuyHorse: {
+    case Data::BuyHorse: {
         return from->buyHorse();
     }
-    case QMdmmData::Slash: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case Data::Slash: {
+        Player *to = room->player(toPlayer);
         return from->slash(to);
     }
-    case QMdmmData::Kick: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case Data::Kick: {
+        Player *to = room->player(toPlayer);
         return from->kick(to);
     }
-    case QMdmmData::Move: {
+    case Data::Move: {
         return from->move(toPlace);
     }
-    case QMdmmData::LetMove: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case Data::LetMove: {
+        Player *to = room->player(toPlayer);
         return from->letMove(to, toPlace);
     }
     default:
@@ -92,19 +94,19 @@ bool QMdmmLogicPrivate::applyAction(const QString &fromPlayer, QMdmmData::Action
     return false;
 }
 
-void QMdmmLogicPrivate::startSscForAction()
+void LogicP::startSscForAction()
 {
     sscForActionReplies.clear();
     sscForActionWinners.clear();
-    state = QMdmmLogic::SscForAction;
-    emit q->requestSscForAction(room->alivePlayerNames(), QMdmmLogic::QPrivateSignal());
+    state = Logic::SscForAction;
+    emit q->requestSscForAction(room->alivePlayerNames(), Logic::QPrivateSignal());
 }
 
-void QMdmmLogicPrivate::sscForAction()
+void LogicP::sscForAction()
 {
     if (sscForActionReplies.count() == room->alivePlayersCount()) {
-        emit q->sscResult(sscForActionReplies, QMdmmLogic::QPrivateSignal());
-        sscForActionWinners = QMdmmData::stoneScissorsClothWinners(sscForActionReplies);
+        emit q->sscResult(sscForActionReplies, Logic::QPrivateSignal());
+        sscForActionWinners = Data::stoneScissorsClothWinners(sscForActionReplies);
         if (sscForActionWinners.isEmpty()) {
             // restart due to tie
             startSscForAction();
@@ -115,7 +117,7 @@ void QMdmmLogicPrivate::sscForAction()
     }
 }
 
-void QMdmmLogicPrivate::startActionOrder()
+void LogicP::startActionOrder()
 {
     QHash<QString, int> remainingActionCount;
     QList<int> remainingActionOrders;
@@ -146,25 +148,25 @@ void QMdmmLogicPrivate::startActionOrder()
     }
 
     if (remainingActionCount.isEmpty()) {
-        emit q->actionOrderResult(confirmedActionOrders, QMdmmLogic::QPrivateSignal());
+        emit q->actionOrderResult(confirmedActionOrders, Logic::QPrivateSignal());
         currentActionOrder = 0;
         startAction();
     } else {
         desiredActionOrders.clear();
-        state = QMdmmLogic::ActionOrder;
+        state = Logic::ActionOrder;
         for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it)
-            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(sscForActionWinners.length()), it.value(), QMdmmLogic::QPrivateSignal());
+            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(sscForActionWinners.length()), it.value(), Logic::QPrivateSignal());
     }
 }
 
-void QMdmmLogicPrivate::actionOrder()
+void LogicP::actionOrder()
 {
     // TODO: support 0 as yielding selection / accepting arbitrary order
     if (desiredActionOrders.size() + confirmedActionOrders.size() == sscForActionWinners.length())
         startSscForActionOrder();
 }
 
-void QMdmmLogicPrivate::startSscForActionOrder()
+void LogicP::startSscForActionOrder()
 {
     QList<int> orders = desiredActionOrders.uniqueKeys();
     foreach (int order, orders) {
@@ -188,16 +190,16 @@ void QMdmmLogicPrivate::startSscForActionOrder()
         Q_ASSERT(currentStrivingActionOrder != 0);
         QStringList striving = desiredActionOrders.values(currentStrivingActionOrder);
         sscForActionOrderReplies.clear();
-        state = QMdmmLogic::SscForActionOrder;
-        emit q->requestSscForActionOrder(striving, currentStrivingActionOrder, QMdmmLogic::QPrivateSignal());
+        state = Logic::SscForActionOrder;
+        emit q->requestSscForActionOrder(striving, currentStrivingActionOrder, Logic::QPrivateSignal());
     }
 }
 
-void QMdmmLogicPrivate::sscForActionOrder()
+void LogicP::sscForActionOrder()
 {
     if (QStringList striving = desiredActionOrders.values(currentStrivingActionOrder); sscForActionOrderReplies.count() == striving.count()) {
-        emit q->sscResult(sscForActionOrderReplies, QMdmmLogic::QPrivateSignal());
-        if (QStringList sscForActionOrderWinners = QMdmmData::stoneScissorsClothWinners(sscForActionOrderReplies); !sscForActionOrderWinners.isEmpty()) {
+        emit q->sscResult(sscForActionOrderReplies, Logic::QPrivateSignal());
+        if (QStringList sscForActionOrderWinners = Data::stoneScissorsClothWinners(sscForActionOrderReplies); !sscForActionOrderWinners.isEmpty()) {
             foreach (const QString &winner, sscForActionOrderWinners)
                 striving.removeAll(winner);
             foreach (const QString &loser, striving)
@@ -207,7 +209,7 @@ void QMdmmLogicPrivate::sscForActionOrder()
     }
 }
 
-void QMdmmLogicPrivate::startAction()
+void LogicP::startAction()
 {
     if (!room->isRoundOver()) {
         ++currentActionOrder;
@@ -215,29 +217,29 @@ void QMdmmLogicPrivate::startAction()
             // no copy since C++17 - QHash<T>::value returns const T
             // If C++11 or C++14 is needed, we need const QString && as type of currentPlayer (somewhat uncomfortable)
             QString currentPlayer = confirmedActionOrders.value(currentActionOrder);
-            QMdmmPlayer *p = room->player(currentPlayer);
+            Player *p = room->player(currentPlayer);
             if (p->alive()) {
-                state = QMdmmLogic::Action;
-                emit q->requestAction(currentPlayer, currentActionOrder, QMdmmLogic::QPrivateSignal());
+                state = Logic::Action;
+                emit q->requestAction(currentPlayer, currentActionOrder, Logic::QPrivateSignal());
                 return;
             }
         }
 
         startSscForAction();
     } else {
-        emit q->roundOver(QMdmmLogic::QPrivateSignal());
+        emit q->roundOver(Logic::QPrivateSignal());
         startUpgrade();
     }
 }
 
-void QMdmmLogicPrivate::startUpgrade()
+void LogicP::startUpgrade()
 {
     if (room->isRoundOver()) {
         upgrades.clear();
-        foreach (const QMdmmPlayer *p, room->players()) {
+        foreach (const Player *p, room->players()) {
             if (p->upgradePoint() > 0) {
-                state = QMdmmLogic::Upgrade;
-                emit q->requestUpgrade(p->objectName(), p->upgradePoint(), QMdmmLogic::QPrivateSignal());
+                state = Logic::Upgrade;
+                emit q->requestUpgrade(p->objectName(), p->upgradePoint(), Logic::QPrivateSignal());
             }
         }
     } else {
@@ -246,28 +248,28 @@ void QMdmmLogicPrivate::startUpgrade()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const, readability-function-cognitive-complexity)
-void QMdmmLogicPrivate::upgrade()
+void LogicP::upgrade()
 {
     if (room->isRoundOver()) {
         int n = 0;
-        foreach (const QMdmmPlayer *p, room->players()) {
+        foreach (const Player *p, room->players()) {
             if (p->upgradePoint() > 0)
                 ++n;
         }
         if (upgrades.count() == n) {
-            for (QHash<QString, QList<QMdmmData::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
-                QMdmmPlayer *up = room->player(it.key());
-                const QList<QMdmmData::UpgradeItem> &items = it.value();
-                foreach (QMdmmData::UpgradeItem item, items) {
+            for (QHash<QString, QList<Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+                Player *up = room->player(it.key());
+                const QList<Data::UpgradeItem> &items = it.value();
+                foreach (Data::UpgradeItem item, items) {
                     bool success = false;
                     switch (item) {
-                    case QMdmmData::UpgradeKnife:
+                    case Data::UpgradeKnife:
                         success = up->upgradeKnife();
                         break;
-                    case QMdmmData::UpgradeHorse:
+                    case Data::UpgradeHorse:
                         success = up->upgradeHorse();
                         break;
-                    case QMdmmData::UpgradeMaxHp:
+                    case Data::UpgradeMaxHp:
                         success = up->upgradeMaxHp();
                         break;
                     default:
@@ -278,16 +280,18 @@ void QMdmmLogicPrivate::upgrade()
                 }
             }
 
-            state = QMdmmLogic::BeforeRoundStart;
+            state = Logic::BeforeRoundStart;
 
             if (QStringList winners; room->isGameOver(&winners)) {
                 room->resetUpgrades();
-                emit q->gameOver(winners, QMdmmLogic::QPrivateSignal());
+                emit q->gameOver(winners, Logic::QPrivateSignal());
             } else {
-                emit q->upgradeResult(upgrades, QMdmmLogic::QPrivateSignal());
+                emit q->upgradeResult(upgrades, Logic::QPrivateSignal());
             }
         }
     }
 }
+
+} // namespace p
 
 } // namespace QMdmmCore

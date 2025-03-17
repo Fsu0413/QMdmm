@@ -18,7 +18,7 @@ class tst_QMdmmLogic : public QObject
 public:
     Q_INVOKABLE tst_QMdmmLogic() = default;
 
-    std::unique_ptr<QMdmmLogic> l;
+    std::unique_ptr<Logic> l;
 
 private slots:
     // https://doc.qt.io/qt-5/qtest-overview.html#creating-a-test
@@ -26,12 +26,12 @@ private slots:
 
     void init()
     {
-        l.reset(new QMdmmLogic(QMdmmLogicConfiguration::defaults(), this));
+        l.reset(new Logic(LogicConfiguration::defaults(), this));
     }
 
     void QMdmmLogicstate()
     {
-        QCOMPARE(l->state(), QMdmmLogic::BeforeRoundStart);
+        QCOMPARE(l->state(), Logic::BeforeRoundStart);
     }
 
     void QMdmmLogicaddPlayer()
@@ -44,14 +44,14 @@ private slots:
 
         // case 2
         {
-            l->d->state = QMdmmLogic::SscForAction;
+            l->d->state = Logic::SscForAction;
             bool r = l->addPlayer(QStringLiteral("test2"));
             QVERIFY(!r);
         }
 
         // case 3
         {
-            l->d->state = QMdmmLogic::BeforeRoundStart;
+            l->d->state = Logic::BeforeRoundStart;
             bool r = l->addPlayer(QStringLiteral("test1"));
             QVERIFY(!r);
         }
@@ -77,14 +77,14 @@ private slots:
 
         // case 2
         {
-            l->d->state = QMdmmLogic::SscForAction;
+            l->d->state = Logic::SscForAction;
             bool r = l->removePlayer(QStringLiteral("test2"));
             QVERIFY(!r);
         }
 
         // case 3
         {
-            l->d->state = QMdmmLogic::BeforeRoundStart;
+            l->d->state = Logic::BeforeRoundStart;
             bool r = l->removePlayer(QStringLiteral("test1"));
             QVERIFY(!r);
         }

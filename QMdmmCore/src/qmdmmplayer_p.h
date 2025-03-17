@@ -4,14 +4,17 @@
 #define QMDMMPLAYER_P
 
 #include "qmdmmplayer.h"
+#include "qmdmmroom.h"
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
 namespace QMdmmCore {
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
+namespace p {
+
+struct QMDMMCORE_PRIVATE_EXPORT PlayerP final
 {
-    QMdmmPlayerPrivate(v0::QMdmmRoom *room);
+    PlayerP(Room *room);
 
     bool knife;
     bool horse;
@@ -25,8 +28,10 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmPlayerPrivate final
 
     int upgradePoint;
 
-    static void applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int damagePoint, QMdmmData::DamageReason reason);
+    static void applyDamage(Player *from, Player *to, int damagePoint, Data::DamageReason reason);
 };
+
+} // namespace p
 
 } // namespace QMdmmCore
 

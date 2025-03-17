@@ -11,28 +11,30 @@
 
 namespace QMdmmCore {
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
-{
-    QMdmmLogicPrivate(const QMdmmLogicConfiguration &logicConfiguration, QMdmmLogic *q);
+namespace p {
 
-    QMdmmLogic *q;
-    QMdmmRoom *room;
+struct QMDMMCORE_PRIVATE_EXPORT LogicP final
+{
+    LogicP(const LogicConfiguration &logicConfiguration, Logic *q);
+
+    Logic *q;
+    Room *room;
     QStringList players;
 
-    QMdmmLogic::State state;
+    Logic::State state;
 
-    QHash<QString, QMdmmData::StoneScissorsCloth> sscForActionReplies;
+    QHash<QString, Data::StoneScissorsCloth> sscForActionReplies;
     QStringList sscForActionWinners;
     QMultiHash<int, QString> desiredActionOrders;
     QHash<int, QString> confirmedActionOrders;
     int currentStrivingActionOrder;
-    QHash<QString, QMdmmData::StoneScissorsCloth> sscForActionOrderReplies;
+    QHash<QString, Data::StoneScissorsCloth> sscForActionOrderReplies;
     int currentActionOrder;
-    QHash<QString, QList<QMdmmData::UpgradeItem>> upgrades;
+    QHash<QString, QList<Data::UpgradeItem>> upgrades;
 
     // helper functions
-    [[nodiscard]] bool actionFeasible(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace) const;
-    bool applyAction(const QString &fromPlayer, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    [[nodiscard]] bool actionFeasible(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace) const;
+    bool applyAction(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace);
 
     // Functions:
     void startSscForAction();
@@ -45,6 +47,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmLogicPrivate final
     void startUpgrade();
     void upgrade();
 };
+
+} // namespace p
 
 } // namespace QMdmmCore
 

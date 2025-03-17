@@ -18,16 +18,16 @@ class tst_QMdmmPlayer : public QObject
 public:
     Q_INVOKABLE tst_QMdmmPlayer() = default;
 
-    std::unique_ptr<QMdmmRoom> r;
-    QPointer<QMdmmPlayer> p1;
-    QPointer<QMdmmPlayer> p2;
+    std::unique_ptr<Room> r;
+    QPointer<Player> p1;
+    QPointer<Player> p2;
 
 private slots:
     // https://doc.qt.io/qt-5/qtest-overview.html#creating-a-test
     // called before each test case is run
     void init()
     {
-        r.reset(new QMdmmRoom(QMdmmLogicConfiguration::defaults(), this));
+        r.reset(new Room(LogicConfiguration::defaults(), this));
         p1 = r->addPlayer(QStringLiteral("test1"));
         p2 = r->addPlayer(QStringLiteral("test2"));
     }
@@ -35,7 +35,7 @@ private slots:
     void QMdmmPlayerroom()
     {
         QCOMPARE(p1->room(), r.get());
-        QCOMPARE(static_cast<const QMdmmPlayer *>(p1)->room(), r.get());
+        QCOMPARE(static_cast<const Player *>(p1)->room(), r.get());
     }
 
     void QMdmmPlayerhasKnife()
@@ -51,7 +51,7 @@ private slots:
 
         // case 2: set hasKnife = true -> emit hasKnifeChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasKnifeChanged);
+            QSignalSpy s(p1, &Player::hasKnifeChanged);
             p1->setHasKnife(true);
 
             QCOMPARE(s.length(), 1);
@@ -65,7 +65,7 @@ private slots:
 
         // case 3: set hasKnife = false -> do not emit hasKnifeChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasKnifeChanged);
+            QSignalSpy s(p1, &Player::hasKnifeChanged);
             p1->setHasKnife(false);
 
             QCOMPARE(s.length(), 0);
@@ -86,7 +86,7 @@ private slots:
 
         // case 2: set hasHorse = true -> emit hasHorseChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasHorseChanged);
+            QSignalSpy s(p1, &Player::hasHorseChanged);
             p1->setHasHorse(true);
 
             QCOMPARE(s.length(), 1);
@@ -100,7 +100,7 @@ private slots:
 
         // case 3: set hasHorse = false -> do not emit hasHorseChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasHorseChanged);
+            QSignalSpy s(p1, &Player::hasHorseChanged);
             p1->setHasHorse(false);
 
             QCOMPARE(s.length(), 0);
@@ -124,8 +124,8 @@ private slots:
 
         // case 2: set hp = 9 -> emit only hpChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::die);
+            QSignalSpy s(p1, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::die);
             bool kills = false;
             p1->setHp(9, &kills);
 
@@ -147,8 +147,8 @@ private slots:
         // case 3: set hp = 0 (provided conf.zeroHpAsDead == true) -> emit both hpChanged and die
         // damaging corpse do not trigger die
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::die);
+            QSignalSpy s(p1, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::die);
             bool kills = false;
             p1->setHp(0, &kills);
 
@@ -178,8 +178,8 @@ private slots:
 
         // case 4: set hp = 10 -> emit no signal
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::die);
+            QSignalSpy s(p1, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::die);
             bool kills = false;
             p1->setHp(10, &kills);
 
@@ -191,18 +191,18 @@ private slots:
             QVERIFY(!p1->dead());
         }
 
-        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        LogicConfiguration conf = LogicConfiguration::defaults();
         conf.setZeroHpAsDead(false);
 
-        r.reset(new QMdmmRoom(conf, this));
+        r.reset(new Room(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
         r->prepareForRoundStart();
 
         // case 5: zeroHpAsDead = false
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::die);
+            QSignalSpy s(p1, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::die);
             bool kills = false;
             p1->setHp(0, &kills);
 
@@ -263,13 +263,13 @@ private slots:
 
         // case 2: set place = 0 -> emit placeChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
-            p1->setPlace(QMdmmData::Country);
+            QSignalSpy s(p1, &Player::placeChanged);
+            p1->setPlace(Data::Country);
 
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
-                QCOMPARE(p1->place(), QMdmmData::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Country);
+                QCOMPARE(p1->place(), Data::Country);
             }
         }
 
@@ -277,7 +277,7 @@ private slots:
 
         // case 3: set place = 1 -> do not emit placeChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p1, &Player::placeChanged);
             p1->setPlace(1);
 
             QCOMPARE(s.length(), 0);
@@ -298,13 +298,13 @@ private slots:
 
         // case 2: set initialPlace = 0 -> emit initialPlaceChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::initialPlaceChanged);
-            p1->setInitialPlace(QMdmmData::Country);
+            QSignalSpy s(p1, &Player::initialPlaceChanged);
+            p1->setInitialPlace(Data::Country);
 
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
-                QCOMPARE(p1->initialPlace(), QMdmmData::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Country);
+                QCOMPARE(p1->initialPlace(), Data::Country);
             }
         }
 
@@ -312,7 +312,7 @@ private slots:
 
         // case 3: set initialPlace = 1 -> do not emit initialPlaceChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::initialPlaceChanged);
+            QSignalSpy s(p1, &Player::initialPlaceChanged);
             p1->setInitialPlace(1);
 
             QCOMPARE(s.length(), 0);
@@ -333,7 +333,7 @@ private slots:
 
         // case 2: set knifeDamage = 2 -> emit knifeDamageChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+            QSignalSpy s(p1, &Player::knifeDamageChanged);
             p1->setKnifeDamage(2);
 
             QCOMPARE(s.length(), 1);
@@ -347,7 +347,7 @@ private slots:
 
         // case 3: set knifeDamage = 1 -> do not emit knifeDamageChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+            QSignalSpy s(p1, &Player::knifeDamageChanged);
             p1->setKnifeDamage(1);
 
             QCOMPARE(s.length(), 0);
@@ -368,7 +368,7 @@ private slots:
 
         // case 2: set horseDamage = 3 -> emit horseDamageChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+            QSignalSpy s(p1, &Player::horseDamageChanged);
             p1->setHorseDamage(3);
 
             QCOMPARE(s.length(), 1);
@@ -382,7 +382,7 @@ private slots:
 
         // case 3: set horseDamage = 2 -> do not emit horseDamageChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+            QSignalSpy s(p1, &Player::horseDamageChanged);
             p1->setHorseDamage(2);
 
             QCOMPARE(s.length(), 0);
@@ -403,7 +403,7 @@ private slots:
 
         // case 2: set maxHp = 11 -> emit maxHpChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+            QSignalSpy s(p1, &Player::maxHpChanged);
             p1->setMaxHp(11);
 
             QCOMPARE(s.length(), 1);
@@ -417,7 +417,7 @@ private slots:
 
         // case 3: set maxHp = 10 -> do not emit maxHpChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+            QSignalSpy s(p1, &Player::maxHpChanged);
             p1->setMaxHp(10);
 
             QCOMPARE(s.length(), 0);
@@ -438,7 +438,7 @@ private slots:
 
         // case 2: set upgradePoint = 1 -> emit upgradePointChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::upgradePointChanged);
+            QSignalSpy s(p1, &Player::upgradePointChanged);
             p1->setUpgradePoint(1);
 
             QCOMPARE(s.length(), 1);
@@ -452,7 +452,7 @@ private slots:
 
         // case 3: set upgradePoint = 0 -> do not emit upgradePointChanged
         {
-            QSignalSpy s(p1, &QMdmmPlayer::upgradePointChanged);
+            QSignalSpy s(p1, &Player::upgradePointChanged);
             p1->setUpgradePoint(0);
 
             QCOMPARE(s.length(), 0);
@@ -491,14 +491,14 @@ private slots:
 
         // case 4: in country - cannot buy knife
         {
-            p1->setPlace(QMdmmData::Country);
+            p1->setPlace(Data::Country);
             QVERIFY(!p1->canBuyKnife());
         }
 
-        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        LogicConfiguration conf = LogicConfiguration::defaults();
         conf.setCanBuyOnlyInInitialCity(true);
 
-        r.reset(new QMdmmRoom(conf, this));
+        r.reset(new Room(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
         p2 = r->addPlayer(QStringLiteral("test2"));
@@ -542,14 +542,14 @@ private slots:
 
         // case 4: in country - cannot buy knife
         {
-            p1->setPlace(QMdmmData::Country);
+            p1->setPlace(Data::Country);
             QVERIFY(!p1->canBuyHorse());
         }
 
-        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        LogicConfiguration conf = LogicConfiguration::defaults();
         conf.setCanBuyOnlyInInitialCity(true);
 
-        r.reset(new QMdmmRoom(conf, this));
+        r.reset(new Room(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
         p2 = r->addPlayer(QStringLiteral("test2"));
@@ -670,8 +670,8 @@ private slots:
         // case 6: can't kick in country
         {
             p1->setHasHorse(true);
-            p1->setPlace(QMdmmData::Country);
-            p2->setPlace(QMdmmData::Country);
+            p1->setPlace(Data::Country);
+            p2->setPlace(Data::Country);
 
             QVERIFY(!p1->canKick(p2));
         }
@@ -683,7 +683,7 @@ private slots:
 
         // case 1: can move to country when in city
         {
-            QVERIFY(p1->canMove(QMdmmData::Country));
+            QVERIFY(p1->canMove(Data::Country));
         }
 
         r->prepareForRoundStart();
@@ -697,7 +697,7 @@ private slots:
 
         // case 3: can move to any city when in a country
         {
-            p1->setPlace(QMdmmData::Country);
+            p1->setPlace(Data::Country);
 
             QVERIFY(p1->canMove(p1->initialPlace()));
             QVERIFY(p1->canMove(p2->place()));
@@ -708,7 +708,7 @@ private slots:
         // case 4: dead player can't move
         {
             p1->setHp(-1);
-            QVERIFY(!p1->canMove(QMdmmData::Country));
+            QVERIFY(!p1->canMove(Data::Country));
         }
 
         r->prepareForRoundStart();
@@ -725,7 +725,7 @@ private slots:
 
         // coverage for this == to
         {
-            QVERIFY(p1->canLetMove(p1, QMdmmData::Country));
+            QVERIFY(p1->canLetMove(p1, Data::Country));
         }
 
         r->prepareForRoundStart();
@@ -735,8 +735,8 @@ private slots:
             p1->setPlace(p2->place());
             p2->setHp(-1);
 
-            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
-            QVERIFY(!p2->canLetMove(p1, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Country));
+            QVERIFY(!p2->canLetMove(p1, Data::Country));
         }
 
         r->prepareForRoundStart();
@@ -745,7 +745,7 @@ private slots:
         {
             p1->setPlace(p2->place());
 
-            QVERIFY(p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(p1->canLetMove(p2, Data::Country));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
             QVERIFY(!p1->canLetMove(p2, p1->initialPlace()));
         }
@@ -754,9 +754,9 @@ private slots:
 
         // case 3: pull stuff - if p1 and p2 place is adjacent
         {
-            p2->setPlace(QMdmmData::Country);
+            p2->setPlace(Data::Country);
             QVERIFY(p1->canLetMove(p2, p1->place()));
-            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Country));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
         }
 
@@ -765,14 +765,14 @@ private slots:
         // case 4: ??? - if p1 and p2 place is not same nor adjacent
         {
             QVERIFY(!p1->canLetMove(p2, p1->place()));
-            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Country));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
         }
 
-        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        LogicConfiguration conf = LogicConfiguration::defaults();
         conf.setEnableLetMove(false);
 
-        r.reset(new QMdmmRoom(conf, this));
+        r.reset(new Room(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
         p2 = r->addPlayer(QStringLiteral("test2"));
@@ -782,7 +782,7 @@ private slots:
         {
             p1->setPlace(p2->place());
 
-            QVERIFY(!p1->canLetMove(p2, QMdmmData::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Country));
         }
     }
 
@@ -855,7 +855,7 @@ private slots:
 
         // case 1
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasKnifeChanged);
+            QSignalSpy s(p1, &Player::hasKnifeChanged);
 
             QVERIFY(p1->buyKnife());
             QCOMPARE(s.length(), 1);
@@ -871,7 +871,7 @@ private slots:
         {
             p1->setHasKnife(true);
 
-            QSignalSpy s(p1, &QMdmmPlayer::hasKnifeChanged);
+            QSignalSpy s(p1, &Player::hasKnifeChanged);
 
             QVERIFY(!p1->buyKnife());
             QCOMPARE(s.length(), 0);
@@ -884,7 +884,7 @@ private slots:
 
         // case 1
         {
-            QSignalSpy s(p1, &QMdmmPlayer::hasHorseChanged);
+            QSignalSpy s(p1, &Player::hasHorseChanged);
 
             QVERIFY(p1->buyHorse());
             QCOMPARE(s.length(), 1);
@@ -900,7 +900,7 @@ private slots:
         {
             p1->setHasHorse(true);
 
-            QSignalSpy s(p1, &QMdmmPlayer::hasHorseChanged);
+            QSignalSpy s(p1, &Player::hasHorseChanged);
 
             QVERIFY(!p1->buyHorse());
             QCOMPARE(s.length(), 0);
@@ -915,7 +915,7 @@ private slots:
         {
             p1->setHasKnife(true);
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
+            QSignalSpy s(p2, &Player::hpChanged);
 
             QVERIFY(!p1->slash(p2));
             QCOMPARE(s.length(), 0);
@@ -926,11 +926,11 @@ private slots:
         // case 2
         {
             p1->setHasKnife(true);
-            p2->setPlace(QMdmmData::Country);
+            p2->setPlace(Data::Country);
             p1->setPlace(p2->place());
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::hpChanged);
+            QSignalSpy s(p2, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::hpChanged);
 
             QVERIFY(p1->slash(p2));
             QCOMPARE(s.length(), 1);
@@ -946,14 +946,14 @@ private slots:
         // case 3: slash kills
         {
             p1->setHasKnife(true);
-            p2->setPlace(QMdmmData::Country);
+            p2->setPlace(Data::Country);
             p1->setPlace(p2->place());
             p2->setHp(1);
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p2, &QMdmmPlayer::die);
-            QSignalSpy s3(p1, &QMdmmPlayer::upgradePointChanged);
-            QSignalSpy s4(p1, &QMdmmPlayer::die);
+            QSignalSpy s(p2, &Player::hpChanged);
+            QSignalSpy s2(p2, &Player::die);
+            QSignalSpy s3(p1, &Player::upgradePointChanged);
+            QSignalSpy s4(p1, &Player::die);
 
             QVERIFY(p1->slash(p2));
             QCOMPARE(s.length(), 1);
@@ -978,11 +978,11 @@ private slots:
             p1->setPlace(p2->place());
             p1->setHp(1);
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p1, &QMdmmPlayer::die);
-            QSignalSpy s3(p2, &QMdmmPlayer::upgradePointChanged);
-            QSignalSpy s4(p1, &QMdmmPlayer::hpChanged);
-            QSignalSpy s5(p2, &QMdmmPlayer::die);
+            QSignalSpy s(p2, &Player::hpChanged);
+            QSignalSpy s2(p1, &Player::die);
+            QSignalSpy s3(p2, &Player::upgradePointChanged);
+            QSignalSpy s4(p1, &Player::hpChanged);
+            QSignalSpy s5(p2, &Player::die);
 
             QVERIFY(p1->slash(p2));
             QCOMPARE(s.length(), 1);
@@ -1009,71 +1009,71 @@ private slots:
     void QMdmmPlayerslash2_data()
     {
         QTest::addColumn<int>("punishHpModifier");
-        QTest::addColumn<QMdmmLogicConfiguration::PunishHpRoundStrategy>("punishHpRoundStrategy");
+        QTest::addColumn<LogicConfiguration::PunishHpRoundStrategy>("punishHpRoundStrategy");
         QTest::addColumn<int>("maxHp");
         QTest::addColumn<int>("punishedHp");
 
-        QTest::newRow("disable") << 0 << QMdmmLogicConfiguration::RoundDown << 10 << 10;
+        QTest::newRow("disable") << 0 << LogicConfiguration::RoundDown << 10 << 10;
 
         // some typical numbers
-        QTest::newRow("roundDown-0") << 3 << QMdmmLogicConfiguration::RoundDown << 9 << 6;
-        QTest::newRow("roundDown-1") << 3 << QMdmmLogicConfiguration::RoundDown << 10 << 7;
-        QTest::newRow("roundDown-2") << 3 << QMdmmLogicConfiguration::RoundDown << 11 << 8;
-        QTest::newRow("roundDown-3") << 3 << QMdmmLogicConfiguration::RoundDown << 12 << 8;
-        QTest::newRow("roundToNearest45-0") << 3 << QMdmmLogicConfiguration::RoundToNearest45 << 9 << 6;
-        QTest::newRow("roundToNearest45-1") << 3 << QMdmmLogicConfiguration::RoundToNearest45 << 10 << 7;
-        QTest::newRow("roundToNearest45-2") << 3 << QMdmmLogicConfiguration::RoundToNearest45 << 11 << 7;
-        QTest::newRow("roundToNearest45-3") << 3 << QMdmmLogicConfiguration::RoundToNearest45 << 12 << 8;
-        QTest::newRow("roundUp-0") << 3 << QMdmmLogicConfiguration::RoundUp << 9 << 6;
-        QTest::newRow("roundUp-1") << 3 << QMdmmLogicConfiguration::RoundUp << 10 << 6;
-        QTest::newRow("roundUp-2") << 3 << QMdmmLogicConfiguration::RoundUp << 11 << 7;
-        QTest::newRow("roundUp-3") << 3 << QMdmmLogicConfiguration::RoundUp << 12 << 8;
-        QTest::newRow("plusOne-0") << 3 << QMdmmLogicConfiguration::PlusOne << 9 << 5;
-        QTest::newRow("plusOne-1") << 3 << QMdmmLogicConfiguration::PlusOne << 10 << 6;
-        QTest::newRow("plusOne-2") << 3 << QMdmmLogicConfiguration::PlusOne << 11 << 7;
-        QTest::newRow("plusOne-3") << 3 << QMdmmLogicConfiguration::PlusOne << 12 << 7;
+        QTest::newRow("roundDown-0") << 3 << LogicConfiguration::RoundDown << 9 << 6;
+        QTest::newRow("roundDown-1") << 3 << LogicConfiguration::RoundDown << 10 << 7;
+        QTest::newRow("roundDown-2") << 3 << LogicConfiguration::RoundDown << 11 << 8;
+        QTest::newRow("roundDown-3") << 3 << LogicConfiguration::RoundDown << 12 << 8;
+        QTest::newRow("roundToNearest45-0") << 3 << LogicConfiguration::RoundToNearest45 << 9 << 6;
+        QTest::newRow("roundToNearest45-1") << 3 << LogicConfiguration::RoundToNearest45 << 10 << 7;
+        QTest::newRow("roundToNearest45-2") << 3 << LogicConfiguration::RoundToNearest45 << 11 << 7;
+        QTest::newRow("roundToNearest45-3") << 3 << LogicConfiguration::RoundToNearest45 << 12 << 8;
+        QTest::newRow("roundUp-0") << 3 << LogicConfiguration::RoundUp << 9 << 6;
+        QTest::newRow("roundUp-1") << 3 << LogicConfiguration::RoundUp << 10 << 6;
+        QTest::newRow("roundUp-2") << 3 << LogicConfiguration::RoundUp << 11 << 7;
+        QTest::newRow("roundUp-3") << 3 << LogicConfiguration::RoundUp << 12 << 8;
+        QTest::newRow("plusOne-0") << 3 << LogicConfiguration::PlusOne << 9 << 5;
+        QTest::newRow("plusOne-1") << 3 << LogicConfiguration::PlusOne << 10 << 6;
+        QTest::newRow("plusOne-2") << 3 << LogicConfiguration::PlusOne << 11 << 7;
+        QTest::newRow("plusOne-3") << 3 << LogicConfiguration::PlusOne << 12 << 7;
 
         // some big numbers
-        QTest::newRow("roundDown-4") << 15 << QMdmmLogicConfiguration::RoundDown << 105 << 98;
-        QTest::newRow("roundDown-5") << 15 << QMdmmLogicConfiguration::RoundDown << 106 << 99;
-        QTest::newRow("roundDown-6") << 15 << QMdmmLogicConfiguration::RoundDown << 112 << 105;
-        QTest::newRow("roundDown-7") << 15 << QMdmmLogicConfiguration::RoundDown << 113 << 106;
-        QTest::newRow("roundDown-8") << 15 << QMdmmLogicConfiguration::RoundDown << 119 << 112;
-        QTest::newRow("roundDown-9") << 15 << QMdmmLogicConfiguration::RoundDown << 120 << 112;
-        QTest::newRow("roundToNearest45-4") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 105 << 98;
-        QTest::newRow("roundToNearest45-5") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 106 << 99;
-        QTest::newRow("roundToNearest45-6") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 112 << 105;
-        QTest::newRow("roundToNearest45-7") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 113 << 105;
-        QTest::newRow("roundToNearest45-8") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 119 << 111;
-        QTest::newRow("roundToNearest45-9") << 15 << QMdmmLogicConfiguration::RoundToNearest45 << 120 << 112;
-        QTest::newRow("roundUp-4") << 15 << QMdmmLogicConfiguration::RoundUp << 105 << 98;
-        QTest::newRow("roundUp-5") << 15 << QMdmmLogicConfiguration::RoundUp << 106 << 98;
-        QTest::newRow("roundUp-6") << 15 << QMdmmLogicConfiguration::RoundUp << 112 << 104;
-        QTest::newRow("roundUp-7") << 15 << QMdmmLogicConfiguration::RoundUp << 113 << 105;
-        QTest::newRow("roundUp-8") << 15 << QMdmmLogicConfiguration::RoundUp << 119 << 111;
-        QTest::newRow("roundUp-9") << 15 << QMdmmLogicConfiguration::RoundUp << 120 << 112;
-        QTest::newRow("plusOne-4") << 15 << QMdmmLogicConfiguration::PlusOne << 105 << 97;
-        QTest::newRow("plusOne-5") << 15 << QMdmmLogicConfiguration::PlusOne << 106 << 98;
-        QTest::newRow("plusOne-6") << 15 << QMdmmLogicConfiguration::PlusOne << 112 << 104;
-        QTest::newRow("plusOne-7") << 15 << QMdmmLogicConfiguration::PlusOne << 113 << 105;
-        QTest::newRow("plusOne-8") << 15 << QMdmmLogicConfiguration::PlusOne << 119 << 111;
-        QTest::newRow("plusOne-9") << 15 << QMdmmLogicConfiguration::PlusOne << 120 << 111;
+        QTest::newRow("roundDown-4") << 15 << LogicConfiguration::RoundDown << 105 << 98;
+        QTest::newRow("roundDown-5") << 15 << LogicConfiguration::RoundDown << 106 << 99;
+        QTest::newRow("roundDown-6") << 15 << LogicConfiguration::RoundDown << 112 << 105;
+        QTest::newRow("roundDown-7") << 15 << LogicConfiguration::RoundDown << 113 << 106;
+        QTest::newRow("roundDown-8") << 15 << LogicConfiguration::RoundDown << 119 << 112;
+        QTest::newRow("roundDown-9") << 15 << LogicConfiguration::RoundDown << 120 << 112;
+        QTest::newRow("roundToNearest45-4") << 15 << LogicConfiguration::RoundToNearest45 << 105 << 98;
+        QTest::newRow("roundToNearest45-5") << 15 << LogicConfiguration::RoundToNearest45 << 106 << 99;
+        QTest::newRow("roundToNearest45-6") << 15 << LogicConfiguration::RoundToNearest45 << 112 << 105;
+        QTest::newRow("roundToNearest45-7") << 15 << LogicConfiguration::RoundToNearest45 << 113 << 105;
+        QTest::newRow("roundToNearest45-8") << 15 << LogicConfiguration::RoundToNearest45 << 119 << 111;
+        QTest::newRow("roundToNearest45-9") << 15 << LogicConfiguration::RoundToNearest45 << 120 << 112;
+        QTest::newRow("roundUp-4") << 15 << LogicConfiguration::RoundUp << 105 << 98;
+        QTest::newRow("roundUp-5") << 15 << LogicConfiguration::RoundUp << 106 << 98;
+        QTest::newRow("roundUp-6") << 15 << LogicConfiguration::RoundUp << 112 << 104;
+        QTest::newRow("roundUp-7") << 15 << LogicConfiguration::RoundUp << 113 << 105;
+        QTest::newRow("roundUp-8") << 15 << LogicConfiguration::RoundUp << 119 << 111;
+        QTest::newRow("roundUp-9") << 15 << LogicConfiguration::RoundUp << 120 << 112;
+        QTest::newRow("plusOne-4") << 15 << LogicConfiguration::PlusOne << 105 << 97;
+        QTest::newRow("plusOne-5") << 15 << LogicConfiguration::PlusOne << 106 << 98;
+        QTest::newRow("plusOne-6") << 15 << LogicConfiguration::PlusOne << 112 << 104;
+        QTest::newRow("plusOne-7") << 15 << LogicConfiguration::PlusOne << 113 << 105;
+        QTest::newRow("plusOne-8") << 15 << LogicConfiguration::PlusOne << 119 << 111;
+        QTest::newRow("plusOne-9") << 15 << LogicConfiguration::PlusOne << 120 << 111;
 
-        QTest::newRow("punishHp0") << 15 << QMdmmLogicConfiguration::RoundDown << 10 << 10;
-        QTest::newRow("default") << 3 << QMdmmLogicConfiguration::PunishHpRoundStrategy(100) << 10 << 7;
+        QTest::newRow("punishHp0") << 15 << LogicConfiguration::RoundDown << 10 << 10;
+        QTest::newRow("default") << 3 << LogicConfiguration::PunishHpRoundStrategy(100) << 10 << 7;
     }
     void QMdmmPlayerslash2()
     {
         QFETCH(int, punishHpModifier);
-        QFETCH(QMdmmLogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy);
+        QFETCH(LogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy);
         QFETCH(int, maxHp);
         QFETCH(int, punishedHp);
 
-        QMdmmLogicConfiguration conf = QMdmmLogicConfiguration::defaults();
+        LogicConfiguration conf = LogicConfiguration::defaults();
         conf.setPunishHpModifier(punishHpModifier);
         conf.setPunishHpRoundStrategy(punishHpRoundStrategy);
 
-        r.reset(new QMdmmRoom(conf, this));
+        r.reset(new Room(conf, this));
 
         p1 = r->addPlayer(QStringLiteral("test1"));
         p1->setMaxHp(maxHp);
@@ -1084,8 +1084,8 @@ private slots:
         p1->setHasKnife(true);
         p1->setPlace(p2->place());
 
-        QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-        QSignalSpy s2(p1, &QMdmmPlayer::hpChanged);
+        QSignalSpy s(p2, &Player::hpChanged);
+        QSignalSpy s2(p1, &Player::hpChanged);
 
         QVERIFY(p1->slash(p2));
         QCOMPARE(s.length(), 1);
@@ -1113,7 +1113,7 @@ private slots:
         {
             p1->setHasHorse(true);
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
+            QSignalSpy s(p2, &Player::hpChanged);
 
             QVERIFY(!p1->kick(p2));
             QCOMPARE(s.length(), 0);
@@ -1126,8 +1126,8 @@ private slots:
             p1->setHasHorse(true);
             p1->setPlace(p2->place());
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p2, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p2, &Player::hpChanged);
+            QSignalSpy s2(p2, &Player::placeChanged);
 
             QVERIFY(p1->kick(p2));
             QCOMPARE(s.length(), 1);
@@ -1137,8 +1137,8 @@ private slots:
             }
             QCOMPARE(s2.length(), 1);
             if (s2.length() > 0) {
-                QCOMPARE(s2.first().first().toInt(), QMdmmData::Country);
-                QCOMPARE(p2->place(), QMdmmData::Country);
+                QCOMPARE(s2.first().first().toInt(), Data::Country);
+                QCOMPARE(p2->place(), Data::Country);
             }
         }
 
@@ -1150,10 +1150,10 @@ private slots:
             p1->setPlace(p2->place());
             p2->setHp(1);
 
-            QSignalSpy s(p2, &QMdmmPlayer::hpChanged);
-            QSignalSpy s2(p2, &QMdmmPlayer::die);
-            QSignalSpy s3(p1, &QMdmmPlayer::upgradePointChanged);
-            QSignalSpy s4(p2, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p2, &Player::hpChanged);
+            QSignalSpy s2(p2, &Player::die);
+            QSignalSpy s3(p1, &Player::upgradePointChanged);
+            QSignalSpy s4(p2, &Player::placeChanged);
 
             QVERIFY(p1->kick(p2));
             QCOMPARE(s.length(), 1);
@@ -1176,7 +1176,7 @@ private slots:
         r->prepareForRoundStart();
 
         {
-            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p1, &Player::placeChanged);
 
             QVERIFY(!p1->move(p2->place()));
             QCOMPARE(s.length(), 0);
@@ -1185,13 +1185,13 @@ private slots:
         r->prepareForRoundStart();
 
         {
-            QSignalSpy s(p1, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p1, &Player::placeChanged);
 
-            QVERIFY(p1->move(QMdmmData::Country));
+            QVERIFY(p1->move(Data::Country));
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
-                QCOMPARE(p1->place(), QMdmmData::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Country);
+                QCOMPARE(p1->place(), Data::Country);
             }
         }
     }
@@ -1201,7 +1201,7 @@ private slots:
         r->prepareForRoundStart();
 
         {
-            QSignalSpy s(p2, &QMdmmPlayer::placeChanged);
+            QSignalSpy s(p2, &Player::placeChanged);
 
             QVERIFY(!p1->letMove(p2, p1->place()));
             QCOMPARE(s.length(), 0);
@@ -1210,14 +1210,14 @@ private slots:
         r->prepareForRoundStart();
 
         {
-            p1->setPlace(QMdmmData::Country);
-            QSignalSpy s(p2, &QMdmmPlayer::placeChanged);
+            p1->setPlace(Data::Country);
+            QSignalSpy s(p2, &Player::placeChanged);
 
-            QVERIFY(p1->letMove(p2, QMdmmData::Country));
+            QVERIFY(p1->letMove(p2, Data::Country));
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), QMdmmData::Country);
-                QCOMPARE(p2->place(), QMdmmData::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Country);
+                QCOMPARE(p2->place(), Data::Country);
             }
         }
     }
@@ -1233,7 +1233,7 @@ private slots:
         r->resetUpgrades();
 
         {
-            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+            QSignalSpy s(p1, &Player::knifeDamageChanged);
 
             QVERIFY(p1->upgradeKnife());
             QCOMPARE(s.length(), 1);
@@ -1248,7 +1248,7 @@ private slots:
         {
             p1->setKnifeDamage(10);
 
-            QSignalSpy s(p1, &QMdmmPlayer::knifeDamageChanged);
+            QSignalSpy s(p1, &Player::knifeDamageChanged);
 
             QVERIFY(!p1->upgradeKnife());
             QCOMPARE(s.length(), 0);
@@ -1260,7 +1260,7 @@ private slots:
         r->resetUpgrades();
 
         {
-            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+            QSignalSpy s(p1, &Player::horseDamageChanged);
 
             QVERIFY(p1->upgradeHorse());
             QCOMPARE(s.length(), 1);
@@ -1275,7 +1275,7 @@ private slots:
         {
             p1->setHorseDamage(10);
 
-            QSignalSpy s(p1, &QMdmmPlayer::horseDamageChanged);
+            QSignalSpy s(p1, &Player::horseDamageChanged);
 
             QVERIFY(!p1->upgradeHorse());
             QCOMPARE(s.length(), 0);
@@ -1287,7 +1287,7 @@ private slots:
         r->resetUpgrades();
 
         {
-            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+            QSignalSpy s(p1, &Player::maxHpChanged);
 
             QVERIFY(p1->upgradeMaxHp());
             QCOMPARE(s.length(), 1);
@@ -1302,7 +1302,7 @@ private slots:
         {
             p1->setMaxHp(20);
 
-            QSignalSpy s(p1, &QMdmmPlayer::maxHpChanged);
+            QSignalSpy s(p1, &Player::maxHpChanged);
 
             QVERIFY(!p1->upgradeMaxHp());
             QCOMPARE(s.length(), 0);

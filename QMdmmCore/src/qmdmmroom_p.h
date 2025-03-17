@@ -12,11 +12,15 @@
 
 namespace QMdmmCore {
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmRoomPrivate final
+namespace p {
+
+struct QMDMMCORE_PRIVATE_EXPORT RoomP final
 {
-    QMap<QString, QMdmmPlayer *> players;
-    QMdmmLogicConfiguration logicConfiguration;
+    QMap<QString, Player *> players;
+    LogicConfiguration logicConfiguration;
 };
+
+} // namespace p
 
 } // namespace QMdmmCore
 

@@ -9,7 +9,7 @@
 #include <QTcpSocket>
 #include <utility>
 
-namespace QMdmmGlobal = QMdmmCore::QMdmmGlobal;
+namespace QMdmmGlobal = QMdmmCore::Global;
 
 const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
@@ -180,7 +180,7 @@ void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readabil
 
     QJsonObject ob;
     ob.insert(QStringLiteral("versionNumber"), QMdmmGlobal::version().toString());
-    ob.insert(QStringLiteral("protocolVersion"), QMdmmProtocol::protocolVersion());
+    ob.insert(QStringLiteral("protocolVersion"), QMdmmProtocol::version());
     QMdmmPacket packet(QMdmmProtocol::NotifyVersion, ob);
     emit socket->sendPacket(packet);
 }

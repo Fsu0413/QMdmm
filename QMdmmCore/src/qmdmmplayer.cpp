@@ -6,6 +6,8 @@
 #include "qmdmmlogic.h"
 #include "qmdmmroom.h"
 
+using namespace QMdmmCore::p;
+
 /**
  * @file qmdmmplayer.h
  * @brief This is the file where MDMM player is defined.
@@ -15,29 +17,29 @@ namespace QMdmmCore {
 namespace v0 {
 
 /**
- * @class QMdmmPlayer
+ * @class Player
  * @brief The player playing MDMM Game
  *
  * This is the place where the data of each player is saved, and is the object where the data changed signal is emitted.
  */
 
 /**
- * @property QMdmmPlayer::hasKnife
+ * @property Player::hasKnife
  * @brief if the player has bought knife
  */
 
 /**
- * @property QMdmmPlayer::hasHorse
+ * @property Player::hasHorse
  * @brief if the player has bought horse
  */
 
 /**
- * @property QMdmmPlayer::hp
+ * @property Player::hp
  * @brief the current HP of the player
  */
 
 /**
- * @property QMdmmPlayer::place
+ * @property Player::place
  * @brief the place of the player.
  *
  * @note The return value is not of type @c QMdmmData::Place . The reason is that the number of Cities should be same as the number of players in a room.
@@ -45,43 +47,43 @@ namespace v0 {
  */
 
 /**
- * @property QMdmmPlayer::initialPlace
+ * @property Player::initialPlace
  * @brief the initial place of the player.
  *
  * @note This is also known as "seat", since one should be in "City No. N" where N is the seat number when game starts.
  */
 
 /**
- * @property QMdmmPlayer::knifeDamage
+ * @property Player::knifeDamage
  * @brief the knife damage of the player.
  */
 
 /**
- * @property QMdmmPlayer::horseDamage
+ * @property Player::horseDamage
  * @brief the horse damage of the player.
  */
 
 /**
- * @property QMdmmPlayer::maxHp
+ * @property Player::maxHp
  * @brief the maximum HP of the player.
  */
 
 /**
- * @property QMdmmPlayer::upgradePoint
+ * @property Player::upgradePoint
  * @brief the upgrade point of the player.
  *
  * @note This is also known as "killed player per round"
  */
 
 /**
- * @property QMdmmPlayer::dead
+ * @property Player::dead
  * @brief if the player is dead
  *
  * @note This property is not stored and is calculated from @c hp property.
  */
 
 /**
- * @property QMdmmPlayer::alive
+ * @property Player::alive
  * @brief if the player is alive
  *
  * @note This property is not stored and is calculated from @c hp property.
@@ -94,9 +96,9 @@ namespace v0 {
  *
  * Note: This ctor is meant to be called from Room
  */
-QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
+Player::Player(const QString &name, Room *room)
     : QObject(room)
-    , d(std::make_unique<QMdmmPlayerPrivate>(room))
+    , d(std::make_unique<PlayerP>(room))
 {
     setObjectName(name);
 }
@@ -106,33 +108,33 @@ QMdmmPlayer::QMdmmPlayer(const QString &name, QMdmmRoom *room)
  *
  * Note: This dtor is meant to be called from Room
  */
-QMdmmPlayer::~QMdmmPlayer() = default;
+Player::~Player() = default;
 
 /**
  * @brief Get the room the player is in
  * @return the room the player is in
  */
-QMdmmRoom *QMdmmPlayer::room()
+Room *Player::room()
 {
     // We don't need extra cost for qobject_cast here, since every Player is created with Room as parent.
-    return static_cast<QMdmmRoom *>(parent());
+    return static_cast<Room *>(parent());
 }
 
 /**
  * @brief Get the room the player is in (const version)
  * @return the room the player is in
  */
-const QMdmmRoom *QMdmmPlayer::room() const
+const Room *Player::room() const
 {
     // same as above
-    return static_cast<const QMdmmRoom *>(parent());
+    return static_cast<const Room *>(parent());
 }
 
 /**
  * @brief getter of property @c hasKnife
  * @return @c hasKnife
  */
-bool QMdmmPlayer::hasKnife() const noexcept
+bool Player::hasKnife() const noexcept
 {
     return d->knife;
 }
@@ -141,7 +143,7 @@ bool QMdmmPlayer::hasKnife() const noexcept
  * @brief setter of property @c hasKnife
  * @param k @c hasKnife
  */
-void QMdmmPlayer::setHasKnife(bool k)
+void Player::setHasKnife(bool k)
 {
     if (d->knife != k) {
         d->knife = k;
@@ -153,7 +155,7 @@ void QMdmmPlayer::setHasKnife(bool k)
  * @brief getter of property @c hasHorse
  * @return @c hasHorse
  */
-bool QMdmmPlayer::hasHorse() const noexcept
+bool Player::hasHorse() const noexcept
 {
     return d->horse;
 }
@@ -162,7 +164,7 @@ bool QMdmmPlayer::hasHorse() const noexcept
  * @brief setter of property @c hasHorse
  * @param h @c hasHorse
  */
-void QMdmmPlayer::setHasHorse(bool h)
+void Player::setHasHorse(bool h)
 {
     if (d->horse != h) {
         d->horse = h;
@@ -174,7 +176,7 @@ void QMdmmPlayer::setHasHorse(bool h)
  * @brief getter of property @c hp
  * @return @c hp
  */
-int QMdmmPlayer::hp() const noexcept
+int Player::hp() const noexcept
 {
     return d->hp;
 }
@@ -191,7 +193,7 @@ int QMdmmPlayer::hp() const noexcept
  *
  * @sa QMdmmLogicConfiguration::zeroHpAsDead
  */
-void QMdmmPlayer::setHp(int h, bool *kills)
+void Player::setHp(int h, bool *kills)
 {
     if (kills == nullptr) {
         static bool _kills;
@@ -215,7 +217,7 @@ void QMdmmPlayer::setHp(int h, bool *kills)
  * @brief getter of property @c place
  * @return @c place
  */
-int QMdmmPlayer::place() const noexcept
+int Player::place() const noexcept
 {
     return d->place;
 }
@@ -224,7 +226,7 @@ int QMdmmPlayer::place() const noexcept
  * @brief setter of property @c place
  * @param toPlace @c place
  */
-void QMdmmPlayer::setPlace(int toPlace)
+void Player::setPlace(int toPlace)
 {
     if (d->place != toPlace) {
         d->place = toPlace;
@@ -236,7 +238,7 @@ void QMdmmPlayer::setPlace(int toPlace)
  * @brief getter of property @c initialPlace
  * @return @c initialPlace
  */
-int QMdmmPlayer::initialPlace() const noexcept
+int Player::initialPlace() const noexcept
 {
     return d->initialPlace;
 }
@@ -245,7 +247,7 @@ int QMdmmPlayer::initialPlace() const noexcept
  * @brief setter of property @c initialPlace
  * @param initialPlace @c initialPlace
  */
-void QMdmmPlayer::setInitialPlace(int initialPlace)
+void Player::setInitialPlace(int initialPlace)
 {
     if (d->initialPlace != initialPlace) {
         d->initialPlace = initialPlace;
@@ -257,7 +259,7 @@ void QMdmmPlayer::setInitialPlace(int initialPlace)
  * @brief getter of property @c knifeDamage
  * @return @c knifeDamage
  */
-int QMdmmPlayer::knifeDamage() const noexcept
+int Player::knifeDamage() const noexcept
 {
     return d->knifeDamage;
 }
@@ -266,7 +268,7 @@ int QMdmmPlayer::knifeDamage() const noexcept
  * @brief setter of property @c knifeDamage
  * @param k @c knifeDamage
  */
-void QMdmmPlayer::setKnifeDamage(int k)
+void Player::setKnifeDamage(int k)
 {
     if (d->knifeDamage != k) {
         d->knifeDamage = k;
@@ -278,7 +280,7 @@ void QMdmmPlayer::setKnifeDamage(int k)
  * @brief getter of property @c horseDamage
  * @return @c horseDamage
  */
-int QMdmmPlayer::horseDamage() const noexcept
+int Player::horseDamage() const noexcept
 {
     return d->horseDamage;
 }
@@ -287,7 +289,7 @@ int QMdmmPlayer::horseDamage() const noexcept
  * @brief setter of property @c horseDamage
  * @param h @c horseDamage
  */
-void QMdmmPlayer::setHorseDamage(int h)
+void Player::setHorseDamage(int h)
 {
     if (d->horseDamage != h) {
         d->horseDamage = h;
@@ -299,7 +301,7 @@ void QMdmmPlayer::setHorseDamage(int h)
  * @brief getter of property @c maxHp
  * @return @c maxHp
  */
-int QMdmmPlayer::maxHp() const noexcept
+int Player::maxHp() const noexcept
 {
     return d->maxHp;
 }
@@ -308,7 +310,7 @@ int QMdmmPlayer::maxHp() const noexcept
  * @brief setter of property @c maxHp
  * @param m @c maxHp
  */
-void QMdmmPlayer::setMaxHp(int m)
+void Player::setMaxHp(int m)
 {
     if (d->maxHp != m) {
         d->maxHp = m;
@@ -320,7 +322,7 @@ void QMdmmPlayer::setMaxHp(int m)
  * @brief getter of property @c upgradePoint
  * @return @c upgradePoint
  */
-int QMdmmPlayer::upgradePoint() const noexcept
+int Player::upgradePoint() const noexcept
 {
     return d->upgradePoint;
 }
@@ -329,7 +331,7 @@ int QMdmmPlayer::upgradePoint() const noexcept
  * @brief setter of property @c upgradePoint
  * @param u @c upgradePoint
  */
-void QMdmmPlayer::setUpgradePoint(int u)
+void Player::setUpgradePoint(int u)
 {
     if (d->upgradePoint != u) {
         d->upgradePoint = u;
@@ -341,14 +343,14 @@ void QMdmmPlayer::setUpgradePoint(int u)
  * @brief getter of property @c dead
  * @return @c dead
  */
-bool QMdmmPlayer::dead() const
+bool Player::dead() const
 {
     bool zeroHpAsDead = room()->logicConfiguration().zeroHpAsDead();
     return zeroHpAsDead ? (d->hp <= 0) : (d->hp < 0);
 }
 
 /**
- * @fn QMdmmPlayer::alive() const
+ * @fn Player::alive() const
  * @brief getter of property @c alive
  * @return @c alive
  */
@@ -359,9 +361,9 @@ bool QMdmmPlayer::dead() const
  *
  * @sa QMdmmLogicConfiguration::canBuyOnlyInInitialCity
  */
-bool QMdmmPlayer::canBuyKnife() const
+bool Player::canBuyKnife() const
 {
-    return alive() && !hasKnife() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
+    return alive() && !hasKnife() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Country));
 }
 
 /**
@@ -370,9 +372,9 @@ bool QMdmmPlayer::canBuyKnife() const
  *
  * @sa QMdmmLogicConfiguration::canBuyOnlyInInitialCity
  */
-bool QMdmmPlayer::canBuyHorse() const
+bool Player::canBuyHorse() const
 {
-    return alive() && !hasHorse() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != QMdmmData::Country));
+    return alive() && !hasHorse() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Country));
 }
 
 /**
@@ -382,7 +384,7 @@ bool QMdmmPlayer::canBuyHorse() const
  *
  * @note A player cannot slash himself / herself.
  */
-bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
+bool Player::canSlash(const Player *to) const
 {
     Q_ASSERT(room() == to->room());
 
@@ -408,7 +410,7 @@ bool QMdmmPlayer::canSlash(const QMdmmPlayer *to) const
  *
  * @note A player cannot kick himself / herself.
  */
-bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
+bool Player::canKick(const Player *to) const
 {
     Q_ASSERT(room() == to->room());
 
@@ -421,7 +423,7 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
     if (this == to)
         return false;
 
-    if ((place() != to->place()) || (place() == QMdmmData::Country))
+    if ((place() != to->place()) || (place() == Data::Country))
         return false;
 
     return true;
@@ -432,9 +434,9 @@ bool QMdmmPlayer::canKick(const QMdmmPlayer *to) const
  * @param toPlace the target place
  * @return @c true if able, @c false if not
  */
-bool QMdmmPlayer::canMove(int toPlace) const
+bool Player::canMove(int toPlace) const
 {
-    return alive() && QMdmmData::isPlaceAdjacent(place(), toPlace);
+    return alive() && Data::isPlaceAdjacent(place(), toPlace);
 }
 
 /**
@@ -447,7 +449,7 @@ bool QMdmmPlayer::canMove(int toPlace) const
  *
  * @sa QMdmmLogicConfiguration::enableLetMove
  */
-bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
+bool Player::canLetMove(const Player *to, int toPlace) const
 {
     Q_ASSERT(room() == to->room());
 
@@ -461,11 +463,11 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
         return false;
 
     // one movement should move player to adjacent place only
-    if (!QMdmmData::isPlaceAdjacent(to->place(), toPlace))
+    if (!Data::isPlaceAdjacent(to->place(), toPlace))
         return false;
 
     // case 1: pull a player in adjacent place to self's place
-    if (QMdmmData::isPlaceAdjacent(place(), to->place()) && toPlace == place())
+    if (Data::isPlaceAdjacent(place(), to->place()) && toPlace == place())
         return true;
 
     // case 2: push a player in same place to adjacent place
@@ -481,7 +483,7 @@ bool QMdmmPlayer::canLetMove(const QMdmmPlayer *to, int toPlace) const
  *
  * @sa QMdmmLogicConfiguration::maximumKnifeDamage
  */
-int QMdmmPlayer::upgradeKnifeRemainingTimes() const
+int Player::upgradeKnifeRemainingTimes() const
 {
     return room()->logicConfiguration().maximumKnifeDamage() - knifeDamage();
 }
@@ -492,7 +494,7 @@ int QMdmmPlayer::upgradeKnifeRemainingTimes() const
  *
  * @sa QMdmmLogicConfiguration::maximumHorseDamage
  */
-int QMdmmPlayer::upgradeHorseRemainingTimes() const
+int Player::upgradeHorseRemainingTimes() const
 {
     return room()->logicConfiguration().maximumHorseDamage() - horseDamage();
 }
@@ -503,25 +505,25 @@ int QMdmmPlayer::upgradeHorseRemainingTimes() const
  *
  * @sa QMdmmLogicConfiguration::maximumMaxHp
  */
-int QMdmmPlayer::upgradeMaxHpRemainingTimes() const
+int Player::upgradeMaxHpRemainingTimes() const
 {
     return room()->logicConfiguration().maximumMaxHp() - maxHp();
 }
 
 /**
- * @fn QMdmmPlayer::canUpgradeKnife() const
+ * @fn Player::canUpgradeKnife() const
  * @brief if a player can upgrade knife damage
  * @return @c true if able, @c false if not
  */
 
 /**
- * @fn QMdmmPlayer::canUpgradeHorse() const
+ * @fn Player::canUpgradeHorse() const
  * @brief if a player can upgrade horse damage
  * @return @c true if able, @c false if not
  */
 
 /**
- * @fn QMdmmPlayer::canUpgradeMaxHp() const
+ * @fn Player::canUpgradeMaxHp() const
  * @brief if a player can upgrade maximum HP
  * @return @c true if able, @c false if not
  */
@@ -532,7 +534,7 @@ int QMdmmPlayer::upgradeMaxHpRemainingTimes() const
  *
  * @sa @c canBuyKnife()
  */
-bool QMdmmPlayer::buyKnife()
+bool Player::buyKnife()
 {
     if (!canBuyKnife())
         return false;
@@ -547,7 +549,7 @@ bool QMdmmPlayer::buyKnife()
  *
  * @sa @c canBuyHorse()
  */
-bool QMdmmPlayer::buyHorse()
+bool Player::buyHorse()
 {
     if (!canBuyHorse())
         return false;
@@ -565,40 +567,40 @@ bool QMdmmPlayer::buyHorse()
  *
  * @sa @c canSlash()
  */
-bool QMdmmPlayer::slash(QMdmmPlayer *to)
+bool Player::slash(Player *to)
 {
     Q_ASSERT(room() == to->room());
 
     if (!canSlash(to))
         return false;
 
-    QMdmmPlayerPrivate::applyDamage(this, to, knifeDamage(), QMdmmData::Slashed);
+    PlayerP::applyDamage(this, to, knifeDamage(), Data::Slashed);
 
-    if (place() != QMdmmData::Country) {
+    if (place() != Data::Country) {
         int punishHpModifier = room()->logicConfiguration().punishHpModifier();
         if (punishHpModifier > 0) {
-            QMdmmLogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
+            LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
 
             int punishedHp;
             switch (punishHpRoundStrategy) {
             default:
                 [[fallthrough]];
-            case QMdmmLogicConfiguration::RoundDown:
+            case LogicConfiguration::RoundDown:
                 punishedHp = maxHp() / punishHpModifier;
                 break;
-            case QMdmmLogicConfiguration::RoundToNearest45:
+            case LogicConfiguration::RoundToNearest45:
                 punishedHp = ((maxHp() * 2) / punishHpModifier + 1) / 2;
                 break;
-            case QMdmmLogicConfiguration::RoundUp:
+            case LogicConfiguration::RoundUp:
                 punishedHp = (maxHp() + punishHpModifier - 1) / punishHpModifier;
                 break;
-            case QMdmmLogicConfiguration::PlusOne:
+            case LogicConfiguration::PlusOne:
                 punishedHp = maxHp() / punishHpModifier + 1;
                 break;
             }
 
             if (punishedHp > 0)
-                QMdmmPlayerPrivate::applyDamage(to, this, punishedHp, QMdmmData::HpPunished);
+                PlayerP::applyDamage(to, this, punishedHp, Data::HpPunished);
         }
     }
 
@@ -612,19 +614,19 @@ bool QMdmmPlayer::slash(QMdmmPlayer *to)
  *
  * @sa @c canKick()
  */
-bool QMdmmPlayer::kick(QMdmmPlayer *to)
+bool Player::kick(Player *to)
 {
     Q_ASSERT(room() == to->room());
 
     if (!canKick(to))
         return false;
 
-    QMdmmPlayerPrivate::applyDamage(this, to, horseDamage(), QMdmmData::Kicked);
+    PlayerP::applyDamage(this, to, horseDamage(), Data::Kicked);
 
     if (!to->dead()) {
         // bypass the canMove check, directly set place.
         // Since it is effect of the kick action
-        to->setPlace(QMdmmData::Country);
+        to->setPlace(Data::Country);
     }
 
     return true;
@@ -639,7 +641,7 @@ bool QMdmmPlayer::kick(QMdmmPlayer *to)
  *
  * @sa @c canMove()
  */
-bool QMdmmPlayer::move(int toPlace)
+bool Player::move(int toPlace)
 {
     if (canMove(toPlace)) {
         setPlace(toPlace);
@@ -657,7 +659,7 @@ bool QMdmmPlayer::move(int toPlace)
  *
  * @sa @c canLetMove()
  */
-bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-make-member-function-const): Operation is ought to be not const
+bool Player::letMove(Player *to, int toPlace) // NOLINT(readability-make-member-function-const): Operation is ought to be not const
 {
     // for pull / push
     // kick (effect) is not implemented here since it should bypass canLetMove check.
@@ -676,7 +678,7 @@ bool QMdmmPlayer::letMove(QMdmmPlayer *to, int toPlace) // NOLINT(readability-ma
  * @brief Action: Do nothing
  * @return @c true if succeed, @c false if not
  */
-bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought to be not const
+bool Player::doNothing() // NOLINT(readability-make-member-function-const): Operation is ought to be not const
 {
     return alive();
 }
@@ -685,7 +687,7 @@ bool QMdmmPlayer::doNothing() // NOLINT(readability-make-member-function-const):
  * @brief upgrade knife damage by one point
  * @return @c true if succeed, @c false if not
  */
-bool QMdmmPlayer::upgradeKnife()
+bool Player::upgradeKnife()
 {
     if (!canUpgradeKnife())
         return false;
@@ -698,7 +700,7 @@ bool QMdmmPlayer::upgradeKnife()
  * @brief upgrade horse damage by one point
  * @return @c true if succeed, @c false if not
  */
-bool QMdmmPlayer::upgradeHorse()
+bool Player::upgradeHorse()
 {
     if (!canUpgradeHorse())
         return false;
@@ -711,7 +713,7 @@ bool QMdmmPlayer::upgradeHorse()
  * @brief upgrade maximum HP by one point
  * @return @c true if succeed, @c false if not
  */
-bool QMdmmPlayer::upgradeMaxHp()
+bool Player::upgradeMaxHp()
 {
     if (!canUpgradeMaxHp())
         return false;
@@ -724,7 +726,7 @@ bool QMdmmPlayer::upgradeMaxHp()
  * @brief reset all status to initial state of a round
  * @param seat the seat number (a.k.a. initial place)
  */
-void QMdmmPlayer::prepareForRoundStart(int seat)
+void Player::prepareForRoundStart(int seat)
 {
     setHasKnife(false);
     setHasHorse(false);
@@ -739,7 +741,7 @@ void QMdmmPlayer::prepareForRoundStart(int seat)
  *
  * Useful when a player leaves or joins a room between rounds, which causes a game over
  */
-void QMdmmPlayer::resetUpgrades()
+void Player::resetUpgrades()
 {
     setMaxHp(room()->logicConfiguration().initialMaxHp());
     setKnifeDamage(room()->logicConfiguration().initialKnifeDamage());
@@ -748,52 +750,52 @@ void QMdmmPlayer::resetUpgrades()
 }
 
 /**
- * @fn QMdmmPlayer::hasKnifeChanged(bool hasKnife, QPrivateSignal)
+ * @fn Player::hasKnifeChanged(bool hasKnife, QPrivateSignal)
  * @brief notify signal for property @c hasKnife
  */
 
 /**
- * @fn QMdmmPlayer::hasHorseChanged(bool hasHorse, QPrivateSignal)
+ * @fn Player::hasHorseChanged(bool hasHorse, QPrivateSignal)
  * @brief notify signal for property @c hasHorse
  */
 
 /**
- * @fn QMdmmPlayer::hpChanged(int hp, QPrivateSignal)
+ * @fn Player::hpChanged(int hp, QPrivateSignal)
  * @brief notify signal for property @c hp
  */
 
 /**
- * @fn QMdmmPlayer::placeChanged(int place, QPrivateSignal)
+ * @fn Player::placeChanged(int place, QPrivateSignal)
  * @brief notify signal for property @c place
  */
 
 /**
- * @fn QMdmmPlayer::initialPlaceChanged(int initialPlace, QPrivateSignal)
+ * @fn Player::initialPlaceChanged(int initialPlace, QPrivateSignal)
  * @brief notify signal for property @c initialPlace
  */
 
 /**
- * @fn QMdmmPlayer::knifeDamageChanged(int knifeDamage, QPrivateSignal)
+ * @fn Player::knifeDamageChanged(int knifeDamage, QPrivateSignal)
  * @brief notify signal for property @c knifeDamage
  */
 
 /**
- * @fn QMdmmPlayer::horseDamageChanged(int horseDamage, QPrivateSignal)
+ * @fn Player::horseDamageChanged(int horseDamage, QPrivateSignal)
  * @brief notify signal for property @c horseDamage
  */
 
 /**
- * @fn QMdmmPlayer::maxHpChanged(int maxHp, QPrivateSignal)
+ * @fn Player::maxHpChanged(int maxHp, QPrivateSignal)
  * @brief notify signal for property @c maxHp
  */
 
 /**
- * @fn QMdmmPlayer::upgradePointChanged(int upgradePoint, QPrivateSignal)
+ * @fn Player::upgradePointChanged(int upgradePoint, QPrivateSignal)
  * @brief notify signal for property @c upgradePoint
  */
 
 /**
- * @fn QMdmmPlayer::damaged(const QString &from, int damagePoint, QMdmmData::DamageReason reason, QPrivateSignal)
+ * @fn Player::damaged(const QString &from, int damagePoint, Data::DamageReason reason, QPrivateSignal)
  * @brief emitted when this player is damaged
  *
  * @note This is emitted later of the 2 overloads.
@@ -801,7 +803,7 @@ void QMdmmPlayer::resetUpgrades()
  */
 
 /**
- * @fn QMdmmPlayer::damaged(const QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason, QPrivateSignal)
+ * @fn Player::damaged(const Player *from, int damagePoint, Data::DamageReason reason, QPrivateSignal)
  * @brief emitted when this player is damaged
  *
  * @note This is emitted earlier of the 2 overloads.
@@ -809,7 +811,7 @@ void QMdmmPlayer::resetUpgrades()
  */
 
 /**
- * @fn QMdmmPlayer::die(QPrivateSignal)
+ * @fn Player::die(QPrivateSignal)
  * @brief emitted when the player dies
  *
  * Acts as the notify signal for property @c alive and @c dead

@@ -15,8 +15,8 @@
 #include <QThread>
 #include <QTimer>
 
-namespace QMdmmProtocol = QMdmmCore::QMdmmProtocol;
-using QMdmmLogic = QMdmmCore::QMdmmLogic;
+namespace QMdmmProtocol = QMdmmCore::Protocol;
+using QMdmmLogic = QMdmmCore::Logic;
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 

@@ -6,7 +6,7 @@
 # When included in project mode, it registers functions for generating output file list.
 # When being run, it generates files.
 
-set(RMESSENTIALS_HEADER_GENERATION_REGEX "(struct|class) [A-Z]*_EXPORT ([A-Za-z_][A-Za-z0-9_]*)")
+set(RMESSENTIALS_HEADER_GENERATION_REGEX "QMDMM_EXPORT_NAME\\(([A-Za-z_][A-Za-z_0-9]*)\\)")
 set(AUTO_GENERATE_HEADER_CMAKE_FILE "${CMAKE_CURRENT_LIST_FILE}")
 
 function(auto_generate_header_file_list original_header_file_path output_var)
@@ -14,7 +14,7 @@ function(auto_generate_header_file_list original_header_file_path output_var)
     set(output)
     foreach (ORIGINAL_HEADER_STRING IN LISTS ORIGINAL_HEADER_STRINGS)
         if (ORIGINAL_HEADER_STRING MATCHES "${RMESSENTIALS_HEADER_GENERATION_REGEX}")
-            list(APPEND output "${CMAKE_MATCH_2}")
+            list(APPEND output "${CMAKE_MATCH_1}")
         else()
             message(FATAL_ERROR "Error when reading file ${original_header_file_path}")
         endif()

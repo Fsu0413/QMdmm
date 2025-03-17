@@ -5,9 +5,7 @@
 
 #include <QMdmmCoreGlobal>
 
-#if 0
-class QMDMMNETWORKING_EXPORT QMdmmNetworkingGlobal
-#endif
+QMDMM_EXPORT_NAME(QMdmmNetworkingGlobal)
 
 #ifndef QMDMM_STATIC
 #ifdef QMDMMSERVER_LIBRARY

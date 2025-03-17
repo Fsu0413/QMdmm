@@ -21,7 +21,7 @@ private slots:
     void QMdmmPacketDataCopy()
     {
         QJsonObject ob;
-        QMdmmPacketData e = ob;
+        PacketData e = ob;
         QJsonObject ob2;
         ob2.insert(QStringLiteral("test"), QJsonValue());
         e = ob2;
@@ -29,7 +29,7 @@ private slots:
 
     void QMdmmProtocolprotocolVersion()
     {
-        int r = QMdmmProtocol::protocolVersion();
+        int r = Protocol::version();
         QCOMPARE(r, 0);
     }
 
@@ -37,23 +37,23 @@ private slots:
     {
         // case 1
         {
-            QMdmmPacket p;
-            QMdmmProtocol::PacketType t = p.type();
-            QCOMPARE(t, QMdmmProtocol::TypeInvalid);
+            Packet p;
+            Protocol::PacketType t = p.type();
+            QCOMPARE(t, Protocol::TypeInvalid);
         }
 
         // case 2
         {
-            QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {});
-            QMdmmProtocol::PacketType t = p.type();
-            QCOMPARE(t, QMdmmProtocol::TypeRequest);
+            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Protocol::PacketType t = p.type();
+            QCOMPARE(t, Protocol::TypeRequest);
         }
 
         // case 3
         {
-            QMdmmPacket p(QMdmmProtocol::NotifyVersion, {});
-            QMdmmProtocol::PacketType t = p.type();
-            QCOMPARE(t, QMdmmProtocol::TypeNotify);
+            Packet p(Protocol::NotifyVersion, {});
+            Protocol::PacketType t = p.type();
+            QCOMPARE(t, Protocol::TypeNotify);
         }
     }
 
@@ -61,23 +61,23 @@ private slots:
     {
         // case 1
         {
-            QMdmmPacket p;
-            QMdmmProtocol::RequestId t = p.requestId();
-            QCOMPARE(t, QMdmmProtocol::RequestInvalid);
+            Packet p;
+            Protocol::RequestId t = p.requestId();
+            QCOMPARE(t, Protocol::RequestInvalid);
         }
 
         // case 2
         {
-            QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {});
-            QMdmmProtocol::RequestId t = p.requestId();
-            QCOMPARE(t, QMdmmProtocol::RequestStoneScissorsCloth);
+            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Protocol::RequestId t = p.requestId();
+            QCOMPARE(t, Protocol::RequestStoneScissorsCloth);
         }
 
         // case 3
         {
-            QMdmmPacket p(QMdmmProtocol::NotifyVersion, {});
-            QMdmmProtocol::RequestId t = p.requestId();
-            QCOMPARE(t, QMdmmProtocol::RequestInvalid);
+            Packet p(Protocol::NotifyVersion, {});
+            Protocol::RequestId t = p.requestId();
+            QCOMPARE(t, Protocol::RequestInvalid);
         }
     }
 
@@ -85,23 +85,23 @@ private slots:
     {
         // case 1
         {
-            QMdmmPacket p;
-            QMdmmProtocol::NotifyId t = p.notifyId();
-            QCOMPARE(t, QMdmmProtocol::NotifyInvalid);
+            Packet p;
+            Protocol::NotifyId t = p.notifyId();
+            QCOMPARE(t, Protocol::NotifyInvalid);
         }
 
         // case 2
         {
-            QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {});
-            QMdmmProtocol::NotifyId t = p.notifyId();
-            QCOMPARE(t, QMdmmProtocol::NotifyInvalid);
+            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Protocol::NotifyId t = p.notifyId();
+            QCOMPARE(t, Protocol::NotifyInvalid);
         }
 
         // case 3
         {
-            QMdmmPacket p(QMdmmProtocol::NotifyVersion, {});
-            QMdmmProtocol::NotifyId t = p.notifyId();
-            QCOMPARE(t, QMdmmProtocol::NotifyVersion);
+            Packet p(Protocol::NotifyVersion, {});
+            Protocol::NotifyId t = p.notifyId();
+            QCOMPARE(t, Protocol::NotifyVersion);
         }
     }
 
@@ -109,14 +109,14 @@ private slots:
     {
         // case 1
         {
-            QMdmmPacket p;
+            Packet p;
             QJsonValue t = p.value();
             QVERIFY(t.isNull());
         }
 
         // case 2
         {
-            QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {1});
+            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {1});
             QJsonValue t = p.value();
             QVERIFY(!t.isNull());
             QCOMPARE(t.toInt(), 1);
@@ -126,7 +126,7 @@ private slots:
     void QMdmmPacketserialize()
     {
         {
-            QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {1});
+            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {1});
             QByteArray arr = p;
 
             // The Json object created by Qt is sorted by key
@@ -160,26 +160,26 @@ private slots:
         QString actualErrorString;
         QString actualErrorString2;
 
-        QMdmmPacket p = QMdmmPacket::fromJson(input, &actualErrorString);
+        Packet p = Packet::fromJson(input, &actualErrorString);
 
         QCOMPARE(errorString, actualErrorString);
         QCOMPARE(p.hasError(&actualErrorString2), !actualErrorString.isEmpty());
         QCOMPARE(actualErrorString, actualErrorString2);
 
         if (actualErrorString.isEmpty()) {
-            QCOMPARE(p.type(), QMdmmProtocol::TypeRequest);
-            QCOMPARE(p.requestId(), QMdmmProtocol::RequestActionOrder);
+            QCOMPARE(p.type(), Protocol::TypeRequest);
+            QCOMPARE(p.requestId(), Protocol::RequestActionOrder);
             QCOMPARE(p.value(), QStringLiteral("Fsu0413"));
 
             // This packet is TypeRequest so notifyId should get invalid
-            QCOMPARE(p.notifyId(), QMdmmProtocol::NotifyInvalid);
+            QCOMPARE(p.notifyId(), Protocol::NotifyInvalid);
         }
     }
     void QMdmmPacketfromJsonhasError2()
     {
         {
             // coverage for errorString = nullptr
-            (void)QMdmmPacket::fromJson({}, nullptr).hasError();
+            (void)Packet::fromJson({}, nullptr).hasError();
         }
         {
             // Check of a notify JSON
@@ -187,19 +187,19 @@ private slots:
             QString actualErrorString;
             QString actualErrorString2;
 
-            QMdmmPacket p = QMdmmPacket::fromJson(input, &actualErrorString);
+            Packet p = Packet::fromJson(input, &actualErrorString);
 
             QVERIFY(actualErrorString.isEmpty());
             QCOMPARE(p.hasError(&actualErrorString2), !actualErrorString.isEmpty());
             QCOMPARE(actualErrorString, actualErrorString2);
 
             if (actualErrorString.isEmpty()) {
-                QCOMPARE(p.type(), QMdmmProtocol::TypeNotify);
-                QCOMPARE(p.notifyId(), QMdmmProtocol::NotifyLogicConfiguration);
+                QCOMPARE(p.type(), Protocol::TypeNotify);
+                QCOMPARE(p.notifyId(), Protocol::NotifyLogicConfiguration);
                 QCOMPARE(p.value(), QStringLiteral("Fsu0413"));
 
                 // This packet is TypeNotify so requestId should get invalid
-                QCOMPARE(p.requestId(), QMdmmProtocol::RequestInvalid);
+                QCOMPARE(p.requestId(), Protocol::RequestInvalid);
             }
         }
     }
@@ -208,9 +208,9 @@ private slots:
     {
         // coverage for Q_DECLARE_METATYPE
 
-        QMdmmPacket p(QMdmmProtocol::TypeRequest, QMdmmProtocol::RequestStoneScissorsCloth, {});
-        QVariant v = QVariant::fromValue<QMdmmPacket>(p);
-        QCOMPARE(v.value<QMdmmPacket>().serialize(), p.serialize());
+        Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+        QVariant v = QVariant::fromValue<Packet>(p);
+        QCOMPARE(v.value<Packet>().serialize(), p.serialize());
     }
 };
 

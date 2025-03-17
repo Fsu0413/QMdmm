@@ -9,8 +9,11 @@
 
 #include <QObject>
 
-using QMdmmRoom = QMdmmCore::QMdmmRoom;
-namespace QMdmmData = QMdmmCore::QMdmmData;
+using QMdmmRoom = QMdmmCore::Room;
+namespace QMdmmData = QMdmmCore::Data;
+
+QMDMM_EXPORT_NAME(QMdmmClientConfiguration)
+QMDMM_EXPORT_NAME(QMdmmClient)
 
 struct QMDMMNETWORKING_EXPORT QMdmmClientConfiguration final : public QVariantMap
 {

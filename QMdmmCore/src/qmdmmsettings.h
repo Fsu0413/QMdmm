@@ -8,10 +8,12 @@
 #include <QSettings>
 #include <memory>
 
+QMDMM_EXPORT_NAME(QMdmmSettings)
+
 namespace QMdmmCore {
 namespace v0 {
 
-class QMDMMCORE_EXPORT QMdmmSettings
+class QMDMMCORE_EXPORT Settings
 {
     Q_GADGET
 
@@ -24,8 +26,8 @@ public:
     };
     Q_ENUM(Instance);
 
-    QMdmmSettings();
-    ~QMdmmSettings();
+    Settings();
+    ~Settings();
 
     QSettings::Status saveConfig(Instance instance);
 
@@ -40,12 +42,12 @@ public:
     [[nodiscard]] bool contains(Instance instance, const QString &key) const;
 
 private:
-    Q_DISABLE_COPY_MOVE(QMdmmSettings);
+    Q_DISABLE_COPY_MOVE(Settings);
 };
 } // namespace v0
 
 inline namespace v1 {
-using v0::QMdmmSettings;
+using v0::Settings;
 }
 
 } // namespace QMdmmCore

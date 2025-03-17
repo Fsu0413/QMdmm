@@ -10,8 +10,10 @@
 
 class QMdmmAgent;
 class QMdmmSocket;
-using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
-namespace QMdmmData = QMdmmCore::QMdmmData;
+using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
+namespace QMdmmData = QMdmmCore::Data;
+
+QMDMM_EXPORT_NAME(QMdmmLogicRunner)
 
 // for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.

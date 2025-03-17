@@ -25,9 +25,9 @@ private slots:
         QTest::addColumn<bool>("result");
 
         QTest::newRow("nc-nc") << 1 << 2 << false;
-        QTest::newRow("c-c") << (int)QMdmmData::Country << (int)QMdmmData::Country << false;
-        QTest::newRow("nc-c") << 1 << (int)QMdmmData::Country << true;
-        QTest::newRow("c-nc") << (int)QMdmmData::Country << 2 << true;
+        QTest::newRow("c-c") << (int)Data::Country << (int)Data::Country << false;
+        QTest::newRow("nc-c") << 1 << (int)Data::Country << true;
+        QTest::newRow("c-nc") << (int)Data::Country << 2 << true;
     }
     void QMdmmDataisPlaceAdjacent()
     {
@@ -35,34 +35,34 @@ private slots:
         QFETCH(int, p2);
         QFETCH(bool, result);
 
-        bool r = QMdmmData::isPlaceAdjacent(p1, p2);
+        bool r = Data::isPlaceAdjacent(p1, p2);
         QCOMPARE(r, result);
     }
 
     void QMdmmDatastoneScissorsClothWinners_data()
     {
-        typedef QHash<QString, QMdmmData::StoneScissorsCloth> JudgeHash;
+        typedef QHash<QString, Data::StoneScissorsCloth> JudgeHash;
 
         QTest::addColumn<JudgeHash>("judgers");
         QTest::addColumn<QStringList>("result");
 
         QTest::newRow("tie-allsame") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("2"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("3"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("4"), QMdmmData::Stone),
+            std::make_pair(QStringLiteral("1"), Data::Stone),
+            std::make_pair(QStringLiteral("2"), Data::Stone),
+            std::make_pair(QStringLiteral("3"), Data::Stone),
+            std::make_pair(QStringLiteral("4"), Data::Stone),
         } << QStringList {};
         QTest::newRow("tie-alldiff") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("2"), QMdmmData::Scissors),
-            std::make_pair(QStringLiteral("3"), QMdmmData::Cloth),
-            std::make_pair(QStringLiteral("4"), QMdmmData::Stone),
+            std::make_pair(QStringLiteral("1"), Data::Stone),
+            std::make_pair(QStringLiteral("2"), Data::Scissors),
+            std::make_pair(QStringLiteral("3"), Data::Cloth),
+            std::make_pair(QStringLiteral("4"), Data::Stone),
         } << QStringList {};
         QTest::newRow("stone-vs-scissors") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("2"), QMdmmData::Scissors),
-            std::make_pair(QStringLiteral("3"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("4"), QMdmmData::Scissors),
+            std::make_pair(QStringLiteral("1"), Data::Stone),
+            std::make_pair(QStringLiteral("2"), Data::Scissors),
+            std::make_pair(QStringLiteral("3"), Data::Stone),
+            std::make_pair(QStringLiteral("4"), Data::Scissors),
         } << QStringList {
             QStringLiteral("1"),
             QStringLiteral("1"),
@@ -70,10 +70,10 @@ private slots:
             QStringLiteral("3"),
         };
         QTest::newRow("cloth-vs-stone") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), QMdmmData::Stone),
-            std::make_pair(QStringLiteral("2"), QMdmmData::Cloth),
-            std::make_pair(QStringLiteral("3"), QMdmmData::Cloth),
-            std::make_pair(QStringLiteral("4"), QMdmmData::Cloth),
+            std::make_pair(QStringLiteral("1"), Data::Stone),
+            std::make_pair(QStringLiteral("2"), Data::Cloth),
+            std::make_pair(QStringLiteral("3"), Data::Cloth),
+            std::make_pair(QStringLiteral("4"), Data::Cloth),
         } << QStringList {
             QStringLiteral("2"),
             QStringLiteral("3"),
@@ -82,12 +82,12 @@ private slots:
     }
     void QMdmmDatastoneScissorsClothWinners()
     {
-        typedef QHash<QString, QMdmmData::StoneScissorsCloth> JudgeHash;
+        typedef QHash<QString, Data::StoneScissorsCloth> JudgeHash;
 
         QFETCH(JudgeHash, judgers);
         QFETCH(QStringList, result);
 
-        QStringList r = QMdmmData::stoneScissorsClothWinners(judgers);
+        QStringList r = Data::stoneScissorsClothWinners(judgers);
         foreach (const QString &a, result)
             r.removeOne(a);
 
@@ -96,7 +96,7 @@ private slots:
 
     void QMdmmGlobalversion()
     {
-        QVersionNumber r = QMdmmGlobal::version();
+        QVersionNumber r = Global::version();
         QCOMPARE(r, QVersionNumber::fromString(QStringLiteral(QMDMM_VERSION)));
     }
 
@@ -105,26 +105,26 @@ private slots:
         QList<int> l {1, 2, 3, 4, 5, 2, 3, 4, 5, 6};
         QSet<int> s {1, 2, 3, 4, 5, 6};
 
-        QSet<int> r = QMdmmUtilities::list2Set(l);
+        QSet<int> r = Utilities::list2Set(l);
         QCOMPARE(r, s);
     }
 
     void QMdmmUtilitiesenumList2VariantList1()
     {
-        QList<QMdmmData::StoneScissorsCloth> l {QMdmmData::Stone, QMdmmData::Scissors, QMdmmData::Cloth, QMdmmData::Stone};
-        QVariantList s {static_cast<int>(QMdmmData::Stone), static_cast<int>(QMdmmData::Scissors), static_cast<int>(QMdmmData::Cloth), static_cast<int>(QMdmmData::Stone)};
+        QList<Data::StoneScissorsCloth> l {Data::Stone, Data::Scissors, Data::Cloth, Data::Stone};
+        QVariantList s {static_cast<int>(Data::Stone), static_cast<int>(Data::Scissors), static_cast<int>(Data::Cloth), static_cast<int>(Data::Stone)};
 
-        QVariantList r = QMdmmUtilities::enumList2VariantList(l);
+        QVariantList r = Utilities::enumList2VariantList(l);
         QCOMPARE(r, s);
     }
 
     void QMdmmUtilitiesenumList2VariantList2()
     {
-        QList<QMdmmData::AgentState> l {QMdmmData::StateOnlineBot, QMdmmData::StateOnlineTrust, QMdmmData::StateOffline};
-        QVariantList s {static_cast<int>(QMdmmData::AgentState(QMdmmData::StateOnlineBot)), static_cast<int>(QMdmmData::AgentState(QMdmmData::StateOnlineTrust)),
-                        static_cast<int>(QMdmmData::AgentState(QMdmmData::StateOffline))};
+        QList<Data::AgentState> l {Data::StateOnlineBot, Data::StateOnlineTrust, Data::StateOffline};
+        QVariantList s {static_cast<int>(Data::AgentState(Data::StateOnlineBot)), static_cast<int>(Data::AgentState(Data::StateOnlineTrust)),
+                        static_cast<int>(Data::AgentState(Data::StateOffline))};
 
-        QVariantList r = QMdmmUtilities::enumList2VariantList(l);
+        QVariantList r = Utilities::enumList2VariantList(l);
         QCOMPARE(r, s);
     }
 
@@ -133,7 +133,7 @@ private slots:
         QList<int> l {1, 2, 3, 4, 5, 6};
         QVariantList s {1, 2, 3, 4, 5, 6};
 
-        QVariantList r = QMdmmUtilities::intList2VariantList(l);
+        QVariantList r = Utilities::intList2VariantList(l);
         QCOMPARE(r, s);
     }
 
@@ -142,7 +142,7 @@ private slots:
         QVariantList l {6, 7, 8, 9, 10, 11};
         QList<int> s {6, 7, 8, 9, 10, 11};
 
-        QList<int> r = QMdmmUtilities::variantList2IntList(l);
+        QList<int> r = Utilities::variantList2IntList(l);
         QCOMPARE(r, s);
     }
 
@@ -151,7 +151,7 @@ private slots:
         QStringList l {QStringLiteral("Fs"), QStringLiteral("u"), QStringLiteral("0413")};
         QVariantList s {QStringLiteral("Fs"), QStringLiteral("u"), QStringLiteral("0413")};
 
-        QVariantList r = QMdmmUtilities::stringList2VariantList(l);
+        QVariantList r = Utilities::stringList2VariantList(l);
         QCOMPARE(r, s);
     }
 
@@ -160,7 +160,7 @@ private slots:
         QVariantList l {QStringLiteral("3140"), QStringLiteral("u"), QStringLiteral("sF")};
         QStringList s {QStringLiteral("3140"), QStringLiteral("u"), QStringLiteral("sF")};
 
-        QStringList r = QMdmmUtilities::variantList2StringList(l);
+        QStringList r = Utilities::variantList2StringList(l);
         QCOMPARE(r, s);
     }
 };

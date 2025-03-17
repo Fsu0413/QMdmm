@@ -10,7 +10,9 @@
 
 #include <QObject>
 
-namespace QMdmmData = QMdmmCore::QMdmmData;
+namespace QMdmmData = QMdmmCore::Data;
+
+QMDMM_EXPORT_NAME(QMdmmAgent)
 
 class QMdmmSocket;
 

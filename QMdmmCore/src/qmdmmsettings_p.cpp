@@ -8,6 +8,8 @@
 
 namespace QMdmmCore {
 
+namespace p {
+
 // for reading global / per-user configuration, QSettings is the suitable way
 // for specified configuration, QVariantMap is more proper since QSettings always autosaves configuration (This is not desired behavior!)
 
@@ -17,101 +19,101 @@ namespace QMdmmCore {
 
 // The unique API is following QMdmmSettingsWrapperPrivate
 
-QMdmmSettingsWrapperPrivate::~QMdmmSettingsWrapperPrivate() = default;
+SettingsWrapperP::~SettingsWrapperP() = default;
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate(const QString &organization, const QString &application)
+QSettingsWrapperP::QSettingsWrapperP(const QString &organization, const QString &application)
     : settings(organization, application)
 {
 }
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate(QSettings::Scope scope, const QString &organization, const QString &application)
+QSettingsWrapperP::QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application)
     : settings(scope, organization, application)
 {
 }
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application)
+QSettingsWrapperP::QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application)
     : settings(format, scope, organization, application)
 {
 }
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate(const QString &fileName, QSettings::Format format)
+QSettingsWrapperP::QSettingsWrapperP(const QString &fileName, QSettings::Format format)
     : settings(fileName, format)
 {
 }
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate() = default;
+QSettingsWrapperP::QSettingsWrapperP() = default;
 
-QMdmmQSettingsWrapperPrivate::QMdmmQSettingsWrapperPrivate(QSettings::Scope scope)
+QSettingsWrapperP::QSettingsWrapperP(QSettings::Scope scope)
     : settings(scope)
 {
 }
 
-QMdmmQSettingsWrapperPrivate::~QMdmmQSettingsWrapperPrivate() = default;
+QSettingsWrapperP::~QSettingsWrapperP() = default;
 
-void QMdmmQSettingsWrapperPrivate::setValue(const QString &key, const QVariant &value)
+void QSettingsWrapperP::setValue(const QString &key, const QVariant &value)
 {
     settings.setValue(key, value);
 }
 
-QVariant QMdmmQSettingsWrapperPrivate::value(const QString &key, const QVariant &defaultValue) const
+QVariant QSettingsWrapperP::value(const QString &key, const QVariant &defaultValue) const
 {
     return settings.value(key, defaultValue);
 }
 
-void QMdmmQSettingsWrapperPrivate::beginGroup(const QString &prefix)
+void QSettingsWrapperP::beginGroup(const QString &prefix)
 {
     settings.beginGroup(prefix);
 }
 
-void QMdmmQSettingsWrapperPrivate::endGroup()
+void QSettingsWrapperP::endGroup()
 {
     settings.endGroup();
 }
 
-QString QMdmmQSettingsWrapperPrivate::group() const
+QString QSettingsWrapperP::group() const
 {
     return settings.group();
 }
 
-bool QMdmmQSettingsWrapperPrivate::contains(const QString &key) const
+bool QSettingsWrapperP::contains(const QString &key) const
 {
     return settings.contains(key);
 }
 
-QMdmmQVariantMapWrapperPrivate::~QMdmmQVariantMapWrapperPrivate() = default;
+QVariantMapWrapperP::~QVariantMapWrapperP() = default;
 
-void QMdmmQVariantMapWrapperPrivate::setValue(const QString &key, const QVariant &value)
+void QVariantMapWrapperP::setValue(const QString &key, const QVariant &value)
 {
     map.insert(keyWithGroup(key), value);
 }
 
-QVariant QMdmmQVariantMapWrapperPrivate::value(const QString &key, const QVariant &defaultValue) const
+QVariant QVariantMapWrapperP::value(const QString &key, const QVariant &defaultValue) const
 {
     return map.value(keyWithGroup(key), defaultValue);
 }
 
-void QMdmmQVariantMapWrapperPrivate::beginGroup(const QString &prefix)
+void QVariantMapWrapperP::beginGroup(const QString &prefix)
 {
     currentGroup.append(prefix);
 }
 
-void QMdmmQVariantMapWrapperPrivate::endGroup()
+void QVariantMapWrapperP::endGroup()
 {
     Q_ASSERT(!currentGroup.isEmpty());
     currentGroup.removeLast();
 }
 
-QString QMdmmQVariantMapWrapperPrivate::group() const
+QString QVariantMapWrapperP::group() const
 {
     return currentGroup.join(QStringLiteral("/"));
 }
 
-bool QMdmmQVariantMapWrapperPrivate::contains(const QString &key) const
+bool QVariantMapWrapperP::contains(const QString &key) const
 {
     return map.contains(keyWithGroup(key));
 }
 
-QString QMdmmQVariantMapWrapperPrivate::keyWithGroup(const QString &key) const
+QString QVariantMapWrapperP::keyWithGroup(const QString &key) const
 {
     QStringList groupPlusKey = currentGroup;
     groupPlusKey.append(key);
@@ -130,19 +132,19 @@ void initializeQSettings()
 }
 } // namespace
 
-QMdmmSettingsPrivate::QMdmmSettingsPrivate()
+SettingsP::SettingsP()
     : globalConfig(nullptr)
     , userConfig(nullptr)
     , specifiedConfig(nullptr)
 {
     std::call_once(qSettingsInitialized, &initializeQSettings);
 
-    globalConfig = new QMdmmQSettingsWrapperPrivate(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    userConfig = new QMdmmQSettingsWrapperPrivate(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    specifiedConfig = new QMdmmQVariantMapWrapperPrivate;
+    globalConfig = new QSettingsWrapperP(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    userConfig = new QSettingsWrapperP(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    specifiedConfig = new QVariantMapWrapperP;
 }
 
-QMdmmSettingsPrivate::~QMdmmSettingsPrivate()
+SettingsP::~SettingsP()
 {
     delete globalConfig;
     delete userConfig;
@@ -150,17 +152,17 @@ QMdmmSettingsPrivate::~QMdmmSettingsPrivate()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-QSettings::Status QMdmmSettingsPrivate::saveConfig(QMdmmSettings::Instance instance)
+QSettings::Status SettingsP::saveConfig(Settings::Instance instance)
 {
-    Q_ASSERT((instance == QMdmmSettings::Global) || (instance == QMdmmSettings::PerUser));
+    Q_ASSERT((instance == Settings::Global) || (instance == Settings::PerUser));
 
     QSettings *toBeSaved = nullptr;
 
     switch (instance) {
-    case QMdmmSettings::Global:
+    case Settings::Global:
         toBeSaved = &globalConfig->settings;
         break;
-    case QMdmmSettings::PerUser:
+    case Settings::PerUser:
         toBeSaved = &userConfig->settings;
         break;
     default:
@@ -187,4 +189,7 @@ QSettings::Status QMdmmSettingsPrivate::saveConfig(QMdmmSettings::Instance insta
 
     return toBeSaved->status();
 }
+
+} // namespace p
+
 } // namespace QMdmmCore

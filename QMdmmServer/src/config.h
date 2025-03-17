@@ -10,7 +10,7 @@
 #include <QCommandLineParser>
 #include <QSettings>
 
-using QMdmmSettings = QMdmmCore::QMdmmSettings;
+using QMdmmSettings = QMdmmCore::Settings;
 
 class Config
 {

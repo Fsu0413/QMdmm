@@ -6,6 +6,8 @@
 #include <QGlobalStatic>
 #include <QSettings>
 
+using namespace QMdmmCore::p;
+
 namespace QMdmmCore {
 namespace v0 {
 
@@ -15,17 +17,17 @@ namespace v0 {
 
 namespace {
 // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
-Q_GLOBAL_STATIC(QMdmmSettingsPrivate, d)
+Q_GLOBAL_STATIC(SettingsP, d)
 } // namespace
 
 #endif
 
 /**
- * @class QMdmmSettings
+ * @class Settings
  * @brief The configuration files maintained by MDMM game or system
  *
- * This setting class maintains 3 configuration instance, in where one for global default (@c QMdmmSettings::Global),
- * another one for per-user default (@c QMdmmSettings::PerUser), and remained one for user specified (@c QMdmmSettings::Specified).
+ * This setting class maintains 3 configuration instance, in where one for global default (@c Settings::Global),
+ * another one for per-user default (@c Settings::PerUser), and remained one for user specified (@c Settings::Specified).
  *
  * Global default and per-user default configurations are loaded when initialized. The specified one is initialized empty.
  *
@@ -35,30 +37,30 @@ Q_GLOBAL_STATIC(QMdmmSettingsPrivate, d)
  */
 
 /**
- * @enum QMdmmSettings::Instance
+ * @enum Settings::Instance
  * @brief The identifier of the 3 instances
  */
 
 /**
- * @var QMdmmSettings::Instance QMdmmSettings::Global
+ * @var Settings::Instance Settings::Global
  * @brief Global default configuration
  *
- * @var QMdmmSettings::Instance QMdmmSettings::PerUser
+ * @var Settings::Instance Settings::PerUser
  * @brief Per-user default configuration
  *
- * @var QMdmmSettings::Instance QMdmmSettings::Specified
+ * @var Settings::Instance Settings::Specified
  * @brief User specified configuration
  */
 
 /**
  * @brief ctor.
  */
-QMdmmSettings::QMdmmSettings() = default;
+Settings::Settings() = default;
 
 /**
  * @brief dtor.
  */
-QMdmmSettings::~QMdmmSettings() = default;
+Settings::~Settings() = default;
 
 /**
  * @brief Save current configuration
@@ -69,7 +71,7 @@ QMdmmSettings::~QMdmmSettings() = default;
  *
  * @warning Calling this method while one or more group is active is undefined behavior.
  */
-QSettings::Status QMdmmSettings::saveConfig(Instance instance)
+QSettings::Status Settings::saveConfig(Instance instance)
 {
     Q_ASSERT(instance != Specified);
 
@@ -81,11 +83,11 @@ QSettings::Status QMdmmSettings::saveConfig(Instance instance)
  * @param key Key.
  * @param value Value.
  *
- * This can only modify modifies @c QMdmmSettings::Specified one.
+ * This can only modify modifies @c Settings::Specified one.
  *
  * @note To prevent unwanted configuration file saving, <tt>setValue(Instance)</tt> won't be implemented or supported.
  */
-void QMdmmSettings::setValue(const QString &key, const QVariant &value)
+void Settings::setValue(const QString &key, const QVariant &value)
 {
     d->specifiedConfig->setValue(key, value);
 }
@@ -96,7 +98,7 @@ void QMdmmSettings::setValue(const QString &key, const QVariant &value)
  * @param defaultValue The default value to be returned if the key does not exist on all 3 instances
  * @return The set value.
  */
-QVariant QMdmmSettings::value(const QString &key, const QVariant &defaultValue) const
+QVariant Settings::value(const QString &key, const QVariant &defaultValue) const
 {
     return d->specifiedConfig->value(key, d->userConfig->value(key, d->globalConfig->value(key, defaultValue)));
 }
@@ -108,9 +110,9 @@ QVariant QMdmmSettings::value(const QString &key, const QVariant &defaultValue) 
  * @param defaultValue The default value to be returned if the key does not exist
  * @return The set value.
  */
-QVariant QMdmmSettings::value(Instance instance, const QString &key, const QVariant &defaultValue) const
+QVariant Settings::value(Instance instance, const QString &key, const QVariant &defaultValue) const
 {
-    QMdmmSettingsWrapperPrivate *c = nullptr;
+    SettingsWrapperP *c = nullptr;
     switch (instance) {
     case Global:
         c = d->globalConfig;
@@ -136,7 +138,7 @@ QVariant QMdmmSettings::value(Instance instance, const QString &key, const QVari
  *
  * @note To reduce desync, neither <tt>beginGroup(Instance)</tt> nor <tt>endGroup(Instance)</tt> will implemented or supported.
  */
-void QMdmmSettings::beginGroup(const QString &prefix)
+void Settings::beginGroup(const QString &prefix)
 {
     d->globalConfig->beginGroup(prefix);
     d->userConfig->beginGroup(prefix);
@@ -148,7 +150,7 @@ void QMdmmSettings::beginGroup(const QString &prefix)
  *
  * @note To reduce desync, neither <tt>beginGroup(Instance)</tt> nor <tt>endGroup(Instance)</tt> will implemented or supported.
  */
-void QMdmmSettings::endGroup()
+void Settings::endGroup()
 {
     d->specifiedConfig->endGroup();
     d->userConfig->endGroup();
@@ -160,7 +162,7 @@ void QMdmmSettings::endGroup()
  * @param key Key.
  * @return If @c key is set
  */
-bool QMdmmSettings::contains(const QString &key) const
+bool Settings::contains(const QString &key) const
 {
     return d->specifiedConfig->contains(key) || d->userConfig->contains(key) || d->globalConfig->contains(key);
 }
@@ -171,9 +173,9 @@ bool QMdmmSettings::contains(const QString &key) const
  * @param key Key.
  * @return If @c key is set
  */
-bool QMdmmSettings::contains(Instance instance, const QString &key) const
+bool Settings::contains(Instance instance, const QString &key) const
 {
-    QMdmmSettingsWrapperPrivate *c = nullptr;
+    SettingsWrapperP *c = nullptr;
     switch (instance) {
     case Global:
         c = d->globalConfig;

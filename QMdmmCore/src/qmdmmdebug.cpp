@@ -11,6 +11,8 @@
  * @brief QMdmm Debug stuff
  */
 
+using namespace QMdmmCore::p;
+
 namespace QMdmmCore {
 namespace v0 {
 
@@ -28,9 +30,9 @@ void qMdmmDebugSetDevice(QIODevice *f)
             f->open(QIODevice::WriteOnly);
     }
 
-    qMdmmDebugLogPrivateInstance()->f = f;
-    if (QMdmmDebugLogPrivate::qtMessageHandler == nullptr)
-        QMdmmDebugLogPrivate::qtMessageHandler = qInstallMessageHandler(&qMdmmMessageOutput);
+    debugLogInstance()->f = f;
+    if (DebugLog::qtMessageHandler == nullptr)
+        DebugLog::qtMessageHandler = qInstallMessageHandler(&messageOutput);
 }
 
 } // namespace v0

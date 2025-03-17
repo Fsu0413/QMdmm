@@ -21,15 +21,15 @@ private slots:
     void QMdmmLogicConfiguration##valueName()                                  \
     {                                                                          \
         {                                                                      \
-            QMdmmLogicConfiguration c;                                         \
+            LogicConfiguration c;                                              \
             QCOMPARE(c.valueName(), (defaultValue));                           \
         }                                                                      \
         {                                                                      \
-            QMdmmLogicConfiguration c = QMdmmLogicConfiguration::v1();         \
+            LogicConfiguration c = LogicConfiguration::v1();                   \
             QCOMPARE(c.valueName(), (v1value));                                \
         }                                                                      \
         {                                                                      \
-            QMdmmLogicConfiguration c = QMdmmLogicConfiguration::defaults();   \
+            LogicConfiguration c = LogicConfiguration::defaults();             \
             QCOMPARE(c.valueName(), (defaultValue));                           \
             c.set##ValueName(value);                                           \
             QCOMPARE(c.valueName(), (value));                                  \
@@ -45,8 +45,7 @@ private slots:
     TEST_CONFIGURATION(initialMaxHp, InitialMaxHp, 10, 7, 20)
     TEST_CONFIGURATION(maximumMaxHp, MaximumMaxHp, 20, 7, 50)
     TEST_CONFIGURATION(punishHpModifier, PunishHpModifier, 2, 0, 5)
-    TEST_CONFIGURATION(punishHpRoundStrategy, PunishHpRoundStrategy, QMdmmLogicConfiguration::RoundToNearest45, QMdmmLogicConfiguration::RoundToNearest45,
-                       QMdmmLogicConfiguration::RoundDown)
+    TEST_CONFIGURATION(punishHpRoundStrategy, PunishHpRoundStrategy, LogicConfiguration::RoundToNearest45, LogicConfiguration::RoundToNearest45, LogicConfiguration::RoundDown)
     TEST_CONFIGURATION(zeroHpAsDead, ZeroHpAsDead, true, false, false)
     TEST_CONFIGURATION(enableLetMove, EnableLetMove, true, false, false)
     TEST_CONFIGURATION(canBuyOnlyInInitialCity, CanBuyOnlyInInitialCity, false, false, true)
@@ -98,7 +97,7 @@ private slots:
         QFETCH(QJsonValue, value);
         QFETCH(bool, result);
 
-        QMdmmLogicConfiguration conf;
+        LogicConfiguration conf;
         bool r = conf.deserialize(value);
         QCOMPARE(r, result);
         if (r) {

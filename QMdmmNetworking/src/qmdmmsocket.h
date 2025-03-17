@@ -14,7 +14,9 @@
 
 #include <cstdint>
 
-using QMdmmPacket = QMdmmCore::QMdmmPacket;
+using QMdmmPacket = QMdmmCore::Packet;
+
+QMDMM_EXPORT_NAME(QMdmmSocket)
 
 // QMdmmSocket should be a wrapper for QObject, and do serialize / deserialize work of received data
 class QMdmmSocketPrivate;

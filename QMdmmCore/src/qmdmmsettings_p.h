@@ -9,9 +9,11 @@
 
 namespace QMdmmCore {
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmSettingsWrapperPrivate
+namespace p {
+
+struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
 {
-    virtual ~QMdmmSettingsWrapperPrivate();
+    virtual ~SettingsWrapperP();
 
     virtual void setValue(const QString &key, const QVariant &value) = 0;
     [[nodiscard]] virtual QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const = 0;
@@ -23,17 +25,17 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmSettingsWrapperPrivate
     [[nodiscard]] virtual bool contains(const QString &key) const = 0;
 };
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmQSettingsWrapperPrivate : public QMdmmSettingsWrapperPrivate
+struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
 {
     QSettings settings;
 
-    explicit QMdmmQSettingsWrapperPrivate(const QString &organization, const QString &application = QString());
-    QMdmmQSettingsWrapperPrivate(QSettings::Scope scope, const QString &organization, const QString &application = QString());
-    QMdmmQSettingsWrapperPrivate(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = QString());
-    QMdmmQSettingsWrapperPrivate(const QString &fileName, QSettings::Format format);
-    QMdmmQSettingsWrapperPrivate();
-    explicit QMdmmQSettingsWrapperPrivate(QSettings::Scope scope);
-    ~QMdmmQSettingsWrapperPrivate() override;
+    explicit QSettingsWrapperP(const QString &organization, const QString &application = QString());
+    QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application = QString());
+    QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = QString());
+    QSettingsWrapperP(const QString &fileName, QSettings::Format format);
+    QSettingsWrapperP();
+    explicit QSettingsWrapperP(QSettings::Scope scope);
+    ~QSettingsWrapperP() override;
 
     void setValue(const QString &key, const QVariant &value) override;
     [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue) const override;
@@ -43,12 +45,12 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmQSettingsWrapperPrivate : public QMdmmSetti
     [[nodiscard]] bool contains(const QString &key) const override;
 };
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmQVariantMapWrapperPrivate : public QMdmmSettingsWrapperPrivate
+struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
 {
     QVariantMap map;
     QStringList currentGroup;
 
-    ~QMdmmQVariantMapWrapperPrivate() override;
+    ~QVariantMapWrapperP() override;
 
     void setValue(const QString &key, const QVariant &value) override;
     [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue) const override;
@@ -60,17 +62,19 @@ struct QMDMMCORE_PRIVATE_EXPORT QMdmmQVariantMapWrapperPrivate : public QMdmmSet
     [[nodiscard]] QString keyWithGroup(const QString &key) const;
 };
 
-struct QMDMMCORE_PRIVATE_EXPORT QMdmmSettingsPrivate
+struct QMDMMCORE_PRIVATE_EXPORT SettingsP
 {
-    QMdmmQSettingsWrapperPrivate *globalConfig;
-    QMdmmQSettingsWrapperPrivate *userConfig;
-    QMdmmQVariantMapWrapperPrivate *specifiedConfig;
+    QSettingsWrapperP *globalConfig;
+    QSettingsWrapperP *userConfig;
+    QVariantMapWrapperP *specifiedConfig;
 
-    QMdmmSettingsPrivate();
-    ~QMdmmSettingsPrivate();
+    SettingsP();
+    ~SettingsP();
 
-    QSettings::Status saveConfig(QMdmmSettings::Instance toBeSaved);
+    QSettings::Status saveConfig(Settings::Instance toBeSaved);
 };
+
+} // namespace p
 
 } // namespace QMdmmCore
 

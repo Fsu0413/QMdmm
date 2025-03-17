@@ -14,7 +14,10 @@
 
 #include <cstdint>
 
-using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
+QMDMM_EXPORT_NAME(QMdmmServerConfiguration)
+QMDMM_EXPORT_NAME(QMdmmServer)
+
+using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
 
 struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObject
 {

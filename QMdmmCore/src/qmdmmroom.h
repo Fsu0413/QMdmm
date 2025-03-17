@@ -11,16 +11,21 @@
 
 #include <cstdint>
 
+QMDMM_EXPORT_NAME(QMdmmLogicConfiguration)
+QMDMM_EXPORT_NAME(QMdmmRoom)
+
 namespace QMdmmCore {
 
-struct QMdmmRoomPrivate;
+namespace p {
+struct RoomP;
+}
 
 namespace v0 {
 
-class QMdmmPlayer;
-class QMdmmLogic;
+class Player;
+class Logic;
 
-class QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
+class QMDMMCORE_EXPORT LogicConfiguration final : public QJsonObject
 {
     Q_GADGET
 
@@ -33,14 +38,14 @@ class QMDMMCORE_EXPORT QMdmmLogicConfiguration final : public QJsonObject
     Q_PROPERTY(int initialMaxHp READ initialMaxHp WRITE setInitialMaxHp DESIGNABLE false FINAL)
     Q_PROPERTY(int maximumMaxHp READ maximumMaxHp WRITE setMaximumMaxHp DESIGNABLE false FINAL)
     Q_PROPERTY(int punishHpModifier READ punishHpModifier WRITE setPunishHpModifier DESIGNABLE false FINAL)
-    Q_PROPERTY(QMdmmLogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy READ punishHpRoundStrategy WRITE setPunishHpRoundStrategy DESIGNABLE false FINAL)
+    Q_PROPERTY(LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy READ punishHpRoundStrategy WRITE setPunishHpRoundStrategy DESIGNABLE false FINAL)
     Q_PROPERTY(bool zeroHpAsDead READ zeroHpAsDead WRITE setZeroHpAsDead DESIGNABLE false FINAL)
     Q_PROPERTY(bool enableLetMove READ enableLetMove WRITE setEnableLetMove DESIGNABLE false FINAL)
     Q_PROPERTY(bool canBuyOnlyInInitialCity READ canBuyOnlyInInitialCity WRITE setCanBuyOnlyInInitialCity DESIGNABLE false FINAL)
 
 public:
-    static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &defaults();
-    static QMDMMCORE_EXPORT const QMdmmLogicConfiguration &v1();
+    static QMDMMCORE_EXPORT const LogicConfiguration &defaults();
+    static QMDMMCORE_EXPORT const LogicConfiguration &v1();
 
     enum PunishHpRoundStrategy : uint8_t
     {
@@ -52,8 +57,8 @@ public:
     Q_ENUM(PunishHpRoundStrategy);
 
 #ifdef Q_MOC_RUN
-    Q_INVOKABLE QMdmmLogicConfiguration();
-    Q_INVOKABLE QMdmmLogicConfiguration(const QMdmmLogicConfiguration &);
+    Q_INVOKABLE LogicConfiguration();
+    Q_INVOKABLE LogicConfiguration(const LogicConfiguration &);
 #else
     using QJsonObject::QJsonObject;
     using QJsonObject::operator=;
@@ -77,7 +82,7 @@ public:
 
     // legacy experience
     DEFINE_CONFIGURATION(int, punishHpModifier, PunishHpModifier)
-    DEFINE_CONFIGURATION(QMdmmLogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy, PunishHpRoundStrategy)
+    DEFINE_CONFIGURATION(LogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy, PunishHpRoundStrategy)
     DEFINE_CONFIGURATION(bool, zeroHpAsDead, ZeroHpAsDead)
     DEFINE_CONFIGURATION(bool, enableLetMove, EnableLetMove)
     DEFINE_CONFIGURATION(bool, canBuyOnlyInInitialCity, CanBuyOnlyInInitialCity)
@@ -87,32 +92,29 @@ public:
     bool deserialize(const QJsonValue &value);
 };
 
-inline namespace priv {
-}
-
-class QMDMMCORE_EXPORT QMdmmRoom final : public QObject
+class QMDMMCORE_EXPORT Room final : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QMdmmRoom(QMdmmLogicConfiguration logicConfiguration, QObject *parent = nullptr);
-    ~QMdmmRoom() override;
+    explicit Room(LogicConfiguration logicConfiguration, QObject *parent = nullptr);
+    ~Room() override;
 
-    [[nodiscard]] const QMdmmLogicConfiguration &logicConfiguration() const;
-    void setLogicConfiguration(const QMdmmLogicConfiguration &logicConfiguration);
+    [[nodiscard]] const LogicConfiguration &logicConfiguration() const;
+    void setLogicConfiguration(const LogicConfiguration &logicConfiguration);
 
-    QMdmmPlayer *addPlayer(const QString &playerName);
+    Player *addPlayer(const QString &playerName);
     bool removePlayer(const QString &playerName);
 
-    [[nodiscard]] QMdmmPlayer *player(const QString &playerName);
-    [[nodiscard]] const QMdmmPlayer *player(const QString &playerName) const;
+    [[nodiscard]] Player *player(const QString &playerName);
+    [[nodiscard]] const Player *player(const QString &playerName) const;
 
-    [[nodiscard]] QList<QMdmmPlayer *> players();
-    [[nodiscard]] QList<const QMdmmPlayer *> players() const;
+    [[nodiscard]] QList<Player *> players();
+    [[nodiscard]] QList<const Player *> players() const;
     [[nodiscard]] QStringList playerNames() const;
 
-    [[nodiscard]] QList<QMdmmPlayer *> alivePlayers();
-    [[nodiscard]] QList<const QMdmmPlayer *> alivePlayers() const;
+    [[nodiscard]] QList<Player *> alivePlayers();
+    [[nodiscard]] QList<const Player *> alivePlayers() const;
     [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const
     {
@@ -133,14 +135,14 @@ signals:
     void playerRemoved(const QString &playerName, QPrivateSignal);
 
 private:
-    const std::unique_ptr<QMdmmRoomPrivate> d;
-    Q_DISABLE_COPY_MOVE(QMdmmRoom)
+    const std::unique_ptr<p::RoomP> d;
+    Q_DISABLE_COPY_MOVE(Room)
 };
 } // namespace v0
 
 inline namespace v1 {
-using v0::QMdmmLogicConfiguration;
-using v0::QMdmmRoom;
+using v0::LogicConfiguration;
+using v0::Room;
 } // namespace v1
 
 } // namespace QMdmmCore

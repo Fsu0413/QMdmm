@@ -6,12 +6,10 @@
 #ifndef QMDMMDEBUG_H
 #define QMDMMDEBUG_H
 
-#if 0
-class QMDMMCORE_EXPORT QMdmmDebug
-#endif
-
 #include <QDebug>
 #include <QFileDevice>
+
+QMDMM_EXPORT_NAME(QMdmmDebug)
 
 namespace QMdmmCore {
 namespace v0 {

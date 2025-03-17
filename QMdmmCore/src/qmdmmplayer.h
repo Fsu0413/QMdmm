@@ -7,15 +7,19 @@
 
 #include <QObject>
 
+QMDMM_EXPORT_NAME(QMdmmPlayer)
+
 namespace QMdmmCore {
 
-struct QMdmmPlayerPrivate;
+namespace p {
+struct PlayerP;
+}
 
 namespace v0 {
 
-class QMdmmRoom;
+class Room;
 
-class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
+class QMDMMCORE_EXPORT Player final : public QObject
 {
     Q_OBJECT
 
@@ -34,12 +38,12 @@ class QMDMMCORE_EXPORT QMdmmPlayer final : public QObject
     Q_PROPERTY(bool alive READ alive STORED false DESIGNABLE false FINAL)
 
 public:
-    explicit QMdmmPlayer(const QString &name, QMdmmRoom *room /* or parent */);
-    ~QMdmmPlayer() override;
+    explicit Player(const QString &name, Room *room /* or parent */);
+    ~Player() override;
 
     // property setters/getters
-    [[nodiscard]] QMdmmRoom *room();
-    [[nodiscard]] const QMdmmRoom *room() const;
+    [[nodiscard]] Room *room();
+    [[nodiscard]] const Room *room() const;
 
     // current property
     [[nodiscard]] bool hasKnife() const noexcept;
@@ -73,10 +77,10 @@ public:
     // action checks
     [[nodiscard]] bool canBuyKnife() const;
     [[nodiscard]] bool canBuyHorse() const;
-    [[nodiscard]] bool canSlash(const QMdmmPlayer *to) const;
-    [[nodiscard]] bool canKick(const QMdmmPlayer *to) const;
+    [[nodiscard]] bool canSlash(const Player *to) const;
+    [[nodiscard]] bool canKick(const Player *to) const;
     [[nodiscard]] bool canMove(int toPlace) const;
-    [[nodiscard]] bool canLetMove(const QMdmmPlayer *to, int toPlace) const;
+    [[nodiscard]] bool canLetMove(const Player *to, int toPlace) const;
 
     // upgrade checks
     [[nodiscard]] int upgradeKnifeRemainingTimes() const;
@@ -101,11 +105,11 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool buyKnife();
     bool buyHorse();
 
-    bool slash(QMdmmPlayer *to);
-    bool kick(QMdmmPlayer *to);
+    bool slash(Player *to);
+    bool kick(Player *to);
 
     bool move(int toPlace);
-    bool letMove(QMdmmPlayer *to, int toPlace);
+    bool letMove(Player *to, int toPlace);
 
     bool doNothing();
 
@@ -130,22 +134,22 @@ signals:
 
     // it is to be decided which of following 2 declarations is more easy to use so...
     // Temporarily keep these 2.
-    void damaged(const QString &from, int damagePoint, QMdmmData::DamageReason reason, QPrivateSignal);
-    void damaged(const QMdmmPlayer *from, int damagePoint, QMdmmData::DamageReason reason, QPrivateSignal);
+    void damaged(const QString &from, int damagePoint, Data::DamageReason reason, QPrivateSignal);
+    void damaged(const Player *from, int damagePoint, Data::DamageReason reason, QPrivateSignal);
     void die(QPrivateSignal);
 
 #ifndef DOXYGEN
 private:
-    friend struct QMdmmCore::QMdmmPlayerPrivate;
-    const std::unique_ptr<QMdmmCore::QMdmmPlayerPrivate> d;
-    Q_DISABLE_COPY_MOVE(QMdmmPlayer)
+    friend struct p::PlayerP;
+    const std::unique_ptr<p::PlayerP> d;
+    Q_DISABLE_COPY_MOVE(Player)
 #endif
 };
 
 } // namespace v0
 
 inline namespace v1 {
-using v0::QMdmmPlayer;
+using v0::Player;
 }
 
 } // namespace QMdmmCore

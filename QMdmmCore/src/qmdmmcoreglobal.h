@@ -18,13 +18,6 @@
 #include <memory>
 #include <type_traits>
 
-#if 0
-class QMDMMCORE_EXPORT QMdmmCoreGlobal
-class QMDMMCORE_EXPORT QMdmmData
-class QMDMMCORE_EXPORT QMdmmGlobal
-class QMDMMCORE_EXPORT QMdmmUtilities
-#endif
-
 #ifndef DOXYGEN
 #ifndef QMDMM_STATIC
 #ifdef QMDMMCORE_LIBRARY
@@ -40,19 +33,22 @@ class QMDMMCORE_EXPORT QMdmmUtilities
 #else
 #define QMDMMCORE_PRIVATE_EXPORT
 #endif
-#define QMDMMCORE_EXPORT_NO_GENERATE_HEADER QMDMMCORE_EXPORT
 #else
 #define QMDMMCORE_EXPORT
-#define QMDMMCORE_EXPORT_NO_GENERATE_HEADER
 #define QMDMMCORE_PRIVATE_EXPORT
 #endif
+
+#define QMDMM_EXPORT_NAME(QMdmmCoreGlobal)
 
 #include "qmdmmdebug.h"
 
 namespace QMdmmCore {
 namespace v0 {
 
-namespace QMdmmData {
+namespace Data {
+
+QMDMM_EXPORT_NAME(QMdmmData)
+
 Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 
 // Originally there was enum Place, but removed due to overdesign.
@@ -126,14 +122,17 @@ constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
     return (p1 == Country) != (p2 == Country);
 }
 
-QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, QMdmmData::StoneScissorsCloth> &judgers);
-} // namespace QMdmmData
+QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, Data::StoneScissorsCloth> &judgers);
+} // namespace Data
 
-namespace QMdmmGlobal {
+namespace Global {
+QMDMM_EXPORT_NAME(QMdmmGlobal)
 QMDMMCORE_EXPORT QVersionNumber version();
-}
+} // namespace Global
 
-namespace QMdmmUtilities {
+namespace Utilities {
+QMDMM_EXPORT_NAME(QMdmmUtilities)
+
 template<typename T>
 QSet<T> list2Set(const QList<T> &l) noexcept(noexcept(QSet<T>(l.constBegin(), l.constEnd())))
 {
@@ -163,13 +162,13 @@ QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
 QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
 QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
 QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
-} // namespace QMdmmUtilities
+} // namespace Utilities
 } // namespace v0
 
 inline namespace v1 {
-namespace QMdmmData = v0::QMdmmData;
-namespace QMdmmGlobal = v0::QMdmmGlobal;
-namespace QMdmmUtilities = v0::QMdmmUtilities;
+namespace Data = v0::Data;
+namespace Global = v0::Global;
+namespace Utilities = v0::Utilities;
 } // namespace v1
 
 } // namespace QMdmmCore

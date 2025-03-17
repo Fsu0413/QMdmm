@@ -10,11 +10,11 @@
 #include <QJsonDocument>
 #include <QScopeGuard>
 
-namespace QMdmmProtocol = QMdmmCore::QMdmmProtocol;
-namespace QMdmmGlobal = QMdmmCore::QMdmmGlobal;
-using QMdmmRoom = QMdmmCore::QMdmmRoom;
-using QMdmmLogicConfiguration = QMdmmCore::QMdmmLogicConfiguration;
-using QMdmmPlayer = QMdmmCore::QMdmmPlayer;
+namespace QMdmmProtocol = QMdmmCore::Protocol;
+namespace QMdmmGlobal = QMdmmCore::Global;
+using QMdmmRoom = QMdmmCore::Room;
+using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
+using QMdmmPlayer = QMdmmCore::Player;
 
 QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
     std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),
@@ -212,7 +212,7 @@ void QMdmmClientPrivate::notifyVersion(const QJsonValue &value)
         return;
     int protocolVersion = vprotocolVersion.toInt();
 
-    if (protocolVersion != QMdmmProtocol::protocolVersion())
+    if (protocolVersion != QMdmmProtocol::version())
         return;
 
     if (QVersionNumber::fromString(versionNumber) != QMdmmGlobal::version()) {

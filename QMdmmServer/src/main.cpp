@@ -11,7 +11,7 @@
 #include <QFile>
 #include <QScopedPointer>
 
-namespace QMdmmGlobal = QMdmmCore::QMdmmGlobal;
+namespace QMdmmGlobal = QMdmmCore::Global;
 using QMdmmCore::qMdmmDebugSetDevice;
 
 int main(int argc, char *argv[])

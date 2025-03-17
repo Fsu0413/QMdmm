@@ -7,12 +7,14 @@
 
 namespace QMdmmCore {
 
-QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
+namespace p {
+
+PlayerP::PlayerP(Room *room)
     : knife(false)
     , horse(false)
     , hp(room->logicConfiguration().initialMaxHp())
-    , place(QMdmmData::Country)
-    , initialPlace(QMdmmData::Country)
+    , place(Data::Country)
+    , initialPlace(Data::Country)
     , knifeDamage(room->logicConfiguration().initialKnifeDamage())
     , horseDamage(room->logicConfiguration().initialHorseDamage())
     , maxHp(room->logicConfiguration().initialMaxHp())
@@ -20,18 +22,20 @@ QMdmmPlayerPrivate::QMdmmPlayerPrivate(QMdmmRoom *room)
 {
 }
 
-void QMdmmPlayerPrivate::applyDamage(QMdmmPlayer *from, QMdmmPlayer *to, int damagePoint, QMdmmData::DamageReason reason)
+void PlayerP::applyDamage(Player *from, Player *to, int damagePoint, Data::DamageReason reason)
 {
     Q_ASSERT(from->room() == to->room());
 
     bool kills = false;
 
     to->setHp(to->hp() - damagePoint, &kills);
-    emit to->damaged(from, damagePoint, reason, QMdmmPlayer::QPrivateSignal());
-    emit to->damaged(from->objectName(), damagePoint, reason, QMdmmPlayer::QPrivateSignal());
+    emit to->damaged(from, damagePoint, reason, Player::QPrivateSignal());
+    emit to->damaged(from->objectName(), damagePoint, reason, Player::QPrivateSignal());
 
     if (kills)
         from->setUpgradePoint(from->upgradePoint() + 1);
 }
+
+} // namespace p
 
 } // namespace QMdmmCore
