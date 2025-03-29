@@ -23,4 +23,11 @@ QMDMM_EXPORT_NAME(QMdmmNetworkingGlobal)
 #define QMDMMNETWORKING_PRIVATE_EXPORT
 #endif
 
+namespace QMdmmNetworking {
+namespace v0 {
+}
+inline namespace v1 {
+}
+} // namespace QMdmmNetworking
+
 #endif // QMDMMSERVER_GLOBAL_H

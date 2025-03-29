@@ -26,10 +26,10 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
 
 public:
-    QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q);
+    QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QMdmmServer *q);
 
     // callbacks
     void pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
@@ -42,14 +42,14 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void tcpServerNewConnection();
     void localServerNewConnection();
     void websocketServerNewConnection();
-    void socketPacketReceived(const QMdmmPacket &packet);
+    void socketPacketReceived(const QMdmmCore::Packet &packet);
 
     void logicRunnerGameOver();
 
 public: // NOLINT(readability-redundant-access-specifiers)
     // variables
     QMdmmServerConfiguration serverConfiguration;
-    QMdmmLogicConfiguration logicConfiguration;
+    QMdmmCore::LogicConfiguration logicConfiguration;
     QMdmmServer *q;
     QTcpServer *t;
     QLocalServer *l;

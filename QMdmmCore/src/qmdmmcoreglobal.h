@@ -43,7 +43,15 @@
 #include "qmdmmdebug.h"
 
 namespace QMdmmCore {
+
 namespace v0 {
+}
+
+#ifndef DOXYGEN
+namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 namespace Data {
 
@@ -165,11 +173,13 @@ QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
 } // namespace Utilities
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 namespace Data = v0::Data;
 namespace Global = v0::Global;
 namespace Utilities = v0::Utilities;
 } // namespace v1
+#endif
 
 } // namespace QMdmmCore
 

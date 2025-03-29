@@ -24,9 +24,9 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
 {
     Q_OBJECT
 
-    static QHash<QMdmmProtocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> notifyCallback;
-    static QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> replyCallback;
-    static QHash<QMdmmProtocol::RequestId, void (QMdmmServerAgentPrivate::*)()> defaultReplyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> replyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)()> defaultReplyCallback;
 
     static int requestTimeoutGracePeriod;
 
@@ -39,11 +39,11 @@ public:
     QPointer<QMdmmSocket> socket;
     QMdmmLogicRunnerPrivate *p;
 
-    QMdmmProtocol::RequestId currentRequest;
+    QMdmmCore::Protocol::RequestId currentRequest;
     QJsonValue currentRequestValue;
     QTimer *requestTimer;
 
-    void addRequest(QMdmmProtocol::RequestId requestId, const QJsonValue &value);
+    void addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value);
 
     // callbacks
     void replyStoneScissorsCloth(const QJsonValue &value);
@@ -60,11 +60,11 @@ signals:
     void notifySpeak(const QJsonValue &value);
     void notifyOperate(const QJsonValue &value);
 
-    void sendPacket(QMdmmPacket packet);
+    void sendPacket(QMdmmCore::Packet packet);
     void socketDisconnected();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void packetReceived(const QMdmmPacket &packet);
+    void packetReceived(const QMdmmCore::Packet &packet);
 
     // requests
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
@@ -74,16 +74,16 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     // notifications
     void notifyLogicConfiguration();
-    void notifyAgentStateChanged(const QString &playerName, const QMdmmData::AgentState &agentState);
-    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState);
+    void notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState);
+    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState);
     void notifyPlayerRemoved(const QString &playerName);
     void notifyGameStart();
     void notifyRoundStart();
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies);
+    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
     void notifyActionOrder(const QHash<int, QString> &result);
-    void notifyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void notifyRoundOver();
-    void notifyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
+    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
     void notifyGameOver(const QStringList &playerNames);
     void notifySpoken(const QString &playerName, const QString &content);
     void notifyOperated(const QString &playerName, const QJsonValue &todo);
@@ -97,7 +97,7 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
     Q_OBJECT
 
 public:
-    QMdmmLogicRunnerPrivate(QMdmmLogicConfiguration logicConfiguration, QMdmmLogicRunner *q);
+    QMdmmLogicRunnerPrivate(QMdmmCore::LogicConfiguration logicConfiguration, QMdmmLogicRunner *q);
     ~QMdmmLogicRunnerPrivate() override;
 
     QMdmmLogicRunner *q;
@@ -107,7 +107,7 @@ public:
     QThread *logicThread;
     QPointer<QMdmmLogic> logic;
 
-    QMdmmLogicConfiguration conf;
+    QMdmmCore::LogicConfiguration conf;
 
     // TODO: check if these queue connected signals / slots works with or without qRegisterMetaType<>()
     // If not, a new global function is needed in QMdmmCore for doing this work
@@ -115,31 +115,31 @@ public:
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // slots called from agent
-    void agentStateChanged(const QMdmmData::AgentState &state);
+    void agentStateChanged(const QMdmmCore::Data::AgentState &state);
     void agentSpoken(const QJsonValue &value);
     void agentOperated(const QJsonValue &value);
     void socketDisconnected();
 
     // These slots are called from Logic
     void requestSscForAction(const QStringList &playerNames);
-    void sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies);
+    void sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
     void requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections);
     void actionOrderResult(const QHash<int, QString> &result);
     void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder);
     void requestAction(const QString &playerName, int actionOrder);
-    void actionResult(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
+    void actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void requestUpgrade(const QString &playerName, int upgradePoint);
-    void upgradeResult(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
+    void upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
     // These signals are emitted to Logic
     void addPlayer(const QString &playerName);
     void removePlayer(const QString &playerName);
     void roundStart();
-    void sscReply(const QString &playerName, QMdmmData::StoneScissorsCloth ssc);
+    void sscReply(const QString &playerName, QMdmmCore::Data::StoneScissorsCloth ssc);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
-    void actionReply(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
-    void upgradeReply(const QString &playerName, const QList<QMdmmData::UpgradeItem> &items);
+    void actionReply(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    void upgradeReply(const QString &playerName, const QList<QMdmmCore::Data::UpgradeItem> &items);
 };
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header

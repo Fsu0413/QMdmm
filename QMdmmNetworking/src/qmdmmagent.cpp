@@ -25,12 +25,12 @@ void QMdmmAgent::setScreenName(const QString &name)
     }
 }
 
-QMdmmData::AgentState QMdmmAgent::state() const
+QMdmmCore::Data::AgentState QMdmmAgent::state() const
 {
     return d->state;
 }
 
-void QMdmmAgent::setState(const QMdmmData::AgentState &state)
+void QMdmmAgent::setState(const QMdmmCore::Data::AgentState &state)
 {
     if (d->state != state) {
         d->state = state;

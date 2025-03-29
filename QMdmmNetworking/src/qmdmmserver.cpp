@@ -9,8 +9,6 @@
 #include <QTcpSocket>
 #include <utility>
 
-namespace QMdmmGlobal = QMdmmCore::Global;
-
 const QMdmmServerConfiguration &QMdmmServerConfiguration::defaults()
 {
     // clang-format off
@@ -69,13 +67,13 @@ IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTY
 #undef CONVERTTOTYPEUINT16T
 #undef CONVERTTOTYPEBOOL
 
-QHash<QMdmmProtocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::notifyCallback {
-    std::make_pair(QMdmmProtocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
-    std::make_pair(QMdmmProtocol::NotifySignIn, &QMdmmServerPrivate::signIn),
-    std::make_pair(QMdmmProtocol::NotifyObserve, &QMdmmServerPrivate::observe),
+QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> QMdmmServerPrivate::notifyCallback {
+    std::make_pair(QMdmmCore::Protocol::NotifyPingServer, &QMdmmServerPrivate::pingServer),
+    std::make_pair(QMdmmCore::Protocol::NotifySignIn, &QMdmmServerPrivate::signIn),
+    std::make_pair(QMdmmCore::Protocol::NotifyObserve, &QMdmmServerPrivate::observe),
 };
 
-QMdmmServerPrivate::QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration_, QMdmmLogicConfiguration logicConfiguration, QMdmmServer *q)
+QMdmmServerPrivate::QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration_, QMdmmCore::LogicConfiguration logicConfiguration, QMdmmServer *q)
     : QObject(q)
     , serverConfiguration(std::move(serverConfiguration_))
     , logicConfiguration(std::move(logicConfiguration))
@@ -110,7 +108,7 @@ QMdmmServerPrivate::QMdmmServerPrivate(QMdmmServerConfiguration serverConfigurat
 
 void QMdmmServerPrivate::pingServer(QMdmmSocket *socket, const QJsonValue &packetValue)
 {
-    emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyPongServer, packetValue));
+    emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPongServer, packetValue));
 }
 
 void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetValue)
@@ -121,7 +119,7 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
 
         QJsonObject ob = packetValue.toObject();
 
-#define CONVERTAGENTSTATE() QMdmmData::AgentState(v.toInt())
+#define CONVERTAGENTSTATE() QMdmmCore::Data::AgentState(v.toInt())
 
         // NOLINTBEGIN(bugprone-macro-parentheses)
 
@@ -145,7 +143,7 @@ void QMdmmServerPrivate::signIn(QMdmmSocket *socket, const QJsonValue &packetVal
         QString screenName;
         CONF(screenName, isString, v.toString);
 
-        QMdmmData::AgentState agentState;
+        QMdmmCore::Data::AgentState agentState;
         CONF(agentState, isDouble, CONVERTAGENTSTATE);
 
 #undef CONF
@@ -179,9 +177,9 @@ void QMdmmServerPrivate::introduceSocket(QMdmmSocket *socket) // NOLINT(readabil
     connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmServerPrivate::socketPacketReceived);
 
     QJsonObject ob;
-    ob.insert(QStringLiteral("versionNumber"), QMdmmGlobal::version().toString());
-    ob.insert(QStringLiteral("protocolVersion"), QMdmmProtocol::version());
-    QMdmmPacket packet(QMdmmProtocol::NotifyVersion, ob);
+    ob.insert(QStringLiteral("versionNumber"), QMdmmCore::Global::version().toString());
+    ob.insert(QStringLiteral("protocolVersion"), QMdmmCore::Protocol::version());
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyVersion, ob);
     emit socket->sendPacket(packet);
 }
 
@@ -212,15 +210,15 @@ void QMdmmServerPrivate::websocketServerNewConnection()
     }
 }
 
-void QMdmmServerPrivate::socketPacketReceived(const QMdmmPacket &packet)
+void QMdmmServerPrivate::socketPacketReceived(const QMdmmCore::Packet &packet)
 {
     QMdmmSocket *socket = qobject_cast<QMdmmSocket *>(sender());
 
     if (socket == nullptr)
         return;
 
-    if (packet.type() == QMdmmProtocol::TypeNotify) {
-        if ((packet.notifyId() & QMdmmProtocol::NotifyToServerMask) != 0) {
+    if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
+        if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToServerMask) != 0) {
             // These packages should be processed in Server
             void (QMdmmServerPrivate::*call)(QMdmmSocket *, const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
@@ -241,7 +239,7 @@ void QMdmmServerPrivate::logicRunnerGameOver()
     }
 }
 
-QMdmmServer::QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QObject *parent)
+QMdmmServer::QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent)
     : QObject(parent)
     , d(new QMdmmServerPrivate(std::move(serverConfiguration), std::move(logicConfiguration), this))
 {

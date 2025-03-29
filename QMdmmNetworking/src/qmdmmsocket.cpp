@@ -62,7 +62,7 @@ QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *q)
 bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
 {
     QString packetError;
-    QMdmmPacket packet = QMdmmPacket::fromJson(arr, &packetError);
+    QMdmmCore::Packet packet = QMdmmCore::Packet::fromJson(arr, &packetError);
 
     if (packet.hasError()) {
         // TODO: make use of this error string
@@ -136,7 +136,7 @@ void QMdmmSocketPrivateQTcpSocket::setupSocket()
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmPacket packet)
+void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
         socket->write(QByteArray(packet).append("\n"));
@@ -204,7 +204,7 @@ void QMdmmSocketPrivateQLocalSocket::setupSocket()
     connect(socket, &QLocalSocket::disconnected, socket, &QLocalSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmPacket packet)
+void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
         socket->write(QByteArray(packet).append("\n"));
@@ -274,7 +274,7 @@ void QMdmmSocketPrivateQWebSocket::setupSocket()
     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQWebSocket::sendPacket(QMdmmPacket packet)
+void QMdmmSocketPrivateQWebSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr)
         socket->sendBinaryMessage(packet);

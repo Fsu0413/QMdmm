@@ -11,7 +11,12 @@
 QMDMM_EXPORT_NAME(QMdmmSettings)
 
 namespace QMdmmCore {
+
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 class QMDMMCORE_EXPORT Settings
 {
@@ -46,9 +51,11 @@ private:
 };
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 using v0::Settings;
 }
+#endif
 
 } // namespace QMdmmCore
 

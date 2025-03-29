@@ -18,7 +18,12 @@ using namespace QMdmmCore::p;
  */
 
 namespace QMdmmCore {
+
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 /**
  * @class LogicConfiguration

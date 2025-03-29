@@ -20,7 +20,11 @@ namespace p {
 struct RoomP;
 }
 
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 class Player;
 class Logic;
@@ -140,10 +144,12 @@ private:
 };
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 using v0::LogicConfiguration;
 using v0::Room;
 } // namespace v1
+#endif
 
 } // namespace QMdmmCore
 

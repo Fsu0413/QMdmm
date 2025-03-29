@@ -10,39 +10,33 @@
 #include <QJsonDocument>
 #include <QScopeGuard>
 
-namespace QMdmmProtocol = QMdmmCore::Protocol;
-namespace QMdmmGlobal = QMdmmCore::Global;
-using QMdmmRoom = QMdmmCore::Room;
-using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
-using QMdmmPlayer = QMdmmCore::Player;
-
-QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
-    std::make_pair(QMdmmProtocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),
-    std::make_pair(QMdmmProtocol::RequestActionOrder, &QMdmmClientPrivate::requestActionOrder),
-    std::make_pair(QMdmmProtocol::RequestAction, &QMdmmClientPrivate::requestAction),
-    std::make_pair(QMdmmProtocol::RequestUpgrade, &QMdmmClientPrivate::requestUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::requestCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &QMdmmClientPrivate::requestStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &QMdmmClientPrivate::requestActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &QMdmmClientPrivate::requestAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &QMdmmClientPrivate::requestUpgrade),
 };
 
-QHash<QMdmmProtocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::notifyCallback {
+QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> QMdmmClientPrivate::notifyCallback {
     // from Server
-    std::make_pair(QMdmmProtocol::NotifyPongServer, &QMdmmClientPrivate::notifyPongServer),
-    std::make_pair(QMdmmProtocol::NotifyVersion, &QMdmmClientPrivate::notifyVersion),
+    std::make_pair(QMdmmCore::Protocol::NotifyPongServer, &QMdmmClientPrivate::notifyPongServer),
+    std::make_pair(QMdmmCore::Protocol::NotifyVersion, &QMdmmClientPrivate::notifyVersion),
 
     // from Agent
-    std::make_pair(QMdmmProtocol::NotifyLogicConfiguration, &QMdmmClientPrivate::notifyLogicConfiguration),
-    std::make_pair(QMdmmProtocol::NotifyAgentStateChanged, &QMdmmClientPrivate::notifyAgentStateChanged),
-    std::make_pair(QMdmmProtocol::NotifyPlayerAdded, &QMdmmClientPrivate::notifyPlayerAdded),
-    std::make_pair(QMdmmProtocol::NotifyPlayerRemoved, &QMdmmClientPrivate::notifyPlayerRemoved),
-    std::make_pair(QMdmmProtocol::NotifyGameStart, &QMdmmClientPrivate::notifyGameStart),
-    std::make_pair(QMdmmProtocol::NotifyRoundStart, &QMdmmClientPrivate::notifyRoundStart),
-    std::make_pair(QMdmmProtocol::NotifyStoneScissorsCloth, &QMdmmClientPrivate::notifyStoneScissorsCloth),
-    std::make_pair(QMdmmProtocol::NotifyActionOrder, &QMdmmClientPrivate::notifyActionOrder),
-    std::make_pair(QMdmmProtocol::NotifyAction, &QMdmmClientPrivate::notifyAction),
-    std::make_pair(QMdmmProtocol::NotifyRoundOver, &QMdmmClientPrivate::notifyRoundOver),
-    std::make_pair(QMdmmProtocol::NotifyUpgrade, &QMdmmClientPrivate::notifyUpgrade),
-    std::make_pair(QMdmmProtocol::NotifyGameOver, &QMdmmClientPrivate::notifyGameOver),
-    std::make_pair(QMdmmProtocol::NotifySpoken, &QMdmmClientPrivate::notifySpoken),
-    std::make_pair(QMdmmProtocol::NotifyOperated, &QMdmmClientPrivate::notifyOperated),
+    std::make_pair(QMdmmCore::Protocol::NotifyLogicConfiguration, &QMdmmClientPrivate::notifyLogicConfiguration),
+    std::make_pair(QMdmmCore::Protocol::NotifyAgentStateChanged, &QMdmmClientPrivate::notifyAgentStateChanged),
+    std::make_pair(QMdmmCore::Protocol::NotifyPlayerAdded, &QMdmmClientPrivate::notifyPlayerAdded),
+    std::make_pair(QMdmmCore::Protocol::NotifyPlayerRemoved, &QMdmmClientPrivate::notifyPlayerRemoved),
+    std::make_pair(QMdmmCore::Protocol::NotifyGameStart, &QMdmmClientPrivate::notifyGameStart),
+    std::make_pair(QMdmmCore::Protocol::NotifyRoundStart, &QMdmmClientPrivate::notifyRoundStart),
+    std::make_pair(QMdmmCore::Protocol::NotifyStoneScissorsCloth, &QMdmmClientPrivate::notifyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::NotifyActionOrder, &QMdmmClientPrivate::notifyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::NotifyAction, &QMdmmClientPrivate::notifyAction),
+    std::make_pair(QMdmmCore::Protocol::NotifyRoundOver, &QMdmmClientPrivate::notifyRoundOver),
+    std::make_pair(QMdmmCore::Protocol::NotifyUpgrade, &QMdmmClientPrivate::notifyUpgrade),
+    std::make_pair(QMdmmCore::Protocol::NotifyGameOver, &QMdmmClientPrivate::notifyGameOver),
+    std::make_pair(QMdmmCore::Protocol::NotifySpoken, &QMdmmClientPrivate::notifySpoken),
+    std::make_pair(QMdmmCore::Protocol::NotifyOperated, &QMdmmClientPrivate::notifyOperated),
 };
 
 QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClientConfiguration clientConfiguration, QMdmmClient *q)
@@ -50,10 +44,10 @@ QMdmmClientPrivate::QMdmmClientPrivate(QMdmmClientConfiguration clientConfigurat
     , q(q)
     , clientConfiguration(std::move(clientConfiguration))
     , socket(nullptr)
-    , room(new QMdmmRoom(QMdmmLogicConfiguration(), this))
+    , room(new QMdmmCore::Room(QMdmmCore::LogicConfiguration(), this))
     , heartbeatTimer(new QTimer(this))
-    , currentRequest(QMdmmProtocol::RequestInvalid)
-    , initialState(QMdmmData::StateOffline)
+    , currentRequest(QMdmmCore::Protocol::RequestInvalid)
+    , initialState(QMdmmCore::Data::StateOffline)
 {
     heartbeatTimer->setInterval(30000);
     heartbeatTimer->setSingleShot(false);
@@ -212,10 +206,10 @@ void QMdmmClientPrivate::notifyVersion(const QJsonValue &value)
         return;
     int protocolVersion = vprotocolVersion.toInt();
 
-    if (protocolVersion != QMdmmProtocol::version())
+    if (protocolVersion != QMdmmCore::Protocol::version())
         return;
 
-    if (QVersionNumber::fromString(versionNumber) != QMdmmGlobal::version()) {
+    if (QVersionNumber::fromString(versionNumber) != QMdmmCore::Global::version()) {
         // how to deal with this?
         // Theoratically it should be compatible with each other.
         // noop for now....
@@ -226,7 +220,7 @@ void QMdmmClientPrivate::notifyVersion(const QJsonValue &value)
     signInOb.insert(QStringLiteral("playerName"), q->objectName());
     signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
     signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
-    emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifySignIn, signInOb));
+    emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySignIn, signInOb));
 
     onRet_.dismiss();
 }
@@ -236,7 +230,7 @@ void QMdmmClientPrivate::notifyLogicConfiguration(const QJsonValue &value)
 {
     ONERRPRINTJSON(value);
 
-    QMdmmLogicConfiguration conf;
+    QMdmmCore::LogicConfiguration conf;
     if (!conf.deserialize(value))
         return;
 
@@ -270,7 +264,7 @@ void QMdmmClientPrivate::notifyAgentStateChanged(const QJsonValue &value)
     QJsonValue vagentState = ob.value(QStringLiteral("agentState"));
     if (!vagentState.isDouble())
         return;
-    QMdmmData::AgentState agentState = QMdmmData::AgentState(static_cast<QMdmmData::AgentState::Int>(vagentState.toInt()));
+    QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
 
     agent->setState(agentState);
     onRet_.dismiss();
@@ -307,7 +301,7 @@ void QMdmmClientPrivate::notifyPlayerAdded(const QJsonValue &value)
     QJsonValue vagentState = ob.value(QStringLiteral("agentState"));
     if (!vagentState.isDouble())
         return;
-    QMdmmData::AgentState agentState = QMdmmData::AgentState(static_cast<QMdmmData::AgentState::Int>(vagentState.toInt()));
+    QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
 
     if (room->addPlayer(playerName) == nullptr)
         return;
@@ -369,7 +363,7 @@ void QMdmmClientPrivate::notifyStoneScissorsCloth(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    QHash<QString, QMdmmData::StoneScissorsCloth> replies;
+    QHash<QString, QMdmmCore::Data::StoneScissorsCloth> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
         if (!agents.contains(playerName))
@@ -377,11 +371,11 @@ void QMdmmClientPrivate::notifyStoneScissorsCloth(const QJsonValue &value)
         QJsonValue vssc = it.value();
         if (!vssc.isDouble())
             return;
-        QMdmmData::StoneScissorsCloth ssc = static_cast<QMdmmData::StoneScissorsCloth>(vssc.toInt());
+        QMdmmCore::Data::StoneScissorsCloth ssc = static_cast<QMdmmCore::Data::StoneScissorsCloth>(vssc.toInt());
         switch (ssc) {
-        case QMdmmData::Stone:
-        case QMdmmData::Scissors:
-        case QMdmmData::Cloth:
+        case QMdmmCore::Data::Stone:
+        case QMdmmCore::Data::Scissors:
+        case QMdmmCore::Data::Cloth:
             break;
         default:
             return;
@@ -440,15 +434,15 @@ void QMdmmClientPrivate::notifyAction(const QJsonValue &value)
     QJsonValue vaction = ob.value(QStringLiteral("action"));
     if (!vaction.isDouble())
         return;
-    QMdmmData::Action action = static_cast<QMdmmData::Action>(vaction.toInt());
+    QMdmmCore::Data::Action action = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
     switch (action) {
-    case QMdmmData::DoNothing:
-    case QMdmmData::BuyKnife:
-    case QMdmmData::BuyHorse:
-    case QMdmmData::Slash:
-    case QMdmmData::Kick:
-    case QMdmmData::Move:
-    case QMdmmData::LetMove:
+    case QMdmmCore::Data::DoNothing:
+    case QMdmmCore::Data::BuyKnife:
+    case QMdmmCore::Data::BuyHorse:
+    case QMdmmCore::Data::Slash:
+    case QMdmmCore::Data::Kick:
+    case QMdmmCore::Data::Move:
+    case QMdmmCore::Data::LetMove:
         break;
     default:
         return;
@@ -458,9 +452,9 @@ void QMdmmClientPrivate::notifyAction(const QJsonValue &value)
     int toPlace = -1;
 
     switch (action) {
-    case QMdmmData::Slash:
-    case QMdmmData::Kick:
-    case QMdmmData::LetMove: {
+    case QMdmmCore::Data::Slash:
+    case QMdmmCore::Data::Kick:
+    case QMdmmCore::Data::LetMove: {
         if (!ob.contains(QStringLiteral("toPlayer")))
             return;
         QJsonValue vtoPlayer = ob.value(QStringLiteral("toPlayer"));
@@ -477,8 +471,8 @@ void QMdmmClientPrivate::notifyAction(const QJsonValue &value)
     }
 
     switch (action) {
-    case QMdmmData::Move:
-    case QMdmmData::LetMove: {
+    case QMdmmCore::Data::Move:
+    case QMdmmCore::Data::LetMove: {
         if (!ob.contains(QStringLiteral("toPlace")))
             return;
         QJsonValue vtoPlace = ob.value(QStringLiteral("toPlace"));
@@ -518,7 +512,7 @@ void QMdmmClientPrivate::notifyUpgrade(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    QHash<QString, QList<QMdmmData::UpgradeItem>> replies;
+    QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
         if (!agents.contains(playerName))
@@ -527,15 +521,15 @@ void QMdmmClientPrivate::notifyUpgrade(const QJsonValue &value)
         if (!vupgrades.isArray())
             return;
         QJsonArray vaupgrades = vupgrades.toArray();
-        QList<QMdmmData::UpgradeItem> upgrades;
+        QList<QMdmmCore::Data::UpgradeItem> upgrades;
         for (const QJsonValueRef &vupgrade : vaupgrades) {
             if (!vupgrade.isDouble())
                 return;
-            QMdmmData::UpgradeItem upgrade = static_cast<QMdmmData::UpgradeItem>(vupgrade.toInt());
+            QMdmmCore::Data::UpgradeItem upgrade = static_cast<QMdmmCore::Data::UpgradeItem>(vupgrade.toInt());
             switch (upgrade) {
-            case QMdmmData::UpgradeKnife:
-            case QMdmmData::UpgradeHorse:
-            case QMdmmData::UpgradeMaxHp:
+            case QMdmmCore::Data::UpgradeKnife:
+            case QMdmmCore::Data::UpgradeHorse:
+            case QMdmmCore::Data::UpgradeMaxHp:
                 break;
             default:
                 return;
@@ -625,32 +619,32 @@ void QMdmmClientPrivate::notifyOperated(const QJsonValue &value)
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-bool QMdmmClientPrivate::applyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace)
+bool QMdmmClientPrivate::applyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    QMdmmPlayer *from = room->player(playerName);
+    QMdmmCore::Player *from = room->player(playerName);
     switch (action) {
-    case QMdmmData::DoNothing: {
+    case QMdmmCore::Data::DoNothing: {
         return from->doNothing();
     }
-    case QMdmmData::BuyKnife: {
+    case QMdmmCore::Data::BuyKnife: {
         return from->buyKnife();
     }
-    case QMdmmData::BuyHorse: {
+    case QMdmmCore::Data::BuyHorse: {
         return from->buyHorse();
     }
-    case QMdmmData::Slash: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case QMdmmCore::Data::Slash: {
+        QMdmmCore::Player *to = room->player(toPlayer);
         return from->slash(to);
     }
-    case QMdmmData::Kick: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case QMdmmCore::Data::Kick: {
+        QMdmmCore::Player *to = room->player(toPlayer);
         return from->kick(to);
     }
-    case QMdmmData::Move: {
+    case QMdmmCore::Data::Move: {
         return from->move(toPlace);
     }
-    case QMdmmData::LetMove: {
-        QMdmmPlayer *to = room->player(toPlayer);
+    case QMdmmCore::Data::LetMove: {
+        QMdmmCore::Player *to = room->player(toPlayer);
         return from->letMove(to, toPlace);
     }
     default:
@@ -661,23 +655,23 @@ bool QMdmmClientPrivate::applyAction(const QString &playerName, QMdmmData::Actio
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-bool QMdmmClientPrivate::applyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades)
+bool QMdmmClientPrivate::applyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     bool ret = true;
 
-    for (QHash<QString, QList<QMdmmData::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
-        QMdmmPlayer *up = room->player(it.key());
-        const QList<QMdmmData::UpgradeItem> &items = it.value();
-        foreach (QMdmmData::UpgradeItem item, items) {
+    for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+        QMdmmCore::Player *up = room->player(it.key());
+        const QList<QMdmmCore::Data::UpgradeItem> &items = it.value();
+        foreach (QMdmmCore::Data::UpgradeItem item, items) {
             bool success = false;
             switch (item) {
-            case QMdmmData::UpgradeKnife:
+            case QMdmmCore::Data::UpgradeKnife:
                 success = up->upgradeKnife();
                 break;
-            case QMdmmData::UpgradeHorse:
+            case QMdmmCore::Data::UpgradeHorse:
                 success = up->upgradeHorse();
                 break;
-            case QMdmmData::UpgradeMaxHp:
+            case QMdmmCore::Data::UpgradeMaxHp:
                 success = up->upgradeMaxHp();
                 break;
             default:
@@ -691,20 +685,20 @@ bool QMdmmClientPrivate::applyUpgrade(const QHash<QString, QList<QMdmmData::Upgr
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmClientPrivate::socketPacketReceived(const QMdmmPacket &packet)
+void QMdmmClientPrivate::socketPacketReceived(const QMdmmCore::Packet &packet)
 {
     if (socket == nullptr)
         return;
 
-    if (packet.type() == QMdmmProtocol::TypeRequest) {
+    if (packet.type() == QMdmmCore::Protocol::TypeRequest) {
         currentRequest = packet.requestId();
         void (QMdmmClientPrivate::*call)(const QJsonValue &) = requestCallback.value(packet.requestId(), nullptr);
         if (call != nullptr)
             (this->*call)(packet.value());
         else
             socket->setHasError(true);
-    } else if (packet.type() == QMdmmProtocol::TypeNotify) {
-        if (((packet.notifyId() & QMdmmProtocol::NotifyFromServerMask) != 0) || ((packet.notifyId() & QMdmmProtocol::NotifyFromAgentMask) != 0)) {
+    } else if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
+        if (((packet.notifyId() & QMdmmCore::Protocol::NotifyFromServerMask) != 0) || ((packet.notifyId() & QMdmmCore::Protocol::NotifyFromAgentMask) != 0)) {
             void (QMdmmClientPrivate::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
@@ -735,5 +729,5 @@ void QMdmmClientPrivate::socketDisconnected()
 void QMdmmClientPrivate::heartbeatTimeout()
 {
     if (socket != nullptr)
-        emit socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyPingServer, QDateTime::currentMSecsSinceEpoch()));
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPingServer, QDateTime::currentMSecsSinceEpoch()));
 }

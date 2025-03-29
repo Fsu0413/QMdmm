@@ -9,9 +9,6 @@
 
 #include <QObject>
 
-using QMdmmRoom = QMdmmCore::Room;
-namespace QMdmmData = QMdmmCore::Data;
-
 QMDMM_EXPORT_NAME(QMdmmClientConfiguration)
 QMDMM_EXPORT_NAME(QMdmmClient)
 
@@ -58,10 +55,10 @@ public:
     explicit QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *parent = nullptr);
     ~QMdmmClient() override;
 
-    bool connectToHost(const QString &host, QMdmmData::AgentState initialState);
+    bool connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState);
 
-    [[nodiscard]] QMdmmRoom *room();
-    [[nodiscard]] const QMdmmRoom *room() const;
+    [[nodiscard]] QMdmmCore::Room *room();
+    [[nodiscard]] const QMdmmCore::Room *room() const;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifySpeak(const QString &content);
@@ -71,10 +68,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     // This function can be called for a timeout request, to generate a default reply and reply to server
     void requestTimeout();
 
-    void replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneScissorsCloth);
+    void replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth);
     void replyActionOrder(const QList<int> &actionOrder);
-    void replyAction(QMdmmData::Action action, const QString &toPlayer, int toPlace);
-    void replyUpgrade(const QList<QMdmmData::UpgradeItem> &upgrades);
+    void replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades);
 
 signals:
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);
@@ -84,15 +81,15 @@ signals:
     void requestAction(int currentOrder, QPrivateSignal);
     void requestUpgrade(int remainingTimes, QPrivateSignal);
 
-    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState, QPrivateSignal);
+    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, QPrivateSignal);
     void notifyPlayerRemoved(const QString &playerName, QPrivateSignal);
     void notifyGameStart(QPrivateSignal);
     void notifyRoundStart(QPrivateSignal);
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmData::StoneScissorsCloth> &ssc, QPrivateSignal);
+    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &ssc, QPrivateSignal);
     void notifyActionOrder(const QHash<int, QString> &actionOrderResult, QPrivateSignal);
-    void notifyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
+    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
     void notifyRoundOver(QPrivateSignal);
-    void notifyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades, QPrivateSignal);
+    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, QPrivateSignal);
     void notifyGameOver(const QStringList &winners, QPrivateSignal);
     void notifySpoken(const QString &playerName, const QString &content, QPrivateSignal);
     void notifyOperated(QPrivateSignal);

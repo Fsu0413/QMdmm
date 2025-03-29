@@ -15,7 +15,12 @@ QMDMM_EXPORT_NAME(QMdmmProtocol)
 QMDMM_EXPORT_NAME(QMdmmPacket)
 
 namespace QMdmmCore {
+
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 namespace Protocol {
 
@@ -125,11 +130,14 @@ private:
 
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 using v0::Packet;
 using v0::PacketData;
 namespace Protocol = v0::Protocol;
 } // namespace v1
+#endif
+
 } // namespace QMdmmCore
 
 Q_DECLARE_METATYPE(QMdmmCore::Packet)

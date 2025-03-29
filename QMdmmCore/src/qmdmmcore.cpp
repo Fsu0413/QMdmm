@@ -9,8 +9,32 @@
  * @brief Global definition of QMdmmCore library
  */
 
+/**
+ * @namespace QMdmmCore
+ * @brief All APIs are in this namespace.
+ */
+
 namespace QMdmmCore {
+
+/**
+ * @namespace v0
+ * @brief Marks the version 0 API
+ *
+ * Initial set of API.
+ */
+
+/**
+ * @namespace v1
+ * @brief Marks the version 1 API
+ *
+ * API which will exist in 1.x.x version.
+ */
+
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 /**
  * @def QMDMMCORE_EXPORT

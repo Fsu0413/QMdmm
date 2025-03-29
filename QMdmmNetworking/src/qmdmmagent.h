@@ -10,8 +10,6 @@
 
 #include <QObject>
 
-namespace QMdmmData = QMdmmCore::Data;
-
 QMDMM_EXPORT_NAME(QMdmmAgent)
 
 class QMdmmSocket;
@@ -24,7 +22,7 @@ class QMDMMNETWORKING_EXPORT QMdmmAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
-    Q_PROPERTY(QMdmmData::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
+    Q_PROPERTY(QMdmmCore::Data::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
 
 public:
     explicit QMdmmAgent(const QString &name, QObject *parent = nullptr);
@@ -34,12 +32,12 @@ public:
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &name);
 
-    [[nodiscard]] QMdmmData::AgentState state() const;
-    void setState(const QMdmmData::AgentState &state);
+    [[nodiscard]] QMdmmCore::Data::AgentState state() const;
+    void setState(const QMdmmCore::Data::AgentState &state);
 
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
-    void stateChanged(QMdmmData::AgentState, QPrivateSignal);
+    void stateChanged(QMdmmCore::Data::AgentState, QPrivateSignal);
 
 private:
     const std::unique_ptr<QMdmmAgentPrivate> d;

@@ -75,7 +75,7 @@ QMdmmClient::QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *
 
 QMdmmClient::~QMdmmClient() = default;
 
-bool QMdmmClient::connectToHost(const QString &host, QMdmmData::AgentState initialState)
+bool QMdmmClient::connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState)
 {
     if (d->socket != nullptr) {
         d->socket->disconnect(d);
@@ -90,12 +90,12 @@ bool QMdmmClient::connectToHost(const QString &host, QMdmmData::AgentState initi
     return d->socket->connectToHost(host);
 }
 
-QMdmmRoom *QMdmmClient::room()
+QMdmmCore::Room *QMdmmClient::room()
 {
     return d->room;
 }
 
-const QMdmmRoom *QMdmmClient::room() const
+const QMdmmCore::Room *QMdmmClient::room() const
 {
     return d->room;
 }
@@ -105,7 +105,7 @@ void QMdmmClient::notifySpeak(const QString &content)
     // Although JSON is native UTF-8 we decided to use Base64 anyway.
     // This can make our request / response all in one line.
     if (d->socket != nullptr)
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifySpeak, QString::fromLatin1(content.toUtf8().toBase64())));
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpeak, QString::fromLatin1(content.toUtf8().toBase64())));
 }
 
 void QMdmmClient::notifyOperate(const void *todo)
@@ -114,59 +114,59 @@ void QMdmmClient::notifyOperate(const void *todo)
     Q_UNUSED(todo);
 
     if (d->socket != nullptr)
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::NotifyOperate, {}));
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyOperate, {}));
 }
 
 void QMdmmClient::requestTimeout()
 {
     // This should be a definitely invalid reply, to trigger default reply logic implemented in server.
-    if (d->socket != nullptr && d->currentRequest != QMdmmProtocol::RequestInvalid) {
-        d->currentRequest = QMdmmProtocol::RequestInvalid;
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, d->currentRequest, {}));
+    if (d->socket != nullptr && d->currentRequest != QMdmmCore::Protocol::RequestInvalid) {
+        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, d->currentRequest, {}));
     }
 }
 
-void QMdmmClient::replyStoneScissorsCloth(QMdmmData::StoneScissorsCloth stoneScissorsCloth)
+void QMdmmClient::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth)
 {
-    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestStoneScissorsCloth) {
-        d->currentRequest = QMdmmProtocol::RequestInvalid;
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestStoneScissorsCloth, static_cast<int>(stoneScissorsCloth)));
+    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestStoneScissorsCloth) {
+        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestStoneScissorsCloth, static_cast<int>(stoneScissorsCloth)));
     }
 }
 
 void QMdmmClient::replyActionOrder(const QList<int> &actionOrder)
 {
-    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestActionOrder) {
-        d->currentRequest = QMdmmProtocol::RequestInvalid;
+    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestActionOrder) {
+        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
         QJsonArray arr;
         foreach (int a, actionOrder)
             arr.append(a);
 
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestActionOrder, arr));
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestActionOrder, arr));
     }
 }
 
-void QMdmmClient::replyAction(QMdmmData::Action action, const QString &toPlayer, int toPlace)
+void QMdmmClient::replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestAction) {
-        d->currentRequest = QMdmmProtocol::RequestInvalid;
+    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestAction) {
+        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
         QJsonObject ob;
         ob.insert(QStringLiteral("action"), static_cast<int>(action));
         ob.insert(QStringLiteral("toPlayer"), toPlayer);
         ob.insert(QStringLiteral("toPlace"), toPlace);
 
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestAction, ob));
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestAction, ob));
     }
 }
 
-void QMdmmClient::replyUpgrade(const QList<QMdmmData::UpgradeItem> &upgrades)
+void QMdmmClient::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
 {
-    if (d->socket != nullptr && d->currentRequest == QMdmmProtocol::RequestUpgrade) {
-        d->currentRequest = QMdmmProtocol::RequestInvalid;
+    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestUpgrade) {
+        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
         QJsonArray arr;
-        foreach (QMdmmData::UpgradeItem it, upgrades)
+        foreach (QMdmmCore::Data::UpgradeItem it, upgrades)
             arr.append(static_cast<int>(it));
 
-        emit d->socket->sendPacket(QMdmmPacket(QMdmmProtocol::TypeReply, QMdmmProtocol::RequestUpgrade, arr));
+        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, arr));
     }
 }

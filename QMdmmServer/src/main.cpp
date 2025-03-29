@@ -11,15 +11,12 @@
 #include <QFile>
 #include <QScopedPointer>
 
-namespace QMdmmGlobal = QMdmmCore::Global;
-using QMdmmCore::qMdmmDebugSetDevice;
-
 int main(int argc, char *argv[])
 {
     QScopedPointer<QCoreApplication> a(new QCoreApplication(argc, argv));
     QCoreApplication::setOrganizationName(QStringLiteral("Fsu0413.me"));
     QCoreApplication::setApplicationName(QStringLiteral("QMdmmServer"));
-    QCoreApplication::setApplicationVersion(QMdmmGlobal::version().toString());
+    QCoreApplication::setApplicationVersion(QMdmmCore::Global::version().toString());
 
     QString logDirectory = QStringLiteral(QMDMM_RUNTIME_DATA_PREFIX "/log");
 
@@ -32,7 +29,7 @@ int main(int argc, char *argv[])
     if (!logFile.open(QIODevice::WriteOnly))
         qFatal("Unable to create log file %s, exiting.", qPrintable(logFilePath));
 
-    qMdmmDebugSetDevice(&logFile);
+    QMdmmCore::qMdmmDebugSetDevice(&logFile);
 
     Config config;
 

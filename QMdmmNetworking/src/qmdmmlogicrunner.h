@@ -10,8 +10,6 @@
 
 class QMdmmAgent;
 class QMdmmSocket;
-using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
-namespace QMdmmData = QMdmmCore::Data;
 
 QMDMM_EXPORT_NAME(QMdmmLogicRunner)
 
@@ -29,11 +27,11 @@ class QMDMMNETWORKING_EXPORT QMdmmLogicRunner final : public QObject
 
 public:
     // Constructor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
-    explicit QMdmmLogicRunner(const QMdmmLogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    explicit QMdmmLogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~QMdmmLogicRunner() override;
 
     // Functions to be called in Server thread
-    QMdmmAgent *addSocket(const QString &playerName, const QString &screenName, const QMdmmData::AgentState &agentState, QMdmmSocket *socket);
+    QMdmmAgent *addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, QMdmmSocket *socket);
 
     QMdmmAgent *agent(const QString &playerName);
     [[nodiscard]] const QMdmmAgent *agent(const QString &playerName) const;

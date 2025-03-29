@@ -27,7 +27,7 @@ public:
     bool hasError;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    virtual void sendPacket(QMdmmPacket packet) = 0;
+    virtual void sendPacket(QMdmmCore::Packet packet) = 0;
     bool packetReceived(const QByteArray &arr);
     void socketDisconnected();
     void errorOccurred(const QString &errorString);
@@ -53,7 +53,7 @@ public:
     void setupSocket();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void sendPacket(QMdmmPacket packet) override;
+    void sendPacket(QMdmmCore::Packet packet) override;
     void readyRead();
     void errorOccurredTcpSocket(QAbstractSocket::SocketError e);
 };
@@ -78,7 +78,7 @@ public:
     void setupSocket();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void sendPacket(QMdmmPacket packet) override;
+    void sendPacket(QMdmmCore::Packet packet) override;
     void readyRead();
     void errorOccurredLocalSocket(QLocalSocket::LocalSocketError e);
 };
@@ -103,7 +103,7 @@ public:
     void setupSocket();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void sendPacket(QMdmmPacket packet) override;
+    void sendPacket(QMdmmCore::Packet packet) override;
     void errorOccurredWebSocket(QAbstractSocket::SocketError e);
 };
 

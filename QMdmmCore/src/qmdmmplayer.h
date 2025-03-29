@@ -15,7 +15,11 @@ namespace p {
 struct PlayerP;
 }
 
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 class Room;
 
@@ -148,9 +152,11 @@ private:
 
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 using v0::Player;
 }
+#endif
 
 } // namespace QMdmmCore
 

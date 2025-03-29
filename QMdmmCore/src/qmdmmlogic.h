@@ -19,7 +19,11 @@ namespace p {
 struct LogicP;
 }
 
+#ifndef DOXYGEN
 namespace v0 {
+#else
+inline namespace v1 {
+#endif
 
 class LogicConfiguration;
 
@@ -79,9 +83,11 @@ private:
 
 } // namespace v0
 
+#ifndef DOXYGEN
 inline namespace v1 {
 using v0::Logic;
 }
+#endif
 
 } // namespace QMdmmCore
 

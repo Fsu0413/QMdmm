@@ -14,8 +14,6 @@
 
 #include <cstdint>
 
-using QMdmmPacket = QMdmmCore::Packet;
-
 QMDMM_EXPORT_NAME(QMdmmSocket)
 
 // QMdmmSocket should be a wrapper for QObject, and do serialize / deserialize work of received data
@@ -50,9 +48,9 @@ public:
     bool connectToHost(const QString &host);
 
 signals:
-    void sendPacket(QMdmmPacket);
+    void sendPacket(QMdmmCore::Packet);
 
-    void packetReceived(QMdmmPacket, QPrivateSignal);
+    void packetReceived(QMdmmCore::Packet, QPrivateSignal);
     void socketErrorOccurred(const QString &errorString, QPrivateSignal);
     void socketDisconnected(QPrivateSignal);
 

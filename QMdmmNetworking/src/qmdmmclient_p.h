@@ -25,21 +25,21 @@ class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
     Q_OBJECT
 
 public:
-    static QHash<QMdmmProtocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> requestCallback;
-    static QHash<QMdmmProtocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> requestCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> notifyCallback;
 
     QMdmmClientPrivate(QMdmmClientConfiguration clientConfiguration, QMdmmClient *q);
 
     QMdmmClient *q;
     QMdmmClientConfiguration clientConfiguration;
     QPointer<QMdmmSocket> socket;
-    QMdmmRoom *room;
+    QMdmmCore::Room *room;
     QHash<QString, QMdmmAgent *> agents;
 
     QTimer *heartbeatTimer;
 
-    QMdmmProtocol::RequestId currentRequest;
-    QMdmmData::AgentState initialState;
+    QMdmmCore::Protocol::RequestId currentRequest;
+    QMdmmCore::Data::AgentState initialState;
 
     void requestStoneScissorsCloth(const QJsonValue &value);
     void requestActionOrder(const QJsonValue &value);
@@ -63,11 +63,11 @@ public:
     void notifySpoken(const QJsonValue &value);
     void notifyOperated(const QJsonValue &value);
 
-    bool applyAction(const QString &playerName, QMdmmData::Action action, const QString &toPlayer, int toPlace);
-    bool applyUpgrade(const QHash<QString, QList<QMdmmData::UpgradeItem>> &upgrades);
+    bool applyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    bool applyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void socketPacketReceived(const QMdmmPacket &packet);
+    void socketPacketReceived(const QMdmmCore::Packet &packet);
     void socketErrorOccurred(const QString &errorString);
     void socketDisconnected();
 

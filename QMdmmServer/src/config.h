@@ -10,22 +10,20 @@
 #include <QCommandLineParser>
 #include <QSettings>
 
-using QMdmmSettings = QMdmmCore::Settings;
-
 class Config
 {
 public:
     Config();
 
     [[nodiscard]] const QMdmmServerConfiguration &serverConfiguration() const;
-    [[nodiscard]] const QMdmmLogicConfiguration &logicConfiguration() const;
+    [[nodiscard]] const QMdmmCore::LogicConfiguration &logicConfiguration() const;
 
 private:
     QMdmmServerConfiguration serverConfiguration_;
-    QMdmmLogicConfiguration logicConfiguration_;
+    QMdmmCore::LogicConfiguration logicConfiguration_;
 
-    void read_(QMdmmSettings *setting, QCommandLineParser *parser);
-    [[noreturn]] void save_(QMdmmSettings *setting, QMdmmSettings::Instance toSave);
+    void read_(QMdmmCore::Settings *setting, QCommandLineParser *parser);
+    [[noreturn]] void save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance toSave);
     [[noreturn]] void show_();
 };
 

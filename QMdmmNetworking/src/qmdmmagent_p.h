@@ -8,7 +8,7 @@
 struct QMDMMNETWORKING_PRIVATE_EXPORT QMdmmAgentPrivate final
 {
     QString screenName;
-    QMdmmData::AgentState state = QMdmmData::StateOffline;
+    QMdmmCore::Data::AgentState state = QMdmmCore::Data::StateOffline;
 };
 
 #endif

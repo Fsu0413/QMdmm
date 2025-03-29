@@ -67,7 +67,7 @@ AB DEFGHIJ NO Q TUV XYZ
 
 Config::Config()
 {
-    QMdmmSettings setting;
+    QMdmmCore::Settings setting;
 
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsCompactedShortOptions);
@@ -128,18 +128,18 @@ Config::Config()
         ::exit(0);
     }
 
-    QMdmmSettings::Instance toSave = QMdmmSettings::Specified;
+    QMdmmCore::Settings::Instance toSave = QMdmmCore::Settings::Specified;
 
     if (parser.isSet(QStringLiteral("c"))) {
         if (parser.isSet(QStringLiteral("C")))
             qFatal("It is not supported to save both per-user configuration and global configuration at one time. Exiting.");
-        toSave = QMdmmSettings::PerUser;
+        toSave = QMdmmCore::Settings::PerUser;
     } else if (parser.isSet(QStringLiteral("C"))) {
-        toSave = QMdmmSettings::Global;
+        toSave = QMdmmCore::Settings::Global;
     }
 
     read_(&setting, &parser);
-    if (toSave != QMdmmSettings::Specified)
+    if (toSave != QMdmmCore::Settings::Specified)
         save_(&setting, toSave);
     if (parser.isSet(QStringLiteral("d")))
         show_();
@@ -203,16 +203,16 @@ inline std::optional<uint16_t> stringToUint16(const QString &value)
     return result;
 }
 
-inline std::optional<QMdmmLogicConfiguration::PunishHpRoundStrategy> stringToPunishHpRoundStrategy(const QString &value)
+inline std::optional<QMdmmCore::LogicConfiguration::PunishHpRoundStrategy> stringToPunishHpRoundStrategy(const QString &value)
 {
-    static const QHash<QString, QMdmmLogicConfiguration::PunishHpRoundStrategy> strategyHash {
-        std::make_pair(QStringLiteral("RoundDown"), QMdmmLogicConfiguration::RoundDown),
-        std::make_pair(QStringLiteral("RoundToNearest45"), QMdmmLogicConfiguration::RoundToNearest45),
-        std::make_pair(QStringLiteral("RoundUp"), QMdmmLogicConfiguration::RoundUp),
-        std::make_pair(QStringLiteral("PlusOne"), QMdmmLogicConfiguration::PlusOne),
+    static const QHash<QString, QMdmmCore::LogicConfiguration::PunishHpRoundStrategy> strategyHash {
+        std::make_pair(QStringLiteral("RoundDown"), QMdmmCore::LogicConfiguration::RoundDown),
+        std::make_pair(QStringLiteral("RoundToNearest45"), QMdmmCore::LogicConfiguration::RoundToNearest45),
+        std::make_pair(QStringLiteral("RoundUp"), QMdmmCore::LogicConfiguration::RoundUp),
+        std::make_pair(QStringLiteral("PlusOne"), QMdmmCore::LogicConfiguration::PlusOne),
     };
 
-    for (QHash<QString, QMdmmLogicConfiguration::PunishHpRoundStrategy>::const_iterator it = strategyHash.constBegin(); it != strategyHash.constEnd(); ++it) {
+    for (QHash<QString, QMdmmCore::LogicConfiguration::PunishHpRoundStrategy>::const_iterator it = strategyHash.constBegin(); it != strategyHash.constEnd(); ++it) {
         if (it.key().compare(value, Qt::CaseInsensitive) == 0)
             return it.value();
     }
@@ -235,13 +235,13 @@ inline QString uint16ToString(uint16_t value)
     return QString::number(static_cast<unsigned int>(value));
 }
 
-inline QString punishHpRoundStrategyToString(QMdmmLogicConfiguration::PunishHpRoundStrategy value)
+inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::PunishHpRoundStrategy value)
 {
-    static const QHash<QMdmmLogicConfiguration::PunishHpRoundStrategy, QString> strategyHash {
-        std::make_pair(QMdmmLogicConfiguration::RoundDown, QStringLiteral("RoundDown")),
-        std::make_pair(QMdmmLogicConfiguration::RoundToNearest45, QStringLiteral("RoundToNearest45")),
-        std::make_pair(QMdmmLogicConfiguration::RoundUp, QStringLiteral("RoundUp")),
-        std::make_pair(QMdmmLogicConfiguration::PlusOne, QStringLiteral("PlusOne")),
+    static const QHash<QMdmmCore::LogicConfiguration::PunishHpRoundStrategy, QString> strategyHash {
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundDown, QStringLiteral("RoundDown")),
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundToNearest45, QStringLiteral("RoundToNearest45")),
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundUp, QStringLiteral("RoundUp")),
+        std::make_pair(QMdmmCore::LogicConfiguration::PlusOne, QStringLiteral("PlusOne")),
     };
 
     return strategyHash.value(value, QString());
@@ -250,7 +250,7 @@ inline QString punishHpRoundStrategyToString(QMdmmLogicConfiguration::PunishHpRo
 } // namespace
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity,readability-function-size)
-void Config::read_(QMdmmSettings *setting, QCommandLineParser *parser)
+void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 {
 #define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                  \
     do {                                                                                \
@@ -337,7 +337,7 @@ void Config::read_(QMdmmSettings *setting, QCommandLineParser *parser)
     CONFIG_ITEM(int, logicConfiguration_, "maxhp", stringToInt, InitialMaxHp);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-maxhp", stringToInt, MaximumMaxHp);
     CONFIG_ITEM(int, logicConfiguration_, "punish-hp-modifier", stringToInt, PunishHpModifier);
-    CONFIG_ITEM(QMdmmLogicConfiguration::PunishHpRoundStrategy, logicConfiguration_, "punish-hp-round-strategy", stringToPunishHpRoundStrategy, PunishHpRoundStrategy);
+    CONFIG_ITEM(QMdmmCore::LogicConfiguration::PunishHpRoundStrategy, logicConfiguration_, "punish-hp-round-strategy", stringToPunishHpRoundStrategy, PunishHpRoundStrategy);
     CONFIG_ITEM(bool, logicConfiguration_, "zero-hp-as-dead", stringToBool, ZeroHpAsDead);
     CONFIG_ITEM(bool, logicConfiguration_, "enable-let-move", stringToBool, EnableLetMove);
     CONFIG_ITEM(bool, logicConfiguration_, "can-buy-only-in-initial-city", stringToBool, CanBuyOnlyInInitialCity);
@@ -347,7 +347,7 @@ void Config::read_(QMdmmSettings *setting, QCommandLineParser *parser)
 #undef CONFIG_ITEM
 }
 
-void Config::save_(QMdmmSettings *setting, QMdmmSettings::Instance toSave)
+void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance toSave)
 {
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
@@ -383,7 +383,7 @@ void Config::save_(QMdmmSettings *setting, QMdmmSettings::Instance toSave)
     CONFIG_ITEM(int, logicConfiguration_, "maxhp", intToString, initialMaxHp);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-maxhp", intToString, maximumMaxHp);
     CONFIG_ITEM(int, logicConfiguration_, "punish-hp-modifier", intToString, punishHpModifier);
-    CONFIG_ITEM(QMdmmLogicConfiguration::PunishHpRoundStrategy, logicConfiguration_, "punish-hp-round-strategy", punishHpRoundStrategyToString, punishHpRoundStrategy);
+    CONFIG_ITEM(QMdmmCore::LogicConfiguration::PunishHpRoundStrategy, logicConfiguration_, "punish-hp-round-strategy", punishHpRoundStrategyToString, punishHpRoundStrategy);
     CONFIG_ITEM(bool, logicConfiguration_, "zero-hp-as-dead", boolToString, zeroHpAsDead);
     CONFIG_ITEM(bool, logicConfiguration_, "enable-let-move", boolToString, enableLetMove);
     CONFIG_ITEM(bool, logicConfiguration_, "can-buy-only-in-initial-city", boolToString, canBuyOnlyInInitialCity);
@@ -412,7 +412,7 @@ const QMdmmServerConfiguration &Config::serverConfiguration() const
     return serverConfiguration_;
 }
 
-const QMdmmLogicConfiguration &Config::logicConfiguration() const
+const QMdmmCore::LogicConfiguration &Config::logicConfiguration() const
 {
     return logicConfiguration_;
 }

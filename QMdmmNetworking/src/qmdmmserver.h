@@ -17,8 +17,6 @@
 QMDMM_EXPORT_NAME(QMdmmServerConfiguration)
 QMDMM_EXPORT_NAME(QMdmmServer)
 
-using QMdmmLogicConfiguration = QMdmmCore::LogicConfiguration;
-
 struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObject
 {
     Q_GADGET
@@ -71,7 +69,7 @@ class QMDMMNETWORKING_EXPORT QMdmmServer : public QObject
     Q_OBJECT
 
 public:
-    explicit QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmLogicConfiguration logicConfiguration, QObject *parent = nullptr);
+    explicit QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent = nullptr);
     ~QMdmmServer() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
