@@ -11,6 +11,13 @@ if (POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
+# https://gitlab.kitware.com/cmake/cmake/-/issues/26692#note_1636912
+# CMake decided to not supporting "-std:c++23preview" build flag and use "-std:c++latest"
+if (MSVC AND ( CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.43.34808 ) )
+    set(CMAKE_CXX23_STANDARD_COMPILE_OPTION "-std:c++23preview")
+    set(CMAKE_CXX23_EXTENSION_COMPILE_OPTION "-std:c++23preview")
+endif()
+
 project(QMdmm
     VERSION 0.0.1
     LANGUAGES CXX
