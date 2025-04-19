@@ -17,7 +17,15 @@
 QMDMM_EXPORT_NAME(QMdmmServerConfiguration)
 QMDMM_EXPORT_NAME(QMdmmServer)
 
-struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObject
+namespace QMdmmNetworking {
+
+namespace p {
+class ServerP;
+}
+
+namespace v0 {
+
+struct QMDMMNETWORKING_EXPORT ServerConfiguration final : public QJsonObject
 {
     Q_GADGET
     Q_PROPERTY(bool tcpEnabled READ tcpEnabled WRITE setTcpEnabled DESIGNABLE false FINAL)
@@ -29,7 +37,7 @@ struct QMDMMNETWORKING_EXPORT QMdmmServerConfiguration final : public QJsonObjec
     Q_PROPERTY(uint16_t websocketPort READ websocketPort WRITE setWebsocketPort DESIGNABLE false FINAL)
 
 public:
-    static QMDMMNETWORKING_EXPORT const QMdmmServerConfiguration &defaults();
+    static QMDMMNETWORKING_EXPORT const ServerConfiguration &defaults();
 
 #ifdef Q_MOC_RUN
     Q_INVOKABLE QMdmmServerConfiguration();
@@ -62,23 +70,30 @@ public:
 #undef DEFINE_CONFIGURATION
 };
 
-class QMdmmServerPrivate;
-
-class QMDMMNETWORKING_EXPORT QMdmmServer : public QObject
+class QMDMMNETWORKING_EXPORT Server : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QMdmmServer(QMdmmServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent = nullptr);
-    ~QMdmmServer() override;
+    explicit Server(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent = nullptr);
+    ~Server() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     bool listen();
 
 private:
-    // QMdmmServerPrivate is QObject. QPointer can't be used since it is incomplete here
-    QMdmmServerPrivate *const d;
-    Q_DISABLE_COPY_MOVE(QMdmmServer);
+    // ServerP is QObject. QPointer can't be used since it is incomplete here
+    p::ServerP *const d;
+    Q_DISABLE_COPY_MOVE(Server);
 };
+
+} // namespace v0
+
+inline namespace v1 {
+using v0::Server;
+using v0::ServerConfiguration;
+} // namespace v1
+
+} // namespace QMdmmNetworking
 
 #endif // QMDMMSERVER_H

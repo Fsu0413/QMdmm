@@ -407,7 +407,7 @@ void Config::show_()
     ::exit(0);
 }
 
-const QMdmmServerConfiguration &Config::serverConfiguration() const
+const QMdmmNetworking::ServerConfiguration &Config::serverConfiguration() const
 {
     return serverConfiguration_;
 }

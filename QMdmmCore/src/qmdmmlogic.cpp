@@ -226,18 +226,24 @@ bool Logic::roundStart()
  */
 bool Logic::sscReply(const QString &playerName, Data::StoneScissorsCloth ssc)
 {
-    if (d->state == SscForAction) {
-        d->sscForActionReplies.insert(playerName, ssc);
-        d->sscForAction();
+    if (d->players.contains(playerName)) {
+        if (d->state == SscForAction) {
+            if (!d->sscForActionReplies.contains(playerName)) {
+                d->sscForActionReplies.insert(playerName, ssc);
+                d->sscForAction();
 
-        return true;
-    }
+                return true;
+            }
+        }
 
-    if (d->state == SscForActionOrder) {
-        d->sscForActionOrderReplies.insert(playerName, ssc);
-        d->sscForActionOrder();
+        if (d->state == SscForActionOrder) {
+            if (!d->sscForActionOrderReplies.contains(playerName)) {
+                d->sscForActionOrderReplies.insert(playerName, ssc);
+                d->sscForActionOrder();
 
-        return true;
+                return true;
+            }
+        }
     }
 
     return false;
@@ -253,14 +259,15 @@ bool Logic::sscReply(const QString &playerName, Data::StoneScissorsCloth ssc)
  */
 bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
-    if (d->state == ActionOrder) {
-        foreach (int order, desiredOrder)
-            d->desiredActionOrders.insert(order, playerName);
-        d->actionOrder();
+    if (d->players.contains(playerName)) {
+        if (d->state == ActionOrder) {
+            foreach (int order, desiredOrder)
+                d->desiredActionOrders.insert(order, playerName);
+            d->actionOrder();
 
-        return true;
+            return true;
+        }
     }
-
     return false;
 }
 
@@ -276,12 +283,14 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
  */
 bool Logic::actionReply(const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace)
 {
-    if (d->state == Action) {
-        if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
-            d->applyAction(playerName, action, toPlayer, toPlace);
-            d->startAction();
+    if (d->players.contains(playerName)) {
+        if (d->state == Action) {
+            if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
+                d->applyAction(playerName, action, toPlayer, toPlace);
+                d->startAction();
 
-            return true;
+                return true;
+            }
         }
     }
 
@@ -298,11 +307,13 @@ bool Logic::actionReply(const QString &playerName, Data::Action action, const QS
  */
 bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeItem> &items)
 {
-    if (d->state == Upgrade) {
-        d->upgrades.insert(playerName, items);
-        d->upgrade();
+    if (d->players.contains(playerName)) {
+        if (d->state == Upgrade) {
+            d->upgrades.insert(playerName, items);
+            d->upgrade();
 
-        return true;
+            return true;
+        }
     }
 
     return false;

@@ -20,23 +20,24 @@
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
-namespace QMdmmProtocol = QMdmmCore::Protocol;
+namespace QMdmmNetworking {
+namespace p {
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerPrivate final : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT ServerP final : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerPrivate::*)(QMdmmSocket *, const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> notifyCallback;
 
 public:
-    QMdmmServerPrivate(QMdmmServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QMdmmServer *q);
+    ServerP(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, Server *q);
 
     // callbacks
-    void pingServer(QMdmmSocket *socket, const QJsonValue &packetValue);
-    void signIn(QMdmmSocket *socket, const QJsonValue &packetValue);
-    void observe(QMdmmSocket *socket, const QJsonValue &packetValue);
+    void pingServer(Socket *socket, const QJsonValue &packetValue);
+    void signIn(Socket *socket, const QJsonValue &packetValue);
+    void observe(Socket *socket, const QJsonValue &packetValue);
 
-    void introduceSocket(QMdmmSocket *socket);
+    void introduceSocket(Socket *socket);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void tcpServerNewConnection();
@@ -48,14 +49,17 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
 public: // NOLINT(readability-redundant-access-specifiers)
     // variables
-    QMdmmServerConfiguration serverConfiguration;
+    ServerConfiguration serverConfiguration;
     QMdmmCore::LogicConfiguration logicConfiguration;
-    QMdmmServer *q;
+    Server *q;
     QTcpServer *t;
     QLocalServer *l;
     QWebSocketServer *w;
-    QMdmmLogicRunner *current;
+    LogicRunner *current;
 };
+
+} // namespace p
+} // namespace QMdmmNetworking
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 

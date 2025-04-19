@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     Config config;
 
-    QMdmmServer server(config.serverConfiguration(), config.logicConfiguration());
+    QMdmmNetworking::Server server(config.serverConfiguration(), config.logicConfiguration());
     server.listen();
 
     return QCoreApplication::exec();

@@ -9,21 +9,22 @@
 #include <QPointer>
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
-
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate : public QObject
+namespace QMdmmNetworking {
+namespace p {
+class QMDMMNETWORKING_PRIVATE_EXPORT SocketP : public QObject
 {
     Q_OBJECT
 
 public:
-    static QMdmmSocket::Type typeByConnectAddr(const QString &addr);
+    static Socket::Type typeByConnectAddr(const QString &addr);
 
-    explicit QMdmmSocketPrivate(QMdmmSocket *q);
-    [[nodiscard]] virtual QMdmmSocket::Type type() const = 0;
+    explicit SocketP(Socket *q);
+    [[nodiscard]] virtual Socket::Type type() const = 0;
 
     virtual bool connectToHost(const QString &addr) = 0;
     virtual bool disconnectFromHost() = 0;
 
-    QMdmmSocket *q;
+    Socket *q;
     bool hasError;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
@@ -33,17 +34,17 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurred(const QString &errorString);
 };
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQTcpSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT SocketP_QTcpSocket : public SocketP
 {
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *q);
-    explicit QMdmmSocketPrivateQTcpSocket(QMdmmSocket *q);
+    SocketP_QTcpSocket(QTcpSocket *socket, Socket *q);
+    explicit SocketP_QTcpSocket(Socket *q);
 
-    [[nodiscard]] QMdmmSocket::Type type() const override
+    [[nodiscard]] Socket::Type type() const override
     {
-        return QMdmmSocket::TypeQTcpSocket;
+        return Socket::TypeQTcpSocket;
     }
 
     bool connectToHost(const QString &addr) override;
@@ -58,17 +59,17 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurredTcpSocket(QAbstractSocket::SocketError e);
 };
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQLocalSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT SocketP_QLocalSocket : public SocketP
 {
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *q);
-    explicit QMdmmSocketPrivateQLocalSocket(QMdmmSocket *q);
+    SocketP_QLocalSocket(QLocalSocket *socket, Socket *q);
+    explicit SocketP_QLocalSocket(Socket *q);
 
-    [[nodiscard]] QMdmmSocket::Type type() const override
+    [[nodiscard]] Socket::Type type() const override
     {
-        return QMdmmSocket::TypeQLocalSocket;
+        return Socket::TypeQLocalSocket;
     }
 
     bool connectToHost(const QString &addr) override;
@@ -83,17 +84,17 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurredLocalSocket(QLocalSocket::LocalSocketError e);
 };
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivateQWebSocket : public QMdmmSocketPrivate
+class QMDMMNETWORKING_PRIVATE_EXPORT SocketP_QWebSocket : public SocketP
 {
     Q_OBJECT
 
 public:
-    QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *q);
-    explicit QMdmmSocketPrivateQWebSocket(QMdmmSocket *q);
+    SocketP_QWebSocket(QWebSocket *socket, Socket *q);
+    explicit SocketP_QWebSocket(Socket *q);
 
-    [[nodiscard]] QMdmmSocket::Type type() const override
+    [[nodiscard]] Socket::Type type() const override
     {
-        return QMdmmSocket::TypeQWebSocket;
+        return Socket::TypeQWebSocket;
     }
 
     bool connectToHost(const QString &addr) override;
@@ -107,12 +108,14 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void errorOccurredWebSocket(QAbstractSocket::SocketError e);
 };
 
-namespace QMdmmSocketPrivateFactory {
-QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p);
-QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p);
-QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p);
-QMDMMNETWORKING_PRIVATE_EXPORT QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p);
-} // namespace QMdmmSocketPrivateFactory
+namespace SocketPFactory {
+QMDMMNETWORKING_PRIVATE_EXPORT SocketP *create(QLocalSocket *l, Socket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT SocketP *create(QTcpSocket *t, Socket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT SocketP *create(QWebSocket *w, Socket *p);
+QMDMMNETWORKING_PRIVATE_EXPORT SocketP *create(Socket::Type type, Socket *p);
+} // namespace SocketPFactory
+} // namespace p
+} // namespace QMdmmNetworking
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 

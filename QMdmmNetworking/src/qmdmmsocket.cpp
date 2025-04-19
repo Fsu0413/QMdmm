@@ -6,60 +6,63 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
-namespace QMdmmSocketPrivateFactory {
-QMdmmSocketPrivate *create(QTcpSocket *t, QMdmmSocket *p)
+namespace QMdmmNetworking {
+namespace p {
+
+namespace SocketPFactory {
+SocketP *create(QTcpSocket *t, Socket *p)
 {
-    return new QMdmmSocketPrivateQTcpSocket(t, p);
+    return new SocketP_QTcpSocket(t, p);
 }
-QMdmmSocketPrivate *create(QLocalSocket *l, QMdmmSocket *p)
+SocketP *create(QLocalSocket *l, Socket *p)
 {
-    return new QMdmmSocketPrivateQLocalSocket(l, p);
+    return new SocketP_QLocalSocket(l, p);
 }
-QMdmmSocketPrivate *create(QWebSocket *w, QMdmmSocket *p)
+SocketP *create(QWebSocket *w, Socket *p)
 {
-    return new QMdmmSocketPrivateQWebSocket(w, p);
+    return new SocketP_QWebSocket(w, p);
 }
 
-QMdmmSocketPrivate *create(QMdmmSocket::Type type, QMdmmSocket *p)
+SocketP *create(Socket::Type type, Socket *p)
 {
     switch (type) {
-    case QMdmmSocket::TypeQTcpSocket:
-        return new QMdmmSocketPrivateQTcpSocket(p);
-    case QMdmmSocket::TypeQLocalSocket:
-        return new QMdmmSocketPrivateQLocalSocket(p);
-    case QMdmmSocket::TypeQWebSocket:
-        return new QMdmmSocketPrivateQWebSocket(p);
+    case Socket::TypeQTcpSocket:
+        return new SocketP_QTcpSocket(p);
+    case Socket::TypeQLocalSocket:
+        return new SocketP_QLocalSocket(p);
+    case Socket::TypeQWebSocket:
+        return new SocketP_QWebSocket(p);
     default:
         break;
     }
 
     return nullptr;
 }
-} // namespace QMdmmSocketPrivateFactory
+} // namespace SocketPFactory
 
-QMdmmSocket::Type QMdmmSocketPrivate::typeByConnectAddr(const QString &addr)
+Socket::Type SocketP::typeByConnectAddr(const QString &addr)
 {
     QUrl u(addr);
     if (!u.isValid())
-        return QMdmmSocket::TypeQLocalSocket;
+        return Socket::TypeQLocalSocket;
     if (u.scheme() == QStringLiteral("qmdmm") || u.scheme() == QStringLiteral("qmdmms"))
-        return QMdmmSocket::TypeQTcpSocket;
+        return Socket::TypeQTcpSocket;
     if (u.scheme() == QStringLiteral("ws") || u.scheme() == QStringLiteral("wss"))
-        return QMdmmSocket::TypeQWebSocket;
+        return Socket::TypeQWebSocket;
 
-    return QMdmmSocket::TypeUnknown;
+    return Socket::TypeUnknown;
 }
 
-QMdmmSocketPrivate::QMdmmSocketPrivate(QMdmmSocket *q)
+SocketP::SocketP(Socket *q)
     : QObject(q)
     , q(q)
     , hasError(false)
 {
-    connect(q, &QMdmmSocket::sendPacket, this, &QMdmmSocketPrivate::sendPacket);
+    connect(q, &Socket::sendPacket, this, &SocketP::sendPacket);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
+bool SocketP::packetReceived(const QByteArray &arr)
 {
     QString packetError;
     QMdmmCore::Packet packet = QMdmmCore::Packet::fromJson(arr, &packetError);
@@ -73,36 +76,36 @@ bool QMdmmSocketPrivate::packetReceived(const QByteArray &arr)
         return false;
     }
 
-    emit q->packetReceived(packet, QMdmmSocket::QPrivateSignal());
+    emit q->packetReceived(packet, Socket::QPrivateSignal());
     return !hasError;
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmSocketPrivate::socketDisconnected()
+void SocketP::socketDisconnected()
 {
-    emit q->socketDisconnected(QMdmmSocket::QPrivateSignal());
+    emit q->socketDisconnected(Socket::QPrivateSignal());
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmSocketPrivate::errorOccurred(const QString &errorString)
+void SocketP::errorOccurred(const QString &errorString)
 {
-    emit q->socketErrorOccurred(errorString, QMdmmSocket::QPrivateSignal());
+    emit q->socketErrorOccurred(errorString, Socket::QPrivateSignal());
 }
 
-QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QTcpSocket *socket, QMdmmSocket *q)
-    : QMdmmSocketPrivate(q)
+SocketP_QTcpSocket::SocketP_QTcpSocket(QTcpSocket *socket, Socket *q)
+    : SocketP(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQTcpSocket::QMdmmSocketPrivateQTcpSocket(QMdmmSocket *q)
-    : QMdmmSocketPrivateQTcpSocket(nullptr, q)
+SocketP_QTcpSocket::SocketP_QTcpSocket(Socket *q)
+    : SocketP_QTcpSocket(nullptr, q)
 {
 }
 
-bool QMdmmSocketPrivateQTcpSocket::connectToHost(const QString &addr)
+bool SocketP_QTcpSocket::connectToHost(const QString &addr)
 {
     if (socket != nullptr)
         socket->deleteLater();
@@ -117,7 +120,7 @@ bool QMdmmSocketPrivateQTcpSocket::connectToHost(const QString &addr)
     return true;
 }
 
-bool QMdmmSocketPrivateQTcpSocket::disconnectFromHost()
+bool SocketP_QTcpSocket::disconnectFromHost()
 {
     if (socket != nullptr) {
         socket->disconnectFromHost();
@@ -127,16 +130,16 @@ bool QMdmmSocketPrivateQTcpSocket::disconnectFromHost()
     return false;
 }
 
-void QMdmmSocketPrivateQTcpSocket::setupSocket()
+void SocketP_QTcpSocket::setupSocket()
 {
-    connect(socket, &QTcpSocket::readyRead, this, &QMdmmSocketPrivateQTcpSocket::readyRead);
-    connect(this, &QMdmmSocketPrivateQTcpSocket::destroyed, socket, &QTcpSocket::deleteLater);
-    connect(socket, &QTcpSocket::errorOccurred, this, &QMdmmSocketPrivateQTcpSocket::errorOccurredTcpSocket);
-    connect(socket, &QTcpSocket::disconnected, this, &QMdmmSocketPrivateQTcpSocket::socketDisconnected);
+    connect(socket, &QTcpSocket::readyRead, this, &SocketP_QTcpSocket::readyRead);
+    connect(this, &SocketP_QTcpSocket::destroyed, socket, &QTcpSocket::deleteLater);
+    connect(socket, &QTcpSocket::errorOccurred, this, &SocketP_QTcpSocket::errorOccurredTcpSocket);
+    connect(socket, &QTcpSocket::disconnected, this, &SocketP_QTcpSocket::socketDisconnected);
     connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmCore::Packet packet)
+void SocketP_QTcpSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
         socket->write(QByteArray(packet).append("\n"));
@@ -144,7 +147,7 @@ void QMdmmSocketPrivateQTcpSocket::sendPacket(QMdmmCore::Packet packet)
     }
 }
 
-void QMdmmSocketPrivateQTcpSocket::readyRead()
+void SocketP_QTcpSocket::readyRead()
 {
     if (socket != nullptr) {
         while (socket->canReadLine()) {
@@ -155,26 +158,26 @@ void QMdmmSocketPrivateQTcpSocket::readyRead()
     }
 }
 
-void QMdmmSocketPrivateQTcpSocket::errorOccurredTcpSocket(QAbstractSocket::SocketError /*e*/)
+void SocketP_QTcpSocket::errorOccurredTcpSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
         errorOccurred(socket->errorString());
 }
 
-QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QLocalSocket *socket, QMdmmSocket *q)
-    : QMdmmSocketPrivate(q)
+SocketP_QLocalSocket::SocketP_QLocalSocket(QLocalSocket *socket, Socket *q)
+    : SocketP(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQLocalSocket::QMdmmSocketPrivateQLocalSocket(QMdmmSocket *q)
-    : QMdmmSocketPrivateQLocalSocket(nullptr, q)
+SocketP_QLocalSocket::SocketP_QLocalSocket(Socket *q)
+    : SocketP_QLocalSocket(nullptr, q)
 {
 }
 
-bool QMdmmSocketPrivateQLocalSocket::connectToHost(const QString &addr)
+bool SocketP_QLocalSocket::connectToHost(const QString &addr)
 {
     if (socket != nullptr)
         socket->deleteLater();
@@ -185,7 +188,7 @@ bool QMdmmSocketPrivateQLocalSocket::connectToHost(const QString &addr)
     return true;
 }
 
-bool QMdmmSocketPrivateQLocalSocket::disconnectFromHost()
+bool SocketP_QLocalSocket::disconnectFromHost()
 {
     if (socket != nullptr) {
         socket->disconnectFromServer();
@@ -195,16 +198,16 @@ bool QMdmmSocketPrivateQLocalSocket::disconnectFromHost()
     return false;
 }
 
-void QMdmmSocketPrivateQLocalSocket::setupSocket()
+void SocketP_QLocalSocket::setupSocket()
 {
-    connect(socket, &QLocalSocket::readyRead, this, &QMdmmSocketPrivateQLocalSocket::readyRead);
-    connect(this, &QMdmmSocketPrivateQLocalSocket::destroyed, socket, &QLocalSocket::deleteLater);
-    connect(socket, &QLocalSocket::errorOccurred, this, &QMdmmSocketPrivateQLocalSocket::errorOccurredLocalSocket);
-    connect(socket, &QLocalSocket::disconnected, this, &QMdmmSocketPrivateQLocalSocket::socketDisconnected);
+    connect(socket, &QLocalSocket::readyRead, this, &SocketP_QLocalSocket::readyRead);
+    connect(this, &SocketP_QLocalSocket::destroyed, socket, &QLocalSocket::deleteLater);
+    connect(socket, &QLocalSocket::errorOccurred, this, &SocketP_QLocalSocket::errorOccurredLocalSocket);
+    connect(socket, &QLocalSocket::disconnected, this, &SocketP_QLocalSocket::socketDisconnected);
     connect(socket, &QLocalSocket::disconnected, socket, &QLocalSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmCore::Packet packet)
+void SocketP_QLocalSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
         socket->write(QByteArray(packet).append("\n"));
@@ -212,7 +215,7 @@ void QMdmmSocketPrivateQLocalSocket::sendPacket(QMdmmCore::Packet packet)
     }
 }
 
-void QMdmmSocketPrivateQLocalSocket::readyRead()
+void SocketP_QLocalSocket::readyRead()
 {
     if (socket != nullptr) {
         while (socket->canReadLine()) {
@@ -223,26 +226,26 @@ void QMdmmSocketPrivateQLocalSocket::readyRead()
     }
 }
 
-void QMdmmSocketPrivateQLocalSocket::errorOccurredLocalSocket(QLocalSocket::LocalSocketError /*e*/)
+void SocketP_QLocalSocket::errorOccurredLocalSocket(QLocalSocket::LocalSocketError /*e*/)
 {
     if (socket != nullptr)
         errorOccurred(socket->errorString());
 }
 
-QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QWebSocket *socket, QMdmmSocket *q)
-    : QMdmmSocketPrivate(q)
+SocketP_QWebSocket::SocketP_QWebSocket(QWebSocket *socket, Socket *q)
+    : SocketP(q)
     , socket(socket)
 {
     if (socket != nullptr)
         setupSocket();
 }
 
-QMdmmSocketPrivateQWebSocket::QMdmmSocketPrivateQWebSocket(QMdmmSocket *q)
-    : QMdmmSocketPrivateQWebSocket(nullptr, q)
+SocketP_QWebSocket::SocketP_QWebSocket(Socket *q)
+    : SocketP_QWebSocket(nullptr, q)
 {
 }
 
-bool QMdmmSocketPrivateQWebSocket::connectToHost(const QString &addr)
+bool SocketP_QWebSocket::connectToHost(const QString &addr)
 {
     if (socket != nullptr)
         socket->deleteLater();
@@ -255,7 +258,7 @@ bool QMdmmSocketPrivateQWebSocket::connectToHost(const QString &addr)
     return true;
 }
 
-bool QMdmmSocketPrivateQWebSocket::disconnectFromHost()
+bool SocketP_QWebSocket::disconnectFromHost()
 {
     if (socket != nullptr) {
         socket->close();
@@ -265,55 +268,57 @@ bool QMdmmSocketPrivateQWebSocket::disconnectFromHost()
     return false;
 }
 
-void QMdmmSocketPrivateQWebSocket::setupSocket()
+void SocketP_QWebSocket::setupSocket()
 {
-    connect(socket, &QWebSocket::binaryMessageReceived, this, &QMdmmSocketPrivateQWebSocket::packetReceived);
-    connect(this, &QMdmmSocketPrivateQWebSocket::destroyed, socket, &QWebSocket::deleteLater);
-    connect(socket, &QWebSocket::errorOccurred, this, &QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket);
-    connect(socket, &QWebSocket::disconnected, this, &QMdmmSocketPrivateQWebSocket::socketDisconnected);
+    connect(socket, &QWebSocket::binaryMessageReceived, this, &SocketP_QWebSocket::packetReceived);
+    connect(this, &SocketP_QWebSocket::destroyed, socket, &QWebSocket::deleteLater);
+    connect(socket, &QWebSocket::errorOccurred, this, &SocketP_QWebSocket::errorOccurredWebSocket);
+    connect(socket, &QWebSocket::disconnected, this, &SocketP_QWebSocket::socketDisconnected);
     connect(socket, &QWebSocket::disconnected, socket, &QWebSocket::deleteLater);
 }
 
-void QMdmmSocketPrivateQWebSocket::sendPacket(QMdmmCore::Packet packet)
+void SocketP_QWebSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr)
         socket->sendBinaryMessage(packet);
 }
 
-void QMdmmSocketPrivateQWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e*/)
+void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
         errorOccurred(socket->errorString());
 }
+} // namespace p
+namespace v0 {
 
-QMdmmSocket::QMdmmSocket(QTcpSocket *t, QObject *parent)
+Socket::Socket(QTcpSocket *t, QObject *parent)
     : QObject(parent)
-    , d(QMdmmSocketPrivateFactory::create(t, this))
+    , d(p::SocketPFactory::create(t, this))
 {
 }
 
-QMdmmSocket::QMdmmSocket(QLocalSocket *l, QObject *parent)
+Socket::Socket(QLocalSocket *l, QObject *parent)
     : QObject(parent)
-    , d(QMdmmSocketPrivateFactory::create(l, this))
+    , d(p::SocketPFactory::create(l, this))
 {
 }
 
-QMdmmSocket::QMdmmSocket(QWebSocket *w, QObject *parent)
+Socket::Socket(QWebSocket *w, QObject *parent)
     : QObject(parent)
-    , d(QMdmmSocketPrivateFactory::create(w, this))
+    , d(p::SocketPFactory::create(w, this))
 {
 }
 
-QMdmmSocket::QMdmmSocket(QObject *parent)
+Socket::Socket(QObject *parent)
     : QObject(parent)
     , d(nullptr)
 {
 }
 
 // No need to delete d.
-QMdmmSocket::~QMdmmSocket() = default;
+Socket::~Socket() = default;
 
-void QMdmmSocket::setHasError(bool hasError)
+void Socket::setHasError(bool hasError)
 {
     if (d != nullptr) {
         d->hasError = hasError;
@@ -322,7 +327,7 @@ void QMdmmSocket::setHasError(bool hasError)
     }
 }
 
-bool QMdmmSocket::hasError() const
+bool Socket::hasError() const
 {
     if (d != nullptr)
         return d->hasError;
@@ -330,9 +335,9 @@ bool QMdmmSocket::hasError() const
     return true;
 }
 
-bool QMdmmSocket::connectToHost(const QString &host)
+bool Socket::connectToHost(const QString &host)
 {
-    Type t = QMdmmSocketPrivate::typeByConnectAddr(host);
+    Type t = p::SocketP::typeByConnectAddr(host);
     if (t == TypeUnknown)
         return false;
 
@@ -341,8 +346,11 @@ bool QMdmmSocket::connectToHost(const QString &host)
         d->deleteLater();
     }
 
-    d = QMdmmSocketPrivateFactory::create(t, this);
+    d = p::SocketPFactory::create(t, this);
     if (d == nullptr)
         return false;
     return d->connectToHost(host);
 }
+
+} // namespace v0
+} // namespace QMdmmNetworking

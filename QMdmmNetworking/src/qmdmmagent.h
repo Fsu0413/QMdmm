@@ -12,21 +12,26 @@
 
 QMDMM_EXPORT_NAME(QMdmmAgent)
 
-class QMdmmSocket;
+namespace QMdmmNetworking {
+namespace p {
+struct AgentP;
+}
 
-struct QMdmmAgentPrivate;
+namespace v0 {
+
+class Socket;
 
 // no "final" here since it is inherited.
 
-class QMDMMNETWORKING_EXPORT QMdmmAgent : public QObject
+class QMDMMNETWORKING_EXPORT Agent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
     Q_PROPERTY(QMdmmCore::Data::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
 
 public:
-    explicit QMdmmAgent(const QString &name, QObject *parent = nullptr);
-    ~QMdmmAgent() override;
+    explicit Agent(const QString &name, QObject *parent = nullptr);
+    ~Agent() override;
 
     // properties
     [[nodiscard]] QString screenName() const;
@@ -40,8 +45,15 @@ signals:
     void stateChanged(QMdmmCore::Data::AgentState, QPrivateSignal);
 
 private:
-    const std::unique_ptr<QMdmmAgentPrivate> d;
-    Q_DISABLE_COPY_MOVE(QMdmmAgent);
+    const std::unique_ptr<p::AgentP> d;
+    Q_DISABLE_COPY_MOVE(Agent);
 };
+
+} // namespace v0
+
+inline namespace v1 {
+using v0::Agent;
+}
+} // namespace QMdmmNetworking
 
 #endif

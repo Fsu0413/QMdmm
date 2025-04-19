@@ -6,6 +6,8 @@
 #include "qmdmmcoreglobal.h"
 
 #include <QSettings>
+#include <QVariant>
+
 #include <memory>
 
 QMDMM_EXPORT_NAME(QMdmmSettings)
@@ -37,8 +39,8 @@ public:
     QSettings::Status saveConfig(Instance instance);
 
     void setValue(const QString &key, const QVariant &value);
-    [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
-    [[nodiscard]] QVariant value(Instance instance, const QString &key, const QVariant &defaultValue = QVariant()) const;
+    [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue = {}) const;
+    [[nodiscard]] QVariant value(Instance instance, const QString &key, const QVariant &defaultValue = {}) const;
 
     void beginGroup(const QString &prefix);
     void endGroup();

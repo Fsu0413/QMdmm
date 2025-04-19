@@ -15,11 +15,11 @@ class Config
 public:
     Config();
 
-    [[nodiscard]] const QMdmmServerConfiguration &serverConfiguration() const;
+    [[nodiscard]] const QMdmmNetworking::ServerConfiguration &serverConfiguration() const;
     [[nodiscard]] const QMdmmCore::LogicConfiguration &logicConfiguration() const;
 
 private:
-    QMdmmServerConfiguration serverConfiguration_;
+    QMdmmNetworking::ServerConfiguration serverConfiguration_;
     QMdmmCore::LogicConfiguration logicConfiguration_;
 
     void read_(QMdmmCore::Settings *setting, QCommandLineParser *parser);

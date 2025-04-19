@@ -10,10 +10,13 @@
 
 #include <random>
 
-const QMdmmClientConfiguration &QMdmmClientConfiguration::defaults()
+namespace QMdmmNetworking {
+namespace v0 {
+
+const ClientConfiguration &ClientConfiguration::defaults()
 {
     // clang-format off
-    static const QMdmmClientConfiguration defaultInstance {
+    static const ClientConfiguration defaultInstance {
         std::make_pair(QStringLiteral("screenName"), QStringLiteral("QMdmm-Fans")),
     };
     // clang-format on
@@ -23,25 +26,25 @@ const QMdmmClientConfiguration &QMdmmClientConfiguration::defaults()
 
 #define CONVERTTOTYPEQSTRING(v) v.toString()
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
-    type QMdmmClientConfiguration::valueName() const                                               \
+    type ClientConfiguration::valueName() const                                                    \
     {                                                                                              \
         if (contains(QStringLiteral(#valueName)))                                                  \
             return convertToType(value(QStringLiteral(#valueName)));                               \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
     }                                                                                              \
-    void QMdmmClientConfiguration::set##ValueName(type value)                                      \
+    void ClientConfiguration::set##ValueName(type value)                                           \
     {                                                                                              \
         insert(QStringLiteral(#valueName), convertToQVariant(value));                              \
     }
 
 #define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
-    type QMdmmClientConfiguration::valueName() const                                                \
+    type ClientConfiguration::valueName() const                                                     \
     {                                                                                               \
         if (contains(QStringLiteral(#valueName)))                                                   \
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void QMdmmClientConfiguration::set##ValueName(const type &value)                                \
+    void ClientConfiguration::set##ValueName(const type &value)                                     \
     {                                                                                               \
         insert(QStringLiteral(#valueName), convertToQVariant(value));                               \
     }
@@ -66,16 +69,16 @@ inline QString generateRandomString()
 }
 } // namespace
 
-QMdmmClient::QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *parent)
+Client::Client(ClientConfiguration clientConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmClientPrivate(std::move(clientConfiguration), this))
+    , d(new p::ClientP(std::move(clientConfiguration), this))
 {
     setObjectName(generateRandomString());
 }
 
-QMdmmClient::~QMdmmClient() = default;
+Client::~Client() = default;
 
-bool QMdmmClient::connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState)
+bool Client::connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState)
 {
     if (d->socket != nullptr) {
         d->socket->disconnect(d);
@@ -83,24 +86,24 @@ bool QMdmmClient::connectToHost(const QString &host, QMdmmCore::Data::AgentState
     }
 
     d->initialState = initialState;
-    d->socket = new QMdmmSocket(d);
-    connect(d->socket, &QMdmmSocket::socketDisconnected, d, &QMdmmClientPrivate::socketDisconnected);
-    connect(d->socket, &QMdmmSocket::socketErrorOccurred, d, &QMdmmClientPrivate::socketErrorOccurred);
-    connect(d->socket, &QMdmmSocket::packetReceived, d, &QMdmmClientPrivate::socketPacketReceived);
+    d->socket = new Socket(d);
+    connect(d->socket, &Socket::socketDisconnected, d, &p::ClientP::socketDisconnected);
+    connect(d->socket, &Socket::socketErrorOccurred, d, &p::ClientP::socketErrorOccurred);
+    connect(d->socket, &Socket::packetReceived, d, &p::ClientP::socketPacketReceived);
     return d->socket->connectToHost(host);
 }
 
-QMdmmCore::Room *QMdmmClient::room()
+QMdmmCore::Room *Client::room()
 {
     return d->room;
 }
 
-const QMdmmCore::Room *QMdmmClient::room() const
+const QMdmmCore::Room *Client::room() const
 {
     return d->room;
 }
 
-void QMdmmClient::notifySpeak(const QString &content)
+void Client::notifySpeak(const QString &content)
 {
     // Although JSON is native UTF-8 we decided to use Base64 anyway.
     // This can make our request / response all in one line.
@@ -108,7 +111,7 @@ void QMdmmClient::notifySpeak(const QString &content)
         emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpeak, QString::fromLatin1(content.toUtf8().toBase64())));
 }
 
-void QMdmmClient::notifyOperate(const void *todo)
+void Client::notifyOperate(const void *todo)
 {
     Q_UNIMPLEMENTED();
     Q_UNUSED(todo);
@@ -117,7 +120,7 @@ void QMdmmClient::notifyOperate(const void *todo)
         emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyOperate, {}));
 }
 
-void QMdmmClient::requestTimeout()
+void Client::requestTimeout()
 {
     // This should be a definitely invalid reply, to trigger default reply logic implemented in server.
     if (d->socket != nullptr && d->currentRequest != QMdmmCore::Protocol::RequestInvalid) {
@@ -126,7 +129,7 @@ void QMdmmClient::requestTimeout()
     }
 }
 
-void QMdmmClient::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth)
+void Client::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestStoneScissorsCloth) {
         d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
@@ -134,7 +137,7 @@ void QMdmmClient::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth st
     }
 }
 
-void QMdmmClient::replyActionOrder(const QList<int> &actionOrder)
+void Client::replyActionOrder(const QList<int> &actionOrder)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestActionOrder) {
         d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
@@ -146,7 +149,7 @@ void QMdmmClient::replyActionOrder(const QList<int> &actionOrder)
     }
 }
 
-void QMdmmClient::replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void Client::replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestAction) {
         d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
@@ -159,7 +162,7 @@ void QMdmmClient::replyAction(QMdmmCore::Data::Action action, const QString &toP
     }
 }
 
-void QMdmmClient::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
+void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
 {
     if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestUpgrade) {
         d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
@@ -170,3 +173,6 @@ void QMdmmClient::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrad
         emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, arr));
     }
 }
+
+} // namespace v0
+} // namespace QMdmmNetworking

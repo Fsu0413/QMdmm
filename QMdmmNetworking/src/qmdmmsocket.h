@@ -16,11 +16,17 @@
 
 QMDMM_EXPORT_NAME(QMdmmSocket)
 
+namespace QMdmmNetworking {
+namespace p {
+
 // QMdmmSocket should be a wrapper for QObject, and do serialize / deserialize work of received data
-class QMdmmSocketPrivate;
+class SocketP;
+} // namespace p
+
+namespace v0 {
 
 // For Server: This QMdmmSocket should be created when socket is in Open state!
-class QMDMMNETWORKING_EXPORT QMdmmSocket : public QObject
+class QMDMMNETWORKING_EXPORT Socket : public QObject
 {
     Q_OBJECT
 
@@ -34,13 +40,13 @@ public:
     };
 
     // ctor for Server: pass an already-open socket here
-    explicit QMdmmSocket(QTcpSocket *t, QObject *parent = nullptr);
-    explicit QMdmmSocket(QLocalSocket *l, QObject *parent = nullptr);
-    explicit QMdmmSocket(QWebSocket *w, QObject *parent = nullptr);
+    explicit Socket(QTcpSocket *t, QObject *parent = nullptr);
+    explicit Socket(QLocalSocket *l, QObject *parent = nullptr);
+    explicit Socket(QWebSocket *w, QObject *parent = nullptr);
 
     // ctor for Client: pass type here
-    explicit QMdmmSocket(QObject *parent = nullptr);
-    ~QMdmmSocket() override;
+    explicit Socket(QObject *parent = nullptr);
+    ~Socket() override;
 
     void setHasError(bool hasError);
     [[nodiscard]] bool hasError() const;
@@ -55,13 +61,20 @@ signals:
     void socketDisconnected(QPrivateSignal);
 
 private:
-    friend class QMdmmSocketPrivate;
+    friend class p::SocketP;
     // non-const d-ptr.
-    // QMdmmSocketPrivate is pv class and its internal implementation varies by socket type.
+    // SocketP is pv class and its internal implementation varies by socket type.
     // function connectToHost alters this d-ptr with proper implementation.
-    // QMdmmSocketPrivate is QObject. QPointer can't be used since it is incomplete here
-    QMdmmSocketPrivate *d;
-    Q_DISABLE_COPY_MOVE(QMdmmSocket);
+    // SocketP is QObject. QPointer can't be used since it is incomplete here
+    p::SocketP *d;
+    Q_DISABLE_COPY_MOVE(Socket);
 };
+} // namespace v0
+
+inline namespace v1 {
+using v0::Socket;
+}
+
+} // namespace QMdmmNetworking
 
 #endif

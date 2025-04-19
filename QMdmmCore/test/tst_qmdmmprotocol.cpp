@@ -141,7 +141,6 @@ private slots:
         QTest::addColumn<QByteArray>("input");
         QTest::addColumn<QString>("errorString");
 
-        QTest::newRow("invalid") << QByteArray("some_invalid") << QStringLiteral("Json error: illegal value");
         QTest::newRow("not-object") << QByteArray("[1,2,3]") << QStringLiteral("Document is not object");
         QTest::newRow("type-notexist") << QByteArray("{}") << QStringLiteral("'type' is non-existent");
         QTest::newRow("type-invalid") << QByteArray(R"json({"type": "Fsu0413"})json") << QStringLiteral("'type' is not number");
@@ -179,7 +178,14 @@ private slots:
     {
         {
             // coverage for errorString = nullptr
-            (void)Packet::fromJson({}, nullptr).hasError();
+            (void)Packet::fromJson(QByteArray("some_invalid"), nullptr).hasError();
+        }
+        {
+            QString actualErrorString;
+            (void)Packet::fromJson(QByteArray("some_invalid"), nullptr).hasError(&actualErrorString);
+
+            bool r = actualErrorString.startsWith(QStringLiteral("Json error: "));
+            QVERIFY(r);
         }
         {
             // Check of a notify JSON

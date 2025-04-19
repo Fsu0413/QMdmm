@@ -8,54 +8,57 @@
 #include <QRandomGenerator>
 #include <utility>
 
-QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &QMdmmServerAgentPrivate::notifySpeak),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &QMdmmServerAgentPrivate::notifyOperate),
+namespace QMdmmNetworking {
+namespace p {
+
+QHash<QMdmmCore::Protocol::NotifyId, void (ServerAgentP::*)(const QJsonValue &)> ServerAgentP::notifyCallback {
+    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerAgentP::notifySpeak),
+    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerAgentP::notifyOperate),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> QMdmmServerAgentPrivate::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::replyStoneScissorsCloth),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &QMdmmServerAgentPrivate::replyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &QMdmmServerAgentPrivate::replyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &QMdmmServerAgentPrivate::replyUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)(const QJsonValue &)> ServerAgentP::replyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerAgentP::replyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerAgentP::replyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerAgentP::replyAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerAgentP::replyUpgrade),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)()> QMdmmServerAgentPrivate::defaultReplyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &QMdmmServerAgentPrivate::defaultReplyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &QMdmmServerAgentPrivate::defaultReplyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &QMdmmServerAgentPrivate::defaultReplyUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)()> ServerAgentP::defaultReplyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerAgentP::defaultReplyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerAgentP::defaultReplyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerAgentP::defaultReplyAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerAgentP::defaultReplyUpgrade),
 };
 
-int QMdmmServerAgentPrivate::requestTimeoutGracePeriod = 60;
+int ServerAgentP::requestTimeoutGracePeriod = 60;
 
-QMdmmServerAgentPrivate::QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent)
-    : QMdmmAgent(name, parent)
+ServerAgentP::ServerAgentP(const QString &name, LogicRunnerP *parent)
+    : Agent(name, parent)
     , p(parent)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
     requestTimer->setInterval(p->conf.requestTimeout() + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
-    connect(requestTimer, &QTimer::timeout, this, &QMdmmServerAgentPrivate::requestTimeout);
+    connect(requestTimer, &QTimer::timeout, this, &ServerAgentP::requestTimeout);
 }
 
-QMdmmServerAgentPrivate::~QMdmmServerAgentPrivate() = default;
+ServerAgentP::~ServerAgentP() = default;
 
-void QMdmmServerAgentPrivate::setSocket(QMdmmSocket *_socket)
+void ServerAgentP::setSocket(Socket *_socket)
 {
     if (socket != nullptr)
         socket->deleteLater();
 
     socket = _socket;
     if (socket != nullptr) {
-        connect(socket, &QMdmmSocket::packetReceived, this, &QMdmmServerAgentPrivate::packetReceived);
-        connect(socket, &QMdmmSocket::socketDisconnected, this, &QMdmmServerAgentPrivate::socketDisconnected);
-        connect(this, &QMdmmServerAgentPrivate::sendPacket, socket, &QMdmmSocket::sendPacket);
+        connect(socket, &Socket::packetReceived, this, &ServerAgentP::packetReceived);
+        connect(socket, &Socket::socketDisconnected, this, &ServerAgentP::socketDisconnected);
+        connect(this, &ServerAgentP::sendPacket, socket, &Socket::sendPacket);
     }
 }
 
-void QMdmmServerAgentPrivate::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
+void ServerAgentP::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
 {
     currentRequest = requestId;
     currentRequestValue = value;
@@ -68,11 +71,11 @@ void QMdmmServerAgentPrivate::addRequest(QMdmmCore::Protocol::RequestId requestI
         // reasons are:
         // 1. introducing time-consuming task in the request function is bad.
         // 2. reply should be called asynchronous since this is the designed way for it
-        QTimer::singleShot(0, Qt::CoarseTimer, this, &QMdmmServerAgentPrivate::executeDefaultReply);
+        QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerAgentP::executeDefaultReply);
     }
 }
 
-void QMdmmServerAgentPrivate::replyStoneScissorsCloth(const QJsonValue &value)
+void ServerAgentP::replyStoneScissorsCloth(const QJsonValue &value)
 {
 #define DEFAULTREPLY                      \
     do {                                  \
@@ -98,7 +101,7 @@ void QMdmmServerAgentPrivate::replyStoneScissorsCloth(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void QMdmmServerAgentPrivate::replyActionOrder(const QJsonValue &value)
+void ServerAgentP::replyActionOrder(const QJsonValue &value)
 {
 #define DEFAULTREPLY               \
     do {                           \
@@ -122,7 +125,7 @@ void QMdmmServerAgentPrivate::replyActionOrder(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void QMdmmServerAgentPrivate::replyAction(const QJsonValue &value)
+void ServerAgentP::replyAction(const QJsonValue &value)
 {
 #define DEFAULTREPLY          \
     do {                      \
@@ -192,7 +195,7 @@ void QMdmmServerAgentPrivate::replyAction(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void QMdmmServerAgentPrivate::replyUpgrade(const QJsonValue &value)
+void ServerAgentP::replyUpgrade(const QJsonValue &value)
 {
 #define DEFAULTREPLY           \
     do {                       \
@@ -225,12 +228,12 @@ void QMdmmServerAgentPrivate::replyUpgrade(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void QMdmmServerAgentPrivate::defaultReplyStoneScissorsCloth()
+void ServerAgentP::defaultReplyStoneScissorsCloth()
 {
     emit p->sscReply(objectName(), static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
 }
 
-void QMdmmServerAgentPrivate::defaultReplyActionOrder()
+void ServerAgentP::defaultReplyActionOrder()
 {
     QJsonObject ob = currentRequestValue.toObject();
     QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
@@ -243,12 +246,12 @@ void QMdmmServerAgentPrivate::defaultReplyActionOrder()
     emit p->actionOrderReply(objectName(), ao);
 }
 
-void QMdmmServerAgentPrivate::defaultReplyAction()
+void ServerAgentP::defaultReplyAction()
 {
     emit p->actionReply(objectName(), QMdmmCore::Data::DoNothing, {}, 0);
 }
 
-void QMdmmServerAgentPrivate::defaultReplyUpgrade()
+void ServerAgentP::defaultReplyUpgrade()
 {
     int times = currentRequestValue.toInt(1);
     QList<QMdmmCore::Data::UpgradeItem> ups;
@@ -258,14 +261,14 @@ void QMdmmServerAgentPrivate::defaultReplyUpgrade()
     emit p->upgradeReply(objectName(), ups);
 }
 
-void QMdmmServerAgentPrivate::packetReceived(const QMdmmCore::Packet &packet)
+void ServerAgentP::packetReceived(const QMdmmCore::Packet &packet)
 {
     if (socket == nullptr)
         return;
 
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToAgentMask) != 0) {
-            void (QMdmmServerAgentPrivate::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ServerAgentP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -275,7 +278,7 @@ void QMdmmServerAgentPrivate::packetReceived(const QMdmmCore::Packet &packet)
         if (currentRequest == packet.requestId()) {
             requestTimer->stop();
             currentRequest = QMdmmCore::Protocol::RequestInvalid;
-            void (QMdmmServerAgentPrivate::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+            void (ServerAgentP::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -284,7 +287,7 @@ void QMdmmServerAgentPrivate::packetReceived(const QMdmmCore::Packet &packet)
     }
 }
 
-void QMdmmServerAgentPrivate::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
+void ServerAgentP::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
@@ -292,7 +295,7 @@ void QMdmmServerAgentPrivate::requestStoneScissorsCloth(const QStringList &playe
     addRequest(QMdmmCore::Protocol::RequestStoneScissorsCloth, ob);
 }
 
-void QMdmmServerAgentPrivate::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void ServerAgentP::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     QJsonObject ob;
     QJsonArray arr;
@@ -304,22 +307,22 @@ void QMdmmServerAgentPrivate::requestActionOrder(const QList<int> &remainedOrder
     addRequest(QMdmmCore::Protocol::RequestActionOrder, ob);
 }
 
-void QMdmmServerAgentPrivate::requestAction(int currentOrder)
+void ServerAgentP::requestAction(int currentOrder)
 {
     addRequest(QMdmmCore::Protocol::RequestAction, currentOrder);
 }
 
-void QMdmmServerAgentPrivate::requestUpgrade(int remainingTimes)
+void ServerAgentP::requestUpgrade(int remainingTimes)
 {
     addRequest(QMdmmCore::Protocol::RequestUpgrade, remainingTimes);
 }
 
-void QMdmmServerAgentPrivate::notifyLogicConfiguration()
+void ServerAgentP::notifyLogicConfiguration()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, p->conf));
 }
 
-void QMdmmServerAgentPrivate::notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
+void ServerAgentP::notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -327,7 +330,7 @@ void QMdmmServerAgentPrivate::notifyAgentStateChanged(const QString &playerName,
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
+void ServerAgentP::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -336,24 +339,24 @@ void QMdmmServerAgentPrivate::notifyPlayerAdded(const QString &playerName, const
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyPlayerRemoved(const QString &playerName)
+void ServerAgentP::notifyPlayerRemoved(const QString &playerName)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerRemoved, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyGameStart()
+void ServerAgentP::notifyGameStart()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameStart, {}));
 }
 
-void QMdmmServerAgentPrivate::notifyRoundStart()
+void ServerAgentP::notifyRoundStart()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void QMdmmServerAgentPrivate::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     QJsonObject ob;
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
@@ -361,7 +364,7 @@ void QMdmmServerAgentPrivate::notifyStoneScissorsCloth(const QHash<QString, QMdm
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyActionOrder(const QHash<int, QString> &result)
+void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result)
 {
     QJsonArray arr;
     for (int i = 1; i < result.count(); ++i)
@@ -369,7 +372,7 @@ void QMdmmServerAgentPrivate::notifyActionOrder(const QHash<int, QString> &resul
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyActionOrder, arr));
 }
 
-void QMdmmServerAgentPrivate::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -397,12 +400,12 @@ void QMdmmServerAgentPrivate::notifyAction(const QString &playerName, QMdmmCore:
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAction, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyRoundOver()
+void ServerAgentP::notifyRoundOver()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void QMdmmServerAgentPrivate::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     QJsonObject ob;
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
@@ -414,12 +417,12 @@ void QMdmmServerAgentPrivate::notifyUpgrade(const QHash<QString, QList<QMdmmCore
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyUpgrade, ob));
 }
 
-void QMdmmServerAgentPrivate::notifyGameOver(const QStringList &playerNames)
+void ServerAgentP::notifyGameOver(const QStringList &playerNames)
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
 }
 
-void QMdmmServerAgentPrivate::notifySpoken(const QString &playerName, const QString &content)
+void ServerAgentP::notifySpoken(const QString &playerName, const QString &content)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -427,42 +430,42 @@ void QMdmmServerAgentPrivate::notifySpoken(const QString &playerName, const QStr
     QMdmmCore::Packet p(QMdmmCore::Protocol::NotifySpoken, ob);
 }
 
-void QMdmmServerAgentPrivate::notifyOperated(const QString &playerName, const QJsonValue &todo)
+void ServerAgentP::notifyOperated(const QString &playerName, const QJsonValue &todo)
 {
     Q_UNIMPLEMENTED();
     Q_UNUSED(playerName);
     Q_UNUSED(todo);
 }
 
-void QMdmmServerAgentPrivate::requestTimeout()
+void ServerAgentP::requestTimeout()
 {
     if (socket != nullptr)
         socket->setHasError(true);
     executeDefaultReply();
 }
 
-void QMdmmServerAgentPrivate::executeDefaultReply()
+void ServerAgentP::executeDefaultReply()
 {
     if (currentRequest != QMdmmCore::Protocol::RequestInvalid) {
-        void (QMdmmServerAgentPrivate::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
+        void (ServerAgentP::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         if (call != nullptr)
             (this->*call)();
     }
 }
 
-QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmCore::LogicConfiguration logicConfiguration, QMdmmLogicRunner *q)
+LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, LogicRunner *q)
     : QObject(q)
     , q(q)
     , conf(std::move(logicConfiguration))
 {
     logicThread = new QThread(this);
-    logic = new QMdmmLogic(conf);
+    logic = new QMdmmCore::Logic(conf);
     logic->moveToThread(logicThread);
-    connect(logicThread, &QThread::finished, logic, &QMdmmLogic::deleteLater);
+    connect(logicThread, &QThread::finished, logic, &QMdmmCore::Logic::deleteLater);
     logicThread->start();
 
-#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &QMdmmLogicRunnerPrivate::signalName, logic, &QMdmmLogic::signalName, Qt::QueuedConnection)
+#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &LogicRunnerP::signalName, logic, &QMdmmCore::Logic::signalName, Qt::QueuedConnection)
 
     CONNECTRUNNERTOLOGIC(addPlayer);
     CONNECTRUNNERTOLOGIC(removePlayer);
@@ -474,7 +477,7 @@ QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmCore::LogicConfiguration l
 
 #undef CONNECTRUNNERTOLOGIC
 
-#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmLogic::signalName, this, &QMdmmLogicRunnerPrivate::signalName, Qt::QueuedConnection)
+#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection)
 
     CONNECTLOGICTORUNNER(requestSscForAction);
     CONNECTLOGICTORUNNER(sscResult);
@@ -489,42 +492,42 @@ QMdmmLogicRunnerPrivate::QMdmmLogicRunnerPrivate(QMdmmCore::LogicConfiguration l
 #undef CONNECTLOGICTORUNNER
 }
 
-void QMdmmLogicRunnerPrivate::agentStateChanged(const QMdmmCore::Data::AgentState &state)
+void LogicRunnerP::agentStateChanged(const QMdmmCore::Data::AgentState &state)
 {
-    QMdmmServerAgentPrivate *changedAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    ServerAgentP *changedAgent = qobject_cast<ServerAgentP *>(sender());
     if (changedAgent == nullptr)
         return;
 
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyAgentStateChanged(changedAgent->objectName(), state);
 }
 
-void QMdmmLogicRunnerPrivate::agentSpoken(const QJsonValue &value)
+void LogicRunnerP::agentSpoken(const QJsonValue &value)
 {
-    QMdmmServerAgentPrivate *speakAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    ServerAgentP *speakAgent = qobject_cast<ServerAgentP *>(sender());
     if (speakAgent == nullptr)
         return;
 
     QString s = value.toString();
     if (!s.isEmpty()) {
-        foreach (QMdmmServerAgentPrivate *agent, agents)
+        foreach (ServerAgentP *agent, agents)
             agent->notifySpoken(speakAgent->objectName(), s);
     }
 }
 
-void QMdmmLogicRunnerPrivate::agentOperated(const QJsonValue &value)
+void LogicRunnerP::agentOperated(const QJsonValue &value)
 {
-    QMdmmServerAgentPrivate *operateAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    ServerAgentP *operateAgent = qobject_cast<ServerAgentP *>(sender());
     if (operateAgent == nullptr)
         return;
 
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyOperated(operateAgent->objectName(), value);
 }
 
-void QMdmmLogicRunnerPrivate::socketDisconnected()
+void LogicRunnerP::socketDisconnected()
 {
-    QMdmmServerAgentPrivate *disconnectedAgent = qobject_cast<QMdmmServerAgentPrivate *>(sender());
+    ServerAgentP *disconnectedAgent = qobject_cast<ServerAgentP *>(sender());
     if (disconnectedAgent == nullptr)
         return;
 
@@ -543,7 +546,7 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
 
         // if all agents are disconnected, terminate the game.
         bool allDisconnected = true;
-        foreach (QMdmmServerAgentPrivate *agent, agents) {
+        foreach (ServerAgentP *agent, agents) {
             if (agent->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
                 allDisconnected = false;
                 break;
@@ -551,7 +554,7 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
         }
 
         if (allDisconnected) {
-            emit q->gameOver(QMdmmLogicRunner::QPrivateSignal());
+            emit q->gameOver(LogicRunner::QPrivateSignal());
             return;
         }
 
@@ -561,11 +564,11 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
     } else {
         // case 2: room is not full, so game hasn't started
         // Agent should be deleted.
-        QMdmmServerAgentPrivate *taken = agents.take(objectName());
+        ServerAgentP *taken = agents.take(objectName());
         Q_UNUSED(taken);
         Q_ASSERT(taken == disconnectedAgent);
 
-        foreach (QMdmmServerAgentPrivate *agent, agents)
+        foreach (ServerAgentP *agent, agents)
             agent->notifyPlayerRemoved(disconnectedAgent->objectName());
         emit removePlayer(disconnectedAgent->objectName());
 
@@ -573,98 +576,100 @@ void QMdmmLogicRunnerPrivate::socketDisconnected()
     }
 }
 
-QMdmmLogicRunnerPrivate::~QMdmmLogicRunnerPrivate() = default;
+LogicRunnerP::~LogicRunnerP() = default;
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::requestSscForAction(const QStringList &playerNames)
+void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 {
     foreach (const QString &playerName, playerNames) {
-        QMdmmServerAgentPrivate *agent = agents.value(playerName);
+        ServerAgentP *agent = agents.value(playerName);
         agent->requestStoneScissorsCloth(playerNames, 0);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyStoneScissorsCloth(replies);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections)
+void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections)
 {
-    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    ServerAgentP *agent = agents.value(playerName);
     agent->requestActionOrder(availableOrders, maximumOrderNum, selections);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::actionOrderResult(const QHash<int, QString> &result)
+void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyActionOrder(result);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
+void LogicRunnerP::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
 {
     foreach (const QString &playerName, playerNames) {
-        QMdmmServerAgentPrivate *agent = agents.value(playerName);
+        ServerAgentP *agent = agents.value(playerName);
         agent->requestStoneScissorsCloth(playerNames, strivedOrder);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::requestAction(const QString &playerName, int actionOrder)
+void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 {
-    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    ServerAgentP *agent = agents.value(playerName);
     agent->requestAction(actionOrder);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyAction(playerName, action, toPlayer, toPlace);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::requestUpgrade(const QString &playerName, int upgradePoint)
+void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 {
-    QMdmmServerAgentPrivate *agent = agents.value(playerName);
+    ServerAgentP *agent = agents.value(playerName);
     agent->requestUpgrade(upgradePoint);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void QMdmmLogicRunnerPrivate::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
-    foreach (QMdmmServerAgentPrivate *agent, agents)
+    foreach (ServerAgentP *agent, agents)
         agent->notifyUpgrade(upgrades);
 }
+} // namespace p
 
-QMdmmLogicRunner::QMdmmLogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
+namespace v0 {
+LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(new QMdmmLogicRunnerPrivate(logicConfiguration, this))
+    , d(new p::LogicRunnerP(logicConfiguration, this))
 {
 }
 
-QMdmmLogicRunner::~QMdmmLogicRunner() = default;
+LogicRunner::~LogicRunner() = default;
 
-QMdmmAgent *QMdmmLogicRunner::addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, QMdmmSocket *socket)
+Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket)
 {
     if (d->agents.contains(playerName))
         return nullptr;
 
-    QMdmmServerAgentPrivate *addedAgent = new QMdmmServerAgentPrivate(playerName, d);
+    p::ServerAgentP *addedAgent = new p::ServerAgentP(playerName, d);
     addedAgent->setScreenName(screenName);
     addedAgent->setState(agentState);
 
     addedAgent->setSocket(socket);
     d->agents.insert(playerName, addedAgent);
 
-    connect(addedAgent, &QMdmmServerAgentPrivate::stateChanged, d, &QMdmmLogicRunnerPrivate::agentStateChanged);
-    connect(addedAgent, &QMdmmServerAgentPrivate::notifySpeak, d, &QMdmmLogicRunnerPrivate::agentSpoken);
-    connect(addedAgent, &QMdmmServerAgentPrivate::notifyOperate, d, &QMdmmLogicRunnerPrivate::agentOperated);
+    connect(addedAgent, &p::ServerAgentP::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
+    connect(addedAgent, &p::ServerAgentP::notifySpeak, d, &p::LogicRunnerP::agentSpoken);
+    connect(addedAgent, &p::ServerAgentP::notifyOperate, d, &p::LogicRunnerP::agentOperated);
 
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data
@@ -673,17 +678,17 @@ QMdmmAgent *QMdmmLogicRunner::addSocket(const QString &playerName, const QString
 
     emit d->addPlayer(playerName);
 
-    foreach (QMdmmServerAgentPrivate *agent, d->agents)
+    foreach (p::ServerAgentP *agent, d->agents)
         agent->notifyPlayerAdded(playerName, screenName, agentState);
-    foreach (QMdmmServerAgentPrivate *agent, d->agents) {
+    foreach (p::ServerAgentP *agent, d->agents) {
         if (agent != addedAgent)
             addedAgent->notifyPlayerAdded(playerName, screenName, agentState);
     }
 
     if (full()) {
-        foreach (QMdmmServerAgentPrivate *agent, d->agents)
+        foreach (p::ServerAgentP *agent, d->agents)
             agent->notifyGameStart();
-        foreach (QMdmmServerAgentPrivate *agent, d->agents)
+        foreach (p::ServerAgentP *agent, d->agents)
             agent->notifyRoundStart();
         emit d->roundStart();
     }
@@ -691,17 +696,19 @@ QMdmmAgent *QMdmmLogicRunner::addSocket(const QString &playerName, const QString
     return addedAgent;
 }
 
-QMdmmAgent *QMdmmLogicRunner::agent(const QString &playerName)
+Agent *LogicRunner::agent(const QString &playerName)
 {
     return d->agents.value(playerName, nullptr);
 }
 
-const QMdmmAgent *QMdmmLogicRunner::agent(const QString &playerName) const
+const Agent *LogicRunner::agent(const QString &playerName) const
 {
     return d->agents.value(playerName, nullptr);
 }
 
-bool QMdmmLogicRunner::full() const
+bool LogicRunner::full() const
 {
     return d->agents.count() >= d->conf.playerNumPerRoom();
 }
+} // namespace v0
+} // namespace QMdmmNetworking

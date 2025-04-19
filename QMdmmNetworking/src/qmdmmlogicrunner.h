@@ -8,33 +8,38 @@
 #include <QMdmmLogicConfiguration>
 #include <QMdmmProtocol>
 
-class QMdmmAgent;
-class QMdmmSocket;
-
 QMDMM_EXPORT_NAME(QMdmmLogicRunner)
 
-// for a simpler logic, I decided to make QMdmmLogicRunner handle only one complete game.
+namespace QMdmmNetworking {
+
+namespace p {
+class LogicRunnerP;
+}
+
+namespace v0 {
+class Agent;
+class Socket;
+
+// for a simpler logic, I decided to make LogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
-// If a player / agent exits mid-game, current practice would be to destroy this QMdmmLogicRunner and its children and disconnect all the agents
+// If a player / agent exits mid-game, current practice would be to destroy this LogicRunner and its children and disconnect all the agents
 // Players who wants to continue playing need rejoin.
 
-class QMdmmLogicRunnerPrivate;
-
 // TODO: Implement Lobby when other contents are ready
-class QMDMMNETWORKING_EXPORT QMdmmLogicRunner final : public QObject
+class QMDMMNETWORKING_EXPORT LogicRunner final : public QObject
 {
     Q_OBJECT
 
 public:
-    // Constructor and destructor: need to be called in Server thread (so that the QMdmmLogicRunner instance is on Server thread)
-    explicit QMdmmLogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
-    ~QMdmmLogicRunner() override;
+    // Constructor and destructor: need to be called in Server thread (so that the LogicRunner instance is on Server thread)
+    explicit LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    ~LogicRunner() override;
 
     // Functions to be called in Server thread
-    QMdmmAgent *addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, QMdmmSocket *socket);
+    Agent *addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket);
 
-    QMdmmAgent *agent(const QString &playerName);
-    [[nodiscard]] const QMdmmAgent *agent(const QString &playerName) const;
+    Agent *agent(const QString &playerName);
+    [[nodiscard]] const Agent *agent(const QString &playerName) const;
 
     [[nodiscard]] bool full() const;
 
@@ -42,10 +47,16 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void gameOver(QPrivateSignal);
 
 private:
-    friend class QMdmmLogicRunnerPrivate;
-    // QMdmmLogicRunnerPrivate is QObject. QPointer can't be used since it is incomplete here
-    QMdmmLogicRunnerPrivate *const d;
-    Q_DISABLE_COPY_MOVE(QMdmmLogicRunner);
+    friend class p::LogicRunnerP;
+    // LogicRunnerP is QObject. QPointer can't be used since it is incomplete here
+    p::LogicRunnerP *const d;
+    Q_DISABLE_COPY_MOVE(LogicRunner);
 };
+} // namespace v0
 
+inline namespace v1 {
+using v0::LogicRunner;
+}
+
+} // namespace QMdmmNetworking
 #endif // QMDMMLOGICRUNNER_H

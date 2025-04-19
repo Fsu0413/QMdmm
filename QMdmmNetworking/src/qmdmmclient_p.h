@@ -18,23 +18,25 @@
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
-namespace QMdmmProtocol = QMdmmCore::Protocol;
+namespace QMdmmNetworking {
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmClientPrivate final : public QObject
+namespace p {
+
+class QMDMMNETWORKING_PRIVATE_EXPORT ClientP final : public QObject
 {
     Q_OBJECT
 
 public:
-    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmClientPrivate::*)(const QJsonValue &)> requestCallback;
-    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmClientPrivate::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> requestCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (ClientP::*)(const QJsonValue &)> notifyCallback;
 
-    QMdmmClientPrivate(QMdmmClientConfiguration clientConfiguration, QMdmmClient *q);
+    ClientP(ClientConfiguration clientConfiguration, Client *q);
 
-    QMdmmClient *q;
-    QMdmmClientConfiguration clientConfiguration;
-    QPointer<QMdmmSocket> socket;
+    Client *q;
+    ClientConfiguration clientConfiguration;
+    QPointer<Socket> socket;
     QMdmmCore::Room *room;
-    QHash<QString, QMdmmAgent *> agents;
+    QHash<QString, Agent *> agents;
 
     QTimer *heartbeatTimer;
 
@@ -73,6 +75,8 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     void heartbeatTimeout();
 };
+} // namespace p
+} // namespace QMdmmNetworking
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 

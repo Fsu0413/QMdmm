@@ -3,21 +3,24 @@
 #include "qmdmmagent.h"
 #include "qmdmmagent_p.h"
 
-QMdmmAgent::QMdmmAgent(const QString &name, QObject *parent)
+namespace QMdmmNetworking {
+namespace v0 {
+
+Agent::Agent(const QString &name, QObject *parent)
     : QObject(parent)
-    , d(std::make_unique<QMdmmAgentPrivate>())
+    , d(std::make_unique<p::AgentP>())
 {
     setObjectName(name);
 }
 
-QMdmmAgent::~QMdmmAgent() = default;
+Agent::~Agent() = default;
 
-QString QMdmmAgent::screenName() const
+QString Agent::screenName() const
 {
     return d->screenName;
 }
 
-void QMdmmAgent::setScreenName(const QString &name)
+void Agent::setScreenName(const QString &name)
 {
     if (name != screenName()) {
         d->screenName = name;
@@ -25,15 +28,17 @@ void QMdmmAgent::setScreenName(const QString &name)
     }
 }
 
-QMdmmCore::Data::AgentState QMdmmAgent::state() const
+QMdmmCore::Data::AgentState Agent::state() const
 {
     return d->state;
 }
 
-void QMdmmAgent::setState(const QMdmmCore::Data::AgentState &state)
+void Agent::setState(const QMdmmCore::Data::AgentState &state)
 {
     if (d->state != state) {
         d->state = state;
         emit stateChanged(state, QPrivateSignal());
     }
 }
+} // namespace v0
+} // namespace QMdmmNetworking

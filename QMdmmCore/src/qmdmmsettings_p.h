@@ -16,7 +16,7 @@ struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
     virtual ~SettingsWrapperP();
 
     virtual void setValue(const QString &key, const QVariant &value) = 0;
-    [[nodiscard]] virtual QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const = 0;
+    [[nodiscard]] virtual QVariant value(const QString &key, const QVariant &defaultValue = {}) const = 0;
 
     virtual void beginGroup(const QString &prefix) = 0;
     virtual void endGroup() = 0;
@@ -29,9 +29,9 @@ struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
 {
     QSettings settings;
 
-    explicit QSettingsWrapperP(const QString &organization, const QString &application = QString());
-    QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application = QString());
-    QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = QString());
+    explicit QSettingsWrapperP(const QString &organization, const QString &application = {});
+    QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application = {});
+    QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = {});
     QSettingsWrapperP(const QString &fileName, QSettings::Format format);
     QSettingsWrapperP();
     explicit QSettingsWrapperP(QSettings::Scope scope);

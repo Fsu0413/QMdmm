@@ -12,13 +12,20 @@
 QMDMM_EXPORT_NAME(QMdmmClientConfiguration)
 QMDMM_EXPORT_NAME(QMdmmClient)
 
-struct QMDMMNETWORKING_EXPORT QMdmmClientConfiguration final : public QVariantMap
+namespace QMdmmNetworking {
+namespace p {
+class ClientP;
+}
+
+namespace v0 {
+
+struct QMDMMNETWORKING_EXPORT ClientConfiguration final : public QVariantMap
 {
     Q_GADGET
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName DESIGNABLE false FINAL)
 
 public:
-    static QMDMMNETWORKING_EXPORT const QMdmmClientConfiguration &defaults();
+    static QMDMMNETWORKING_EXPORT const ClientConfiguration &defaults();
 
 #ifdef Q_MOC_RUN
     Q_INVOKABLE QMdmmClientConfiguration();
@@ -45,15 +52,13 @@ public:
 #undef DEFINE_CONFIGURATION
 };
 
-class QMdmmClientPrivate;
-
-class QMDMMNETWORKING_EXPORT QMdmmClient final : public QObject
+class QMDMMNETWORKING_EXPORT Client final : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QMdmmClient(QMdmmClientConfiguration clientConfiguration, QObject *parent = nullptr);
-    ~QMdmmClient() override;
+    explicit Client(ClientConfiguration clientConfiguration, QObject *parent = nullptr);
+    ~Client() override;
 
     bool connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState);
 
@@ -95,10 +100,17 @@ signals:
     void notifyOperated(QPrivateSignal);
 
 private:
-    friend class QMdmmClientPrivate;
-    // QMdmmClientPrivate is QObject. QPointer can't be used since it is incomplete here
-    QMdmmClientPrivate *const d;
-    Q_DISABLE_COPY_MOVE(QMdmmClient);
+    friend class p::ClientP;
+    // ClientP is QObject. QPointer can't be used since it is incomplete here
+    p::ClientP *const d;
+    Q_DISABLE_COPY_MOVE(Client);
 };
+} // namespace v0
+
+inline namespace v1 {
+using v0::Client;
+using v0::ClientConfiguration;
+} // namespace v1
+} // namespace QMdmmNetworking
 
 #endif

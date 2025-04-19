@@ -15,29 +15,29 @@
 #include <QThread>
 #include <QTimer>
 
-namespace QMdmmProtocol = QMdmmCore::Protocol;
-using QMdmmLogic = QMdmmCore::Logic;
-
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmServerAgentPrivate : public QMdmmAgent
+namespace QMdmmNetworking {
+namespace p {
+
+class QMDMMNETWORKING_PRIVATE_EXPORT ServerAgentP : public Agent
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> notifyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)(const QJsonValue &)> replyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (QMdmmServerAgentPrivate::*)()> defaultReplyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerAgentP::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)(const QJsonValue &)> replyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)()> defaultReplyCallback;
 
     static int requestTimeoutGracePeriod;
 
 public:
-    QMdmmServerAgentPrivate(const QString &name, QMdmmLogicRunnerPrivate *parent);
-    ~QMdmmServerAgentPrivate() override;
+    ServerAgentP(const QString &name, LogicRunnerP *parent);
+    ~ServerAgentP() override;
 
-    void setSocket(QMdmmSocket *_socket);
+    void setSocket(Socket *_socket);
 
-    QPointer<QMdmmSocket> socket;
-    QMdmmLogicRunnerPrivate *p;
+    QPointer<Socket> socket;
+    LogicRunnerP *p;
 
     QMdmmCore::Protocol::RequestId currentRequest;
     QJsonValue currentRequestValue;
@@ -92,20 +92,20 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void executeDefaultReply();
 };
 
-class QMDMMNETWORKING_PRIVATE_EXPORT QMdmmLogicRunnerPrivate : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT LogicRunnerP : public QObject
 {
     Q_OBJECT
 
 public:
-    QMdmmLogicRunnerPrivate(QMdmmCore::LogicConfiguration logicConfiguration, QMdmmLogicRunner *q);
-    ~QMdmmLogicRunnerPrivate() override;
+    LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, LogicRunner *q);
+    ~LogicRunnerP() override;
 
-    QMdmmLogicRunner *q;
+    LogicRunner *q;
 
-    QHash<QString, QMdmmServerAgentPrivate *> agents;
+    QHash<QString, ServerAgentP *> agents;
 
     QThread *logicThread;
-    QPointer<QMdmmLogic> logic;
+    QPointer<QMdmmCore::Logic> logic;
 
     QMdmmCore::LogicConfiguration conf;
 
@@ -141,6 +141,9 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void actionReply(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void upgradeReply(const QString &playerName, const QList<QMdmmCore::Data::UpgradeItem> &items);
 };
+
+} // namespace p
+} // namespace QMdmmNetworking
 
 // NOLINTEND(misc-non-private-member-variables-in-classes): This is private header
 
