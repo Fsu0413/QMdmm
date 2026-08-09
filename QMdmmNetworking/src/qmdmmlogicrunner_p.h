@@ -130,6 +130,8 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void requestUpgrade(const QString &playerName, int upgradePoint);
     void upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
+    void roundOver();
+    void gameOver(const QStringList &winners);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
     // These signals are emitted to Logic

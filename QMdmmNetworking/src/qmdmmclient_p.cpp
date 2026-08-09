@@ -293,8 +293,12 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
-    if (agents.contains(playerName))
+    // A duplicate notifyPlayerAdded (player already tracked) is benign and
+    // must not be treated as a protocol error that tears down the connection.
+    if (agents.contains(playerName)) {
+        onRet_.dismiss();
         return;
+    }
 
     QJsonValue vscreenName = ob.value(QStringLiteral("screenName"));
     if (!vscreenName.isString())
@@ -312,6 +316,7 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
     Agent *agent = new Agent(playerName, this);
     agent->setScreenName(screenName);
     agent->setState(agentState);
+    agents.insert(playerName, agent);
 
     emit q->notifyPlayerAdded(playerName, screenName, agentState, Client::QPrivateSignal());
     onRet_.dismiss();
@@ -354,6 +359,11 @@ void ClientP::notifyGameStart(const QJsonValue &value [[maybe_unused]])
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
 {
+    // Mirror the server: reset each player's per-round state (place, hp, items)
+    // so the client's local room model stays consistent with the authority.
+    // Without this, players would stay at the default Country place and every
+    // place-dependent action (BuyKnife/Move/Slash/...) would fail locally.
+    room->prepareForRoundStart();
     emit q->notifyRoundStart(Client::QPrivateSignal());
 }
 
@@ -402,7 +412,7 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
     QHash<int, QString> result;
     int i = 0;
     for (const QJsonValueRef &val : arr) {
-        if (!value.isString())
+        if (!val.isString())
             return;
         QString playerName = val.toString();
         if (!agents.contains(playerName))
@@ -576,8 +586,9 @@ void ClientP::notifyGameOver(const QJsonValue &value)
         if (!vwinner.isString())
             return;
         QString winner = vwinner.toString();
-        if (agents.contains(winner))
-            return;
+        // Only trust winners we actually know about; ignore unknown names.
+        if (!agents.contains(winner))
+            continue;
         winners << winner;
     }
 

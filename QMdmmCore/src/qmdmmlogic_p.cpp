@@ -251,6 +251,7 @@ void LogicP::upgrade()
             if (p->upgradePoint() > 0)
                 ++n;
         }
+
         if (upgrades.count() == n) {
             for (QHash<QString, QList<Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
                 Player *up = room->player(it.key());

@@ -488,6 +488,8 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, Log
     CONNECTLOGICTORUNNER(actionResult);
     CONNECTLOGICTORUNNER(requestUpgrade);
     CONNECTLOGICTORUNNER(upgradeResult);
+    CONNECTLOGICTORUNNER(roundOver);
+    CONNECTLOGICTORUNNER(gameOver);
 
 #undef CONNECTLOGICTORUNNER
 }
@@ -576,7 +578,17 @@ void LogicRunnerP::socketDisconnected()
     }
 }
 
-LogicRunnerP::~LogicRunnerP() = default;
+LogicRunnerP::~LogicRunnerP()
+{
+    // The logic lives in logicThread. Tear it down cleanly so the thread is no
+    // longer running when this object (and thus logicThread, its child) is
+    // destroyed -- otherwise Qt's QThread destructor hits
+    // qFatal("QThread: Destroyed while thread ... is still running") and aborts.
+    if (logic)
+        logic->deleteLater();
+    logicThread->quit();
+    logicThread->wait();
+}
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
@@ -643,6 +655,26 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
 {
     foreach (ServerAgentP *agent, agents)
         agent->notifyUpgrade(upgrades);
+
+    // The upgrade phase finished without a game over. Advance to the next round.
+    // This mirrors the initial kick-off in addSocket(): announce the new round to
+    // every agent (so clients reset their local room via notifyRoundStart) and
+    // then start it. Without this, the match stalls after the very first round.
+    foreach (ServerAgentP *agent, agents)
+        agent->notifyRoundStart();
+    emit roundStart();
+}
+
+void LogicRunnerP::roundOver()
+{
+    foreach (ServerAgentP *agent, agents)
+        agent->notifyRoundOver();
+}
+
+void LogicRunnerP::gameOver(const QStringList &winners)
+{
+    foreach (ServerAgentP *agent, agents)
+        agent->notifyGameOver(winners);
 }
 } // namespace p
 
@@ -680,9 +712,13 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
 
     foreach (p::ServerAgentP *agent, d->agents)
         agent->notifyPlayerAdded(playerName, screenName, agentState);
+    // Tell the newly added agent about every player that joined before it.
+    // NOTE: iterate over the *existing* agents and report their identities,
+    // not the new player's name again (that would duplicate notifyPlayerAdded
+    // for the new agent and make the client treat it as a fatal error).
     foreach (p::ServerAgentP *agent, d->agents) {
         if (agent != addedAgent)
-            addedAgent->notifyPlayerAdded(playerName, screenName, agentState);
+            addedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
     }
 
     if (full()) {
