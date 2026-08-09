@@ -245,6 +245,199 @@ private slots:
         QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
         QVERIFY(up.count() > 0);
     }
+
+    // --- Gap coverage: branches the first pass of tests never exercised ---
+
+    // A. SSC tie (no winner) must restart SSC instead of advancing.
+    void QMdmmLogicsscTieRestarts()
+    {
+        QSignalSpy req(l.get(), &Logic::requestSscForAction);
+        QSignalSpy res(l.get(), &Logic::sscResult);
+
+        l->roundStart();
+
+        // All three pick Stone -> a tie, no winner.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Stone);
+
+        // requestSscForAction fired once at roundStart and once more on the restart.
+        QCOMPARE(req.length(), 2);
+        // sscResult is emitted (reports the tie) but the engine does NOT advance.
+        QCOMPARE(res.length(), 1);
+        QCOMPARE(l->state(), Logic::SscForAction);
+
+        // The restarted round is still playable: a winning combo now advances.
+        QSignalSpy ord(l.get(), &Logic::requestActionOrder);
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+        QVERIFY(ord.count() > 0);
+    }
+
+    // B. Exactly one SSC winner takes every action order (no ActionOrder phase).
+    void QMdmmLogicsingleWinnerNoActionOrder()
+    {
+        l->roundStart();
+
+        QSignalSpy ord(l.get(), &Logic::requestActionOrder);
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        // test1=Stone beats test2=test3=Scissors; the two Scissors tie among themselves.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Scissors);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        // Single winner -> no action-order negotiation, straight to Action.
+        QCOMPARE(ord.length(), 0);
+        QVERIFY(act.count() > 0);
+    }
+
+    // C. Two winners picking the SAME order must fight a tie-break SSC (SscForActionOrder).
+    void QMdmmLogicactionOrderTieBreak()
+    {
+        l->roundStart();
+
+        QSignalSpy reqOrder(l.get(), &Logic::requestActionOrder);
+        QSignalSpy reqTie(l.get(), &Logic::requestSscForActionOrder);
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(reqOrder.count() > 0);
+
+        // Both winners demand order 1 -> engine asks them to break the tie with SSC.
+        l->actionOrderReply(QStringLiteral("test1"), {1});
+        l->actionOrderReply(QStringLiteral("test2"), {1});
+
+        QVERIFY(reqTie.count() > 0);
+
+        // Non-tie SSC resolves the struggle (Cloth beats Stone here); Action follows.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Cloth);
+
+        QVERIFY(act.count() > 0);
+    }
+
+    // D. actionOrderReply must reject unknown players and wrong states.
+    void QMdmmLogicactionOrderReplyNegative()
+    {
+        l->roundStart();
+
+        // unknown player, even once we are in the right state
+        {
+            l->sscReply(QStringLiteral("test1"), Data::Stone);
+            l->sscReply(QStringLiteral("test2"), Data::Stone);
+            l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+            QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {1}));
+        }
+
+        // wrong state: actionOrderReply before any SSC negotiation
+        {
+            init();
+            l->roundStart();
+            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+        }
+    }
+
+    // E. actionReply must reject an infeasible action (no knife -> cannot Slash).
+    void QMdmmLogicactionReplyInfeasible()
+    {
+        l->roundStart();
+
+        QSignalSpy res(l.get(), &Logic::actionResult);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+
+        // test1 has no knife, so Slash is infeasible -> rejected, no actionResult.
+        QVERIFY(!l->actionReply(QStringLiteral("test1"), Data::Slash, QStringLiteral("test2"), 0));
+        QCOMPARE(res.length(), 0);
+    }
+
+    // F. A feasible Slash is applied, can kill, and triggers roundOver.
+    void QMdmmLogicactionReplyKillsAndRoundOver()
+    {
+        l->roundStart();
+
+        // Put attacker and victim in the same place (Country == 0) and arm the attacker.
+        l->d->room->player(QStringLiteral("test1"))->setHasKnife(true);
+        l->d->room->player(QStringLiteral("test1"))->setPlace(0);
+        l->d->room->player(QStringLiteral("test2"))->setPlace(0);
+        // Victim one hit from death.
+        l->d->room->player(QStringLiteral("test2"))->setHp(1);
+
+        QSignalSpy res(l.get(), &Logic::actionResult);
+        QSignalSpy over(l.get(), &Logic::roundOver);
+
+        // All three alive during SSC -> two winners (Stones) -> action-order phase.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+
+        // Kill the third player now, so the round ends the moment the victim dies.
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+
+        QVERIFY(l->actionReply(QStringLiteral("test1"), Data::Slash, QStringLiteral("test2"), 0));
+
+        QVERIFY(res.count() > 0);
+        QVERIFY(over.count() > 0);
+        QVERIFY(l->d->room->player(QStringLiteral("test2"))->dead());
+    }
+
+    // G. When a fully-maxed player exists and the round is over, upgrade ends the game.
+    void QMdmmLogicupgradeGameOver()
+    {
+        l->roundStart();
+
+        // End the round: only test1 survives.
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+
+        // test1 is fully upgraded (max HP / knife / horse) but still earns a point.
+        Player *p = l->d->room->player(QStringLiteral("test1"));
+        p->setMaxHp(20);
+        p->setKnifeDamage(10);
+        p->setHorseDamage(10);
+        p->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy gameOver(l.get(), &Logic::gameOver);
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+
+        // Reply with no items: nothing to apply, but the game is already over.
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {}));
+        QVERIFY(gameOver.count() > 0);
+        QCOMPARE(up.length(), 0);
+    }
+
+    // H. upgradeReply actually applies the chosen upgrade items.
+    void QMdmmLogicupgradeAppliesItems()
+    {
+        l->roundStart();
+
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        Player *p = l->d->room->player(QStringLiteral("test1"));
+        const int beforeMaxHp = p->maxHp();
+        p->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(up.count() > 0);
+        QCOMPARE(p->maxHp(), beforeMaxHp + 1);
+    }
 };
 
 namespace {
