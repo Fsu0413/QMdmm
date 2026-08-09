@@ -2,6 +2,7 @@
 
 #include <QMdmmCore/QMdmmLogic>
 #include <QMdmmCore/QMdmmLogicConfiguration>
+#include <QMdmmPlayer>
 
 #include "qmdmmlogic_p.h"
 
@@ -171,6 +172,78 @@ private slots:
             QCOMPARE(s.length(), 1);
             QCOMPARE(q.length(), 1);
         }
+    }
+
+    // Drive the SSC -> action-order -> action -> upgrade loop so that the GUI,
+    // once wired to this engine, is not bitten by a backend bug.
+    //
+    // Note: SSC choices must NOT be a Stone/Scissors/Cloth cycle -- that yields
+    // no winner and the engine restarts SSC forever. Two Stones vs one Scissors
+    // gives exactly two winners, which is what exercises the action-order phase.
+    // The request* signals are emitted synchronously inside the reply calls, so
+    // the spies must be connected *before* the triggering call.
+    void QMdmmLogicactionOrderReply()
+    {
+        l->roundStart(); // init() already added test1/test2/test3
+
+        QSignalSpy req(l.get(), &Logic::requestActionOrder);
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        // requestActionOrder is emitted synchronously inside the 3rd sscReply().
+        QVERIFY(req.count() > 0);
+
+        bool r = l->actionOrderReply(QStringLiteral("test1"), {1});
+        QVERIFY(r);
+        r = l->actionOrderReply(QStringLiteral("test2"), {2});
+        QVERIFY(r);
+
+        // After both winners pick an order the engine enters the Action phase and
+        // emits requestAction for the order-1 player, again synchronously.
+        QVERIFY(act.count() > 0);
+    }
+
+    void QMdmmLogicactionReply()
+    {
+        l->roundStart();
+
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+
+        QVERIFY(act.count() > 0);
+
+        // The order-1 player (test1) is the one requested to act.
+        bool r = l->actionReply(QStringLiteral("test1"), Data::DoNothing, {}, 0);
+        QVERIFY(r);
+    }
+
+    void QMdmmLogicupgradeReply()
+    {
+        l->roundStart();
+
+        // Negative contract: outside the Upgrade state the reply is rejected.
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+
+        // Positive contract: upgrades happen at round end, when <= 1 player is
+        // alive. Simulate that (kill the other two) and give test1 an upgrade
+        // point, then verify the reply is accepted and upgradeResult emitted.
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(up.count() > 0);
     }
 };
 
