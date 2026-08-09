@@ -15,10 +15,6 @@ Item {
         scale: parent.height / 1024
 
         RootItem {
-            // This item has:
-            // fixed height 1024
-            // width scaled with height, with 800 as minimum
-
             // All visual children can assume the height is never changed
             // only horizontal position / width may be considered when resizing
         }

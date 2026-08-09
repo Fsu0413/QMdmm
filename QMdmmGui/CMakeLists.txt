@@ -6,6 +6,8 @@
 set(QMDMMGUI_SOURCES
     src/main.cpp
     src/cppif.h
+    src/gameclient.h
+    src/gameclient.cpp
     src/mainwindow.h
     src/mainwindow.cpp
 )
@@ -16,6 +18,9 @@ set(QMDMMGUI_QML_FILES
     qml/StartScene.qml
     qml/Window.qml
     qml/RootItem.qml
+    qml/ConnectScene.qml
+    qml/GameScene.qml
+    qml/PlayerCard.qml
 )
 set(QMDMMGUI_RESOURCES
     assets/1.jpg

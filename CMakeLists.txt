@@ -100,6 +100,7 @@ add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
 add_subdirectory(QMdmmServer)
+add_subdirectory(smoke) # Networked local-game playability regression test
 if (Qt6_FOUND)
     add_subdirectory(QMdmmGui)
 endif()
