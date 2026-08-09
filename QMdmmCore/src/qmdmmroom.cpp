@@ -29,11 +29,6 @@ namespace v0 {
  */
 
 /**
- * @def DEFINE_CONFIGURATION(type, valueName, ValueName)
- * @brief helper macro to define functions
- */
-
-/**
  * @property LogicConfiguration::playerNumPerRoom
  * @brief Player number per room, default 3
  * @todo move this configuration to server side

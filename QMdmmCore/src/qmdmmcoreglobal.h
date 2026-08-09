@@ -128,7 +128,7 @@ enum AgentStateEnum : uint8_t
 Q_DECLARE_FLAGS(AgentState, AgentStateEnum)
 Q_FLAG_NS(AgentState)
 
-constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
+[[nodiscard]] constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
 {
     // simplifies to "only one of p1 and p2 is Country"
     // simplifies again to "p1 is Country xor p2 is Country"
@@ -136,27 +136,27 @@ constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
     return (p1 == Country) != (p2 == Country);
 }
 
-QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, Data::StoneScissorsCloth> &judgers);
+[[nodiscard]] QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, Data::StoneScissorsCloth> &judgers);
 } // namespace Data
 
 namespace Global {
 QMDMM_EXPORT_NAME(QMdmmGlobal)
-QMDMMCORE_EXPORT QVersionNumber version();
+[[nodiscard]] QMDMMCORE_EXPORT QVersionNumber version();
 } // namespace Global
 
 namespace Utilities {
 QMDMM_EXPORT_NAME(QMdmmUtilities)
 
 template<typename T>
+[[nodiscard]]
 auto list2Set(const T &l)
 {
-    // return QSet<T>(l.cbegin(), l.constEnd());
     using it = std::iterator_traits<decltype(std::cbegin(l))>;
-    return QSet<typename it::value_type>(l.cbegin(), l.constEnd());
+    return QSet<typename std::remove_cv_t<typename it::value_type>>(std::cbegin(l), std::cend(l));
 }
 
 template<typename T>
-QVariantList enumList2VariantList(const QList<T> &list)
+[[nodiscard]] QVariantList enumList2VariantList(const QList<T> &list)
 {
     static_assert(std::is_enum_v<T>);
 
@@ -168,7 +168,7 @@ QVariantList enumList2VariantList(const QList<T> &list)
 }
 
 template<typename T>
-QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
+[[nodiscard]] QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
 {
     QVariantList ret;
     ret.reserve(list.length());
@@ -176,10 +176,10 @@ QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
         ret << static_cast<int>(typename QFlags<T>::Int(i));
     return ret;
 }
-QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
-QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
-QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
-QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
+[[nodiscard]] QMDMMCORE_EXPORT QVariantList intList2VariantList(const QList<int> &list);
+[[nodiscard]] QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
+[[nodiscard]] QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
+[[nodiscard]] QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
 } // namespace Utilities
 
 #ifndef DOXYGEN

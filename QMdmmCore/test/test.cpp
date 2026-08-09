@@ -3,6 +3,8 @@
 #include <QGlobalStatic>
 #include <QTest>
 
+#include <memory>
+
 namespace {
 Q_GLOBAL_STATIC(QList<const QMetaObject *>, testObjects)
 }
@@ -19,7 +21,7 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     foreach (const QMetaObject *ob, *testObjects) {
-        QObject *toBeTested = ob->newInstance();
+        std::unique_ptr<QObject> toBeTested {ob->newInstance()};
         if (toBeTested == nullptr)
             qFatal("%s can't be created", ob->className());
 
@@ -31,8 +33,9 @@ int main(int argc, char *argv[])
             QStringLiteral("%1%2.xml,junitxml").arg(QString::fromLatin1(ob->className()), QString::number(QT_VERSION_MAJOR)),
         };
 
-        ret += QTest::qExec(toBeTested, args);
-        delete toBeTested;
+        // This function does not seem to support multi-threading
+        // Packeting the logic into a lambda and call it in a std::async crashes the program
+        ret += QTest::qExec(toBeTested.get(), args);
     }
 
     return ret;

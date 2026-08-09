@@ -1,3 +1,4 @@
+#include "qmdmmcoreglobal.h"
 #include "test.h"
 
 #include <QMdmmCore/QMdmmCoreGlobal>
@@ -102,10 +103,25 @@ private slots:
 
     void QMdmmUtilitieslist2Set()
     {
-        QList<int> l {1, 2, 3, 4, 5, 2, 3, 4, 5, 6};
+        const int l1[] = {1, 2, 3, 4, 5, 2, 3, 4, 5, 6};
         QSet<int> s {1, 2, 3, 4, 5, 6};
 
-        QSet<int> r = Utilities::list2Set(l);
+        QSet<int> r = Utilities::list2Set(l1);
+        QCOMPARE(r, s);
+
+        std::list<int> l2(std::begin(l1), std::end(l1));
+        r = Utilities::list2Set(l2);
+        QCOMPARE(r, s);
+
+        QList<int> l3(std::begin(l1), std::end(l1));
+        r = Utilities::list2Set(l3);
+        QCOMPARE(r, s);
+
+        std::array l4 = std::to_array(l1);
+        r = Utilities::list2Set(l4);
+        QCOMPARE(r, s);
+
+        r = Utilities::list2Set<std::initializer_list<int>>({1, 2, 3, 4, 5, 2, 3, 4, 5, 6});
         QCOMPARE(r, s);
     }
 

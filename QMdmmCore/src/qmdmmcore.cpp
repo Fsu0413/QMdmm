@@ -37,7 +37,7 @@ namespace v0 {
  */
 
 /**
- * @namespace Data
+ * @namespace QMdmmCore::Data
  * @headerfile <QMdmmData>
  * @brief Various data definition of MDMM game
  */
@@ -51,7 +51,7 @@ namespace v0 {
  */
 
 /**
- * @var Data::Place Data::Country
+ * @var QMdmmCore::Data::Place Data::Country
  * @brief For use with @c QMdmmPlayer::place() , if it equals to @c Data::Country then this player is in Country.
  *
  * This enumeration variable equals to zero. Provided for readability.
@@ -63,22 +63,22 @@ namespace v0 {
  */
 
 /**
- * @var Data::DamageReason Data::DamageReasonUnknown
+ * @var QMdmmCore::Data::DamageReason Data::DamageReasonUnknown
  * @brief Unknown / erroneous damage reason.
  */
 
 /**
- * @var Data::DamageReason Data::Slashed
+ * @var QMdmmCore::Data::DamageReason Data::Slashed
  * @brief Damage is caused by a slash.
  */
 
 /**
- * @var Data::DamageReason Data::Kicked
+ * @var QMdmmCore::Data::DamageReason Data::Kicked
  * @brief Damage is caused by a kick.
  */
 
 /**
- * @var Data::DamageReason Data::HpPunished
+ * @var QMdmmCore::Data::DamageReason Data::HpPunished
  * @brief Damage is caused by HP punish.
  *
  * There is a mechanism in more modern version of MDMM game, where punishment is applied for slash in city.
@@ -93,17 +93,17 @@ namespace v0 {
  */
 
 /**
- * @var Data::StoneScissorsCloth Data::Stone
+ * @var QMdmmCore::Data::StoneScissorsCloth Data::Stone
  * @brief Stone
  */
 
 /**
- * @var Data::StoneScissorsCloth Data::Scissors
+ * @var QMdmmCore::Data::StoneScissorsCloth Data::Scissors
  * @brief Scissors
  */
 
 /**
- * @var Data::StoneScissorsCloth Data::Cloth
+ * @var QMdmmCore::Data::StoneScissorsCloth Data::Cloth
  * @brief Cloth
  */
 
@@ -113,37 +113,37 @@ namespace v0 {
  */
 
 /**
- * @var Data::Action Data::DoNothing
+ * @var QMdmmCore::Data::Action Data::DoNothing
  * @brief Do Nothing
  */
 
 /**
- * @var Data::Action Data::BuyKnife
+ * @var QMdmmCore::Data::Action Data::BuyKnife
  * @brief Buy Knife
  */
 
 /**
- * @var Data::Action Data::BuyHorse
+ * @var QMdmmCore::Data::Action Data::BuyHorse
  * @brief Buy Horse
  */
 
 /**
- * @var Data::Action Data::Slash
+ * @var QMdmmCore::Data::Action Data::Slash
  * @brief Slash (toPlayer: the target player)
  */
 
 /**
- * @var Data::Action Data::Kick
+ * @var QMdmmCore::Data::Action Data::Kick
  * @brief Kick (toPlayer: the target player)
  */
 
 /**
- * @var Data::Action Data::Move
+ * @var QMdmmCore::Data::Action Data::Move
  * @brief Move (toPlace: the target place)
  */
 
 /**
- * @var Data::Action Data::LetMove
+ * @var QMdmmCore::Data::Action Data::LetMove
  * @brief Let Move (toPlayer: the target player, toPlace: the target place)
  */
 
@@ -153,17 +153,17 @@ namespace v0 {
  */
 
 /**
- * @var Data::UpgradeItem Data::UpgradeKnife
+ * @var QMdmmCore::Data::UpgradeItem Data::UpgradeKnife
  * @brief Upgrade knife
  */
 
 /**
- * @var Data::UpgradeItem Data::UpgradeHorse
+ * @var QMdmmCore::Data::UpgradeItem Data::UpgradeHorse
  * @brief Upgrade horse
  */
 
 /**
- * @var Data::UpgradeItem Data::UpgradeMaxHp
+ * @var QMdmmCore::Data::UpgradeItem Data::UpgradeMaxHp
  * @brief Upgrade maximum hp
  */
 
@@ -173,47 +173,47 @@ namespace v0 {
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateMaskOnline
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateMaskOnline
  * @brief Mask of online
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateMaskBot
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateMaskBot
  * @brief Mask of bot
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateMaskTrust
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateMaskTrust
  * @brief Mask of trust
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateOffline
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateOffline
  * @brief State of offline
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateOfflineBot
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateOfflineBot
  * @brief State of offline bot
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateOnline
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateOnline
  * @brief State of online
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateOnlineBot
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateOnlineBot
  * @brief State of online bot
  */
 
 /**
- * @var Data::AgentStateEnum Data::StateOnlineTrust
+ * @var QMdmmCore::Data::AgentStateEnum Data::StateOnlineTrust
  * @brief State of online trusted
  */
 
 /**
- * @fn Data::isPlaceAdjacent(int p1, int p2)
+ * @fn QMdmmCore::Data::isPlaceAdjacent(int p1, int p2)
  * @brief Judges if the 2 places are adjacent, for judgement like make-move ability or other things.
  * @param p1 Place 1
  * @param p2 Place 2
@@ -268,7 +268,7 @@ QStringList Data::stoneScissorsClothWinners(const QHash<QString, Data::StoneScis
 }
 
 /**
- * @namespace Global
+ * @namespace QMdmmCore::Global
  * @headerfile <QMdmmGlobal>
  * @brief Global functions of QMdmm
  */
@@ -283,13 +283,13 @@ QVersionNumber Global::version()
 }
 
 /**
- * @namespace Utilities
+ * @namespace QMdmmCore::Utilities
  * @headerfile <QMdmmUtilities>
  * @brief Convenience functions and types for working with QMdmm library
  */
 
 /**
- * @fn Utilities::list2Set(const T &l)
+ * @fn QMdmmCore::Utilities::list2Set(const T &l)
  * @brief Convenience function of converting a QList to QSet
  * @tparam T The type of the list
  * @param l The list to convert
@@ -300,12 +300,12 @@ QVersionNumber Global::version()
  */
 
 /**
- * @fn Utilities::enumList2VariantList(const QList<T> &list)
+ * @fn QMdmmCore::Utilities::enumList2VariantList(const QList<T> &list)
  * @brief Convenience function of converting QList<enum> to QVariantList
  */
 
 /**
- * @fn Utilities::enumList2VariantList(const QList<QFlags<T> > &list)
+ * @fn QMdmmCore::Utilities::enumList2VariantList(const QList<QFlags<T> > &list)
  * @brief Convenience function of converting QList<QFlags> to QVariantList
  */
 
