@@ -22,8 +22,6 @@ struct RoomP;
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 class Player;
@@ -142,9 +140,9 @@ private:
     const std::unique_ptr<p::RoomP> d;
     Q_DISABLE_COPY_MOVE(Room)
 };
-} // namespace v0
 
 #ifndef DOXYGEN
+} // namespace v0
 inline namespace v1 {
 using v0::LogicConfiguration;
 using v0::Room;

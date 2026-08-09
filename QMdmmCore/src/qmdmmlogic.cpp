@@ -2,8 +2,6 @@
 
 #include "qmdmmlogic.h"
 #include "qmdmmlogic_p.h"
-
-#include "qmdmmplayer.h"
 #include "qmdmmroom.h"
 
 #include <QHash>
@@ -19,8 +17,6 @@
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -414,5 +410,9 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  *
  * Can be only emitted in @c Logic::Upgrade state.
  */
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

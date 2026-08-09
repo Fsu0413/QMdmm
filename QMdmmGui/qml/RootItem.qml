@@ -9,7 +9,6 @@ Image {
 
     source: "../assets/1.jpg"
 
-    // Component.onCompleted: cppif.testSlot()
     StartScene {
         anchors.fill: parent
 

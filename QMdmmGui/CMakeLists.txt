@@ -3,14 +3,11 @@
 # This GUI will be Qt 6 only
 # Qt 5 and Qt 6 QML CMake API is incompatible (qt6_add_qml_module) so ...
 
-set(QMDMMGUI_PCH
-    src/qmdmmgui.h
-)
-
 set(QMDMMGUI_SOURCES
-    ${QMDMMGUI_PCH}
     src/main.cpp
     src/cppif.h
+    src/mainwindow.h
+    src/mainwindow.cpp
 )
 
 set(QMDMMGUI_QML_FILES
@@ -27,6 +24,8 @@ set(QMDMMGUI_RESOURCES
     assets/knife.png
 )
 
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
 qt6_add_executable(QMdmm6 WIN32 MACOSX_BUNDLE ${QMDMMGUI_SOURCES})
 
 set_target_properties(QMdmm6 PROPERTIES
@@ -35,17 +34,18 @@ set_target_properties(QMdmm6 PROPERTIES
     AUTORCC ON
     VERSION "${QMdmm_VERSION}"
 )
-target_precompile_headers(QMdmm6
-    PRIVATE "${QMDMMGUI_PCH}"
-)
+
 target_link_libraries(QMdmm6
     PUBLIC QMdmmNetworking6
            QMdmmCore6
+           Qt6::QuickWidgets
            Qt6::Quick
            Qt6::Qml
+           Qt6::Widgets
            Qt6::Gui
            Qt6::Core
 )
+target_link_libraries(QMdmm6 PRIVATE Qt6::Widgets)
 qt6_add_qml_module(QMdmm6
     URI QMdmm.Gui
     VERSION ${QMdmm_VERSION}

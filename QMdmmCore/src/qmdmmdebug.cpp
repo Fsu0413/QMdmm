@@ -16,8 +16,6 @@ using namespace QMdmmCore::p;
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -39,5 +37,8 @@ void qMdmmDebugSetDevice(QIODevice *f)
         DebugLog::qtMessageHandler = qInstallMessageHandler(&messageOutput);
 }
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

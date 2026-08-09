@@ -78,11 +78,14 @@ Image {
         anchors.centerIn: parent
         width: parent.width / 4 * 3
         height: parent.height / 8 * 7
+
         fontSizeMode: Text.Fit
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         text: parent.text
         font: parent.font
+
+        onFontInfoChanged: print(font.pixelSize, fontInfo.pixelSize)
     }
 
     MouseArea {

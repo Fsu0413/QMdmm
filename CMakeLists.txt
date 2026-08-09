@@ -61,7 +61,7 @@ endif()
 set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
 set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network WebSockets Gui Qml Quick ${QT6_EXTRA_COMPONENTS_NEEDED})
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network WebSockets Gui Qml Quick Widgets QuickWidgets ${QT6_EXTRA_COMPONENTS_NEEDED})
 
 if (Qt6_FOUND)
     qt6_standard_project_setup(REQUIRES 6.5)

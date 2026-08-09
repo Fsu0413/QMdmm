@@ -15,8 +15,6 @@ namespace QMdmmCore {
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -453,5 +451,9 @@ Packet Packet::fromJson(const QByteArray &serialized, QString *errorString)
 
     return ret;
 }
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

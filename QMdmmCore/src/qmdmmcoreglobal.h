@@ -14,8 +14,7 @@
 #include <QtGlobal>
 
 #include <cstdint>
-#include <functional>
-#include <memory>
+#include <iterator>
 #include <type_traits>
 
 #ifndef DOXYGEN
@@ -44,13 +43,20 @@
 
 namespace QMdmmCore {
 
-namespace v0 {
+#ifndef DOXYGEN
+namespace p {
 }
+#endif
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
+}
 inline namespace v1 {
+}
+#endif
+
+#ifndef DOXYGEN
+namespace v0 {
 #endif
 
 namespace Data {
@@ -142,10 +148,13 @@ namespace Utilities {
 QMDMM_EXPORT_NAME(QMdmmUtilities)
 
 template<typename T>
-QSet<T> list2Set(const QList<T> &l) noexcept(noexcept(QSet<T>(l.constBegin(), l.constEnd())))
+auto list2Set(const T &l)
 {
-    return QSet<T>(l.constBegin(), l.constEnd());
+    // return QSet<T>(l.cbegin(), l.constEnd());
+    using it = std::iterator_traits<decltype(std::cbegin(l))>;
+    return QSet<typename it::value_type>(l.cbegin(), l.constEnd());
 }
+
 template<typename T>
 QVariantList enumList2VariantList(const QList<T> &list)
 {
@@ -157,6 +166,7 @@ QVariantList enumList2VariantList(const QList<T> &list)
         ret << static_cast<int>(i);
     return ret;
 }
+
 template<typename T>
 QVariantList enumList2VariantList(const QList<QFlags<T>> &list)
 {
@@ -171,9 +181,10 @@ QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
 QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
 QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
 } // namespace Utilities
-} // namespace v0
 
 #ifndef DOXYGEN
+} // namespace v0
+
 inline namespace v1 {
 namespace Data = v0::Data;
 namespace Global = v0::Global;

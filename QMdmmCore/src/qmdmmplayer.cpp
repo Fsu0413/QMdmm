@@ -16,8 +16,6 @@ using namespace QMdmmCore::p;
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -820,5 +818,9 @@ void Player::resetUpgrades()
  *
  * Acts as the notify signal for property @c alive and @c dead
  */
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

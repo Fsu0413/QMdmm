@@ -18,8 +18,6 @@ namespace QMdmmCore {
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 namespace Protocol {
@@ -128,9 +126,8 @@ private:
 #endif
 };
 
-} // namespace v0
-
 #ifndef DOXYGEN
+} // namespace v0
 inline namespace v1 {
 using v0::Packet;
 using v0::PacketData;

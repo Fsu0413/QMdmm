@@ -24,10 +24,14 @@ QMDMM_EXPORT_NAME(QMdmmNetworkingGlobal)
 #endif
 
 namespace QMdmmNetworking {
+#ifndef DOXYGEN
+namespace p {
+}
 namespace v0 {
 }
 inline namespace v1 {
 }
+#endif
 } // namespace QMdmmNetworking
 
 #endif // QMDMMSERVER_GLOBAL_H

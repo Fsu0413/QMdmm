@@ -21,8 +21,6 @@ namespace QMdmmCore {
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -693,5 +691,9 @@ void Room::resetUpgrades()
  * @brief emitted when a player is removed
  * @param playerName the internal name of the removed player
  */
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

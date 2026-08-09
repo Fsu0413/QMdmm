@@ -12,8 +12,6 @@ namespace QMdmmCore {
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 #ifndef DOXYGEN
@@ -200,5 +198,8 @@ bool Settings::contains(Instance instance, const QString &key) const
     return c->contains(key);
 }
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

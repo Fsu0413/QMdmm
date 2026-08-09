@@ -16,8 +16,6 @@ namespace QMdmmCore {
 
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 class QMDMMCORE_EXPORT Settings
@@ -51,9 +49,9 @@ public:
 private:
     Q_DISABLE_COPY_MOVE(Settings);
 };
-} // namespace v0
 
 #ifndef DOXYGEN
+} // namespace v0
 inline namespace v1 {
 using v0::Settings;
 }

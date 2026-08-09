@@ -16,24 +16,8 @@
 
 namespace QMdmmCore {
 
-/**
- * @namespace v0
- * @brief Marks the version 0 API
- *
- * Initial set of API.
- */
-
-/**
- * @namespace v1
- * @brief Marks the version 1 API
- *
- * API which will exist in 1.x.x version.
- */
-
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 
 /**
@@ -305,10 +289,14 @@ QVersionNumber Global::version()
  */
 
 /**
- * @fn Utilities::list2Set(const QList<T> &l)
+ * @fn Utilities::list2Set(const T &l)
  * @brief Convenience function of converting a QList to QSet
+ * @tparam T The type of the list
+ * @param l The list to convert
+ * @return The converted set
  *
- * Qt deprecates QList::toSet since Qt 5.15 and instead suggests using the QSet iterator ctor. This function does call the ctor.
+ * Qt deprecates QList::toSet since Qt 5.15 and instead suggests using the QSet iterator ctor.
+ * This function calls the ctor while accepting any iterable types.
  */
 
 /**
@@ -369,5 +357,9 @@ QStringList Utilities::variantList2StringList(const QVariantList &list)
         ret << i.toString();
     return ret;
 }
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
+
 } // namespace QMdmmCore

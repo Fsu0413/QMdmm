@@ -14,13 +14,11 @@ QMDMM_EXPORT_NAME(QMdmmDebug)
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
-#else
-inline namespace v1 {
 #endif
 QMDMMCORE_EXPORT void qMdmmDebugSetDevice(QIODevice *f);
-} // namespace v0
 
 #ifndef DOXYGEN
+} // namespace v0
 inline namespace v1 {
 using v0::qMdmmDebugSetDevice;
 } // namespace v1
