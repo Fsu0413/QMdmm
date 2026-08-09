@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-void registerTestObjectImpl(const QMetaObject *metaObject);
+const QMetaObject *registerTestObjectImpl(const QMetaObject *metaObject=nullptr);
 
 template<typename T>
 struct RegisterTestObject

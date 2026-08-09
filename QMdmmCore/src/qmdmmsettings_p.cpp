@@ -17,7 +17,7 @@ namespace p {
 // But it is needed to provide a unique API on top of QVariantMap and QSettings, where the API name difference should go away.
 // For QVariantMap the grouping shoule be implemented by ourselves (not so complex, a few lines of code only).
 
-// The unique API is following QMdmmSettingsWrapperPrivate
+// The unique API is following QMdmmCore::p::SettingsWrapperP
 
 SettingsWrapperP::~SettingsWrapperP() = default;
 
@@ -183,6 +183,8 @@ QSettings::Status SettingsP::saveConfig(Settings::Instance instance)
     // Do not check the current group for now.
     // It is not thread safe popping the group then pushing it again
     // TODO: find a thread-safe way (lock?) to ignore the group on toBeSaved
+    
+    Q_ASSERT(toBeSaved->group().isEmpty());
 
     foreach (const QString &key, specifiedConfig->map.keys())
         toBeSaved->setValue(key, specifiedConfig->value(key, {}));

@@ -118,7 +118,7 @@ Player::~Player() = default;
  */
 Room *Player::room()
 {
-    // We don't need extra cost for qobject_cast here, since every Player is created with Room as parent.
+    // We don't need extra cost for qobject_cast / dynamic_cast here, since every Player is created with Room as parent.
     return static_cast<Room *>(parent());
 }
 
@@ -193,12 +193,12 @@ int Player::hp() const noexcept
  *
  * A player is alive if @c hp is positive and dead if @c hp is negative. It depends on the configuration whether @c hp is 0 is treated as dead or alive.
  *
- * @sa QMdmmLogicConfiguration::zeroHpAsDead
+ * @sa QMdmm::LogicConfiguration::zeroHpAsDead
  */
 void Player::setHp(int h, bool *kills)
 {
     if (kills == nullptr) {
-        static bool _kills;
+        static thread_local bool _kills;
         kills = &_kills;
     }
 
@@ -447,9 +447,9 @@ bool Player::canMove(int toPlace) const
  * @param toPlace the target place
  * @return @c true if able, @c false if not
  *
- * @note if @c this == @c to then this function is same as @c canMove()
+ * @note if @c this == @c to then this function is same as @c canMove() , regardless of @ref QMdmmCore::LogicConfiguration::enableLetMove()
  *
- * @sa QMdmmLogicConfiguration::enableLetMove
+ * @sa QMdmmCore::LogicConfiguration::enableLetMove
  */
 bool Player::canLetMove(const Player *to, int toPlace) const
 {
@@ -494,7 +494,7 @@ int Player::upgradeKnifeRemainingTimes() const
  * @brief get the remained times a player can upgrade horse damage
  * @return the remained times a player can upgrade horse damage
  *
- * @sa QMdmmLogicConfiguration::maximumHorseDamage
+ * @sa QMdmm::LogicConfiguration::maximumHorseDamage
  */
 int Player::upgradeHorseRemainingTimes() const
 {
@@ -505,7 +505,7 @@ int Player::upgradeHorseRemainingTimes() const
  * @brief get the remained times a player can upgrade maximum HP
  * @return the remained times a player can upgrade maximum HP
  *
- * @sa QMdmmLogicConfiguration::maximumMaxHp
+ * @sa QMdmm::LogicConfiguration::maximumMaxHp
  */
 int Player::upgradeMaxHpRemainingTimes() const
 {

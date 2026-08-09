@@ -1,15 +1,143 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+#include "test.h"
 
 #include <QMdmmCore/QMdmmDebug>
 
+#include <QBuffer>
 #include <QTest>
+
+// NOLINTBEGIN
+
+using namespace QMdmmCore;
 
 class tst_QMdmmDebug : public QObject
 {
     Q_OBJECT
 
+public:
+    Q_INVOKABLE tst_QMdmmDebug() = default;
+
+    QBuffer buf;
+
 private slots:
-    // TBD
+    // called before each test case is run
+    void init()
+    {
+        buf.setData(QByteArray());
+        buf.open(QIODevice::ReadWrite);
+    }
+
+    // called after each test case is run
+    void cleanup()
+    {
+        // detach from the log device before it goes out of scope
+        qMdmmDebugSetDevice(nullptr);
+        buf.close();
+    }
+
+    void QMdmmDebugqMdmmDebugSetDevice()
+    {
+        qMdmmDebugSetDevice(&buf);
+        qDebug("hello QMdmm");
+
+        // messages are written to the device, one line each
+        QByteArray data = buf.data();
+        QVERIFY(data.contains("hello QMdmm"));
+        QVERIFY(data.endsWith('\n'));
+
+        qint64 sizeAfterFirst = data.size();
+        qWarning("second message");
+        data = buf.data();
+        QVERIFY(data.contains("second message"));
+        QVERIFY(data.size() > sizeAfterFirst);
+        QCOMPARE(data.count('\n'), 2);
+    }
+
+    void QMdmmDebugopensDeviceIfNotOpen()
+    {
+        QBuffer closedBuf;
+        QVERIFY(!closedBuf.isOpen());
+
+        qMdmmDebugSetDevice(&closedBuf);
+        QVERIFY(closedBuf.isOpen());
+        QVERIFY(closedBuf.isWritable());
+
+        qDebug("opened by setDevice");
+        QVERIFY(closedBuf.data().contains("opened by setDevice"));
+
+        qMdmmDebugSetDevice(nullptr);
+    }
+
+    void QMdmmDebugunsetDevice()
+    {
+        qMdmmDebugSetDevice(&buf);
+        qDebug("before unset");
+        QVERIFY(buf.data().contains("before unset"));
+
+        QByteArray dataBeforeUnset = buf.data();
+
+        // after unsetting, messages fall back to Qt's own handler and must not reach the device
+        qMdmmDebugSetDevice(nullptr);
+        qDebug("after unset");
+        QCOMPARE(buf.data(), dataBeforeUnset);
+    }
+
+    void QMdmmDebugdeletedDeviceIsNotUsed()
+    {
+        // the log device is held by QPointer, so a destroyed device must not be written to
+        {
+            QBuffer temporaryBuf;
+            temporaryBuf.open(QIODevice::ReadWrite);
+            qMdmmDebugSetDevice(&temporaryBuf);
+            qDebug("while alive");
+            QVERIFY(temporaryBuf.data().contains("while alive"));
+        }
+
+        // must not crash: falls back to the default handler
+        qDebug("after device destroyed");
+    }
+
+    void QMdmmDebugswitchDevice()
+    {
+        QBuffer buf2;
+        buf2.open(QIODevice::ReadWrite);
+
+        qMdmmDebugSetDevice(&buf);
+        qDebug("to first");
+
+        qMdmmDebugSetDevice(&buf2);
+        qDebug("to second");
+
+        QVERIFY(buf.data().contains("to first"));
+        QVERIFY(!buf.data().contains("to second"));
+        QVERIFY(buf2.data().contains("to second"));
+        QVERIFY(!buf2.data().contains("to first"));
+
+        qMdmmDebugSetDevice(nullptr);
+    }
+
+    void QMdmmDebugmessageTypes()
+    {
+        qMdmmDebugSetDevice(&buf);
+
+        qDebug("a debug message");
+        qInfo("an info message");
+        qWarning("a warning message");
+        qCritical("a critical message");
+
+        QByteArray data = buf.data();
+        QVERIFY(data.contains("a debug message"));
+        QVERIFY(data.contains("an info message"));
+        QVERIFY(data.contains("a warning message"));
+        QVERIFY(data.contains("a critical message"));
+        QCOMPARE(data.count('\n'), 4);
+    }
 };
 
-QTEST_GUILESS_MAIN(tst_QMdmmDebug)
+// NOLINTEND
+
+namespace {
+RegisterTestObject<tst_QMdmmDebug> _a;
+} // namespace
 #include "tst_qmdmmdebug.moc"

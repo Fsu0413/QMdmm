@@ -26,7 +26,7 @@ bool LogicP::actionFeasible(const QString &fromPlayer, Data::Action action, cons
     const Player *from = room->player(fromPlayer);
     switch (action) {
     case Data::DoNothing: {
-        return true;
+        return from->alive();
     }
     case Data::BuyKnife: {
         return from->canBuyKnife();
@@ -139,8 +139,6 @@ void LogicP::startActionOrder()
             ++it;
     }
 
-    Q_ASSERT(remainingActionCount.count() >= 0);
-
     if (remainingActionCount.count() == 1) {
         foreach (int n, remainingActionOrders)
             confirmedActionOrders[n] = remainingActionCount.constBegin().key();
@@ -212,10 +210,7 @@ void LogicP::sscForActionOrder()
 void LogicP::startAction()
 {
     if (!room->isRoundOver()) {
-        ++currentActionOrder;
         while (++currentActionOrder <= sscForActionWinners.length()) {
-            // no copy since C++17 - QHash<T>::value returns const T
-            // If C++11 or C++14 is needed, we need const QString && as type of currentPlayer (somewhat uncomfortable)
             QString currentPlayer = confirmedActionOrders.value(currentActionOrder);
             Player *p = room->player(currentPlayer);
             if (p->alive()) {

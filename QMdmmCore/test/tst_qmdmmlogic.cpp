@@ -123,10 +123,10 @@ private slots:
             l->roundStart();
         }
 
-        QSignalSpy s(l.get(), &Logic::sscResult);
-
         // case 0
         {
+            QSignalSpy s(l.get(), &Logic::sscResult);
+
             bool r = l->sscReply(QStringLiteral("test00"), Data::Stone);
             QVERIFY(!r);
 
@@ -136,11 +136,12 @@ private slots:
         {
             init();
             l->roundStart();
-            s.clear();
         }
 
         // case 1
         {
+            QSignalSpy s(l.get(), &Logic::sscResult);
+
             bool r = l->sscReply(QStringLiteral("test1"), Data::Stone);
             QVERIFY(r);
 
@@ -153,11 +154,11 @@ private slots:
         {
             init();
             l->roundStart();
-            s.clear();
         }
 
         // case 2
         {
+            QSignalSpy s(l.get(), &Logic::sscResult);
             QSignalSpy q(l.get(), &Logic::requestSscForAction);
 
             bool r1 = l->sscReply(QStringLiteral("test1"), Data::Stone);
@@ -167,7 +168,7 @@ private slots:
             bool r3 = l->sscReply(QStringLiteral("test3"), Data::Stone);
             QVERIFY(r3);
 
-            // QCOMPARE(s.length(), 1); // why?
+            QCOMPARE(s.length(), 1);
             QCOMPARE(q.length(), 1);
         }
     }

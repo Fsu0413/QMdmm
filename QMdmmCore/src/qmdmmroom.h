@@ -118,11 +118,11 @@ public:
     [[nodiscard]] QList<Player *> alivePlayers();
     [[nodiscard]] QList<const Player *> alivePlayers() const;
     [[nodiscard]] QStringList alivePlayerNames() const;
-    [[nodiscard]] int alivePlayersCount() const
+    [[nodiscard]] int alivePlayersCount() const noexcept
     {
         return (int)(alivePlayers().size());
     }
-    [[nodiscard]] bool isRoundOver() const
+    [[nodiscard]] bool isRoundOver() const noexcept
     {
         return alivePlayersCount() <= 1;
     }
