@@ -121,7 +121,6 @@ private:
     QVariantList m_chat;
     QString m_status;
     int m_playerCount = 3;
-    bool m_online = false;
 
     QHash<QString, QString> m_screenNames;
     QHash<QString, QMdmmCore::Data::AgentState> m_agentStates;

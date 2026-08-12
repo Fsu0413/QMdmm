@@ -270,7 +270,6 @@ void QMdmmGameClient::addBot(const QString &name)
 void QMdmmGameClient::startLocalGame(const QString &playerName)
 {
     reset();
-    m_online = false;
 
     // In-process server so a single user can actually play a full match.
     LogicConfiguration conf = LogicConfiguration::defaults();
@@ -303,7 +302,6 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
 void QMdmmGameClient::connectOnline(const QString &host, const QString &playerName)
 {
     reset();
-    m_online = true;
 
     ClientConfiguration hc;
     hc.setScreenName(playerName.isEmpty() ? QStringLiteral("You") : playerName);
