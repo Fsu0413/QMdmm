@@ -5,7 +5,6 @@
 
 set(QMDMMGUI_SOURCES
     src/main.cpp
-    src/cppif.h
     src/gameclient.h
     src/gameclient.cpp
     src/mainwindow.h
