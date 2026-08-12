@@ -57,7 +57,6 @@ ClientP::ClientP(ClientConfiguration clientConfiguration, Client *q)
     connect(heartbeatTimer, &QTimer::timeout, this, &ClientP::heartbeatTimeout);
 }
 
-// TODO: replace auto with the real type
 // Qt documentation only mentioned "auto" here
 #define ONERRPRINTJSON(value)                                                     \
     auto onRet_ [[maybe_unused]] = qScopeGuard([this, value, func = __func__]() { \
