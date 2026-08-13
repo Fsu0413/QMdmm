@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QSettings>
 
+#include <mutex>
+
 namespace QMdmmCore {
 
 namespace p {
