@@ -566,7 +566,7 @@ void LogicRunnerP::socketDisconnected()
     } else {
         // case 2: room is not full, so game hasn't started
         // Agent should be deleted.
-        ServerAgentP *taken = agents.take(objectName());
+        ServerAgentP *taken = agents.take(disconnectedAgent->objectName());
         Q_UNUSED(taken);
         Q_ASSERT(taken == disconnectedAgent);
 
