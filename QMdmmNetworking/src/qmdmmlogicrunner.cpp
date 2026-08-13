@@ -427,7 +427,7 @@ void ServerAgentP::notifySpoken(const QString &playerName, const QString &conten
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     ob.insert(QStringLiteral("content"), content);
-    QMdmmCore::Packet p(QMdmmCore::Protocol::NotifySpoken, ob);
+    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpoken, ob));
 }
 
 void ServerAgentP::notifyOperated(const QString &playerName, const QJsonValue &todo)
