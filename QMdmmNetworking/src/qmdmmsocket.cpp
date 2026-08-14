@@ -6,6 +6,11 @@
 #include <QLocalSocket>
 #include <QTcpSocket>
 
+/**
+ * @file qmdmmsocket.h
+ * @brief This is the file where the networking Socket is defined.
+ */
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -289,24 +294,73 @@ void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e
 } // namespace p
 namespace v0 {
 
+/**
+ * @class Socket
+ * @brief A wrapper around a concrete socket that serializes / deserializes packets.
+ *
+ * Socket abstracts over TCP socket, local socket and WebSocket transports. It exposes
+ * packet-based signals so that the upper layers (@c Server, @c Client, @c Agent) can
+ * work with @c QMdmmCore::Packet without caring about the underlying transport.
+ */
+
+/**
+ * @enum Socket::Type
+ * @brief The type of the underlying transport.
+ */
+
+/**
+ * @var Socket::Type Socket::TypeUnknown
+ * @brief Unknown or invalid type.
+
+ * @var Socket::Type Socket::TypeQTcpSocket
+ * @brief TCP socket transport.
+
+ * @var Socket::Type Socket::TypeQLocalSocket
+ * @brief Local socket transport.
+
+ * @var Socket::Type Socket::TypeQWebSocket
+ * @brief WebSocket transport.
+ */
+
+/**
+ * @brief ctor for server side, wrapping an already-open TCP socket
+ * @param t the TCP socket
+ * @param parent QObject parent.
+ */
 Socket::Socket(QTcpSocket *t, QObject *parent)
     : QObject(parent)
     , d(p::SocketPFactory::create(t, this))
 {
 }
 
+/**
+ * @brief ctor for server side, wrapping an already-open local socket
+ * @param l the local socket
+ * @param parent QObject parent.
+ */
 Socket::Socket(QLocalSocket *l, QObject *parent)
     : QObject(parent)
     , d(p::SocketPFactory::create(l, this))
 {
 }
 
+/**
+ * @brief ctor for server side, wrapping an already-open WebSocket
+ * @param w the WebSocket
+ * @param parent QObject parent.
+ */
 Socket::Socket(QWebSocket *w, QObject *parent)
     : QObject(parent)
     , d(p::SocketPFactory::create(w, this))
 {
 }
 
+/**
+ * @brief ctor for client side
+ * @param parent QObject parent.
+ *
+ * The underlying transport is created lazily by @c connectToHost() based on the address.
+ */
 Socket::Socket(QObject *parent)
     : QObject(parent)
     , d(nullptr)
@@ -314,8 +368,15 @@ Socket::Socket(QObject *parent)
 }
 
 // No need to delete d.
+/**
+ * @brief dtor.
+ */
 Socket::~Socket() = default;
 
+/**
+ * @brief Set the error state of the socket
+ * @param hasError @c true to mark the socket as errored and disconnect it, @c false otherwise
+ */
 void Socket::setHasError(bool hasError)
 {
     if (d != nullptr) {
@@ -325,6 +386,10 @@ void Socket::setHasError(bool hasError)
     }
 }
 
+/**
+ * @brief if the socket is in error state
+ * @return @c true if the socket has error
+ */
 bool Socket::hasError() const
 {
     if (d != nullptr)
@@ -333,6 +398,14 @@ bool Socket::hasError() const
     return true;
 }
 
+/**
+ * @brief Connect to a host
+ * @param host the address to connect to. The scheme decides the transport: @c qmdmm /
+ *             @c qmdmms for TCP, @c ws / @c wss for WebSocket, and a plain (non-URL)
+ *             string for local socket.
+ * @return @c true if the connection is initiated successfully, @c false if the address
+ *         cannot be parsed to a known transport
+ */
 bool Socket::connectToHost(const QString &host)
 {
     Type t = p::SocketP::typeByConnectAddr(host);
@@ -349,6 +422,29 @@ bool Socket::connectToHost(const QString &host)
         return false;
     return d->connectToHost(host);
 }
+
+/**
+ * @fn Socket::sendPacket(QMdmmCore::Packet packet)
+ * @brief emitted when a packet should be sent to the peer
+ * @param packet the packet to be sent
+ */
+
+/**
+ * @fn Socket::packetReceived(QMdmmCore::Packet packet, QPrivateSignal)
+ * @brief emitted when a complete packet is received from the peer
+ * @param packet the received packet
+ */
+
+/**
+ * @fn Socket::socketErrorOccurred(const QString &errorString, QPrivateSignal)
+ * @brief emitted when a socket error occurs
+ * @param errorString the error description
+ */
+
+/**
+ * @fn Socket::socketDisconnected(QPrivateSignal)
+ * @brief emitted when the socket is disconnected
+ */
 
 } // namespace v0
 } // namespace QMdmmNetworking

@@ -8,6 +8,11 @@
 #include <QRandomGenerator>
 #include <utility>
 
+/**
+ * @file qmdmmlogicrunner.h
+ * @brief This is the file where the networking LogicRunner is defined.
+ */
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -679,14 +684,43 @@ void LogicRunnerP::gameOver(const QStringList &winners)
 } // namespace p
 
 namespace v0 {
+
+/**
+ * @class LogicRunner
+ * @brief The server-side object that runs a single complete game.
+ *
+ * A LogicRunner owns the agents (server-side representations of connected clients) and
+ * runs a @c QMdmmCore::Logic on a separate thread. It handles exactly one complete game:
+ * when the game is over, the LogicRunner should be destroyed and all agents disconnected.
+ *
+ * @note This class is designed for one game only. Lobby / multi-room support is not
+ * implemented yet.
+ */
+
+/**
+ * @brief ctor.
+ * @param logicConfiguration The configuration of the logic
+ * @param parent QObject parent.
+ */
 LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
     : QObject(parent)
     , d(new p::LogicRunnerP(logicConfiguration, this))
 {
 }
 
+/**
+ * @brief dtor.
+ */
 LogicRunner::~LogicRunner() = default;
 
+/**
+ * @brief Add a socket (a connected agent) to the game
+ * @param playerName the internal name of the player
+ * @param screenName the screen name of the player
+ * @param agentState the initial state of the agent
+ * @param socket the socket of the connected client
+ * @return the newly added agent, or @c nullptr if the player name already exists
+ */
 Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket)
 {
     if (d->agents.contains(playerName))
@@ -732,19 +766,39 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     return addedAgent;
 }
 
+/**
+ * @brief get the agent of a specific internal name
+ * @param playerName the internal name of the searched agent
+ * @return the agent of the internal name, or @c nullptr if not found
+ */
 Agent *LogicRunner::agent(const QString &playerName)
 {
     return d->agents.value(playerName, nullptr);
 }
 
+/**
+ * @brief get the agent of a specific internal name (const version)
+ * @param playerName the internal name of the searched agent
+ * @return the agent of the internal name, or @c nullptr if not found
+ */
 const Agent *LogicRunner::agent(const QString &playerName) const
 {
     return d->agents.value(playerName, nullptr);
 }
 
+/**
+ * @brief if the room is full
+ * @return @c true if the number of agents reaches @c LogicConfiguration::playerNumPerRoom
+ */
 bool LogicRunner::full() const
 {
     return d->agents.count() >= d->conf.playerNumPerRoom();
 }
+
+/**
+ * @fn LogicRunner::gameOver(QPrivateSignal)
+ * @brief emitted when the game is over
+ */
+
 } // namespace v0
 } // namespace QMdmmNetworking

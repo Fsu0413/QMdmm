@@ -9,9 +9,142 @@
 #include <QTcpSocket>
 #include <utility>
 
+/**
+ * @file qmdmmserver.h
+ * @brief This is the file where the networking Server is defined.
+ */
+
 namespace QMdmmNetworking {
 namespace v0 {
 
+/**
+ * @class ServerConfiguration
+ * @brief Contains configurations of server
+ */
+
+/**
+ * @property ServerConfiguration::tcpEnabled
+ * @brief Whether the TCP server is enabled, default true
+ */
+
+/**
+ * @property ServerConfiguration::tcpPort
+ * @brief The TCP port, default 6366
+ */
+
+/**
+ * @property ServerConfiguration::localEnabled
+ * @brief Whether the local socket server is enabled, default true
+ */
+
+/**
+ * @property ServerConfiguration::localSocketName
+ * @brief The local socket name, default "QMdmm"
+ */
+
+/**
+ * @property ServerConfiguration::websocketEnabled
+ * @brief Whether the WebSocket server is enabled, default true
+ */
+
+/**
+ * @property ServerConfiguration::websocketName
+ * @brief The WebSocket server name, default "QMdmm"
+ */
+
+/**
+ * @property ServerConfiguration::websocketPort
+ * @brief The WebSocket port, default 6367
+ */
+
+/**
+ * @fn ServerConfiguration::tcpEnabled() const
+ * @brief getter of @c ServerConfiguration::tcpEnabled
+ * @return @c ServerConfiguration::tcpEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::setTcpEnabled(bool tcpEnabled)
+ * @brief setter of @c ServerConfiguration::tcpEnabled
+ * @param tcpEnabled @c ServerConfiguration::tcpEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::tcpPort() const
+ * @brief getter of @c ServerConfiguration::tcpPort
+ * @return @c ServerConfiguration::tcpPort
+ */
+
+/**
+ * @fn ServerConfiguration::setTcpPort(uint16_t tcpPort)
+ * @brief setter of @c ServerConfiguration::tcpPort
+ * @param tcpPort @c ServerConfiguration::tcpPort
+ */
+
+/**
+ * @fn ServerConfiguration::localEnabled() const
+ * @brief getter of @c ServerConfiguration::localEnabled
+ * @return @c ServerConfiguration::localEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::setLocalEnabled(bool localEnabled)
+ * @brief setter of @c ServerConfiguration::localEnabled
+ * @param localEnabled @c ServerConfiguration::localEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::localSocketName() const
+ * @brief getter of @c ServerConfiguration::localSocketName
+ * @return @c ServerConfiguration::localSocketName
+ */
+
+/**
+ * @fn ServerConfiguration::setLocalSocketName(const QString &localSocketName)
+ * @brief setter of @c ServerConfiguration::localSocketName
+ * @param localSocketName @c ServerConfiguration::localSocketName
+ */
+
+/**
+ * @fn ServerConfiguration::websocketEnabled() const
+ * @brief getter of @c ServerConfiguration::websocketEnabled
+ * @return @c ServerConfiguration::websocketEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::setWebsocketEnabled(bool websocketEnabled)
+ * @brief setter of @c ServerConfiguration::websocketEnabled
+ * @param websocketEnabled @c ServerConfiguration::websocketEnabled
+ */
+
+/**
+ * @fn ServerConfiguration::websocketName() const
+ * @brief getter of @c ServerConfiguration::websocketName
+ * @return @c ServerConfiguration::websocketName
+ */
+
+/**
+ * @fn ServerConfiguration::setWebsocketName(const QString &websocketName)
+ * @brief setter of @c ServerConfiguration::websocketName
+ * @param websocketName @c ServerConfiguration::websocketName
+ */
+
+/**
+ * @fn ServerConfiguration::websocketPort() const
+ * @brief getter of @c ServerConfiguration::websocketPort
+ * @return @c ServerConfiguration::websocketPort
+ */
+
+/**
+ * @fn ServerConfiguration::setWebsocketPort(uint16_t websocketPort)
+ * @brief setter of @c ServerConfiguration::websocketPort
+ * @param websocketPort @c ServerConfiguration::websocketPort
+ */
+
+/**
+ * @brief Get default values of configuration
+ * @return default configuration
+ */
 const ServerConfiguration &ServerConfiguration::defaults()
 {
     // clang-format off
@@ -250,12 +383,30 @@ void ServerP::logicRunnerGameOver()
 
 namespace v0 {
 
+/**
+ * @class Server
+ * @brief The server that accepts connections and runs games.
+ *
+ * The server listens on the configured transports (TCP / local socket / WebSocket) and,
+ * once enough players sign in, starts a @c LogicRunner for a complete game.
+ */
+
+/**
+ * @brief ctor.
+ * @param serverConfiguration The configuration of the server
+ * @param logicConfiguration The configuration of the logic used by the games
+ * @param parent QObject parent.
+ */
 Server::Server(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent)
     : QObject(parent)
     , d(new p::ServerP(std::move(serverConfiguration), std::move(logicConfiguration), this))
 {
 }
 
+/**
+ * @brief Start listening on all enabled transports
+ * @return @c true if all enabled transports are listening successfully
+ */
 bool Server::listen()
 {
     bool ret = true;
@@ -272,6 +423,9 @@ bool Server::listen()
 
 // No need to delete d.
 // It will always be deleted by QObject dtor
+/**
+ * @brief dtor.
+ */
 Server::~Server() = default;
 } // namespace v0
 } // namespace QMdmmNetworking
