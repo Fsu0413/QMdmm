@@ -9,8 +9,7 @@ if (DOXYGEN_FOUND)
     endforeach()
 
     foreach (i IN LISTS QMDMMNETWORKING_DOC_FILES)
-        # uncomment when Core is ready
-        # list(APPEND QMDMM_DOC_SOURCE_FILES "../QMdmmNetworking/${i}")
+        list(APPEND QMDMM_DOC_SOURCE_FILES "../QMdmmNetworking/${i}")
     endforeach()
 
     set(DOXYGEN_PROJECT_NAME "${PROJECT_NAME}")
