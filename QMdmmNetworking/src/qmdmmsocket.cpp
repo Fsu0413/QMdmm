@@ -68,10 +68,8 @@ bool SocketP::packetReceived(const QByteArray &arr)
     QMdmmCore::Packet packet = QMdmmCore::Packet::fromJson(arr, &packetError);
 
     if (packet.hasError()) {
-        // TODO: make use of this error string
-        (void)packetError;
-
         // Don't process more package for this connection. It is not guaranteed to be the desired client
+        errorOccurred(packetError);
         q->setHasError(true);
         return false;
     }
