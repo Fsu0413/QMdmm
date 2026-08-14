@@ -724,7 +724,6 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::socketErrorOccurred(const QString &errorString)
 {
-    // TODO: redirect this error string out of client
     socket->disconnect(this);
     emit q->socketErrorDisconnected(errorString, Client::QPrivateSignal());
     socket->deleteLater();
