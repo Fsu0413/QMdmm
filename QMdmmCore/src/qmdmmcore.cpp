@@ -33,7 +33,7 @@ namespace v0 {
 /**
  * @def QMDMM_EXPORT_NAME
  * @brief Specify a file name for automatic header generation. Expand to nothing.
- * @param QMdmmCoreGlobal dummy paramater.
+ * @param QMdmmCoreGlobal dummy parameter.
  */
 
 /**
@@ -214,7 +214,7 @@ namespace v0 {
 
 /**
  * @fn QMdmmCore::Data::isPlaceAdjacent(int p1, int p2)
- * @brief Judges if the 2 places are adjacent, for judgement like make-move ability or other things.
+ * @brief Judges if the 2 places are adjacent, for judgment like make-move ability or other things.
  * @param p1 Place 1
  * @param p2 Place 2
  * @return If the 2 places are adjacent.
@@ -256,7 +256,7 @@ QStringList Data::stoneScissorsClothWinners(const QHash<QString, Data::StoneScis
             std::swap(it1, it2);
 
         // now it1.value is winner, it2.value is loser
-        // we'd make every winners repeat N times (N is loser.count), for the real judgement use
+        // we'd make every winners repeat N times (N is loser.count), for the real judgment use
         QStringList d;
         for (int i = 0; i < it2.value().length(); ++i)
             d.append(it1.value());

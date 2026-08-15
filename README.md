@@ -51,7 +51,7 @@ config-gated (`enableLetMove`).
 | Module | Purpose | Status |
 |---|---|---|
 | `QMdmmCore` | Game rules engine (players / rooms / round state machine / config) | Usable, tested |
-| `QMdmmNetworking` | Network layer (server / client / signalling) | Main flow works; reconnect / spectate / lobby missing |
+| `QMdmmNetworking` | Network layer (server / client / signaling) | Main flow works; reconnect / spectate / lobby missing |
 | `QMdmmServer` | Standalone server program | Runs; full CLI configuration |
 | `QMdmmGui` | Graphical client (QML) | Start menu only; cannot play a full game yet |
 

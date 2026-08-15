@@ -15,7 +15,7 @@ namespace p {
 
 // QSettings is NOT some type of QVariantMap, where it supports grouping, and some API names are different (insert vs. setValue)
 // But it is needed to provide a unique API on top of QVariantMap and QSettings, where the API name difference should go away.
-// For QVariantMap the grouping shoule be implemented by ourselves (not so complex, a few lines of code only).
+// For QVariantMap the grouping should be implemented by ourselves (not so complex, a few lines of code only).
 
 // The unique API is following QMdmmCore::p::SettingsWrapperP
 

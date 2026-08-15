@@ -239,7 +239,7 @@ void QMdmmGameClient::addBot(const QString &name)
     auto *bot = new Client(cfg, this);
     bot->setObjectName(name);
 
-    // Auto-reply: mirror the server's default-reply behaviour so the room fills
+    // Auto-reply: mirror the server's default-reply behavior so the room fills
     // and the match progresses without a human driving the bot.
     connect(bot, &Client::requestStoneScissorsCloth, bot, [bot]() {
         bot->replyStoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
