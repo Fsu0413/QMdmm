@@ -89,8 +89,8 @@ IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTR
 namespace {
 inline QString generateRandomString()
 {
-    std::random_device random1;
-    std::mt19937 random2(random1());
+    static thread_local std::random_device random1;
+    static thread_local std::mt19937 random2(random1());
 
     QByteArray arr;
     for (int i = 0; i < 30; ++i)
