@@ -9,11 +9,10 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
-#include <QScopedPointer>
 
 int main(int argc, char *argv[])
 {
-    QScopedPointer<QCoreApplication> a(new QCoreApplication(argc, argv));
+    QCoreApplication a(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("Fsu0413.me"));
     QCoreApplication::setApplicationName(QStringLiteral("QMdmmServer"));
     QCoreApplication::setApplicationVersion(QMdmmCore::Global::version().toString());
