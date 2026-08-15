@@ -109,9 +109,10 @@ public:
 
     QMdmmCore::LogicConfiguration conf;
 
-    // TODO: check if these queue connected signals / slots works with or without qRegisterMetaType<>()
-    // If not, a new global function is needed in QMdmmCore for doing this work
-    // I did a test of these combinations and found that all these types work without qRegisterMetaType<>() but it needs further testing
+    // No qRegisterMetaType<>() is needed for the queued signals / slots below: their argument
+    // types are QMdmmCore::Data enums / flags (auto-registered via Q_ENUM_NS / Q_FLAG_NS) plus
+    // Qt's built-in container metatypes, and the connections use the function-pointer syntax.
+    // Verified by the in-process smoke test, which drives a full game across the logic thread.
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // slots called from agent
