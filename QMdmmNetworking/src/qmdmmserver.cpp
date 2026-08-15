@@ -205,6 +205,7 @@ IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTY
 
 } // namespace v0
 
+#ifndef DOXYGEN
 namespace p {
 
 QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> ServerP::notifyCallback {
@@ -380,6 +381,7 @@ void ServerP::logicRunnerGameOver()
 }
 
 } // namespace p
+#endif
 
 namespace v0 {
 

@@ -12,6 +12,7 @@
  */
 
 namespace QMdmmNetworking {
+#ifndef DOXYGEN
 namespace p {
 
 namespace SocketPFactory {
@@ -292,6 +293,7 @@ void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e
         errorOccurred(socket->errorString());
 }
 } // namespace p
+#endif
 namespace v0 {
 
 /**

@@ -14,6 +14,7 @@
  */
 
 namespace QMdmmNetworking {
+#ifndef DOXYGEN
 namespace p {
 
 QHash<QMdmmCore::Protocol::NotifyId, void (ServerAgentP::*)(const QJsonValue &)> ServerAgentP::notifyCallback {
@@ -682,6 +683,7 @@ void LogicRunnerP::gameOver(const QStringList &winners)
         agent->notifyGameOver(winners);
 }
 } // namespace p
+#endif
 
 namespace v0 {
 
