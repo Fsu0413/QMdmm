@@ -6,8 +6,6 @@
 #include <QDir>
 #include <QSettings>
 
-#include <mutex>
-
 namespace QMdmmCore {
 
 namespace p {
@@ -124,14 +122,16 @@ QString QVariantMapWrapperP::keyWithGroup(const QString &key) const
 }
 
 namespace {
-std::once_flag qSettingsInitialized;
-
-void initializeQSettings()
+struct InitializeQSettings
 {
-    QSettings::setDefaultFormat(QSettings::IniFormat);
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
-}
+    InitializeQSettings()
+    {
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
+    }
+    Q_DISABLE_COPY_MOVE(InitializeQSettings);
+};
 } // namespace
 
 SettingsP::SettingsP()
@@ -139,7 +139,7 @@ SettingsP::SettingsP()
     , userConfig(nullptr)
     , specifiedConfig(nullptr)
 {
-    std::call_once(qSettingsInitialized, &initializeQSettings);
+    static InitializeQSettings initializeQSettings;
 
     globalConfig = new QSettingsWrapperP(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
     userConfig = new QSettingsWrapperP(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
