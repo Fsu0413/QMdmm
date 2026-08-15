@@ -817,9 +817,11 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket)
     foreach (p::ServerAgentP *agent, d->agents)
         reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
 
-    // Re-announce the current phase. A reconnect only happens once the room is full and the game
-    // has started, so tell the reconnected client the game is running and reset its (fresh) local
-    // room for the current round.
+    // TODO: resending notifyGameStart/notifyRoundStart here is wrong. The reconnecting client never
+    // left the round (only its socket dropped), so a replayed RoundStart makes it clear its local
+    // round state and desync from the server. Replace with precise catch-up: the client reports its
+    // last received round-event sequence number on reconnect, and the server replays only the missed
+    // events (ssc / action-order / action / upgrade) instead of re-announcing the round.
     reconnectedAgent->notifyGameStart();
     reconnectedAgent->notifyRoundStart();
 
