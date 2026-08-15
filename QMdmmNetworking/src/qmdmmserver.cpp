@@ -294,7 +294,20 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 #undef CONF
 #undef CONVERTAGENTSTATE
 
-        // TODO: check if reconnect
+        // Reconnect path: if a player signs in with a name that is already in the current room and
+        // that agent has been marked offline (its socket was dropped and cleared by
+        // socketDisconnected), rebind the new socket and resume instead of treating this as a fresh
+        // join -- addSocket would reject the duplicate name as a spurious "new player" error. This
+        // must run before the "current is full" branch below, which would otherwise spin up a
+        // brand-new empty room for a player who is really reconnecting.
+        if (current != nullptr) {
+            Agent *existing = current->agent(playerName);
+            if (existing != nullptr && !existing->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
+                if (current->reconnect(playerName, socket) != nullptr)
+                    return;
+                break;
+            }
+        }
 
         if (current == nullptr || current->full()) {
             current = new LogicRunner(logicConfiguration, this);
