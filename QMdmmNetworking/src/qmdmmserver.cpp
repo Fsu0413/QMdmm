@@ -294,19 +294,20 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 #undef CONF
 #undef CONVERTAGENTSTATE
 
-        // Reconnect path: if a player signs in with a name that is already in the current room and
-        // that agent has been marked offline (its socket was dropped and cleared by
-        // socketDisconnected), rebind the new socket and resume instead of treating this as a fresh
-        // join -- addSocket would reject the duplicate name as a spurious "new player" error. This
-        // must run before the "current is full" branch below, which would otherwise spin up a
-        // brand-new empty room for a player who is really reconnecting.
-        if (current != nullptr) {
-            Agent *existing = current->agent(playerName);
-            if (existing != nullptr && !existing->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
-                if (current->reconnect(playerName, socket) != nullptr)
-                    return;
-                break;
-            }
+        // Reconnect path: a reconnecting player may live in ANY room, not just `current`. `current`
+        // only tracks the room currently recruiting players; full rooms keep running in the
+        // background and are deleted later on gameOver. So scan every LogicRunner child for the
+        // offline agent and reconnect it in whichever room it is found. A still-online duplicate
+        // name falls through to addSocket below, which rejects it as a spurious "new player" error.
+        const auto runners = findChildren<LogicRunner *>();
+        for (LogicRunner *runner : runners) {
+            Agent *existing = runner->agent(playerName);
+            if (existing == nullptr || existing->state().testFlag(QMdmmCore::Data::StateMaskOnline))
+                continue;
+            if (runner->reconnect(playerName, socket) != nullptr)
+                return;
+            socket->setHasError(true);
+            return;
         }
 
         if (current == nullptr || current->full()) {
