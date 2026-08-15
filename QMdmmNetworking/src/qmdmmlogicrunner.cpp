@@ -547,7 +547,7 @@ void LogicRunnerP::socketDisconnected()
         // Agent should exit game if round over or logic runs pass round over, which makes game over and the logic quits
         // But if client is reconnected before round over, the game should continue
         // TODO: round over - implement it in LogicRunnerP::upgradeResult, iterate all agents and check if they are online
-        // before notifying agent->notifyUpgrade to everyone. Run gameover if at least one agent is offline. 
+        // before notifying agent->notifyUpgrade to everyone. Run gameover if at least one agent is offline.
         // This matches the gameover behavior of QMdmmCore::Logic
 
         QMdmmCore::Data::AgentState state = disconnectedAgent->state();
@@ -772,6 +772,58 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     }
 
     return addedAgent;
+}
+
+/**
+ * @brief Reconnect a previously disconnected agent by rebinding its socket
+ * @param playerName the internal name of the player to reconnect
+ * @param socket the new socket of the reconnecting client
+ * @return the reconnected agent, or @c nullptr if the player is unknown or still connected
+ *
+ * A reconnect only makes sense for a player who is already in the room (the room is full, so the
+ * game has started) but whose socket was cleared by @c LogicRunnerP::socketDisconnected. It
+ * rebinds the socket, restores the online / trust flags, and resends the state snapshot so the
+ * reconnecting client can rebuild its room view.
+ */
+Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket)
+{
+    p::ServerAgentP *reconnectedAgent = d->agents.value(playerName, nullptr);
+    if (reconnectedAgent == nullptr)
+        return nullptr;
+
+    // A still-connected agent is not a reconnect candidate: only an agent whose socket was
+    // cleared by socketDisconnected can be rebound here.
+    if (reconnectedAgent->socket != nullptr)
+        return nullptr;
+
+    // Rebind the socket. setSocket is safe because socketDisconnected already set the old socket
+    // to nullptr before this point, so nothing gets double-deleted.
+    reconnectedAgent->setSocket(socket);
+
+    // Restore the online / trust flags that socketDisconnected cleared. setState emits
+    // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChanged
+    // broadcast to every agent -- this is what lets the other, still-connected clients see that
+    // the player is back online.
+    QMdmmCore::Data::AgentState state = reconnectedAgent->state();
+    state.setFlag(QMdmmCore::Data::StateMaskOnline, true).setFlag(QMdmmCore::Data::StateMaskTrust, true);
+    reconnectedAgent->setState(state);
+
+    // Resend the state snapshot to the reconnected client so it can rebuild its room: the logic
+    // configuration, then every player (identity + current state). The client treats a duplicate
+    // notifyPlayerAdded as benign (ClientP::notifyPlayerAdded), and the notifyAgentStateChanged
+    // broadcast above is dropped by the reconnected client until it has learned the players here.
+    reconnectedAgent->notifyLogicConfiguration();
+
+    foreach (p::ServerAgentP *agent, d->agents)
+        reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
+
+    // Re-announce the current phase. A reconnect only happens once the room is full and the game
+    // has started, so tell the reconnected client the game is running and reset its (fresh) local
+    // room for the current round.
+    reconnectedAgent->notifyGameStart();
+    reconnectedAgent->notifyRoundStart();
+
+    return reconnectedAgent;
 }
 
 /**

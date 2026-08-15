@@ -44,6 +44,7 @@ public:
 
     // Functions to be called in Server thread
     Agent *addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket);
+    Agent *reconnect(const QString &playerName, Socket *socket);
 
     Agent *agent(const QString &playerName);
     [[nodiscard]] const Agent *agent(const QString &playerName) const;
