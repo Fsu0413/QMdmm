@@ -40,27 +40,8 @@ public:
     using QVariantMap::operator=;
 #endif
 
-    // NOLINTBEGIN(bugprone-macro-parentheses)
-
-/**
- * @brief Defines a value-typed configuration getter and setter.
- */
-#define DEFINE_CONFIGURATION(type, valueName, ValueName) \
-    [[nodiscard]] type valueName() const;                \
-    void set##ValueName(type valueName);
-/**
- * @brief Defines a reference-typed configuration getter and setter.
- */
-#define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
-    [[nodiscard]] type valueName() const;                 \
-    void set##ValueName(const type &valueName);
-
-    // NOLINTEND(bugprone-macro-parentheses)
-
-    DEFINE_CONFIGURATION2(QString, screenName, ScreenName)
-
-#undef DEFINE_CONFIGURATION2
-#undef DEFINE_CONFIGURATION
+    [[nodiscard]] QString screenName() const;
+    void setScreenName(const QString &screenName);
 };
 
 class QMDMMNETWORKING_EXPORT Client final : public QObject

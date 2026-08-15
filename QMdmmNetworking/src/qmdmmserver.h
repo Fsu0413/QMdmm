@@ -51,33 +51,20 @@ public:
     using QJsonObject::operator=;
 #endif
 
-    // NOLINTBEGIN(bugprone-macro-parentheses)
-
-/**
- * @brief Defines a value-typed configuration getter and setter.
- */
-#define DEFINE_CONFIGURATION(type, valueName, ValueName) \
-    [[nodiscard]] type valueName() const;                \
-    void set##ValueName(type valueName);
-/**
- * @brief Defines a reference-typed configuration getter and setter.
- */
-#define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
-    [[nodiscard]] type valueName() const;                 \
-    void set##ValueName(const type &valueName);
-
-    // NOLINTEND(bugprone-macro-parentheses)
-
-    DEFINE_CONFIGURATION(bool, tcpEnabled, TcpEnabled)
-    DEFINE_CONFIGURATION(uint16_t, tcpPort, TcpPort)
-    DEFINE_CONFIGURATION(bool, localEnabled, LocalEnabled)
-    DEFINE_CONFIGURATION2(QString, localSocketName, LocalSocketName)
-    DEFINE_CONFIGURATION(bool, websocketEnabled, WebsocketEnabled)
-    DEFINE_CONFIGURATION2(QString, websocketName, WebsocketName)
-    DEFINE_CONFIGURATION(uint16_t, websocketPort, WebsocketPort)
-
-#undef DEFINE_CONFIGURATION2
-#undef DEFINE_CONFIGURATION
+    [[nodiscard]] bool tcpEnabled() const;
+    void setTcpEnabled(bool tcpEnabled);
+    [[nodiscard]] uint16_t tcpPort() const;
+    void setTcpPort(uint16_t tcpPort);
+    [[nodiscard]] bool localEnabled() const;
+    void setLocalEnabled(bool localEnabled);
+    [[nodiscard]] QString localSocketName() const;
+    void setLocalSocketName(const QString &localSocketName);
+    [[nodiscard]] bool websocketEnabled() const;
+    void setWebsocketEnabled(bool websocketEnabled);
+    [[nodiscard]] QString websocketName() const;
+    void setWebsocketName(const QString &websocketName);
+    [[nodiscard]] uint16_t websocketPort() const;
+    void setWebsocketPort(uint16_t websocketPort);
 };
 
 class QMDMMNETWORKING_EXPORT Server : public QObject

@@ -68,33 +68,37 @@ public:
     using QJsonObject::operator=;
 #endif
 
-/**
- * @brief Defines a value-typed configuration getter and setter.
- */
-#define DEFINE_CONFIGURATION(type, valueName, ValueName) \
-    [[nodiscard]] type valueName() const;                \
-    void set##ValueName(type valueName);
-
     // TODO: move to ServerConfiguration
-    DEFINE_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom)
-    DEFINE_CONFIGURATION(int, requestTimeout, RequestTimeout)
+    [[nodiscard]] int playerNumPerRoom() const;
+    void setPlayerNumPerRoom(int playerNumPerRoom);
+    [[nodiscard]] int requestTimeout() const;
+    void setRequestTimeout(int requestTimeout);
 
     // standard configuration
-    DEFINE_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage)
-    DEFINE_CONFIGURATION(int, maximumKnifeDamage, MaximumKnifeDamage)
-    DEFINE_CONFIGURATION(int, initialHorseDamage, InitialHorseDamage)
-    DEFINE_CONFIGURATION(int, maximumHorseDamage, MaximumHorseDamage)
-    DEFINE_CONFIGURATION(int, initialMaxHp, InitialMaxHp)
-    DEFINE_CONFIGURATION(int, maximumMaxHp, MaximumMaxHp)
+    [[nodiscard]] int initialKnifeDamage() const;
+    void setInitialKnifeDamage(int initialKnifeDamage);
+    [[nodiscard]] int maximumKnifeDamage() const;
+    void setMaximumKnifeDamage(int maximumKnifeDamage);
+    [[nodiscard]] int initialHorseDamage() const;
+    void setInitialHorseDamage(int initialHorseDamage);
+    [[nodiscard]] int maximumHorseDamage() const;
+    void setMaximumHorseDamage(int maximumHorseDamage);
+    [[nodiscard]] int initialMaxHp() const;
+    void setInitialMaxHp(int initialMaxHp);
+    [[nodiscard]] int maximumMaxHp() const;
+    void setMaximumMaxHp(int maximumMaxHp);
 
     // legacy experience
-    DEFINE_CONFIGURATION(int, punishHpModifier, PunishHpModifier)
-    DEFINE_CONFIGURATION(LogicConfiguration::PunishHpRoundStrategy, punishHpRoundStrategy, PunishHpRoundStrategy)
-    DEFINE_CONFIGURATION(bool, zeroHpAsDead, ZeroHpAsDead)
-    DEFINE_CONFIGURATION(bool, enableLetMove, EnableLetMove)
-    DEFINE_CONFIGURATION(bool, canBuyOnlyInInitialCity, CanBuyOnlyInInitialCity)
-
-#undef DEFINE_CONFIGURATION
+    [[nodiscard]] int punishHpModifier() const;
+    void setPunishHpModifier(int punishHpModifier);
+    [[nodiscard]] LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy() const;
+    void setPunishHpRoundStrategy(LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy);
+    [[nodiscard]] bool zeroHpAsDead() const;
+    void setZeroHpAsDead(bool zeroHpAsDead);
+    [[nodiscard]] bool enableLetMove() const;
+    void setEnableLetMove(bool enableLetMove);
+    [[nodiscard]] bool canBuyOnlyInInitialCity() const;
+    void setCanBuyOnlyInInitialCity(bool canBuyOnlyInInitialCity);
 
     bool deserialize(const QJsonValue &value);
 };
