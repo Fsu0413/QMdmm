@@ -100,8 +100,8 @@ ctest --test-dir build --output-on-failure
 
 ## Network protocol
 
-The wire protocol is JSON-based and versioned under the `QMdmmCore::v1`
-inline namespace. Packets come in three kinds (`Protocol::PacketType`):
+The wire protocol is JSON-based. Packets come in three kinds
+(`Protocol::PacketType`):
 
 - **Request** — the server (`Logic`) asks an agent to make a decision:
   `StoneScissorsCloth`, `ActionOrder`, `Action`, `Upgrade`.
