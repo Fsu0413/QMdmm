@@ -546,7 +546,8 @@ void LogicRunnerP::socketDisconnected()
         // case 1: room is full, so game has started
         // Agent should exit game if round over or logic runs pass round over, which makes game over and the logic quits
         // But if client is reconnected before round over, the game should continue
-        // TODO: round over
+        // TODO: round over - implement it in LogicRunnerP::upgradeResult, iterate all agents and check if they are online
+        // before notifying agent->notifyUpgrade to everyone. This matches the gameover behavior of QMdmmCore::Logic
 
         QMdmmCore::Data::AgentState state = disconnectedAgent->state();
         state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
@@ -567,7 +568,7 @@ void LogicRunnerP::socketDisconnected()
         }
 
         // If there is an active request, use default reply
-        // QMdmmServerAgentPrivate::executeDefaultReply handles it even if there is not active request
+        // QMdmmNetworking::p::ServerAgentP::executeDefaultReply handles it even if there is no active request
         disconnectedAgent->executeDefaultReply();
     } else {
         // case 2: room is not full, so game hasn't started
@@ -668,6 +669,7 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     // then start it. Without this, the match stalls after the very first round.
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundStart();
+
     emit roundStart();
 }
 
@@ -750,6 +752,7 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
 
     foreach (p::ServerAgentP *agent, d->agents)
         agent->notifyPlayerAdded(playerName, screenName, agentState);
+
     // Tell the newly added agent about every player that joined before it.
     // NOTE: iterate over the *existing* agents and report their identities,
     // not the new player's name again (that would duplicate notifyPlayerAdded

@@ -42,7 +42,7 @@ enum NotifyId : uint16_t
     NotifyVersion, // string versionNumber, int protocolVersion
 
     NotifyFromAgentMask = 0x2000,
-    NotifyLogicConfiguration, // broadcast, object (see QMdmmLogicConfiguration in qmdmmlogic.h)
+    NotifyLogicConfiguration, // broadcast, object (see QMdmmCore::LogicConfiguration in qmdmmlogic.h)
     NotifyAgentStateChanged, // string playerName, int (AgentState) state
     NotifyPlayerAdded, // string playerName, string screenName, int(AgentState) agentState
     NotifyPlayerRemoved, // string playerName
@@ -85,7 +85,7 @@ QMDMMCORE_EXPORT extern int version() noexcept;
 // So put it to header file and inherit QJsonObject, in order not to affect binary compatibility when more data come in
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
 
-// documentation is not needed since it is purely internal to QMdmmPacket
+// documentation is not needed since it is purely internal to QMdmmCore::Packet
 struct QMDMMCORE_EXPORT PacketData final : public QSharedData, public QJsonObject
 {
     PacketData();
