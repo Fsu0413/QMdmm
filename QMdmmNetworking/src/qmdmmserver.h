@@ -53,9 +53,15 @@ public:
 
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
+/**
+ * @brief Defines a value-typed configuration getter and setter.
+ */
 #define DEFINE_CONFIGURATION(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                \
     void set##ValueName(type valueName);
+/**
+ * @brief Defines a reference-typed configuration getter and setter.
+ */
 #define DEFINE_CONFIGURATION2(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                 \
     void set##ValueName(const type &valueName);

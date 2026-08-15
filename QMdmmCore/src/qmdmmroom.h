@@ -68,6 +68,9 @@ public:
     using QJsonObject::operator=;
 #endif
 
+/**
+ * @brief Defines a value-typed configuration getter and setter.
+ */
 #define DEFINE_CONFIGURATION(type, valueName, ValueName) \
     [[nodiscard]] type valueName() const;                \
     void set##ValueName(type valueName);
