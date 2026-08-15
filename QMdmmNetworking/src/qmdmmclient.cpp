@@ -16,7 +16,10 @@
  */
 
 namespace QMdmmNetworking {
+
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class ClientConfiguration
@@ -374,5 +377,7 @@ void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
  * @brief emitted when a player operates
  */
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 } // namespace QMdmmNetworking

@@ -17,15 +17,19 @@
 QMDMM_EXPORT_NAME(QMdmmSocket)
 
 namespace QMdmmNetworking {
+
+#ifndef DOXYGEN
 namespace p {
 
-// QMdmmSocket should be a wrapper for QObject, and do serialize / deserialize work of received data
 class SocketP;
 } // namespace p
+#endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
-// For Server: This QMdmmSocket should be created when socket is in Open state!
+// Socket should be a wrapper for QObject, and do serialize / deserialize work of received data
 class QMDMMNETWORKING_EXPORT Socket : public QObject
 {
     Q_OBJECT
@@ -39,12 +43,14 @@ public:
         TypeQWebSocket,
     };
 
+    Q_DISABLE_COPY_MOVE(Socket);
+
     // ctor for Server: pass an already-open socket here
     explicit Socket(QTcpSocket *t, QObject *parent = nullptr);
     explicit Socket(QLocalSocket *l, QObject *parent = nullptr);
     explicit Socket(QWebSocket *w, QObject *parent = nullptr);
 
-    // ctor for Client: pass type here
+    // ctor for Client: late-bound to a socket when connectToHost is called
     explicit Socket(QObject *parent = nullptr);
     ~Socket() override;
 
@@ -60,6 +66,7 @@ signals:
     void socketErrorOccurred(const QString &errorString, QPrivateSignal);
     void socketDisconnected(QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     friend class p::SocketP;
     // non-const d-ptr.
@@ -67,13 +74,16 @@ private:
     // function connectToHost alters this d-ptr with proper implementation.
     // SocketP is QObject. QPointer can't be used since it is incomplete here
     p::SocketP *d;
-    Q_DISABLE_COPY_MOVE(Socket);
+#endif
 };
+
+#ifndef DOXYGEN
 } // namespace v0
 
 inline namespace v1 {
 using v0::Socket;
 }
+#endif
 
 } // namespace QMdmmNetworking
 

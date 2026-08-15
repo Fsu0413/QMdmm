@@ -16,9 +16,11 @@ QMDMM_EXPORT_NAME(QMdmmRoom)
 
 namespace QMdmmCore {
 
+#ifndef DOXYGEN
 namespace p {
 struct RoomP;
 }
+#endif
 
 #ifndef DOXYGEN
 namespace v0 {
@@ -99,6 +101,8 @@ class QMDMMCORE_EXPORT Room final : public QObject
     Q_OBJECT
 
 public:
+    Q_DISABLE_COPY_MOVE(Room);
+
     explicit Room(LogicConfiguration logicConfiguration, QObject *parent = nullptr);
     ~Room() override;
 
@@ -136,9 +140,10 @@ signals:
     void playerAdded(const QString &playerName, QPrivateSignal);
     void playerRemoved(const QString &playerName, QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     const std::unique_ptr<p::RoomP> d;
-    Q_DISABLE_COPY_MOVE(Room)
+#endif
 };
 
 #ifndef DOXYGEN

@@ -294,7 +294,10 @@ void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e
 }
 } // namespace p
 #endif
+
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class Socket
@@ -448,5 +451,7 @@ bool Socket::connectToHost(const QString &host)
  * @brief emitted when the socket is disconnected
  */
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 } // namespace QMdmmNetworking

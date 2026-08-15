@@ -685,7 +685,9 @@ void LogicRunnerP::gameOver(const QStringList &winners)
 } // namespace p
 #endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class LogicRunner
@@ -802,5 +804,7 @@ bool LogicRunner::full() const
  * @brief emitted when the game is over
  */
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 } // namespace QMdmmNetworking

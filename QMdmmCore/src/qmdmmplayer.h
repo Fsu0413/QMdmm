@@ -11,9 +11,11 @@ QMDMM_EXPORT_NAME(QMdmmPlayer)
 
 namespace QMdmmCore {
 
+#ifndef DOXYGEN
 namespace p {
 struct PlayerP;
 }
+#endif
 
 #ifndef DOXYGEN
 namespace v0 {
@@ -40,6 +42,8 @@ class QMDMMCORE_EXPORT Player final : public QObject
     Q_PROPERTY(bool alive READ alive STORED false DESIGNABLE false FINAL)
 
 public:
+    Q_DISABLE_COPY_MOVE(Player);
+
     explicit Player(const QString &name, Room *room /* or parent */);
     ~Player() override;
 
@@ -144,7 +148,6 @@ signals:
 private:
     friend struct p::PlayerP;
     const std::unique_ptr<p::PlayerP> d;
-    Q_DISABLE_COPY_MOVE(Player)
 #endif
 };
 

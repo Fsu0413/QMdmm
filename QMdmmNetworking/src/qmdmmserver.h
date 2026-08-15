@@ -19,11 +19,15 @@ QMDMM_EXPORT_NAME(QMdmmServer)
 
 namespace QMdmmNetworking {
 
+#ifndef DOXYGEN
 namespace p {
 class ServerP;
 }
+#endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 struct QMDMMNETWORKING_EXPORT ServerConfiguration final : public QJsonObject
 {
@@ -75,24 +79,29 @@ class QMDMMNETWORKING_EXPORT Server : public QObject
     Q_OBJECT
 
 public:
+    Q_DISABLE_COPY_MOVE(Server);
+
     explicit Server(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, QObject *parent = nullptr);
     ~Server() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     bool listen();
 
+#ifndef DOXYGEN
 private:
     // ServerP is QObject. QPointer can't be used since it is incomplete here
     p::ServerP *const d;
-    Q_DISABLE_COPY_MOVE(Server);
+#endif
 };
 
+#ifndef DOXYGEN
 } // namespace v0
 
 inline namespace v1 {
 using v0::Server;
 using v0::ServerConfiguration;
 } // namespace v1
+#endif
 
 } // namespace QMdmmNetworking
 

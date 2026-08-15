@@ -15,9 +15,11 @@ class tst_QMdmmLogic;
 
 namespace QMdmmCore {
 
+#ifndef DOXYGEN
 namespace p {
 struct LogicP;
 }
+#endif
 
 #ifndef DOXYGEN
 namespace v0 {
@@ -40,6 +42,8 @@ public:
         Upgrade,
     };
     Q_ENUM(State)
+
+    Q_DISABLE_COPY_MOVE(Logic);
 
     explicit Logic(const LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~Logic() override;
@@ -73,8 +77,6 @@ signals: // NOLINT(readability-redundant-access-specifiers)
 private:
     friend struct p::LogicP;
     const std::unique_ptr<p::LogicP> d;
-    Q_DISABLE_COPY_MOVE(Logic);
-
     friend class ::tst_QMdmmLogic;
 #endif
 };

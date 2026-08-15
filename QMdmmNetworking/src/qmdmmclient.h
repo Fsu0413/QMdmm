@@ -13,11 +13,16 @@ QMDMM_EXPORT_NAME(QMdmmClientConfiguration)
 QMDMM_EXPORT_NAME(QMdmmClient)
 
 namespace QMdmmNetworking {
+
+#ifndef DOXYGEN
 namespace p {
 class ClientP;
 }
+#endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 struct QMDMMNETWORKING_EXPORT ClientConfiguration final : public QVariantMap
 {
@@ -57,6 +62,8 @@ class QMDMMNETWORKING_EXPORT Client final : public QObject
     Q_OBJECT
 
 public:
+    Q_DISABLE_COPY_MOVE(Client);
+
     explicit Client(ClientConfiguration clientConfiguration, QObject *parent = nullptr);
     ~Client() override;
 
@@ -99,18 +106,22 @@ signals:
     void notifySpoken(const QString &playerName, const QString &content, QPrivateSignal);
     void notifyOperated(QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     friend class p::ClientP;
     // ClientP is QObject. QPointer can't be used since it is incomplete here
     p::ClientP *const d;
-    Q_DISABLE_COPY_MOVE(Client);
+#endif
 };
+
+#ifndef DOXYGEN
 } // namespace v0
 
 inline namespace v1 {
 using v0::Client;
 using v0::ClientConfiguration;
 } // namespace v1
+#endif
 } // namespace QMdmmNetworking
 
 #endif

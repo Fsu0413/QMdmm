@@ -13,11 +13,16 @@
 QMDMM_EXPORT_NAME(QMdmmAgent)
 
 namespace QMdmmNetworking {
+
+#ifndef DOXYGEN
 namespace p {
 struct AgentP;
 }
+#endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 class Socket;
 
@@ -30,6 +35,8 @@ class QMDMMNETWORKING_EXPORT Agent : public QObject
     Q_PROPERTY(QMdmmCore::Data::AgentState state READ state WRITE setState NOTIFY stateChanged FINAL)
 
 public:
+    Q_DISABLE_COPY_MOVE(Agent);
+
     explicit Agent(const QString &name, QObject *parent = nullptr);
     ~Agent() override;
 
@@ -44,16 +51,18 @@ signals:
     void screenNameChanged(const QString &, QPrivateSignal);
     void stateChanged(QMdmmCore::Data::AgentState, QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     const std::unique_ptr<p::AgentP> d;
-    Q_DISABLE_COPY_MOVE(Agent);
+#endif
 };
 
+#ifndef DOXYGEN
 } // namespace v0
-
 inline namespace v1 {
 using v0::Agent;
 }
+#endif
 } // namespace QMdmmNetworking
 
 #endif

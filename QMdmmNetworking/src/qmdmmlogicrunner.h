@@ -12,11 +12,16 @@ QMDMM_EXPORT_NAME(QMdmmLogicRunner)
 
 namespace QMdmmNetworking {
 
+#ifndef DOXYGEN
 namespace p {
 class LogicRunnerP;
 }
+#endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
+
 class Agent;
 class Socket;
 
@@ -31,6 +36,8 @@ class QMDMMNETWORKING_EXPORT LogicRunner final : public QObject
     Q_OBJECT
 
 public:
+    Q_DISABLE_COPY_MOVE(LogicRunner);
+
     // Constructor and destructor: need to be called in Server thread (so that the LogicRunner instance is on Server thread)
     explicit LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~LogicRunner() override;
@@ -46,17 +53,21 @@ public:
 signals: // NOLINT(readability-redundant-access-specifiers)
     void gameOver(QPrivateSignal);
 
+#ifndef DOXYGEN
 private:
     friend class p::LogicRunnerP;
     // LogicRunnerP is QObject. QPointer can't be used since it is incomplete here
     p::LogicRunnerP *const d;
-    Q_DISABLE_COPY_MOVE(LogicRunner);
+#endif
 };
+
+#ifndef DOXYGEN
 } // namespace v0
 
 inline namespace v1 {
 using v0::LogicRunner;
 }
+#endif
 
 } // namespace QMdmmNetworking
 #endif // QMDMMLOGICRUNNER_H

@@ -31,6 +31,8 @@ public:
     };
     Q_ENUM(Instance);
 
+    Q_DISABLE_COPY_MOVE(Settings);
+
     Settings();
     ~Settings();
 
@@ -45,9 +47,6 @@ public:
 
     [[nodiscard]] bool contains(const QString &key) const;
     [[nodiscard]] bool contains(Instance instance, const QString &key) const;
-
-private:
-    Q_DISABLE_COPY_MOVE(Settings);
 };
 
 #ifndef DOXYGEN

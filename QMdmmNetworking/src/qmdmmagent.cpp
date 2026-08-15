@@ -9,7 +9,9 @@
  */
 
 namespace QMdmmNetworking {
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class Agent
@@ -104,5 +106,7 @@ void Agent::setState(const QMdmmCore::Data::AgentState &state)
  * @param state the new state
  */
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 } // namespace QMdmmNetworking

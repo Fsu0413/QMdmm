@@ -15,7 +15,9 @@
  */
 
 namespace QMdmmNetworking {
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class ServerConfiguration
@@ -203,7 +205,9 @@ IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTY
 #undef CONVERTTOTYPEUINT16T
 #undef CONVERTTOTYPEBOOL
 
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 
 #ifndef DOXYGEN
 namespace p {
@@ -383,7 +387,9 @@ void ServerP::logicRunnerGameOver()
 } // namespace p
 #endif
 
+#ifndef DOXYGEN
 namespace v0 {
+#endif
 
 /**
  * @class Server
@@ -429,5 +435,8 @@ bool Server::listen()
  * @brief dtor.
  */
 Server::~Server() = default;
+
+#ifndef DOXYGEN
 } // namespace v0
+#endif
 } // namespace QMdmmNetworking

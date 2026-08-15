@@ -29,8 +29,10 @@ if (DOXYGEN_FOUND)
         Q_CLANG_DOC
         "_declspec(x)= "
         "__attribute__(x)= "
-        "Q_ENUM(x)="
-        "Q_ENUM_NS(x)="
+        "Q_ENUM(x)= "
+        "Q_ENUM_NS(x)= "
+        "Q_DISABLE_COPY(x)=x(const x&)=delete;x&operator=(const x&)=delete;"
+        "Q_DISABLE_COPY_MOVE(x)=x(const x&)=delete;x(x&&)=delete;x&operator=(const x&)=delete;x&operator=(x&&)=delete;"
     )
     set(DOXYGEN_SORT_MEMBER_DOCS NO)
     set(DOXYGEN_MACRO_EXPANSION YES)
