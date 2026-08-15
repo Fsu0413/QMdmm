@@ -547,7 +547,8 @@ void LogicRunnerP::socketDisconnected()
         // Agent should exit game if round over or logic runs pass round over, which makes game over and the logic quits
         // But if client is reconnected before round over, the game should continue
         // TODO: round over - implement it in LogicRunnerP::upgradeResult, iterate all agents and check if they are online
-        // before notifying agent->notifyUpgrade to everyone. This matches the gameover behavior of QMdmmCore::Logic
+        // before notifying agent->notifyUpgrade to everyone. Run gameover if at least one agent is offline. 
+        // This matches the gameover behavior of QMdmmCore::Logic
 
         QMdmmCore::Data::AgentState state = disconnectedAgent->state();
         state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
