@@ -131,7 +131,7 @@ private:
 inline namespace v1 {
 using v0::Packet;
 using v0::PacketData;
-namespace Protocol = v0::Protocol;
+namespace Protocol = v0::Protocol; // NOLINT(misc-unused-alias-decls)
 } // namespace v1
 #endif
 

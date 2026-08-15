@@ -186,9 +186,9 @@ template<typename T>
 } // namespace v0
 
 inline namespace v1 {
-namespace Data = v0::Data;
-namespace Global = v0::Global;
-namespace Utilities = v0::Utilities;
+namespace Data = v0::Data; // NOLINT(misc-unused-alias-decls)
+namespace Global = v0::Global; // NOLINT(misc-unused-alias-decls)
+namespace Utilities = v0::Utilities; // NOLINT(misc-unused-alias-decls)
 } // namespace v1
 #endif
 
