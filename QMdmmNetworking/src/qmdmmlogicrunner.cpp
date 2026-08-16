@@ -365,25 +365,30 @@ void ServerAgentP::notifyRoundStart()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
 {
     QJsonObject ob;
+    ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
         ob.insert(it.key(), static_cast<int>(it.value()));
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob));
 }
 
-void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result)
+void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
 {
     QJsonArray arr;
     for (int i = 1; i < result.count(); ++i)
         arr.append(result.value(i));
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyActionOrder, arr));
+    QJsonObject ob;
+    ob.insert(QStringLiteral("seq"), seq);
+    ob.insert(QStringLiteral("order"), arr);
+    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyActionOrder, ob));
 }
 
-void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
 {
     QJsonObject ob;
+    ob.insert(QStringLiteral("seq"), seq);
     ob.insert(QStringLiteral("playerName"), playerName);
     ob.insert(QStringLiteral("action"), static_cast<int>(action));
 
@@ -414,9 +419,10 @@ void ServerAgentP::notifyRoundOver()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
 {
     QJsonObject ob;
+    ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
         QJsonArray arr;
         foreach (QMdmmCore::Data::UpgradeItem up, it.value())
@@ -625,8 +631,9 @@ void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
+    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyStoneScissorsCloth(replies);
+        agent->notifyStoneScissorsCloth(replies, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -639,8 +646,9 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
+    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyActionOrder(result);
+        agent->notifyActionOrder(result, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -662,8 +670,9 @@ void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
+    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyAction(playerName, action, toPlayer, toPlace);
+        agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -676,8 +685,9 @@ void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
+    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyUpgrade(upgrades);
+        agent->notifyUpgrade(upgrades, seq);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
@@ -685,6 +695,10 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     // then start it. Without this, the match stalls after the very first round.
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundStart();
+
+    // A new round begins: reset the round-event sequence so the next round's
+    // events restart from 1 (the client tracks "last received seq" per round).
+    roundEventSeq = 0;
 
     emit roundStart();
 }

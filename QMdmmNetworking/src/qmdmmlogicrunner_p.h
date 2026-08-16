@@ -78,11 +78,11 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifyPlayerRemoved(const QString &playerName);
     void notifyGameStart();
     void notifyRoundStart();
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
-    void notifyActionOrder(const QHash<int, QString> &result);
-    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq);
+    void notifyActionOrder(const QHash<int, QString> &result, int seq);
+    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq);
     void notifyRoundOver();
-    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
+    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq);
     void notifyGameOver(const QStringList &playerNames);
     void notifySpoken(const QString &playerName, const QString &content);
     void notifyOperated(const QString &playerName, const QJsonValue &todo);
@@ -107,6 +107,11 @@ public:
     QPointer<QMdmmCore::Logic> logic;
 
     QMdmmCore::LogicConfiguration conf;
+
+    // Round-event sequence number: incremented for each round-event broadcast
+    // (ssc / action-order / action / upgrade) and reset when a new round starts.
+    // Used for the precise catch-up on reconnect (see backlog "精确补发").
+    int roundEventSeq = 0;
 
     // No qRegisterMetaType<>() is needed for the queued signals / slots below: their argument
     // types are QMdmmCore::Data enums / flags (auto-registered via Q_ENUM_NS / Q_FLAG_NS) plus

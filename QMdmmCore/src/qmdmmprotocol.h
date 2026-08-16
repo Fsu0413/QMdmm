@@ -48,11 +48,11 @@ enum NotifyId : uint16_t
     NotifyPlayerRemoved, // string playerName
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyStoneScissorsCloth, // broadcast, object { playerName: int ssc }
-    NotifyActionOrder, // broadcast, array { string playerName } [totalActionNum]
-    NotifyAction, // broadcast, string playerName, int(Action) action, optional string toPlayer, optional int toPlace
+    NotifyStoneScissorsCloth, // broadcast, object { int seq, string playerName: int ssc }
+    NotifyActionOrder, // broadcast, object { int seq, array { string playerName } order }
+    NotifyAction, // broadcast, object { int seq, string playerName, int(Action) action, optional string toPlayer, optional int toPlace }
     NotifyRoundOver, // broadcast
-    NotifyUpgrade, // broadcast, string playerName, int item
+    NotifyUpgrade, // broadcast, object { int seq, string playerName: array { int } item }
     NotifyGameOver, // broadcast, string winnerPlayerName
     NotifySpoken, // broadcast, string playerName, string content
     NotifyOperated, // TODO: for ob

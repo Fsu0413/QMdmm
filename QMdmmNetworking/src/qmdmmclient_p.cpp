@@ -388,6 +388,8 @@ void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
     // Without this, players would stay at the default Country place and every
     // place-dependent action (BuyKnife/Move/Slash/...) would fail locally.
     room->prepareForRoundStart();
+    // A new round begins: reset the round-event sequence tracking.
+    lastRoundEventSeq = 0;
     emit q->notifyRoundStart(Client::QPrivateSignal());
 }
 
@@ -400,9 +402,18 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
+    if (!ob.contains(QStringLiteral("seq")))
+        return;
+    QJsonValue vseq = ob.value(QStringLiteral("seq"));
+    if (!vseq.isDouble())
+        return;
+    int seq = vseq.toInt();
+
     QHash<QString, QMdmmCore::Data::StoneScissorsCloth> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
+        if (playerName == QLatin1String("seq"))
+            continue;
         if (!agents.contains(playerName))
             return;
         QJsonValue vssc = it.value();
@@ -420,6 +431,7 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
         replies.insert(playerName, ssc);
     }
 
+    lastRoundEventSeq = seq;
     emit q->notifyStoneScissorsCloth(replies, Client::QPrivateSignal());
     onRet_.dismiss();
 }
@@ -429,9 +441,23 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
 {
     ONERRPRINTJSON(value);
 
-    if (!value.isArray())
+    if (!value.isObject())
         return;
-    QJsonArray arr = value.toArray();
+    QJsonObject ob = value.toObject();
+
+    if (!ob.contains(QStringLiteral("seq")))
+        return;
+    QJsonValue vseq = ob.value(QStringLiteral("seq"));
+    if (!vseq.isDouble())
+        return;
+    int seq = vseq.toInt();
+
+    if (!ob.contains(QStringLiteral("order")))
+        return;
+    QJsonValue vorder = ob.value(QStringLiteral("order"));
+    if (!vorder.isArray())
+        return;
+    QJsonArray arr = vorder.toArray();
 
     QHash<int, QString> result;
     int i = 0;
@@ -444,6 +470,7 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
         result.insert(++i, playerName);
     }
 
+    lastRoundEventSeq = seq;
     emit q->notifyActionOrder(result, Client::QPrivateSignal());
     onRet_.dismiss();
 }
@@ -456,6 +483,13 @@ void ClientP::notifyAction(const QJsonValue &value)
     if (!value.isObject())
         return;
     QJsonObject ob = value.toObject();
+
+    if (!ob.contains(QStringLiteral("seq")))
+        return;
+    QJsonValue vseq = ob.value(QStringLiteral("seq"));
+    if (!vseq.isDouble())
+        return;
+    int seq = vseq.toInt();
 
     if (!ob.contains(QStringLiteral("playerName")))
         return;
@@ -525,6 +559,7 @@ void ClientP::notifyAction(const QJsonValue &value)
         break;
     }
 
+    lastRoundEventSeq = seq;
     emit q->notifyAction(playerName, action, toPlayer, toPlace, Client::QPrivateSignal());
 
     // This replyed action should always be success, since it is judged in Server
@@ -549,9 +584,18 @@ void ClientP::notifyUpgrade(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
+    if (!ob.contains(QStringLiteral("seq")))
+        return;
+    QJsonValue vseq = ob.value(QStringLiteral("seq"));
+    if (!vseq.isDouble())
+        return;
+    int seq = vseq.toInt();
+
     QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
+        if (playerName == QLatin1String("seq"))
+            continue;
         if (!agents.contains(playerName))
             return;
         QJsonValue vupgrades = it.value();
@@ -576,6 +620,7 @@ void ClientP::notifyUpgrade(const QJsonValue &value)
         replies.insert(playerName, upgrades);
     }
 
+    lastRoundEventSeq = seq;
     emit q->notifyUpgrade(replies, Client::QPrivateSignal());
 
     // This replyed upgrade should always be success, since it is judged in Server
