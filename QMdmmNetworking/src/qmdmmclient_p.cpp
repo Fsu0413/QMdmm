@@ -10,8 +10,19 @@
 #include <QJsonDocument>
 #include <QScopeGuard>
 
+#include <algorithm>
+
 namespace QMdmmNetworking {
 namespace p {
+
+namespace {
+// Automatic reconnect policy: exponential backoff (500ms, 1s, 2s, 4s, 8s) with a
+// finite number of attempts. After the last attempt fails the client stays
+// disconnected and the upper layer must call connectToHost again.
+constexpr int ReconnectBaseIntervalMs = 500;
+constexpr int ReconnectMaxIntervalMs = 8000;
+constexpr int MaxReconnectAttempts = 5;
+} // namespace
 
 QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> ClientP::requestCallback {
     std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ClientP::requestStoneScissorsCloth),
@@ -49,12 +60,18 @@ ClientP::ClientP(ClientConfiguration clientConfiguration, Client *q)
     , socket(nullptr)
     , room(new QMdmmCore::Room(QMdmmCore::LogicConfiguration(), this))
     , heartbeatTimer(new QTimer(this))
+    , reconnectTimer(new QTimer(this))
+    , reconnectAttempts(0)
+    , reconnectInProgress(false)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , initialState(QMdmmCore::Data::StateOffline)
 {
     heartbeatTimer->setInterval(30000);
     heartbeatTimer->setSingleShot(false);
     connect(heartbeatTimer, &QTimer::timeout, this, &ClientP::heartbeatTimeout);
+
+    reconnectTimer->setSingleShot(true);
+    connect(reconnectTimer, &QTimer::timeout, this, &ClientP::reconnectTimeout);
 }
 
 // Qt documentation only mentioned "auto" here
@@ -223,6 +240,14 @@ void ClientP::notifyVersion(const QJsonValue &value)
     signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
     signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
     emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySignIn, signInOb));
+
+    // The connection is back and we re-signed in. Stop the retry loop and tell
+    // the upper layer the client is back online.
+    if (reconnectInProgress) {
+        reconnectInProgress = false;
+        reconnectTimer->stop();
+        emit q->reconnected(Client::QPrivateSignal());
+    }
 
     onRet_.dismiss();
 }
@@ -724,17 +749,80 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::socketErrorOccurred(const QString &errorString)
 {
-    socket->disconnect(this);
-    emit q->socketErrorDisconnected(errorString, Client::QPrivateSignal());
-    socket->deleteLater();
+    handleSocketGone(errorString);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::socketDisconnected()
 {
+    handleSocketGone(QStringLiteral("Disconnected"));
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::handleSocketGone(const QString &errorString)
+{
+    if (socket == nullptr)
+        return;
+
+    // Detach first so a second signal from the same socket (error + disconnected
+    // often fire back to back) can't re-enter this handler.
     socket->disconnect(this);
-    emit q->socketErrorDisconnected(QStringLiteral("Disconnected"), Client::QPrivateSignal());
     socket->deleteLater();
+
+    // Only notify the upper layer once per disconnect episode. Retries that fail
+    // again keep the client in the "disconnected" state without spamming.
+    if (!reconnectInProgress) {
+        reconnectInProgress = true;
+        reconnectAttempts = 0;
+        emit q->disconnected(errorString, Client::QPrivateSignal());
+    }
+
+    scheduleReconnect();
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+bool ClientP::connectSocket()
+{
+    socket = new Socket(this);
+    connect(socket, &Socket::socketDisconnected, this, &ClientP::socketDisconnected);
+    connect(socket, &Socket::socketErrorOccurred, this, &ClientP::socketErrorOccurred);
+    connect(socket, &Socket::packetReceived, this, &ClientP::socketPacketReceived);
+    if (socket->connectToHost(host))
+        return true;
+
+    // The host does not map to a known transport. Drop the socketless wrapper so
+    // socket stays null and the caller can report the failure.
+    socket->disconnect(this);
+    socket->deleteLater();
+    return false;
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::scheduleReconnect()
+{
+    if (reconnectAttempts >= MaxReconnectAttempts) {
+        // Out of retries: stay disconnected and let the upper layer decide.
+        reconnectInProgress = false;
+        reconnectTimer->stop();
+        emit q->socketErrorDisconnected(QStringLiteral("Reconnect failed"), Client::QPrivateSignal());
+        return;
+    }
+
+    const int interval = ReconnectBaseIntervalMs << std::min(reconnectAttempts, 4);
+    reconnectTimer->start(std::min(interval, ReconnectMaxIntervalMs));
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::reconnectTimeout()
+{
+    ++reconnectAttempts;
+    if (connectSocket())
+        return;
+
+    // The saved host is not connectable (invalid transport). No point retrying.
+    reconnectInProgress = false;
+    reconnectTimer->stop();
+    emit q->socketErrorDisconnected(QStringLiteral("Reconnect failed"), Client::QPrivateSignal());
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

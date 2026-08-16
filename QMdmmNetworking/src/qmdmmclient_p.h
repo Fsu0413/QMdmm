@@ -39,6 +39,10 @@ public:
     QHash<QString, Agent *> agents;
 
     QTimer *heartbeatTimer;
+    QTimer *reconnectTimer;
+    QString host;
+    int reconnectAttempts;
+    bool reconnectInProgress;
 
     QMdmmCore::Protocol::RequestId currentRequest;
     QMdmmCore::Data::AgentState initialState;
@@ -68,11 +72,16 @@ public:
     bool applyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     bool applyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
 
+    bool connectSocket();
+    void handleSocketGone(const QString &errorString);
+    void scheduleReconnect();
+
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void socketPacketReceived(const QMdmmCore::Packet &packet);
     void socketErrorOccurred(const QString &errorString);
     void socketDisconnected();
 
+    void reconnectTimeout();
     void heartbeatTimeout();
 };
 } // namespace p

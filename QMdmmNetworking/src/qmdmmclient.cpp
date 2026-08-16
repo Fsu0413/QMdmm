@@ -142,12 +142,16 @@ bool Client::connectToHost(const QString &host, QMdmmCore::Data::AgentState init
         d->socket->deleteLater();
     }
 
+    // Remember the host so the client can reconnect by itself after a drop. An
+    // explicit connectToHost always starts a fresh session: clear any in-flight
+    // reconnect state so a manual reconnect and the automatic retry never fight.
+    d->host = host;
     d->initialState = initialState;
-    d->socket = new Socket(d);
-    connect(d->socket, &Socket::socketDisconnected, d, &p::ClientP::socketDisconnected);
-    connect(d->socket, &Socket::socketErrorOccurred, d, &p::ClientP::socketErrorOccurred);
-    connect(d->socket, &Socket::packetReceived, d, &p::ClientP::socketPacketReceived);
-    return d->socket->connectToHost(host);
+    d->reconnectAttempts = 0;
+    d->reconnectInProgress = false;
+    d->reconnectTimer->stop();
+
+    return d->connectSocket();
 }
 
 /**
@@ -269,6 +273,17 @@ void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
         emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, arr));
     }
 }
+
+/**
+ * @fn Client::disconnected(const QString &errorString, QPrivateSignal)
+ * @brief emitted once when the connection drops and the client starts retrying internally
+ * @param errorString the reason the connection dropped
+ */
+
+/**
+ * @fn Client::reconnected(QPrivateSignal)
+ * @brief emitted when the client re-establishes the connection and re-signed in after a disconnect
+ */
 
 /**
  * @fn Client::socketErrorDisconnected(const QString &errorString, QPrivateSignal)

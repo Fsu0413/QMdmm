@@ -73,6 +73,15 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades);
 
 signals:
+    // Emitted once when the connection drops. The client then retries internally;
+    // this is the "disconnected" notice for the upper layer (distinct from
+    // socketErrorDisconnected, which fires only after the automatic reconnect gives up).
+    void disconnected(const QString &errorString, QPrivateSignal);
+
+    // Emitted when the client re-establishes the connection and re-signed in after
+    // a disconnect.
+    void reconnected(QPrivateSignal);
+
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);
 
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
