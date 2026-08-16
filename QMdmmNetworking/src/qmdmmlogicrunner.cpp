@@ -379,7 +379,7 @@ QMdmmCore::Packet ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QM
 QMdmmCore::Packet ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
 {
     QJsonArray arr;
-    for (int i = 1; i < result.count(); ++i)
+    for (int i = 1; i <= result.count(); ++i)
         arr.append(result.value(i));
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);

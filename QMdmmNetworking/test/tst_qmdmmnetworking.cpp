@@ -12,6 +12,7 @@
 #include <QMdmmServer>
 #include <QMdmmSocket>
 
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QTcpSocket>
 #include <QTest>
@@ -260,6 +261,9 @@ void tst_QMdmmNetworking::roundEventCache_recordsAndClearsEvents()
     QCOMPARE(runnerP->roundEventSeq, 2);
     QVERIFY(runnerP->roundEventCache.size() == 2);
     QVERIFY(runnerP->roundEventCache.value(2).notifyId() == Protocol::NotifyActionOrder);
+    // Regression: the order array must carry every player (off-by-one dropped the last one).
+    const QJsonArray orderArr = runnerP->roundEventCache.value(2).value().toObject().value(QStringLiteral("order")).toArray();
+    QVERIFY(orderArr.size() == order.size());
 
     // roundOver drops the current round's events.
     runnerP->roundOver();
