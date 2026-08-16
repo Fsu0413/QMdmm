@@ -61,7 +61,6 @@ signals:
     void notifyOperate(const QJsonValue &value);
 
     void sendPacket(QMdmmCore::Packet packet);
-    void socketDisconnected();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(const QMdmmCore::Packet &packet);

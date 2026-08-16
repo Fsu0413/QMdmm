@@ -59,7 +59,10 @@ void ServerAgentP::setSocket(Socket *_socket)
     socket = _socket;
     if (socket != nullptr) {
         connect(socket, &Socket::packetReceived, this, &ServerAgentP::packetReceived);
-        connect(socket, &Socket::socketDisconnected, this, &ServerAgentP::socketDisconnected);
+        // Forward the socket drop directly to the room, so the room can find the
+        // agent that owns the socket and mark it offline (a socket-disconnected
+        // signal relayed through this agent would lose the identity of the agent).
+        connect(socket, &Socket::socketDisconnected, p, &LogicRunnerP::socketDisconnected);
         connect(this, &ServerAgentP::sendPacket, socket, &Socket::sendPacket);
     }
 }
@@ -535,7 +538,19 @@ void LogicRunnerP::agentOperated(const QJsonValue &value)
 
 void LogicRunnerP::socketDisconnected()
 {
-    ServerAgentP *disconnectedAgent = qobject_cast<ServerAgentP *>(sender());
+    Socket *disconnectedSocket = qobject_cast<Socket *>(sender());
+    if (disconnectedSocket == nullptr)
+        return;
+
+    // The socket is connected directly (see ServerAgentP::setSocket), so sender()
+    // is the Socket, not the agent. Locate the agent that owns it.
+    ServerAgentP *disconnectedAgent = nullptr;
+    foreach (ServerAgentP *agent, agents) {
+        if (agent->socket == disconnectedSocket) {
+            disconnectedAgent = agent;
+            break;
+        }
+    }
     if (disconnectedAgent == nullptr)
         return;
 
