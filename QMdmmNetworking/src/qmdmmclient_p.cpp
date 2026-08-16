@@ -246,7 +246,7 @@ void ClientP::notifyVersion(const QJsonValue &value)
     if (reconnectInProgress) {
         reconnectInProgress = false;
         reconnectTimer->stop();
-        emit q->reconnected(Client::QPrivateSignal());
+        emit q->socketReconnectSucceeded(Client::QPrivateSignal());
     }
 
     onRet_.dismiss();
@@ -774,7 +774,7 @@ void ClientP::handleSocketGone(const QString &errorString)
     if (!reconnectInProgress) {
         reconnectInProgress = true;
         reconnectAttempts = 0;
-        emit q->disconnected(errorString, Client::QPrivateSignal());
+        emit q->socketConnectionLost(errorString, Client::QPrivateSignal());
     }
 
     scheduleReconnect();

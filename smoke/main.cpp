@@ -180,7 +180,7 @@ int main(int argc, char **argv)
             sock->abort();
         }
     });
-    QObject::connect(human, &Client::reconnected, &app, [&]() {
+    QObject::connect(human, &Client::socketReconnectSucceeded, &app, [&]() {
         reconnected = true;
         qDebug() << "smoke: human reconnected";
     });

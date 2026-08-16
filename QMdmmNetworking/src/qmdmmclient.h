@@ -74,13 +74,13 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
 signals:
     // Emitted once when the connection drops. The client then retries internally;
-    // this is the "disconnected" notice for the upper layer (distinct from
+    // this is the "connection lost" notice for the upper layer (distinct from
     // socketErrorDisconnected, which fires only after the automatic reconnect gives up).
-    void disconnected(const QString &errorString, QPrivateSignal);
+    void socketConnectionLost(const QString &errorString, QPrivateSignal);
 
     // Emitted when the client re-establishes the connection and re-signed in after
     // a disconnect.
-    void reconnected(QPrivateSignal);
+    void socketReconnectSucceeded(QPrivateSignal);
 
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);
 

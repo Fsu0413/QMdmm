@@ -275,13 +275,13 @@ void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
 }
 
 /**
- * @fn Client::disconnected(const QString &errorString, QPrivateSignal)
+ * @fn Client::socketConnectionLost(const QString &errorString, QPrivateSignal)
  * @brief emitted once when the connection drops and the client starts retrying internally
  * @param errorString the reason the connection dropped
  */
 
 /**
- * @fn Client::reconnected(QPrivateSignal)
+ * @fn Client::socketReconnectSucceeded(QPrivateSignal)
  * @brief emitted when the client re-establishes the connection and re-signed in after a disconnect
  */
 
