@@ -108,3 +108,5 @@ if (Qt6_FOUND)
         )
     endif()
 endif()
+
+add_subdirectory(test)
