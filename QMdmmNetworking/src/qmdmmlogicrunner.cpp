@@ -365,16 +365,18 @@ void ServerAgentP::notifyRoundStart()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
+QMdmmCore::Packet ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
         ob.insert(it.key(), static_cast<int>(it.value()));
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob));
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob);
+    emit sendPacket(packet);
+    return packet;
 }
 
-void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
+QMdmmCore::Packet ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
 {
     QJsonArray arr;
     for (int i = 1; i < result.count(); ++i)
@@ -382,10 +384,12 @@ void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
     ob.insert(QStringLiteral("order"), arr);
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyActionOrder, ob));
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyActionOrder, ob);
+    emit sendPacket(packet);
+    return packet;
 }
 
-void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
+QMdmmCore::Packet ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
@@ -411,7 +415,9 @@ void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Acti
         break;
     }
 
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAction, ob));
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyAction, ob);
+    emit sendPacket(packet);
+    return packet;
 }
 
 void ServerAgentP::notifyRoundOver()
@@ -419,7 +425,7 @@ void ServerAgentP::notifyRoundOver()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
+QMdmmCore::Packet ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
@@ -429,7 +435,9 @@ void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::Upg
             arr.append(static_cast<int>(up));
         ob.insert(it.key(), arr);
     }
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyUpgrade, ob));
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyUpgrade, ob);
+    emit sendPacket(packet);
+    return packet;
 }
 
 void ServerAgentP::notifyGameOver(const QStringList &playerNames)
@@ -632,8 +640,12 @@ void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     const int seq = ++roundEventSeq;
+    // The packet is identical for every agent, so capture it while broadcasting and cache it
+    // keyed by seq for the reconnect catch-up (see roundEventCache in the header).
+    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyStoneScissorsCloth(replies, seq);
+        packet = agent->notifyStoneScissorsCloth(replies, seq);
+    roundEventCache.insert(seq, packet);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -647,8 +659,10 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
     const int seq = ++roundEventSeq;
+    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyActionOrder(result, seq);
+        packet = agent->notifyActionOrder(result, seq);
+    roundEventCache.insert(seq, packet);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -671,8 +685,10 @@ void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     const int seq = ++roundEventSeq;
+    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
+        packet = agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
+    roundEventCache.insert(seq, packet);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -686,8 +702,10 @@ void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     const int seq = ++roundEventSeq;
+    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyUpgrade(upgrades, seq);
+        packet = agent->notifyUpgrade(upgrades, seq);
+    roundEventCache.insert(seq, packet);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
@@ -696,15 +714,20 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundStart();
 
-    // A new round begins: reset the round-event sequence so the next round's
-    // events restart from 1 (the client tracks "last received seq" per round).
+    // A new round begins: reset the round-event sequence and drop the previous round's events
+    // so the next round's events restart from 1 (the client tracks "last received seq" per round).
     roundEventSeq = 0;
+    roundEventCache.clear();
 
     emit roundStart();
 }
 
 void LogicRunnerP::roundOver()
 {
+    // The round's action phase is over: drop the round-event cache. A reconnect from here on is
+    // in the upgrade phase or the next round, where the old round's events are no longer needed.
+    roundEventCache.clear();
+
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundOver();
 }

@@ -33,6 +33,7 @@ private slots:
     void socketDisconnected_full_marksOffline();
     void reconnect_rebindsSocketAndRestoresState();
     void signIn_reconnectsPlayerInNonCurrentRoom();
+    void roundEventCache_recordsAndClearsEvents();
 };
 
 // Build a server-side Socket that wraps a fresh (unconnected) QTcpSocket, and
@@ -215,6 +216,63 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     // still point at r2.
     QVERIFY(r2->agent(QStringLiteral("p1")) == nullptr);
     QVERIFY(serverP->current == r2);
+}
+
+// The round-event cache records each round event (ssc / action-order / action / upgrade) keyed by
+// its round-event sequence number, and is cleared at every round boundary (roundOver, and the
+// new-round start inside upgradeResult). This is the server-side half of the "precise catch-up"
+// replay that a reconnecting client will request.
+void tst_QMdmmNetworking::roundEventCache_recordsAndClearsEvents()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(3); // 2 agents stay below capacity, so addSocket does not start a game
+
+    LogicRunner runner(conf);
+
+    Socket *sock1 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP1 = makeServerSocket(&sock1, &runner);
+    QVERIFY(sockP1 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
+
+    Socket *sock2 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP2 = makeServerSocket(&sock2, &runner);
+    QVERIFY(sockP2 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnline, sock2) != nullptr);
+    QVERIFY(!runner.full());
+
+    QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
+    QVERIFY(runnerP != nullptr);
+    QVERIFY(runnerP->roundEventCache.isEmpty());
+
+    // ssc (seq 1) and action-order (seq 2) each append their packet to the cache.
+    QHash<QString, Data::StoneScissorsCloth> ssc;
+    ssc.insert(QStringLiteral("p1"), Data::Stone);
+    ssc.insert(QStringLiteral("p2"), Data::Cloth);
+    runnerP->sscResult(ssc);
+    QCOMPARE(runnerP->roundEventSeq, 1);
+    QVERIFY(runnerP->roundEventCache.size() == 1);
+    QVERIFY(runnerP->roundEventCache.value(1).notifyId() == Protocol::NotifyStoneScissorsCloth);
+
+    QHash<int, QString> order;
+    order.insert(1, QStringLiteral("p1"));
+    order.insert(2, QStringLiteral("p2"));
+    runnerP->actionOrderResult(order);
+    QCOMPARE(runnerP->roundEventSeq, 2);
+    QVERIFY(runnerP->roundEventCache.size() == 2);
+    QVERIFY(runnerP->roundEventCache.value(2).notifyId() == Protocol::NotifyActionOrder);
+
+    // roundOver drops the current round's events.
+    runnerP->roundOver();
+    QVERIFY(runnerP->roundEventCache.isEmpty());
+
+    // upgradeResult caches the upgrade event, then the new-round start resets both the cache and seq.
+    QHash<QString, QList<Data::UpgradeItem>> upgrades;
+    QList<Data::UpgradeItem> items;
+    items << Data::UpgradeMaxHp;
+    upgrades.insert(QStringLiteral("p1"), items);
+    runnerP->upgradeResult(upgrades);
+    QCOMPARE(runnerP->roundEventSeq, 0);
+    QVERIFY(runnerP->roundEventCache.isEmpty());
 }
 
 namespace {
