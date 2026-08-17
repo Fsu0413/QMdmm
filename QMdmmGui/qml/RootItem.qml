@@ -60,7 +60,7 @@ Image {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.topMargin: 16
-                text: qsTr("玩家人数（本地对战）")
+                text: qsTr("Player count (local)")
                 color: "white"
             }
             Text {
@@ -97,7 +97,7 @@ Image {
                 anchors.bottomMargin: 12
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: "../assets/btn.png"
-                text: qsTr("确定")
+                text: qsTr("OK")
                 onClicked: configPopup.visible = false
             }
         }
@@ -128,7 +128,7 @@ Image {
                 anchors.margins: 24
                 wrapMode: Text.Wrap
                 color: "white"
-                text: qsTr("QMdmm —— 打打闹闹\n\n多人回合制小游戏。Qt 6 / C++20 实现，AGPL-3.0。\n\n本地模式会在进程内启动服务器，并用机器人填满房间，\n单人也能玩完整一局。在线模式可连接外部服务器。")
+                text: qsTr("QMdmm - a playful brawler\n\nA turn-based multiplayer mini-game. Built with Qt 6 / C++20, AGPL-3.0.\n\nLocal mode starts an in-process server and fills the room with bots,\nso you can play a full match alone. Online mode connects to an external server.")
             }
             Button {
                 height: 56
@@ -137,7 +137,7 @@ Image {
                 anchors.bottomMargin: 12
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: "../assets/btn.png"
-                text: qsTr("关闭")
+                text: qsTr("Close")
                 onClicked: aboutPopup.visible = false
             }
         }

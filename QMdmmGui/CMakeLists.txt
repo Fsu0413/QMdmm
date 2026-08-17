@@ -9,6 +9,7 @@ set(QMDMMGUI_SOURCES
     src/gameclient.cpp
     src/mainwindow.h
     src/mainwindow.cpp
+    translations/translations.qrc
 )
 
 set(QMDMMGUI_QML_FILES
@@ -56,6 +57,7 @@ qt6_add_qml_module(QMdmm6
     QML_FILES ${QMDMMGUI_QML_FILES}
     RESOURCES ${QMDMMGUI_RESOURCES}
 )
+
 install(TARGETS QMdmm6
     COMPONENT "6"
     DESTINATION "${CMAKE_INSTALL_BINDIR}"

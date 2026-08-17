@@ -21,9 +21,9 @@ Item {
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             text: {
-                if (game.gameState === "lobby") return qsTr("大厅：等待其他玩家加入…");
-                if (game.gameState === "playing") return qsTr("对局进行中");
-                if (game.gameState === "gameover") return qsTr("本局结束");
+                if (game.gameState === "lobby") return qsTr("Lobby: waiting for other players...");
+                if (game.gameState === "playing") return qsTr("Match in progress");
+                if (game.gameState === "gameover") return qsTr("Match over");
                 return "";
             }
             color: "white"
@@ -36,7 +36,7 @@ Item {
             anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             source: "../assets/btn.png"
-            text: qsTr("断开")
+            text: qsTr("Disconnect")
             onClicked: game.disconnectAll()
         }
     }
@@ -141,12 +141,12 @@ Item {
             visible: activeRequest === "ssc"
             anchors.centerIn: parent
             spacing: 12
-            Text { text: qsTr("猜拳！"); color: "white"; font.pixelSize: 30; horizontalAlignment: Text.AlignHCenter; width: requestOverlay.width }
+            Text { text: qsTr("Rock-paper-scissors!"); color: "white"; font.pixelSize: 30; horizontalAlignment: Text.AlignHCenter; width: requestOverlay.width }
             Row {
                 spacing: 12
-                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("石头"); onClicked: { game.replySsc(0); activeRequest = ""; } }
-                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("剪刀"); onClicked: { game.replySsc(1); activeRequest = ""; } }
-                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("布"); onClicked: { game.replySsc(2); activeRequest = ""; } }
+                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("Rock"); onClicked: { game.replySsc(0); activeRequest = ""; } }
+                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("Scissors"); onClicked: { game.replySsc(1); activeRequest = ""; } }
+                Button { height: 80; width: 120; source: "../assets/btn.png"; text: qsTr("Paper"); onClicked: { game.replySsc(2); activeRequest = ""; } }
             }
         }
 
@@ -155,7 +155,7 @@ Item {
             visible: activeRequest === "order"
             anchors.centerIn: parent
             spacing: 10
-            Text { text: qsTr("选择行动顺序（再选 %1 个）").arg(orderRemaining); color: "white"; font.pixelSize: 26; width: requestOverlay.width; wrapMode: Text.Wrap }
+            Text { text: qsTr("Choose action order (%1 more)").arg(orderRemaining); color: "white"; font.pixelSize: 26; width: requestOverlay.width; wrapMode: Text.Wrap }
             Flow {
                 width: requestOverlay.width - 20
                 spacing: 8
@@ -172,7 +172,7 @@ Item {
             Button {
                 height: 56; width: 200
                 source: "../assets/btn.png"
-                text: qsTr("确认顺序")
+                text: qsTr("Confirm order")
                 enabled: orderRemaining === 0
                 onClicked: { game.replyActionOrder(orderSelected); activeRequest = ""; }
             }
@@ -183,7 +183,7 @@ Item {
             visible: activeRequest === "action"
             anchors.centerIn: parent
             spacing: 10
-            Text { text: qsTr("轮到你行动"); color: "white"; font.pixelSize: 28 }
+            Text { text: qsTr("Your turn to act"); color: "white"; font.pixelSize: 28 }
             Flow {
                 width: requestOverlay.width - 20
                 spacing: 8
@@ -208,7 +208,7 @@ Item {
             visible: activeRequest === "upgrade"
             anchors.centerIn: parent
             spacing: 10
-            Text { text: qsTr("升级（再选 %1 个）").arg(upgradeRemaining); color: "white"; font.pixelSize: 26; width: requestOverlay.width; wrapMode: Text.Wrap }
+            Text { text: qsTr("Upgrade (%1 more)").arg(upgradeRemaining); color: "white"; font.pixelSize: 26; width: requestOverlay.width; wrapMode: Text.Wrap }
             Flow {
                 width: requestOverlay.width - 20
                 spacing: 8
@@ -227,14 +227,14 @@ Item {
                 Button {
                     height: 56; width: 200
                     source: "../assets/btn.png"
-                    text: qsTr("确认升级")
+                    text: qsTr("Confirm upgrade")
                     enabled: upgradeRemaining === 0
                     onClicked: { game.replyUpgrade(upgradeSelected); activeRequest = ""; }
                 }
                 Button {
                     height: 56; width: 200
                     source: "../assets/btn.png"
-                    text: qsTr("默认(生命)")
+                    text: qsTr("Default (HP)")
                     onClicked: { for (var i = 0; i < upgradeNeed; ++i) upgradeSelected.push(2); game.replyUpgrade(upgradeSelected); activeRequest = ""; }
                 }
             }
@@ -306,7 +306,7 @@ Item {
             activeRequest = "upgrade";
         }
         function onRoundOver() {
-            bannerText.text = qsTr("回合结束");
+            bannerText.text = qsTr("Round over");
             banner.visible = true;
             bannerTimer.start();
         }
@@ -314,7 +314,7 @@ Item {
             activeRequest = "";
             let names = [];
             for (let i = 0; i < winners.length; ++i) names.push(game.screenName(winners[i]));
-            bannerText.text = qsTr("胜者: ") + names.join(", ");
+            bannerText.text = qsTr("Winner(s): ") + names.join(", ");
             banner.visible = true;
         }
     }

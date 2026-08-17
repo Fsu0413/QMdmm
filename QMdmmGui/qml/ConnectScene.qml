@@ -33,7 +33,7 @@ Item {
             anchors.top: parent.top
             anchors.topMargin: 24
             anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("连接游戏")
+            text: qsTr("Connect Game")
             color: "white"
             font.pixelSize: 40
         }
@@ -43,7 +43,7 @@ Item {
             anchors.topMargin: 24
             anchors.left: parent.left
             anchors.leftMargin: 60
-            text: qsTr("你的名字")
+            text: qsTr("Your name")
             color: "#ccc"
         }
         Rectangle {
@@ -74,7 +74,7 @@ Item {
             anchors.topMargin: 28
             anchors.left: parent.left
             anchors.leftMargin: 60
-            text: qsTr("本地对战（进程内服务器 + 机器人填满房间）")
+            text: qsTr("Local play (in-process server + bots fill the room)")
             color: "#ccc"
         }
         Text {
@@ -82,7 +82,7 @@ Item {
             anchors.topMargin: 64
             anchors.left: parent.left
             anchors.leftMargin: 60
-            text: qsTr("人数: ") + game.playerCount
+            text: qsTr("Players: ") + game.playerCount
             color: "white"
             font.pixelSize: 28
         }
@@ -114,7 +114,7 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: 60
             source: "../assets/btn.png"
-            text: qsTr("开始本地游戏")
+            text: qsTr("Start local game")
             onClicked: scene.startLocal(nameInput.text)
         }
 
@@ -124,7 +124,7 @@ Item {
             anchors.topMargin: 300
             anchors.left: parent.left
             anchors.leftMargin: 60
-            text: qsTr("在线模式（连接外部服务器，如 qmdmm://host:6366）")
+            text: qsTr("Online mode (connect to an external server, e.g. qmdmm://host:6366)")
             color: "#ccc"
         }
         Rectangle {
@@ -156,7 +156,7 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: 60
             source: "../assets/btn.png"
-            text: qsTr("连接")
+            text: qsTr("Connect")
             onClicked: scene.connectOnline(hostInput.text, nameInput.text)
         }
 
@@ -168,7 +168,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: 60
             source: "../assets/btn.png"
-            text: qsTr("返回")
+            text: qsTr("Back")
             onClicked: scene.back()
         }
     }

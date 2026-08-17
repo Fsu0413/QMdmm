@@ -4,10 +4,17 @@
 
 #include <QApplication>
 #include <QFont>
+#include <QLocale>
+#include <QTranslator>
 
 int main(int argc, char *argv[])
 {
     [[maybe_unused]] QApplication a(argc, argv);
+
+    // Load the translation matching the system locale (falls back to the English source text).
+    QTranslator translator;
+    if (translator.load(QLocale(), QStringLiteral("qmdmm"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+        QApplication::installTranslator(&translator);
 
     // Make font suitable for displaying
     QFont font = QApplication::font();

@@ -26,7 +26,7 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: 10
         anchors.horizontalCenter: parent.horizontalCenter
-        text: displayName + (you ? qsTr(" (你)") : "")
+        text: displayName + (you ? qsTr(" (you)") : "")
         color: "white"
         font.pixelSize: 28
         elide: Text.ElideRight
@@ -73,7 +73,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 40
         anchors.horizontalCenter: parent.horizontalCenter
-        text: qsTr("位置: %1").arg(game.placeName(player.place))
+        text: qsTr("Place: %1").arg(game.placeName(player.place))
         color: "#ddd"
         font.pixelSize: 20
     }
@@ -81,7 +81,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 14
         anchors.horizontalCenter: parent.horizontalCenter
-        text: qsTr("升级点: %1").arg(player.upgradePoint)
+        text: qsTr("Upgrade points: %1").arg(player.upgradePoint)
         color: "#ddd"
         font.pixelSize: 20
     }
@@ -93,7 +93,7 @@ Item {
         visible: player.dead
         Text {
             anchors.centerIn: parent
-            text: qsTr("出局")
+            text: qsTr("Out")
             color: "#f55"
             font.pixelSize: 40
         }
