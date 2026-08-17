@@ -36,6 +36,7 @@ private slots:
     void reconnect_replaysMissedRoundEvents();
     void signIn_reconnectsPlayerInNonCurrentRoom();
     void roundEventCache_recordsAndClearsEvents();
+    void roundOverAbandonment_endsGameIfAgentOffline();
 };
 
 // Build a server-side Socket that wraps a fresh (unconnected) QTcpSocket, and
@@ -359,6 +360,70 @@ void tst_QMdmmNetworking::roundEventCache_recordsAndClearsEvents()
     runnerP->upgradeResult(upgrades);
     QCOMPARE(runnerP->roundEventSeq, 0);
     QVERIFY(runnerP->roundEventCache.isEmpty());
+}
+
+// At the end of a round (upgradeResult), a player still offline (never reconnected) abandons the
+// game: the room ends with a game over whose winners are the still-online agents, no upgrade
+// result is announced, and the runner signals game-over so the server can destroy it.
+void tst_QMdmmNetworking::roundOverAbandonment_endsGameIfAgentOffline()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(2);
+
+    LogicRunner runner(conf);
+
+    Socket *sock1 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP1 = makeServerSocket(&sock1, &runner);
+    QVERIFY(sockP1 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
+
+    Socket *sock2 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP2 = makeServerSocket(&sock2, &runner);
+    QVERIFY(sockP2 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnlineBot, sock2) != nullptr);
+    QVERIFY(runner.full());
+
+    // Drop p1 (offline, seat preserved).
+    sockP1->socketDisconnected();
+    QVERIFY(!runner.agent(QStringLiteral("p1"))->state().testFlag(Data::StateMaskOnline));
+
+    QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
+    QVERIFY(runnerP != nullptr);
+    QMdmmNetworking::p::ServerAgentP *agent2p = runnerP->agents.value(QStringLiteral("p2"));
+    QVERIFY(agent2p != nullptr);
+
+    // Observe what p2 (the still-online agent) receives.
+    QList<QMdmmCore::Protocol::NotifyId> notifies;
+    QStringList winners;
+    connect(agent2p, &QMdmmNetworking::p::ServerAgentP::sendPacket, [&](const QMdmmCore::Packet &packet) {
+        const QMdmmCore::Protocol::NotifyId id = packet.notifyId();
+        notifies << id;
+        if (id == Protocol::NotifyGameOver) {
+            const QJsonArray arr = packet.value().toArray();
+            for (const QJsonValue &v : arr)
+                winners << v.toString();
+        }
+    });
+
+    // The runner must announce game-over so the server destroys it. The signal carries a
+    // QPrivateSignal tag (inaccessible from outside), so connect with a no-arg lambda.
+    int gameOverCount = 0;
+    connect(&runner, &LogicRunner::gameOver, [&]() { ++gameOverCount; });
+
+    QHash<QString, QList<Data::UpgradeItem>> upgrades;
+    runnerP->upgradeResult(upgrades);
+
+    // p2 is told the game is over with itself as the winner; no upgrade result was announced.
+    QVERIFY(notifies.contains(Protocol::NotifyGameOver));
+    QVERIFY(!notifies.contains(Protocol::NotifyUpgrade));
+    QCOMPARE(winners.size(), 1);
+    QCOMPARE(winners.at(0), QStringLiteral("p2"));
+
+    // The runner announced game-over, and the round-over abandonment path returned before any
+    // round-event broadcast, so nothing was cached and the sequence was not advanced.
+    QCOMPARE(gameOverCount, 1);
+    QVERIFY(runnerP->roundEventCache.isEmpty());
+    QCOMPARE(runnerP->roundEventSeq, 0);
 }
 
 namespace {

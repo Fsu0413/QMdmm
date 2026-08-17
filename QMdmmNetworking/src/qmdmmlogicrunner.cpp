@@ -573,12 +573,10 @@ void LogicRunnerP::socketDisconnected()
     disconnectedAgent->socket = nullptr;
 
     if (q->full()) {
-        // case 1: room is full, so game has started
-        // Agent should exit game if round over or logic runs pass round over, which makes game over and the logic quits
-        // But if client is reconnected before round over, the game should continue
-        // TODO: round over - implement it in LogicRunnerP::upgradeResult, iterate all agents and check if they are online
-        // before notifying agent->notifyUpgrade to everyone. Run gameover if at least one agent is offline.
-        // This matches the gameover behavior of QMdmmCore::Logic
+        // case 1: room is full, so game has started.
+        // The seat is preserved (marked offline) so the player can reconnect. If they do not
+        // reconnect before the round is over, the game is abandoned: LogicRunnerP::upgradeResult
+        // detects the still-offline agent and ends the game (see the round-over check there).
 
         QMdmmCore::Data::AgentState state = disconnectedAgent->state();
         state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
@@ -702,6 +700,24 @@ void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
+    // Round-over abandonment check (see the comment in socketDisconnected): a player whose socket
+    // dropped mid-round is auto-replied so the logic keeps advancing, but if they have not
+    // reconnected by the time the round is over, the game cannot continue. End it as a game over
+    // (winners = the still-online agents) instead of notifying the upgrade result, matching
+    // QMdmmCore::Logic's game-over behavior.
+    foreach (ServerAgentP *agent, agents) {
+        if (!agent->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
+            QStringList winners;
+            foreach (ServerAgentP *onlineAgent, agents) {
+                if (onlineAgent->state().testFlag(QMdmmCore::Data::StateMaskOnline))
+                    winners << onlineAgent->objectName();
+            }
+            gameOver(winners);
+            emit q->gameOver(LogicRunner::QPrivateSignal());
+            return;
+        }
+    }
+
     const int seq = ++roundEventSeq;
     QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
