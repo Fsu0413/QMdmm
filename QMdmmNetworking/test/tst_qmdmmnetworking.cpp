@@ -35,7 +35,7 @@ private slots:
     void reconnect_rebindsSocketAndRestoresState();
     void reconnect_replaysMissedRoundEvents();
     void signIn_reconnectsPlayerInNonCurrentRoom();
-    void roundEventCache_recordsAndClearsEvents();
+    void roundEventLog_recordsAndClearsEvents();
     void roundOverAbandonment_endsGameIfAgentOffline();
 };
 
@@ -177,8 +177,8 @@ void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
     QMdmmNetworking::p::ServerAgentP *agent1p = runnerP->agents.value(QStringLiteral("p1"));
     QVERIFY(agent1p != nullptr);
 
-    // Three round events broadcast while p1 was gone (drive the cache directly, as the
-    // roundEventCache_recordsAndClearsEvents test does).
+    // Three round events broadcast while p1 was gone (drive the room slots directly, as the
+    // roundEventLog_recordsAndClearsEvents test does).
     QHash<QString, Data::StoneScissorsCloth> ssc;
     ssc.insert(QStringLiteral("p1"), Data::Stone);
     ssc.insert(QStringLiteral("p2"), Data::Cloth);
@@ -302,11 +302,11 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     QVERIFY(serverP->current == r2);
 }
 
-// The round-event cache records each round event (ssc / action-order / action / upgrade) keyed by
-// its round-event sequence number, and is cleared at every round boundary (roundOver, and the
-// new-round start inside upgradeResult). This is the server-side half of the "precise catch-up"
-// replay that a reconnecting client will request.
-void tst_QMdmmNetworking::roundEventCache_recordsAndClearsEvents()
+// Each agent keeps its own ordered log of the round events it broadcast (ssc / action-order /
+// action / upgrade), each paired with its round-event sequence number, and the log is cleared at
+// every round boundary (roundOver, and the new-round start inside upgradeResult). This is the
+// server-side half of the "precise catch-up" replay that a reconnecting client will request.
+void tst_QMdmmNetworking::roundEventLog_recordsAndClearsEvents()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(3); // 2 agents stay below capacity, so addSocket does not start a game
@@ -326,40 +326,44 @@ void tst_QMdmmNetworking::roundEventCache_recordsAndClearsEvents()
 
     QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
     QVERIFY(runnerP != nullptr);
-    QVERIFY(runnerP->roundEventCache.isEmpty());
+    QMdmmNetworking::p::ServerAgentP *agent1p = runnerP->agents.value(QStringLiteral("p1"));
+    QVERIFY(agent1p != nullptr);
+    QVERIFY(agent1p->roundEventLog.isEmpty());
 
-    // ssc (seq 1) and action-order (seq 2) each append their packet to the cache.
+    // ssc (seq 1) and action-order (seq 2) each append their packet to the agent's log, in order.
     QHash<QString, Data::StoneScissorsCloth> ssc;
     ssc.insert(QStringLiteral("p1"), Data::Stone);
     ssc.insert(QStringLiteral("p2"), Data::Cloth);
     runnerP->sscResult(ssc);
     QCOMPARE(runnerP->roundEventSeq, 1);
-    QVERIFY(runnerP->roundEventCache.size() == 1);
-    QVERIFY(runnerP->roundEventCache.value(1).notifyId() == Protocol::NotifyStoneScissorsCloth);
+    QVERIFY(agent1p->roundEventLog.size() == 1);
+    QVERIFY(agent1p->roundEventLog.at(0).first == 1);
+    QVERIFY(agent1p->roundEventLog.at(0).second.notifyId() == Protocol::NotifyStoneScissorsCloth);
 
     QHash<int, QString> order;
     order.insert(1, QStringLiteral("p1"));
     order.insert(2, QStringLiteral("p2"));
     runnerP->actionOrderResult(order);
     QCOMPARE(runnerP->roundEventSeq, 2);
-    QVERIFY(runnerP->roundEventCache.size() == 2);
-    QVERIFY(runnerP->roundEventCache.value(2).notifyId() == Protocol::NotifyActionOrder);
+    QVERIFY(agent1p->roundEventLog.size() == 2);
+    QVERIFY(agent1p->roundEventLog.at(1).first == 2);
+    QVERIFY(agent1p->roundEventLog.at(1).second.notifyId() == Protocol::NotifyActionOrder);
     // Regression: the order array must carry every player (off-by-one dropped the last one).
-    const QJsonArray orderArr = runnerP->roundEventCache.value(2).value().toObject().value(QStringLiteral("order")).toArray();
+    const QJsonArray orderArr = agent1p->roundEventLog.at(1).second.value().toObject().value(QStringLiteral("order")).toArray();
     QVERIFY(orderArr.size() == order.size());
 
     // roundOver drops the current round's events.
     runnerP->roundOver();
-    QVERIFY(runnerP->roundEventCache.isEmpty());
+    QVERIFY(agent1p->roundEventLog.isEmpty());
 
-    // upgradeResult caches the upgrade event, then the new-round start resets both the cache and seq.
+    // upgradeResult logs the upgrade event, then the new-round start resets both the log and seq.
     QHash<QString, QList<Data::UpgradeItem>> upgrades;
     QList<Data::UpgradeItem> items;
     items << Data::UpgradeMaxHp;
     upgrades.insert(QStringLiteral("p1"), items);
     runnerP->upgradeResult(upgrades);
     QCOMPARE(runnerP->roundEventSeq, 0);
-    QVERIFY(runnerP->roundEventCache.isEmpty());
+    QVERIFY(agent1p->roundEventLog.isEmpty());
 }
 
 // At the end of a round (upgradeResult), a player still offline (never reconnected) abandons the
@@ -420,9 +424,9 @@ void tst_QMdmmNetworking::roundOverAbandonment_endsGameIfAgentOffline()
     QCOMPARE(winners.at(0), QStringLiteral("p2"));
 
     // The runner announced game-over, and the round-over abandonment path returned before any
-    // round-event broadcast, so nothing was cached and the sequence was not advanced.
+    // round-event broadcast, so nothing was logged and the sequence was not advanced.
     QCOMPARE(gameOverCount, 1);
-    QVERIFY(runnerP->roundEventCache.isEmpty());
+    QVERIFY(agent2p->roundEventLog.isEmpty());
     QCOMPARE(runnerP->roundEventSeq, 0);
 }
 

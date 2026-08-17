@@ -6,7 +6,6 @@
 #include <QJsonArray>
 #include <QMetaType>
 #include <QRandomGenerator>
-#include <algorithm>
 #include <utility>
 
 /**
@@ -366,18 +365,18 @@ void ServerAgentP::notifyRoundStart()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-QMdmmCore::Packet ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
+void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
         ob.insert(it.key(), static_cast<int>(it.value()));
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob);
+    roundEventLog.append(std::make_pair(seq, packet));
     emit sendPacket(packet);
-    return packet;
 }
 
-QMdmmCore::Packet ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
+void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
 {
     QJsonArray arr;
     for (int i = 1; i <= result.count(); ++i)
@@ -386,11 +385,11 @@ QMdmmCore::Packet ServerAgentP::notifyActionOrder(const QHash<int, QString> &res
     ob.insert(QStringLiteral("seq"), seq);
     ob.insert(QStringLiteral("order"), arr);
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyActionOrder, ob);
+    roundEventLog.append(std::make_pair(seq, packet));
     emit sendPacket(packet);
-    return packet;
 }
 
-QMdmmCore::Packet ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
+void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
@@ -417,8 +416,8 @@ QMdmmCore::Packet ServerAgentP::notifyAction(const QString &playerName, QMdmmCor
     }
 
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyAction, ob);
+    roundEventLog.append(std::make_pair(seq, packet));
     emit sendPacket(packet);
-    return packet;
 }
 
 void ServerAgentP::notifyRoundOver()
@@ -426,7 +425,7 @@ void ServerAgentP::notifyRoundOver()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-QMdmmCore::Packet ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
+void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("seq"), seq);
@@ -437,8 +436,24 @@ QMdmmCore::Packet ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCo
         ob.insert(it.key(), arr);
     }
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyUpgrade, ob);
+    roundEventLog.append(std::make_pair(seq, packet));
     emit sendPacket(packet);
-    return packet;
+}
+
+void ServerAgentP::clearRoundEventLog()
+{
+    roundEventLog.clear();
+}
+
+void ServerAgentP::replayMissedRoundEvents(int lastRoundEventSeq)
+{
+    // roundEventLog is ordered by send order, which equals the round-event sequence order (events
+    // are appended in broadcast order), so replaying in-place needs no sorting: just skip the
+    // events the client already received and re-send the rest, in order.
+    for (auto it = roundEventLog.cbegin(); it != roundEventLog.cend(); ++it) {
+        if (it->first > lastRoundEventSeq)
+            emit sendPacket(it->second);
+    }
 }
 
 void ServerAgentP::notifyGameOver(const QStringList &playerNames)
@@ -639,12 +654,10 @@ void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     const int seq = ++roundEventSeq;
-    // The packet is identical for every agent, so capture it while broadcasting and cache it
-    // keyed by seq for the reconnect catch-up (see roundEventCache in the header).
-    QMdmmCore::Packet packet;
+    // Each agent records the round event it broadcasts in its own roundEventLog (see
+    // ServerAgentP::notifyStoneScissorsCloth), for the per-agent reconnect catch-up.
     foreach (ServerAgentP *agent, agents)
-        packet = agent->notifyStoneScissorsCloth(replies, seq);
-    roundEventCache.insert(seq, packet);
+        agent->notifyStoneScissorsCloth(replies, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -658,10 +671,8 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
     const int seq = ++roundEventSeq;
-    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        packet = agent->notifyActionOrder(result, seq);
-    roundEventCache.insert(seq, packet);
+        agent->notifyActionOrder(result, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -684,10 +695,8 @@ void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     const int seq = ++roundEventSeq;
-    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        packet = agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
-    roundEventCache.insert(seq, packet);
+        agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -719,10 +728,8 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     }
 
     const int seq = ++roundEventSeq;
-    QMdmmCore::Packet packet;
     foreach (ServerAgentP *agent, agents)
-        packet = agent->notifyUpgrade(upgrades, seq);
-    roundEventCache.insert(seq, packet);
+        agent->notifyUpgrade(upgrades, seq);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
@@ -734,16 +741,19 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     // A new round begins: reset the round-event sequence and drop the previous round's events
     // so the next round's events restart from 1 (the client tracks "last received seq" per round).
     roundEventSeq = 0;
-    roundEventCache.clear();
+    foreach (ServerAgentP *agent, agents)
+        agent->clearRoundEventLog();
 
     emit roundStart();
 }
 
 void LogicRunnerP::roundOver()
 {
-    // The round's action phase is over: drop the round-event cache. A reconnect from here on is
-    // in the upgrade phase or the next round, where the old round's events are no longer needed.
-    roundEventCache.clear();
+    // The round's action phase is over: drop each agent's round-event log. A reconnect from here
+    // on is in the upgrade phase or the next round, where the old round's events are no longer
+    // needed.
+    foreach (ServerAgentP *agent, agents)
+        agent->clearRoundEventLog();
 
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundOver();
@@ -891,18 +901,12 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int las
         reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
 
     // Precise catch-up: replay the round events the client missed. The client reported the last
-    // round-event sequence number it received before the drop (lastRoundEventSeq); every cached
-    // event with a higher sequence number was broadcast while it was gone and must be replayed in
-    // order. This replaces the old notifyGameStart/notifyRoundStart replay, which made the still-
-    // in-round client reset its local state and desync from the server.
-    QList<int> missedSeqs;
-    for (QHash<int, QMdmmCore::Packet>::const_iterator it = d->roundEventCache.constBegin(); it != d->roundEventCache.constEnd(); ++it) {
-        if (it.key() > lastRoundEventSeq)
-            missedSeqs.append(it.key());
-    }
-    std::sort(missedSeqs.begin(), missedSeqs.end());
-    foreach (int seq, missedSeqs)
-        emit reconnectedAgent->sendPacket(d->roundEventCache.value(seq));
+    // round-event sequence number it received before the drop (lastRoundEventSeq); every event
+    // this agent broadcast while the client was gone (with a higher sequence number) is replayed
+    // in send order. The agent's own round-event log is naturally ordered by sequence number, so
+    // replay needs no sorting. This replaces the old notifyGameStart/notifyRoundStart replay,
+    // which made the still-in-round client reset its local state and desync from the server.
+    reconnectedAgent->replayMissedRoundEvents(lastRoundEventSeq);
 
     return reconnectedAgent;
 }
