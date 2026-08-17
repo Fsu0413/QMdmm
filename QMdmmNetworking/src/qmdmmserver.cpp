@@ -294,6 +294,16 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 #undef CONF
 #undef CONVERTAGENTSTATE
 
+        // The client reports the last round-event sequence number it received before a drop, so the
+        // server can replay only the events it missed (precise catch-up). A fresh sign-in omits the
+        // field and defaults to 0 -- harmless, since a fresh room has an empty round-event cache.
+        int lastRoundEventSeq = 0;
+        if (ob.contains(QStringLiteral("lastRoundEventSeq"))) {
+            QJsonValue vlastRoundEventSeq = ob.value(QStringLiteral("lastRoundEventSeq"));
+            if (vlastRoundEventSeq.isDouble())
+                lastRoundEventSeq = vlastRoundEventSeq.toInt();
+        }
+
         // Reconnect path: a reconnecting player may live in ANY room, not just `current`. `current`
         // only tracks the room currently recruiting players; full rooms keep running in the
         // background and are deleted later on gameOver. So scan every LogicRunner child for the
@@ -304,7 +314,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             Agent *existing = runner->agent(playerName);
             if (existing == nullptr || existing->state().testFlag(QMdmmCore::Data::StateMaskOnline))
                 continue;
-            if (runner->reconnect(playerName, socket) != nullptr)
+            if (runner->reconnect(playerName, socket, lastRoundEventSeq) != nullptr)
                 return;
             socket->setHasError(true);
             return;

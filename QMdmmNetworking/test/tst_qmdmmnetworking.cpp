@@ -33,6 +33,7 @@ private slots:
     void socketDisconnected_notFull_removesAgent();
     void socketDisconnected_full_marksOffline();
     void reconnect_rebindsSocketAndRestoresState();
+    void reconnect_replaysMissedRoundEvents();
     void signIn_reconnectsPlayerInNonCurrentRoom();
     void roundEventCache_recordsAndClearsEvents();
 };
@@ -142,6 +143,87 @@ void tst_QMdmmNetworking::reconnect_rebindsSocketAndRestoresState()
     QCOMPARE(reconnected, runner.agent(QStringLiteral("p1")));
     QVERIFY(reconnected->state().testFlag(Data::StateMaskOnline));
     QVERIFY(reconnected->state().testFlag(Data::StateMaskTrust));
+}
+
+// reconnect() must not re-announce the round (the client never left it) -- instead it replays,
+// in order, only the cached round events with a sequence number higher than what the client
+// reported as its last received one. This is the server half of the "precise catch-up" on
+// reconnect.
+void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(2);
+
+    LogicRunner runner(conf);
+
+    Socket *sock1 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP1 = makeServerSocket(&sock1, &runner);
+    QVERIFY(sockP1 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
+
+    Socket *sock2 = nullptr;
+    QMdmmNetworking::p::SocketP *sockP2 = makeServerSocket(&sock2, &runner);
+    QVERIFY(sockP2 != nullptr);
+    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnlineBot, sock2) != nullptr);
+    QVERIFY(runner.full());
+
+    // Drop p1 (offline, seat preserved).
+    sockP1->socketDisconnected();
+    QVERIFY(!runner.agent(QStringLiteral("p1"))->state().testFlag(Data::StateMaskOnline));
+
+    QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
+    QVERIFY(runnerP != nullptr);
+    QMdmmNetworking::p::ServerAgentP *agent1p = runnerP->agents.value(QStringLiteral("p1"));
+    QVERIFY(agent1p != nullptr);
+
+    // Three round events broadcast while p1 was gone (drive the cache directly, as the
+    // roundEventCache_recordsAndClearsEvents test does).
+    QHash<QString, Data::StoneScissorsCloth> ssc;
+    ssc.insert(QStringLiteral("p1"), Data::Stone);
+    ssc.insert(QStringLiteral("p2"), Data::Cloth);
+    runnerP->sscResult(ssc); // seq 1
+
+    QHash<int, QString> order;
+    order.insert(1, QStringLiteral("p1"));
+    order.insert(2, QStringLiteral("p2"));
+    runnerP->actionOrderResult(order); // seq 2
+
+    runnerP->actionResult(QStringLiteral("p1"), Data::DoNothing, QString(), 0); // seq 3
+
+    // Observe what gets sent to p1's rebound socket on reconnect (connected only now, so the
+    // broadcasts made while p1 was offline above are not counted).
+    QList<QMdmmCore::Protocol::NotifyId> allNotifies;
+    QList<QMdmmCore::Protocol::NotifyId> replayedNotifies;
+    QList<int> replayedSeqs;
+    connect(agent1p, &QMdmmNetworking::p::ServerAgentP::sendPacket, [&](const QMdmmCore::Packet &packet) {
+        const QMdmmCore::Protocol::NotifyId id = packet.notifyId();
+        allNotifies << id;
+        if (id == Protocol::NotifyStoneScissorsCloth || id == Protocol::NotifyActionOrder || id == Protocol::NotifyAction || id == Protocol::NotifyUpgrade) {
+            replayedNotifies << id;
+            replayedSeqs << packet.value().toObject().value(QStringLiteral("seq")).toInt();
+        }
+    });
+
+    // Reconnect with last received seq = 1: only seq 2 and seq 3 are replayed, in order.
+    Socket *sock1b = nullptr;
+    QMdmmNetworking::p::SocketP *sockP1b = makeServerSocket(&sock1b, &runner);
+    QVERIFY(sockP1b != nullptr);
+
+    Agent *reconnected = runner.reconnect(QStringLiteral("p1"), sock1b, 1);
+    QVERIFY(reconnected != nullptr);
+    QVERIFY(reconnected->state().testFlag(Data::StateMaskOnline));
+    QVERIFY(reconnected->state().testFlag(Data::StateMaskTrust));
+
+    // The wrong old behavior re-sent notifyGameStart / notifyRoundStart; the precise catch-up must not.
+    QVERIFY(!allNotifies.contains(Protocol::NotifyGameStart));
+    QVERIFY(!allNotifies.contains(Protocol::NotifyRoundStart));
+
+    // Only the missed events (seq > 1) are replayed, in ascending sequence order.
+    QCOMPARE(replayedNotifies.size(), 2);
+    QVERIFY(replayedNotifies.at(0) == Protocol::NotifyActionOrder);
+    QCOMPARE(replayedSeqs.at(0), 2);
+    QVERIFY(replayedNotifies.at(1) == Protocol::NotifyAction);
+    QCOMPARE(replayedSeqs.at(1), 3);
 }
 
 // Build a ServerP::signIn payload for a player (playerName / screenName / agentState).

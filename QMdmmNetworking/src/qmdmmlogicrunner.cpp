@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QMetaType>
 #include <QRandomGenerator>
+#include <algorithm>
 #include <utility>
 
 /**
@@ -830,14 +831,18 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
  * @brief Reconnect a previously disconnected agent by rebinding its socket
  * @param playerName the internal name of the player to reconnect
  * @param socket the new socket of the reconnecting client
+ * @param lastRoundEventSeq the last round-event sequence number the client received before the drop
  * @return the reconnected agent, or @c nullptr if the player is unknown or still connected
  *
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
  * game has started) but whose socket was cleared by @c LogicRunnerP::socketDisconnected. It
- * rebinds the socket, restores the online / trust flags, and resends the state snapshot so the
- * reconnecting client can rebuild its room view.
+ * rebinds the socket, restores the online / trust flags, resends the state snapshot so the
+ * reconnecting client can rebuild its room view, and then replays only the round events the client
+ * missed (those cached with a sequence number greater than @p lastRoundEventSeq) instead of
+ * re-announcing the round -- the client never left the round, so a replayed
+ * @c notifyGameStart / @c notifyRoundStart would reset its local state and desync it.
  */
-Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket)
+Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int lastRoundEventSeq)
 {
     p::ServerAgentP *reconnectedAgent = d->agents.value(playerName, nullptr);
     if (reconnectedAgent == nullptr)
@@ -869,13 +874,19 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket)
     foreach (p::ServerAgentP *agent, d->agents)
         reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
 
-    // TODO: resending notifyGameStart/notifyRoundStart here is wrong. The reconnecting client never
-    // left the round (only its socket dropped), so a replayed RoundStart makes it clear its local
-    // round state and desync from the server. Replace with precise catch-up: the client reports its
-    // last received round-event sequence number on reconnect, and the server replays only the missed
-    // events (ssc / action-order / action / upgrade) instead of re-announcing the round.
-    reconnectedAgent->notifyGameStart();
-    reconnectedAgent->notifyRoundStart();
+    // Precise catch-up: replay the round events the client missed. The client reported the last
+    // round-event sequence number it received before the drop (lastRoundEventSeq); every cached
+    // event with a higher sequence number was broadcast while it was gone and must be replayed in
+    // order. This replaces the old notifyGameStart/notifyRoundStart replay, which made the still-
+    // in-round client reset its local state and desync from the server.
+    QList<int> missedSeqs;
+    for (QHash<int, QMdmmCore::Packet>::const_iterator it = d->roundEventCache.constBegin(); it != d->roundEventCache.constEnd(); ++it) {
+        if (it.key() > lastRoundEventSeq)
+            missedSeqs.append(it.key());
+    }
+    std::sort(missedSeqs.begin(), missedSeqs.end());
+    foreach (int seq, missedSeqs)
+        emit reconnectedAgent->sendPacket(d->roundEventCache.value(seq));
 
     return reconnectedAgent;
 }

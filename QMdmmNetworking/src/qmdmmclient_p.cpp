@@ -239,6 +239,10 @@ void ClientP::notifyVersion(const QJsonValue &value)
     signInOb.insert(QStringLiteral("playerName"), q->objectName());
     signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
     signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
+    // Report the last round-event sequence number received before the drop, so the server can
+    // replay only the events this client missed (precise catch-up). On a fresh sign-in this is 0
+    // and the server's empty round-event cache means nothing extra is replayed.
+    signInOb.insert(QStringLiteral("lastRoundEventSeq"), lastRoundEventSeq);
     emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySignIn, signInOb));
 
     // The connection is back and we re-signed in. Stop the retry loop and tell
