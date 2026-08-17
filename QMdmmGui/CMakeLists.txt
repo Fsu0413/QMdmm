@@ -9,7 +9,6 @@ set(QMDMMGUI_SOURCES
     src/gameclient.cpp
     src/mainwindow.h
     src/mainwindow.cpp
-    translations/translations.qrc
 )
 
 set(QMDMMGUI_QML_FILES
@@ -29,7 +28,7 @@ set(QMDMMGUI_RESOURCES
     assets/knife.png
 )
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools)
 
 qt6_add_executable(QMdmm6 WIN32 MACOSX_BUNDLE ${QMDMMGUI_SOURCES})
 
@@ -56,6 +55,10 @@ qt6_add_qml_module(QMdmm6
     VERSION ${QMdmm_VERSION}
     QML_FILES ${QMDMMGUI_QML_FILES}
     RESOURCES ${QMDMMGUI_RESOURCES}
+)
+
+qt6_add_translations(QMdmm6
+    TS_FILES translations/qmdmm_zh_CN.ts
 )
 
 install(TARGETS QMdmm6
