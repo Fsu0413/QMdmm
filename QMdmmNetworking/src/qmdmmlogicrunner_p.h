@@ -46,7 +46,7 @@ public:
 
     // Round-event log: every round-event packet this agent has broadcast (ssc / action-order /
     // action / upgrade), in send order, each paired with its round-event sequence number. Used for
-    // the per-agent precise catch-up on reconnect (backlog "精确补发"): a reconnecting client is
+    // the per-agent precise catch-up on reconnect (backlog "precise catch-up"): a reconnecting client is
     // replayed only the events it missed, in send order. The log is naturally ordered by sequence
     // number (events are appended in broadcast order), so no sorting is needed.
     QList<std::pair<int, QMdmmCore::Packet>> roundEventLog;
@@ -121,7 +121,7 @@ public:
 
     // Round-event sequence number: incremented for each round-event broadcast
     // (ssc / action-order / action / upgrade) and reset when a new round starts.
-    // Used for the precise catch-up on reconnect (see backlog "精确补发"). Each agent keeps its
+    // Used for the precise catch-up on reconnect (see backlog "precise catch-up"). Each agent keeps its
     // own ordered log of the round events it broadcast (see ServerAgentP::roundEventLog).
     int roundEventSeq = 0;
 

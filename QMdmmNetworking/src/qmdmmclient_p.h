@@ -48,7 +48,7 @@ public:
     QMdmmCore::Data::AgentState initialState;
 
     // Last received round-event sequence number. Tracked per round so the client
-    // can report it on reconnect for the precise catch-up (see backlog "精确补发").
+    // can report it on reconnect for the precise catch-up (see backlog "precise catch-up").
     int lastRoundEventSeq = 0;
 
     void requestStoneScissorsCloth(const QJsonValue &value);
