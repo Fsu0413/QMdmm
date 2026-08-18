@@ -39,3 +39,45 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  docs:
+    name: Publish API docs
+    runs-on: macos-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doxygen
+        run: brew install doxygen
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.9.*"
+          modules: "qtwebsockets"
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -B build -G "Unix Makefiles"
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=OFF
+          -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+
+      - name: Build docs
+        run: cmake --build build --target QMdmm_docs
+
+      - name: Publish to qmdmm-docs
+        env:
+          DOCS_TOKEN: ${{ secrets.QMDMM_DOCS_TOKEN }}
+        run: |
+          cd build/doc/html
+          touch .nojekyll
+          git init -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: publish doxygen-generated API reference"
+          git remote add origin "https://x-access-token:${DOCS_TOKEN}@github.com/nemn9852/qmdmm-docs.git"
+          git push -f origin main
