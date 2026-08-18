@@ -58,6 +58,15 @@ config-gated (`enableLetMove`).
 In other words: nobody can play a full game end-to-end yet. The core library
 is solid; what is missing is wiring the GUI to the network layer.
 
+## Documentation
+
+- [Architecture](docs/architecture.md) — how the modules fit together, and how
+  a round actually runs.
+- [Getting Started](docs/getting-started.md) — build, run, and play a headless
+  game end-to-end.
+- [API reference](https://nemn9852.github.io/qmdmm-docs/) — Doxygen for the
+  `QMdmmCore` and `QMdmmNetworking` public classes.
+
 ## Building
 
 Requirements:
@@ -126,6 +135,7 @@ QMdmmNetworking/ Network layer (server / client / protocol transport)
 QMdmmServer/     Standalone server program
 QMdmmGui/        Graphical client (QML)
 smoke/           Headless networked-gameplay regression test
+docs/            User-facing documentation (architecture, getting started)
 doc/             Doxygen documentation
 3rdparty/        Third-party dependencies
 cmake/           CMake helper modules
