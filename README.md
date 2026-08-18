@@ -51,18 +51,19 @@ config-gated (`enableLetMove`).
 | Module | Purpose | Status |
 |---|---|---|
 | `QMdmmCore` | Game rules engine (players / rooms / round state machine / config) | Usable, tested |
-| `QMdmmNetworking` | Network layer (server / client / signaling) | Main flow works; reconnect / spectate / lobby missing |
+| `QMdmmNetworking` | Network layer (server / client / signaling) | Main flow + reconnect work; spectate / lobby missing |
 | `QMdmmServer` | Standalone server program | Runs; full CLI configuration |
 | `QMdmmGui` | Graphical client (QML) | Start menu only; cannot play a full game yet |
 
-In other words: nobody can play a full game end-to-end yet. The core library
-is solid; what is missing is wiring the GUI to the network layer.
+In other words: the headless smoke test plays a full game end-to-end (including
+a mid-game reconnect), but the GUI cannot play one yet. The core library is
+solid; what is missing is wiring the GUI to the network layer.
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) — how the modules fit together, and how
+- [Architecture](doc/architecture.md) — how the modules fit together, and how
   a round actually runs.
-- [Getting Started](docs/getting-started.md) — build, run, and play a headless
+- [Getting Started](doc/getting-started.md) — build, run, and play a headless
   game end-to-end.
 - [API reference](https://nemn9852.github.io/qmdmm-docs/) — Doxygen for the
   `QMdmmCore` and `QMdmmNetworking` public classes.
@@ -135,8 +136,7 @@ QMdmmNetworking/ Network layer (server / client / protocol transport)
 QMdmmServer/     Standalone server program
 QMdmmGui/        Graphical client (QML)
 smoke/           Headless networked-gameplay regression test
-docs/            User-facing documentation (architecture, getting started)
-doc/             Doxygen documentation
+doc/             Documentation: Doxygen config + guides (architecture, getting started)
 3rdparty/        Third-party dependencies
 cmake/           CMake helper modules
 ```
