@@ -147,9 +147,8 @@ void tst_QMdmmNetworking::reconnect_rebindsSocketAndRestoresState()
 }
 
 // reconnect() must not re-announce the round (the client never left it) -- instead it replays,
-// in order, only the cached round events with a sequence number higher than what the client
-// reported as its last received one. This is the server half of the "precise catch-up" on
-// reconnect.
+// in order, only the cached round events after the index the client reported as its received
+// count. This is the server half of the "precise catch-up" on reconnect.
 void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
@@ -182,30 +181,29 @@ void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
     QHash<QString, Data::StoneScissorsCloth> ssc;
     ssc.insert(QStringLiteral("p1"), Data::Stone);
     ssc.insert(QStringLiteral("p2"), Data::Cloth);
-    runnerP->sscResult(ssc); // seq 1
+    runnerP->sscResult(ssc); // event index 0
 
     QHash<int, QString> order;
     order.insert(1, QStringLiteral("p1"));
     order.insert(2, QStringLiteral("p2"));
-    runnerP->actionOrderResult(order); // seq 2
+    runnerP->actionOrderResult(order); // event index 1
 
-    runnerP->actionResult(QStringLiteral("p1"), Data::DoNothing, QString(), 0); // seq 3
+    runnerP->actionResult(QStringLiteral("p1"), Data::DoNothing, QString(), 0); // event index 2
 
     // Observe what gets sent to p1's rebound socket on reconnect (connected only now, so the
     // broadcasts made while p1 was offline above are not counted).
     QList<QMdmmCore::Protocol::NotifyId> allNotifies;
     QList<QMdmmCore::Protocol::NotifyId> replayedNotifies;
-    QList<int> replayedSeqs;
     connect(agent1p, &QMdmmNetworking::p::ServerAgentP::sendPacket, [&](const QMdmmCore::Packet &packet) {
         const QMdmmCore::Protocol::NotifyId id = packet.notifyId();
         allNotifies << id;
         if (id == Protocol::NotifyStoneScissorsCloth || id == Protocol::NotifyActionOrder || id == Protocol::NotifyAction || id == Protocol::NotifyUpgrade) {
             replayedNotifies << id;
-            replayedSeqs << packet.value().toObject().value(QStringLiteral("seq")).toInt();
         }
     });
 
-    // Reconnect with last received seq = 1: only seq 2 and seq 3 are replayed, in order.
+    // Reconnect having already received 1 round event (index 0): only the 2nd and 3rd events are
+    // replayed, in order.
     Socket *sock1b = nullptr;
     QMdmmNetworking::p::SocketP *sockP1b = makeServerSocket(&sock1b, &runner);
     QVERIFY(sockP1b != nullptr);
@@ -219,12 +217,10 @@ void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
     QVERIFY(!allNotifies.contains(Protocol::NotifyGameStart));
     QVERIFY(!allNotifies.contains(Protocol::NotifyRoundStart));
 
-    // Only the missed events (seq > 1) are replayed, in ascending sequence order.
+    // Only the missed events (index >= 1) are replayed, in ascending send order.
     QCOMPARE(replayedNotifies.size(), 2);
     QVERIFY(replayedNotifies.at(0) == Protocol::NotifyActionOrder);
-    QCOMPARE(replayedSeqs.at(0), 2);
     QVERIFY(replayedNotifies.at(1) == Protocol::NotifyAction);
-    QCOMPARE(replayedSeqs.at(1), 3);
 }
 
 // Build a ServerP::signIn payload for a player (playerName / screenName / agentState).
@@ -303,9 +299,9 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
 }
 
 // Each agent keeps its own ordered log of the round events it broadcast (ssc / action-order /
-// action / upgrade), each paired with its round-event sequence number, and the log is cleared at
-// every round boundary (roundOver, and the new-round start inside upgradeResult). This is the
-// server-side half of the "precise catch-up" replay that a reconnecting client will request.
+// action / upgrade), and the log is cleared at every round boundary (roundOver, and the new-round
+// start inside upgradeResult). This is the server-side half of the "precise catch-up" replay that
+// a reconnecting client will request.
 void tst_QMdmmNetworking::roundEventLog_recordsAndClearsEvents()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
@@ -330,39 +326,34 @@ void tst_QMdmmNetworking::roundEventLog_recordsAndClearsEvents()
     QVERIFY(agent1p != nullptr);
     QVERIFY(agent1p->roundEventLog.isEmpty());
 
-    // ssc (seq 1) and action-order (seq 2) each append their packet to the agent's log, in order.
+    // ssc and action-order each append their packet to the agent's log, in order.
     QHash<QString, Data::StoneScissorsCloth> ssc;
     ssc.insert(QStringLiteral("p1"), Data::Stone);
     ssc.insert(QStringLiteral("p2"), Data::Cloth);
     runnerP->sscResult(ssc);
-    QCOMPARE(runnerP->roundEventSeq, 1);
     QVERIFY(agent1p->roundEventLog.size() == 1);
-    QVERIFY(agent1p->roundEventLog.at(0).first == 1);
-    QVERIFY(agent1p->roundEventLog.at(0).second.notifyId() == Protocol::NotifyStoneScissorsCloth);
+    QVERIFY(agent1p->roundEventLog.at(0).notifyId() == Protocol::NotifyStoneScissorsCloth);
 
     QHash<int, QString> order;
     order.insert(1, QStringLiteral("p1"));
     order.insert(2, QStringLiteral("p2"));
     runnerP->actionOrderResult(order);
-    QCOMPARE(runnerP->roundEventSeq, 2);
     QVERIFY(agent1p->roundEventLog.size() == 2);
-    QVERIFY(agent1p->roundEventLog.at(1).first == 2);
-    QVERIFY(agent1p->roundEventLog.at(1).second.notifyId() == Protocol::NotifyActionOrder);
+    QVERIFY(agent1p->roundEventLog.at(1).notifyId() == Protocol::NotifyActionOrder);
     // Regression: the order array must carry every player (off-by-one dropped the last one).
-    const QJsonArray orderArr = agent1p->roundEventLog.at(1).second.value().toObject().value(QStringLiteral("order")).toArray();
+    const QJsonArray orderArr = agent1p->roundEventLog.at(1).value().toArray();
     QVERIFY(orderArr.size() == order.size());
 
     // roundOver drops the current round's events.
     runnerP->roundOver();
     QVERIFY(agent1p->roundEventLog.isEmpty());
 
-    // upgradeResult logs the upgrade event, then the new-round start resets both the log and seq.
+    // upgradeResult logs the upgrade event, then the new-round start drops the log again.
     QHash<QString, QList<Data::UpgradeItem>> upgrades;
     QList<Data::UpgradeItem> items;
     items << Data::UpgradeMaxHp;
     upgrades.insert(QStringLiteral("p1"), items);
     runnerP->upgradeResult(upgrades);
-    QCOMPARE(runnerP->roundEventSeq, 0);
     QVERIFY(agent1p->roundEventLog.isEmpty());
 }
 
@@ -424,10 +415,9 @@ void tst_QMdmmNetworking::roundOverAbandonment_endsGameIfAgentOffline()
     QCOMPARE(winners.at(0), QStringLiteral("p2"));
 
     // The runner announced game-over, and the round-over abandonment path returned before any
-    // round-event broadcast, so nothing was logged and the sequence was not advanced.
+    // round-event broadcast, so nothing was logged.
     QCOMPARE(gameOverCount, 1);
     QVERIFY(agent2p->roundEventLog.isEmpty());
-    QCOMPARE(runnerP->roundEventSeq, 0);
 }
 
 namespace {

@@ -365,34 +365,29 @@ void ServerAgentP::notifyRoundStart()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, int seq)
+void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
         ob.insert(it.key(), static_cast<int>(it.value()));
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob);
-    roundEventLog.append(std::make_pair(seq, packet));
+    roundEventLog.append(packet);
     emit sendPacket(packet);
 }
 
-void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result, int seq)
+void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result)
 {
     QJsonArray arr;
     for (int i = 1; i <= result.count(); ++i)
         arr.append(result.value(i));
-    QJsonObject ob;
-    ob.insert(QStringLiteral("seq"), seq);
-    ob.insert(QStringLiteral("order"), arr);
-    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyActionOrder, ob);
-    roundEventLog.append(std::make_pair(seq, packet));
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyActionOrder, arr);
+    roundEventLog.append(packet);
     emit sendPacket(packet);
 }
 
-void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, int seq)
+void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("seq"), seq);
     ob.insert(QStringLiteral("playerName"), playerName);
     ob.insert(QStringLiteral("action"), static_cast<int>(action));
 
@@ -416,7 +411,7 @@ void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Acti
     }
 
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyAction, ob);
-    roundEventLog.append(std::make_pair(seq, packet));
+    roundEventLog.append(packet);
     emit sendPacket(packet);
 }
 
@@ -425,10 +420,9 @@ void ServerAgentP::notifyRoundOver()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, int seq)
+void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("seq"), seq);
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
         QJsonArray arr;
         foreach (QMdmmCore::Data::UpgradeItem up, it.value())
@@ -436,7 +430,7 @@ void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::Upg
         ob.insert(it.key(), arr);
     }
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyUpgrade, ob);
-    roundEventLog.append(std::make_pair(seq, packet));
+    roundEventLog.append(packet);
     emit sendPacket(packet);
 }
 
@@ -447,13 +441,12 @@ void ServerAgentP::clearRoundEventLog()
 
 void ServerAgentP::replayMissedRoundEvents(int lastRoundEventSeq)
 {
-    // roundEventLog is ordered by send order, which equals the round-event sequence order (events
-    // are appended in broadcast order), so replaying in-place needs no sorting: just skip the
-    // events the client already received and re-send the rest, in order.
-    for (auto it = roundEventLog.cbegin(); it != roundEventLog.cend(); ++it) {
-        if (it->first > lastRoundEventSeq)
-            emit sendPacket(it->second);
-    }
+    // roundEventLog is ordered by send order, and its index IS the round-event sequence number
+    // (see roundEventLog in qmdmmlogicrunner_p.h), which equals the client's received-event
+    // counter. Replaying in-place needs no sorting: skip the first `lastRoundEventSeq` events the
+    // client already got and re-send the rest, in order.
+    for (int i = lastRoundEventSeq; i < roundEventLog.size(); ++i)
+        emit sendPacket(roundEventLog.at(i));
 }
 
 void ServerAgentP::notifyGameOver(const QStringList &playerNames)
@@ -653,11 +646,10 @@ void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
-    const int seq = ++roundEventSeq;
     // Each agent records the round event it broadcasts in its own roundEventLog (see
     // ServerAgentP::notifyStoneScissorsCloth), for the per-agent reconnect catch-up.
     foreach (ServerAgentP *agent, agents)
-        agent->notifyStoneScissorsCloth(replies, seq);
+        agent->notifyStoneScissorsCloth(replies);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -670,9 +662,8 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
-    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyActionOrder(result, seq);
+        agent->notifyActionOrder(result);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -694,9 +685,8 @@ void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyAction(playerName, action, toPlayer, toPlace, seq);
+        agent->notifyAction(playerName, action, toPlayer, toPlace);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -727,9 +717,8 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
         }
     }
 
-    const int seq = ++roundEventSeq;
     foreach (ServerAgentP *agent, agents)
-        agent->notifyUpgrade(upgrades, seq);
+        agent->notifyUpgrade(upgrades);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
@@ -738,9 +727,8 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     foreach (ServerAgentP *agent, agents)
         agent->notifyRoundStart();
 
-    // A new round begins: reset the round-event sequence and drop the previous round's events
-    // so the next round's events restart from 1 (the client tracks "last received seq" per round).
-    roundEventSeq = 0;
+    // A new round begins: drop the previous round's events so the next round's log restarts empty
+    // (the client resets its per-round event counter on notifyRoundStart, mirroring this).
     foreach (ServerAgentP *agent, agents)
         agent->clearRoundEventLog();
 
@@ -857,14 +845,14 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
  * @brief Reconnect a previously disconnected agent by rebinding its socket
  * @param playerName the internal name of the player to reconnect
  * @param socket the new socket of the reconnecting client
- * @param lastRoundEventSeq the last round-event sequence number the client received before the drop
+ * @param lastRoundEventSeq the number of round events the client received before the drop (also the last sequence number)
  * @return the reconnected agent, or @c nullptr if the player is unknown or still connected
  *
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
  * game has started) but whose socket was cleared by @c LogicRunnerP::socketDisconnected. It
  * rebinds the socket, restores the online / trust flags, resends the state snapshot so the
  * reconnecting client can rebuild its room view, and then replays only the round events the client
- * missed (those cached with a sequence number greater than @p lastRoundEventSeq) instead of
+ * missed (every cached event after the first @p lastRoundEventSeq) instead of
  * re-announcing the round -- the client never left the round, so a replayed
  * @c notifyGameStart / @c notifyRoundStart would reset its local state and desync it.
  */
@@ -900,12 +888,13 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int las
     foreach (p::ServerAgentP *agent, d->agents)
         reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
 
-    // Precise catch-up: replay the round events the client missed. The client reported the last
-    // round-event sequence number it received before the drop (lastRoundEventSeq); every event
-    // this agent broadcast while the client was gone (with a higher sequence number) is replayed
-    // in send order. The agent's own round-event log is naturally ordered by sequence number, so
-    // replay needs no sorting. This replaces the old notifyGameStart/notifyRoundStart replay,
-    // which made the still-in-round client reset its local state and desync from the server.
+    // Precise catch-up: replay the round events the client missed. The client reported how many
+    // round events it received before the drop (lastRoundEventSeq, which doubles as the last
+    // sequence number); every event this agent broadcast while the client was gone is replayed
+    // in send order, skipping the first `lastRoundEventSeq` (already received). The agent's own
+    // round-event log is naturally ordered by sequence number, so replay needs no sorting. This
+    // replaces the old notifyGameStart/notifyRoundStart replay, which made the still-in-round
+    // client reset its local state and desync from the server.
     reconnectedAgent->replayMissedRoundEvents(lastRoundEventSeq);
 
     return reconnectedAgent;

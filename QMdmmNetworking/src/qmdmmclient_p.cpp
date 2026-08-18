@@ -239,9 +239,9 @@ void ClientP::notifyVersion(const QJsonValue &value)
     signInOb.insert(QStringLiteral("playerName"), q->objectName());
     signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
     signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
-    // Report the last round-event sequence number received before the drop, so the server can
-    // replay only the events this client missed (precise catch-up). On a fresh sign-in this is 0
-    // and the server's empty round-event cache means nothing extra is replayed.
+    // Report how many round events this client received before a drop, so the server can replay
+    // only the events it missed (precise catch-up). On a fresh sign-in this is 0 and the server's
+    // empty round-event log means nothing extra is replayed.
     signInOb.insert(QStringLiteral("lastRoundEventSeq"), lastRoundEventSeq);
     emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySignIn, signInOb));
 
@@ -392,7 +392,7 @@ void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
     // Without this, players would stay at the default Country place and every
     // place-dependent action (BuyKnife/Move/Slash/...) would fail locally.
     room->prepareForRoundStart();
-    // A new round begins: reset the round-event sequence tracking.
+    // A new round begins: reset the round-event counter.
     lastRoundEventSeq = 0;
     emit q->notifyRoundStart(Client::QPrivateSignal());
 }
@@ -406,18 +406,9 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("seq")))
-        return;
-    QJsonValue vseq = ob.value(QStringLiteral("seq"));
-    if (!vseq.isDouble())
-        return;
-    int seq = vseq.toInt();
-
     QHash<QString, QMdmmCore::Data::StoneScissorsCloth> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
-        if (playerName == QLatin1String("seq"))
-            continue;
         if (!agents.contains(playerName))
             return;
         QJsonValue vssc = it.value();
@@ -435,7 +426,7 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
         replies.insert(playerName, ssc);
     }
 
-    lastRoundEventSeq = seq;
+    ++lastRoundEventSeq;
     emit q->notifyStoneScissorsCloth(replies, Client::QPrivateSignal());
     onRet_.dismiss();
 }
@@ -445,23 +436,9 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
 {
     ONERRPRINTJSON(value);
 
-    if (!value.isObject())
+    if (!value.isArray())
         return;
-    QJsonObject ob = value.toObject();
-
-    if (!ob.contains(QStringLiteral("seq")))
-        return;
-    QJsonValue vseq = ob.value(QStringLiteral("seq"));
-    if (!vseq.isDouble())
-        return;
-    int seq = vseq.toInt();
-
-    if (!ob.contains(QStringLiteral("order")))
-        return;
-    QJsonValue vorder = ob.value(QStringLiteral("order"));
-    if (!vorder.isArray())
-        return;
-    QJsonArray arr = vorder.toArray();
+    QJsonArray arr = value.toArray();
 
     QHash<int, QString> result;
     int i = 0;
@@ -474,7 +451,7 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
         result.insert(++i, playerName);
     }
 
-    lastRoundEventSeq = seq;
+    ++lastRoundEventSeq;
     emit q->notifyActionOrder(result, Client::QPrivateSignal());
     onRet_.dismiss();
 }
@@ -487,13 +464,6 @@ void ClientP::notifyAction(const QJsonValue &value)
     if (!value.isObject())
         return;
     QJsonObject ob = value.toObject();
-
-    if (!ob.contains(QStringLiteral("seq")))
-        return;
-    QJsonValue vseq = ob.value(QStringLiteral("seq"));
-    if (!vseq.isDouble())
-        return;
-    int seq = vseq.toInt();
 
     if (!ob.contains(QStringLiteral("playerName")))
         return;
@@ -563,7 +533,7 @@ void ClientP::notifyAction(const QJsonValue &value)
         break;
     }
 
-    lastRoundEventSeq = seq;
+    ++lastRoundEventSeq;
     emit q->notifyAction(playerName, action, toPlayer, toPlace, Client::QPrivateSignal());
 
     // This replyed action should always be success, since it is judged in Server
@@ -588,18 +558,9 @@ void ClientP::notifyUpgrade(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("seq")))
-        return;
-    QJsonValue vseq = ob.value(QStringLiteral("seq"));
-    if (!vseq.isDouble())
-        return;
-    int seq = vseq.toInt();
-
     QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
-        if (playerName == QLatin1String("seq"))
-            continue;
         if (!agents.contains(playerName))
             return;
         QJsonValue vupgrades = it.value();
@@ -624,7 +585,7 @@ void ClientP::notifyUpgrade(const QJsonValue &value)
         replies.insert(playerName, upgrades);
     }
 
-    lastRoundEventSeq = seq;
+    ++lastRoundEventSeq;
     emit q->notifyUpgrade(replies, Client::QPrivateSignal());
 
     // This replyed upgrade should always be success, since it is judged in Server

@@ -294,9 +294,9 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 #undef CONF
 #undef CONVERTAGENTSTATE
 
-        // The client reports the last round-event sequence number it received before a drop, so the
-        // server can replay only the events it missed (precise catch-up). A fresh sign-in omits the
-        // field and defaults to 0 -- harmless, since a fresh room has an empty round-event cache.
+        // The client reports how many round events it received before a drop, so the server can
+        // replay only the events it missed (precise catch-up). A fresh sign-in omits the field and
+        // defaults to 0 -- harmless, since a fresh room has an empty round-event log.
         int lastRoundEventSeq = 0;
         if (ob.contains(QStringLiteral("lastRoundEventSeq"))) {
             QJsonValue vlastRoundEventSeq = ob.value(QStringLiteral("lastRoundEventSeq"));
