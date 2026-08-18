@@ -43,6 +43,8 @@ if (DOXYGEN_FOUND)
         "${PROJECT_NAME}_docs"
         ${QMDMM_DOC_SOURCE_FILES}
         QMdmmCore/group.cpp
+        architecture.md
+        getting-started.md
         ALL
         USE_STAMP_FILE
     )
