@@ -35,6 +35,7 @@ if (DOXYGEN_FOUND)
         "Q_DISABLE_COPY_MOVE(x)=x(const x&)=delete;x(x&&)=delete;x&operator=(const x&)=delete;x&operator=(x&&)=delete;"
     )
     set(DOXYGEN_SORT_MEMBER_DOCS NO)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "../README.md")
     set(DOXYGEN_MACRO_EXPANSION YES)
     set(DOXYGEN_EXTRACT_PRIV_VIRTUAL YES)
     set(DOXYGEN_WARN_IF_UNDOC_ENUM_VAL YES)
@@ -43,6 +44,7 @@ if (DOXYGEN_FOUND)
         "${PROJECT_NAME}_docs"
         ${QMDMM_DOC_SOURCE_FILES}
         QMdmmCore/group.cpp
+        ../README.md
         architecture.md
         getting-started.md
         ALL
