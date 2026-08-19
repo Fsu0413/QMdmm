@@ -182,10 +182,11 @@ QSettings::Status SettingsP::saveConfig(Settings::Instance instance)
         );
     }
 
-    // Do not check the current group for now.
-    // It is not thread safe popping the group then pushing it again
-    // TODO: find a thread-safe way (lock?) to ignore the group on toBeSaved
-    
+    // The specified config is a flat map whose keys must land at the top
+    // level, so the target QSettings must have no current group. This runs
+    // single-threaded right before process exit (only caller is Config::save_),
+    // so there is no race to lock against; assert the empty-group precondition
+    // rather than pop/restore the group, which would not be thread-safe.
     Q_ASSERT(toBeSaved->group().isEmpty());
 
     foreach (const QString &key, specifiedConfig->map.keys())
