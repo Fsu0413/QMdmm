@@ -17,57 +17,58 @@ namespace QMdmmNetworking {
 #ifndef DOXYGEN
 namespace p {
 
-QHash<QMdmmCore::Protocol::NotifyId, void (ServerAgentP::*)(const QJsonValue &)> ServerAgentP::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerAgentP::notifySpeak),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerAgentP::notifyOperate),
+QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::notifyCallback {
+    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnection::notifySpeak),
+    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnection::notifyOperate),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)(const QJsonValue &)> ServerAgentP::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerAgentP::replyStoneScissorsCloth),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerAgentP::replyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerAgentP::replyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerAgentP::replyUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::replyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::replyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::replyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::replyAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::replyUpgrade),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)()> ServerAgentP::defaultReplyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerAgentP::defaultReplyStoneScissorsCloth),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerAgentP::defaultReplyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerAgentP::defaultReplyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerAgentP::defaultReplyUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnection::defaultReplyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::defaultReplyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::defaultReplyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::defaultReplyAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::defaultReplyUpgrade),
 };
 
-int ServerAgentP::requestTimeoutGracePeriod = 60;
+int ServerConnection::requestTimeoutGracePeriod = 60;
 
-ServerAgentP::ServerAgentP(const QString &name, LogicRunnerP *parent)
-    : Agent(name, parent)
+ServerConnection::ServerConnection(Agent *agent, LogicRunnerP *parent)
+    : QObject(parent)
+    , agent(agent)
     , p(parent)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
     requestTimer->setInterval(p->conf.requestTimeout() + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
-    connect(requestTimer, &QTimer::timeout, this, &ServerAgentP::requestTimeout);
+    connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
 }
 
-ServerAgentP::~ServerAgentP() = default;
+ServerConnection::~ServerConnection() = default;
 
-void ServerAgentP::setSocket(Socket *_socket)
+void ServerConnection::setSocket(Socket *_socket)
 {
     if (socket != nullptr)
         socket->deleteLater();
 
     socket = _socket;
     if (socket != nullptr) {
-        connect(socket, &Socket::packetReceived, this, &ServerAgentP::packetReceived);
+        connect(socket, &Socket::packetReceived, this, &ServerConnection::packetReceived);
         // Forward the socket drop directly to the room, so the room can find the
-        // agent that owns the socket and mark it offline (a socket-disconnected
-        // signal relayed through this agent would lose the identity of the agent).
+        // connection that owns the socket and mark its agent offline (a socket-disconnected
+        // signal relayed through this connection would lose the identity of the agent).
         connect(socket, &Socket::socketDisconnected, p, &LogicRunnerP::socketDisconnected);
-        connect(this, &ServerAgentP::sendPacket, socket, &Socket::sendPacket);
+        connect(this, &ServerConnection::sendPacket, socket, &Socket::sendPacket);
     }
 }
 
-void ServerAgentP::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
+void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
 {
     currentRequest = requestId;
     currentRequestValue = value;
@@ -80,11 +81,11 @@ void ServerAgentP::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJ
         // reasons are:
         // 1. introducing time-consuming task in the request function is bad.
         // 2. reply should be called asynchronous since this is the designed way for it
-        QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerAgentP::executeDefaultReply);
+        QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerConnection::executeDefaultReply);
     }
 }
 
-void ServerAgentP::replyStoneScissorsCloth(const QJsonValue &value)
+void ServerConnection::replyStoneScissorsCloth(const QJsonValue &value)
 {
 #define DEFAULTREPLY                      \
     do {                                  \
@@ -105,12 +106,12 @@ void ServerAgentP::replyStoneScissorsCloth(const QJsonValue &value)
         DEFAULTREPLY;
     }
 
-    emit p->sscReply(objectName(), ssc);
+    emit p->sscReply(agent->objectName(), ssc);
 
 #undef DEFAULTREPLY
 }
 
-void ServerAgentP::replyActionOrder(const QJsonValue &value)
+void ServerConnection::replyActionOrder(const QJsonValue &value)
 {
 #define DEFAULTREPLY               \
     do {                           \
@@ -129,12 +130,12 @@ void ServerAgentP::replyActionOrder(const QJsonValue &value)
         ao << it->toInt();
     }
 
-    emit p->actionOrderReply(objectName(), ao);
+    emit p->actionOrderReply(agent->objectName(), ao);
 
 #undef DEFAULTREPLY
 }
 
-void ServerAgentP::replyAction(const QJsonValue &value)
+void ServerConnection::replyAction(const QJsonValue &value)
 {
 #define DEFAULTREPLY          \
     do {                      \
@@ -199,12 +200,12 @@ void ServerAgentP::replyAction(const QJsonValue &value)
         break;
     }
 
-    emit p->actionReply(objectName(), action, toPlayer, toPlace);
+    emit p->actionReply(agent->objectName(), action, toPlayer, toPlace);
 
 #undef DEFAULTREPLY
 }
 
-void ServerAgentP::replyUpgrade(const QJsonValue &value)
+void ServerConnection::replyUpgrade(const QJsonValue &value)
 {
 #define DEFAULTREPLY           \
     do {                       \
@@ -232,17 +233,17 @@ void ServerAgentP::replyUpgrade(const QJsonValue &value)
         ups << up;
     }
 
-    emit p->upgradeReply(objectName(), ups);
+    emit p->upgradeReply(agent->objectName(), ups);
 
 #undef DEFAULTREPLY
 }
 
-void ServerAgentP::defaultReplyStoneScissorsCloth()
+void ServerConnection::defaultReplyStoneScissorsCloth()
 {
-    emit p->sscReply(objectName(), static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
+    emit p->sscReply(agent->objectName(), static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
 }
 
-void ServerAgentP::defaultReplyActionOrder()
+void ServerConnection::defaultReplyActionOrder()
 {
     QJsonObject ob = currentRequestValue.toObject();
     QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
@@ -252,32 +253,32 @@ void ServerAgentP::defaultReplyActionOrder()
     while ((num--) != 0)
         ao.append(arr.takeAt(0).toInt());
 
-    emit p->actionOrderReply(objectName(), ao);
+    emit p->actionOrderReply(agent->objectName(), ao);
 }
 
-void ServerAgentP::defaultReplyAction()
+void ServerConnection::defaultReplyAction()
 {
-    emit p->actionReply(objectName(), QMdmmCore::Data::DoNothing, {}, 0);
+    emit p->actionReply(agent->objectName(), QMdmmCore::Data::DoNothing, {}, 0);
 }
 
-void ServerAgentP::defaultReplyUpgrade()
+void ServerConnection::defaultReplyUpgrade()
 {
     int times = currentRequestValue.toInt(1);
     QList<QMdmmCore::Data::UpgradeItem> ups;
     ups.reserve(times);
     while ((times--) != 0)
         ups << QMdmmCore::Data::UpgradeMaxHp;
-    emit p->upgradeReply(objectName(), ups);
+    emit p->upgradeReply(agent->objectName(), ups);
 }
 
-void ServerAgentP::packetReceived(const QMdmmCore::Packet &packet)
+void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
 {
     if (socket == nullptr)
         return;
 
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToAgentMask) != 0) {
-            void (ServerAgentP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ServerConnection::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -287,7 +288,7 @@ void ServerAgentP::packetReceived(const QMdmmCore::Packet &packet)
         if (currentRequest == packet.requestId()) {
             requestTimer->stop();
             currentRequest = QMdmmCore::Protocol::RequestInvalid;
-            void (ServerAgentP::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+            void (ServerConnection::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -296,7 +297,7 @@ void ServerAgentP::packetReceived(const QMdmmCore::Packet &packet)
     }
 }
 
-void ServerAgentP::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
+void ServerConnection::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
@@ -304,7 +305,7 @@ void ServerAgentP::requestStoneScissorsCloth(const QStringList &playerNames, int
     addRequest(QMdmmCore::Protocol::RequestStoneScissorsCloth, ob);
 }
 
-void ServerAgentP::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void ServerConnection::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     QJsonObject ob;
     QJsonArray arr;
@@ -316,22 +317,22 @@ void ServerAgentP::requestActionOrder(const QList<int> &remainedOrders, int maxi
     addRequest(QMdmmCore::Protocol::RequestActionOrder, ob);
 }
 
-void ServerAgentP::requestAction(int currentOrder)
+void ServerConnection::requestAction(int currentOrder)
 {
     addRequest(QMdmmCore::Protocol::RequestAction, currentOrder);
 }
 
-void ServerAgentP::requestUpgrade(int remainingTimes)
+void ServerConnection::requestUpgrade(int remainingTimes)
 {
     addRequest(QMdmmCore::Protocol::RequestUpgrade, remainingTimes);
 }
 
-void ServerAgentP::notifyLogicConfiguration()
+void ServerConnection::notifyLogicConfiguration()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, p->conf));
 }
 
-void ServerAgentP::notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnection::notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -339,7 +340,7 @@ void ServerAgentP::notifyAgentStateChanged(const QString &playerName, const QMdm
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
-void ServerAgentP::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnection::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -348,24 +349,24 @@ void ServerAgentP::notifyPlayerAdded(const QString &playerName, const QString &s
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
-void ServerAgentP::notifyPlayerRemoved(const QString &playerName)
+void ServerConnection::notifyPlayerRemoved(const QString &playerName)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerRemoved, ob));
 }
 
-void ServerAgentP::notifyGameStart()
+void ServerConnection::notifyGameStart()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameStart, {}));
 }
 
-void ServerAgentP::notifyRoundStart()
+void ServerConnection::notifyRoundStart()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void ServerConnection::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     QJsonObject ob;
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
@@ -375,7 +376,7 @@ void ServerAgentP::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data
     emit sendPacket(packet);
 }
 
-void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result)
+void ServerConnection::notifyActionOrder(const QHash<int, QString> &result)
 {
     QJsonArray arr;
     for (int i = 1; i <= result.count(); ++i)
@@ -385,7 +386,7 @@ void ServerAgentP::notifyActionOrder(const QHash<int, QString> &result)
     emit sendPacket(packet);
 }
 
-void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void ServerConnection::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -415,12 +416,12 @@ void ServerAgentP::notifyAction(const QString &playerName, QMdmmCore::Data::Acti
     emit sendPacket(packet);
 }
 
-void ServerAgentP::notifyRoundOver()
+void ServerConnection::notifyRoundOver()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void ServerConnection::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     QJsonObject ob;
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
@@ -434,12 +435,12 @@ void ServerAgentP::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::Upg
     emit sendPacket(packet);
 }
 
-void ServerAgentP::clearRoundEventLog()
+void ServerConnection::clearRoundEventLog()
 {
     roundEventLog.clear();
 }
 
-void ServerAgentP::replayMissedRoundEvents(int lastRoundEventSeq)
+void ServerConnection::replayMissedRoundEvents(int lastRoundEventSeq)
 {
     // roundEventLog is ordered by send order, and its index IS the round-event sequence number
     // (see roundEventLog in qmdmmlogicrunner_p.h), which equals the client's received-event
@@ -449,12 +450,12 @@ void ServerAgentP::replayMissedRoundEvents(int lastRoundEventSeq)
         emit sendPacket(roundEventLog.at(i));
 }
 
-void ServerAgentP::notifyGameOver(const QStringList &playerNames)
+void ServerConnection::notifyGameOver(const QStringList &playerNames)
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
 }
 
-void ServerAgentP::notifySpoken(const QString &playerName, const QString &content)
+void ServerConnection::notifySpoken(const QString &playerName, const QString &content)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -462,24 +463,24 @@ void ServerAgentP::notifySpoken(const QString &playerName, const QString &conten
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpoken, ob));
 }
 
-void ServerAgentP::notifyOperated(const QString &playerName, const QJsonValue &todo)
+void ServerConnection::notifyOperated(const QString &playerName, const QJsonValue &todo)
 {
     Q_UNIMPLEMENTED();
     Q_UNUSED(playerName);
     Q_UNUSED(todo);
 }
 
-void ServerAgentP::requestTimeout()
+void ServerConnection::requestTimeout()
 {
     if (socket != nullptr)
         socket->setHasError(true);
     executeDefaultReply();
 }
 
-void ServerAgentP::executeDefaultReply()
+void ServerConnection::executeDefaultReply()
 {
     if (currentRequest != QMdmmCore::Protocol::RequestInvalid) {
-        void (ServerAgentP::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
+        void (ServerConnection::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         if (call != nullptr)
             (this->*call)();
@@ -528,35 +529,35 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, Log
 
 void LogicRunnerP::agentStateChanged(const QMdmmCore::Data::AgentState &state)
 {
-    ServerAgentP *changedAgent = qobject_cast<ServerAgentP *>(sender());
+    Agent *changedAgent = qobject_cast<Agent *>(sender());
     if (changedAgent == nullptr)
         return;
 
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyAgentStateChanged(changedAgent->objectName(), state);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyAgentStateChanged(changedAgent->objectName(), state);
 }
 
 void LogicRunnerP::agentSpoken(const QJsonValue &value)
 {
-    ServerAgentP *speakAgent = qobject_cast<ServerAgentP *>(sender());
-    if (speakAgent == nullptr)
+    ServerConnection *speakConn = qobject_cast<ServerConnection *>(sender());
+    if (speakConn == nullptr)
         return;
 
     QString s = value.toString();
     if (!s.isEmpty()) {
-        foreach (ServerAgentP *agent, agents)
-            agent->notifySpoken(speakAgent->objectName(), s);
+        foreach (ServerConnection *conn, connections)
+            conn->notifySpoken(speakConn->agent->objectName(), s);
     }
 }
 
 void LogicRunnerP::agentOperated(const QJsonValue &value)
 {
-    ServerAgentP *operateAgent = qobject_cast<ServerAgentP *>(sender());
-    if (operateAgent == nullptr)
+    ServerConnection *operateConn = qobject_cast<ServerConnection *>(sender());
+    if (operateConn == nullptr)
         return;
 
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyOperated(operateAgent->objectName(), value);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyOperated(operateConn->agent->objectName(), value);
 }
 
 void LogicRunnerP::socketDisconnected()
@@ -565,20 +566,20 @@ void LogicRunnerP::socketDisconnected()
     if (disconnectedSocket == nullptr)
         return;
 
-    // The socket is connected directly (see ServerAgentP::setSocket), so sender()
-    // is the Socket, not the agent. Locate the agent that owns it.
-    ServerAgentP *disconnectedAgent = nullptr;
-    foreach (ServerAgentP *agent, agents) {
-        if (agent->socket == disconnectedSocket) {
-            disconnectedAgent = agent;
+    // The socket is connected directly (see ServerConnection::setSocket), so sender()
+    // is the Socket, not the connection. Locate the connection that owns it.
+    ServerConnection *disconnectedConn = nullptr;
+    foreach (ServerConnection *conn, connections) {
+        if (conn->socket == disconnectedSocket) {
+            disconnectedConn = conn;
             break;
         }
     }
-    if (disconnectedAgent == nullptr)
+    if (disconnectedConn == nullptr)
         return;
 
-    disconnectedAgent->socket->deleteLater();
-    disconnectedAgent->socket = nullptr;
+    disconnectedConn->socket->deleteLater();
+    disconnectedConn->socket = nullptr;
 
     if (q->full()) {
         // case 1: room is full, so game has started.
@@ -586,13 +587,13 @@ void LogicRunnerP::socketDisconnected()
         // reconnect before the round is over, the game is abandoned: LogicRunnerP::upgradeResult
         // detects the still-offline agent and ends the game (see the round-over check there).
 
-        QMdmmCore::Data::AgentState state = disconnectedAgent->state();
+        QMdmmCore::Data::AgentState state = disconnectedConn->agent->state();
         state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
-        disconnectedAgent->setState(state);
+        disconnectedConn->agent->setState(state);
 
         // if all agents are disconnected, terminate the game.
         bool allDisconnected = true;
-        foreach (ServerAgentP *agent, agents) {
+        foreach (Agent *agent, agents) {
             if (agent->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
                 allDisconnected = false;
                 break;
@@ -605,20 +606,25 @@ void LogicRunnerP::socketDisconnected()
         }
 
         // If there is an active request, use default reply
-        // QMdmmNetworking::p::ServerAgentP::executeDefaultReply handles it even if there is no active request
-        disconnectedAgent->executeDefaultReply();
+        // QMdmmNetworking::p::ServerConnection::executeDefaultReply handles it even if there is no active request
+        disconnectedConn->executeDefaultReply();
     } else {
         // case 2: room is not full, so game hasn't started
         // Agent should be deleted.
-        ServerAgentP *taken = agents.take(disconnectedAgent->objectName());
-        Q_UNUSED(taken);
-        Q_ASSERT(taken == disconnectedAgent);
+        const QString playerName = disconnectedConn->agent->objectName();
+        Agent *takenAgent = agents.take(playerName);
+        ServerConnection *takenConn = connections.take(playerName);
+        Q_UNUSED(takenAgent);
+        Q_UNUSED(takenConn);
+        Q_ASSERT(takenAgent == disconnectedConn->agent);
+        Q_ASSERT(takenConn == disconnectedConn);
 
-        foreach (ServerAgentP *agent, agents)
-            agent->notifyPlayerRemoved(disconnectedAgent->objectName());
-        emit removePlayer(disconnectedAgent->objectName());
+        foreach (ServerConnection *conn, connections)
+            conn->notifyPlayerRemoved(playerName);
+        emit removePlayer(playerName);
 
-        disconnectedAgent->deleteLater();
+        disconnectedConn->agent->deleteLater();
+        disconnectedConn->deleteLater();
     }
 }
 
@@ -638,62 +644,62 @@ LogicRunnerP::~LogicRunnerP()
 void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 {
     foreach (const QString &playerName, playerNames) {
-        ServerAgentP *agent = agents.value(playerName);
-        agent->requestStoneScissorsCloth(playerNames, 0);
+        ServerConnection *conn = connections.value(playerName);
+        conn->requestStoneScissorsCloth(playerNames, 0);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
-    // Each agent records the round event it broadcasts in its own roundEventLog (see
-    // ServerAgentP::notifyStoneScissorsCloth), for the per-agent reconnect catch-up.
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyStoneScissorsCloth(replies);
+    // Each connection records the round event it broadcasts in its own roundEventLog (see
+    // ServerConnection::notifyStoneScissorsCloth), for the per-agent reconnect catch-up.
+    foreach (ServerConnection *conn, connections)
+        conn->notifyStoneScissorsCloth(replies);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections)
 {
-    ServerAgentP *agent = agents.value(playerName);
-    agent->requestActionOrder(availableOrders, maximumOrderNum, selections);
+    ServerConnection *conn = connections.value(playerName);
+    conn->requestActionOrder(availableOrders, maximumOrderNum, selections);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyActionOrder(result);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyActionOrder(result);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
 {
     foreach (const QString &playerName, playerNames) {
-        ServerAgentP *agent = agents.value(playerName);
-        agent->requestStoneScissorsCloth(playerNames, strivedOrder);
+        ServerConnection *conn = connections.value(playerName);
+        conn->requestStoneScissorsCloth(playerNames, strivedOrder);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 {
-    ServerAgentP *agent = agents.value(playerName);
-    agent->requestAction(actionOrder);
+    ServerConnection *conn = connections.value(playerName);
+    conn->requestAction(actionOrder);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyAction(playerName, action, toPlayer, toPlace);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyAction(playerName, action, toPlayer, toPlace);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 {
-    ServerAgentP *agent = agents.value(playerName);
-    agent->requestUpgrade(upgradePoint);
+    ServerConnection *conn = connections.value(playerName);
+    conn->requestUpgrade(upgradePoint);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -704,10 +710,10 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
     // reconnected by the time the round is over, the game cannot continue. End it as a game over
     // (winners = the still-online agents) instead of notifying the upgrade result, matching
     // QMdmmCore::Logic's game-over behavior.
-    foreach (ServerAgentP *agent, agents) {
+    foreach (Agent *agent, agents) {
         if (!agent->state().testFlag(QMdmmCore::Data::StateMaskOnline)) {
             QStringList winners;
-            foreach (ServerAgentP *onlineAgent, agents) {
+            foreach (Agent *onlineAgent, agents) {
                 if (onlineAgent->state().testFlag(QMdmmCore::Data::StateMaskOnline))
                     winners << onlineAgent->objectName();
             }
@@ -717,40 +723,40 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
         }
     }
 
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyUpgrade(upgrades);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyUpgrade(upgrades);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
     // every agent (so clients reset their local room via notifyRoundStart) and
     // then start it. Without this, the match stalls after the very first round.
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyRoundStart();
+    foreach (ServerConnection *conn, connections)
+        conn->notifyRoundStart();
 
     // A new round begins: drop the previous round's events so the next round's log restarts empty
     // (the client resets its per-round event counter on notifyRoundStart, mirroring this).
-    foreach (ServerAgentP *agent, agents)
-        agent->clearRoundEventLog();
+    foreach (ServerConnection *conn, connections)
+        conn->clearRoundEventLog();
 
     emit roundStart();
 }
 
 void LogicRunnerP::roundOver()
 {
-    // The round's action phase is over: drop each agent's round-event log. A reconnect from here
-    // on is in the upgrade phase or the next round, where the old round's events are no longer
+    // The round's action phase is over: drop each connection's round-event log. A reconnect from
+    // here on is in the upgrade phase or the next round, where the old round's events are no longer
     // needed.
-    foreach (ServerAgentP *agent, agents)
-        agent->clearRoundEventLog();
+    foreach (ServerConnection *conn, connections)
+        conn->clearRoundEventLog();
 
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyRoundOver();
+    foreach (ServerConnection *conn, connections)
+        conn->notifyRoundOver();
 }
 
 void LogicRunnerP::gameOver(const QStringList &winners)
 {
-    foreach (ServerAgentP *agent, agents)
-        agent->notifyGameOver(winners);
+    foreach (ServerConnection *conn, connections)
+        conn->notifyGameOver(winners);
 }
 } // namespace p
 #endif
@@ -800,41 +806,44 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     if (d->agents.contains(playerName))
         return nullptr;
 
-    p::ServerAgentP *addedAgent = new p::ServerAgentP(playerName, d);
+    Agent *addedAgent = new Agent(playerName, d);
     addedAgent->setScreenName(screenName);
     addedAgent->setState(agentState);
 
-    addedAgent->setSocket(socket);
-    d->agents.insert(playerName, addedAgent);
+    p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d);
+    addedConn->setSocket(socket);
 
-    connect(addedAgent, &p::ServerAgentP::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
-    connect(addedAgent, &p::ServerAgentP::notifySpeak, d, &p::LogicRunnerP::agentSpoken);
-    connect(addedAgent, &p::ServerAgentP::notifyOperate, d, &p::LogicRunnerP::agentOperated);
+    d->agents.insert(playerName, addedAgent);
+    d->connections.insert(playerName, addedConn);
+
+    connect(addedAgent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
+    connect(addedConn, &p::ServerConnection::notifySpeak, d, &p::LogicRunnerP::agentSpoken);
+    connect(addedConn, &p::ServerConnection::notifyOperate, d, &p::LogicRunnerP::agentOperated);
 
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data
 
-    addedAgent->notifyLogicConfiguration();
+    addedConn->notifyLogicConfiguration();
 
     emit d->addPlayer(playerName);
 
-    foreach (p::ServerAgentP *agent, d->agents)
-        agent->notifyPlayerAdded(playerName, screenName, agentState);
+    foreach (p::ServerConnection *conn, d->connections)
+        conn->notifyPlayerAdded(playerName, screenName, agentState);
 
     // Tell the newly added agent about every player that joined before it.
-    // NOTE: iterate over the *existing* agents and report their identities,
+    // NOTE: iterate over the *existing* connections and report their identities,
     // not the new player's name again (that would duplicate notifyPlayerAdded
     // for the new agent and make the client treat it as a fatal error).
-    foreach (p::ServerAgentP *agent, d->agents) {
-        if (agent != addedAgent)
-            addedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
+    foreach (p::ServerConnection *conn, d->connections) {
+        if (conn != addedConn)
+            addedConn->notifyPlayerAdded(conn->agent->objectName(), conn->agent->screenName(), conn->agent->state());
     }
 
     if (full()) {
-        foreach (p::ServerAgentP *agent, d->agents)
-            agent->notifyGameStart();
-        foreach (p::ServerAgentP *agent, d->agents)
-            agent->notifyRoundStart();
+        foreach (p::ServerConnection *conn, d->connections)
+            conn->notifyGameStart();
+        foreach (p::ServerConnection *conn, d->connections)
+            conn->notifyRoundStart();
         emit d->roundStart();
     }
 
@@ -858,46 +867,46 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
  */
 Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int lastRoundEventSeq)
 {
-    p::ServerAgentP *reconnectedAgent = d->agents.value(playerName, nullptr);
-    if (reconnectedAgent == nullptr)
+    p::ServerConnection *reconnectedConn = d->connections.value(playerName, nullptr);
+    if (reconnectedConn == nullptr)
         return nullptr;
 
     // A still-connected agent is not a reconnect candidate: only an agent whose socket was
     // cleared by socketDisconnected can be rebound here.
-    if (reconnectedAgent->socket != nullptr)
+    if (reconnectedConn->socket != nullptr)
         return nullptr;
 
     // Rebind the socket. setSocket is safe because socketDisconnected already set the old socket
     // to nullptr before this point, so nothing gets double-deleted.
-    reconnectedAgent->setSocket(socket);
+    reconnectedConn->setSocket(socket);
 
     // Restore the online / trust flags that socketDisconnected cleared. setState emits
     // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChanged
     // broadcast to every agent -- this is what lets the other, still-connected clients see that
     // the player is back online.
-    QMdmmCore::Data::AgentState state = reconnectedAgent->state();
+    QMdmmCore::Data::AgentState state = reconnectedConn->agent->state();
     state.setFlag(QMdmmCore::Data::StateMaskOnline, true).setFlag(QMdmmCore::Data::StateMaskTrust, true);
-    reconnectedAgent->setState(state);
+    reconnectedConn->agent->setState(state);
 
     // Resend the state snapshot to the reconnected client so it can rebuild its room: the logic
     // configuration, then every player (identity + current state). The client treats a duplicate
     // notifyPlayerAdded as benign (ClientP::notifyPlayerAdded), and the notifyAgentStateChanged
     // broadcast above is dropped by the reconnected client until it has learned the players here.
-    reconnectedAgent->notifyLogicConfiguration();
+    reconnectedConn->notifyLogicConfiguration();
 
-    foreach (p::ServerAgentP *agent, d->agents)
-        reconnectedAgent->notifyPlayerAdded(agent->objectName(), agent->screenName(), agent->state());
+    foreach (p::ServerConnection *conn, d->connections)
+        reconnectedConn->notifyPlayerAdded(conn->agent->objectName(), conn->agent->screenName(), conn->agent->state());
 
     // Precise catch-up: replay the round events the client missed. The client reported how many
     // round events it received before the drop (lastRoundEventSeq, which doubles as the last
-    // sequence number); every event this agent broadcast while the client was gone is replayed
-    // in send order, skipping the first `lastRoundEventSeq` (already received). The agent's own
-    // round-event log is naturally ordered by sequence number, so replay needs no sorting. This
-    // replaces the old notifyGameStart/notifyRoundStart replay, which made the still-in-round
-    // client reset its local state and desync from the server.
-    reconnectedAgent->replayMissedRoundEvents(lastRoundEventSeq);
+    // sequence number); every event this connection broadcast while the client was gone is
+    // replayed in send order, skipping the first `lastRoundEventSeq` (already received). The
+    // connection's own round-event log is naturally ordered by sequence number, so replay needs no
+    // sorting. This replaces the old notifyGameStart/notifyRoundStart replay, which made the
+    // still-in-round client reset its local state and desync from the server.
+    reconnectedConn->replayMissedRoundEvents(lastRoundEventSeq);
 
-    return reconnectedAgent;
+    return reconnectedConn->agent;
 }
 
 /**

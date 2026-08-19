@@ -13,15 +13,16 @@ QMdmm splits cleanly into two libraries plus a couple of thin executables:
   exchange JSON packets, but delegates every rule decision to `QMdmmCore`.
 
 The bridge between the two is `LogicRunner`: it owns one `QMdmmCore::Logic` (the
-round state machine) and one `ServerAgentP` per connected player, and shuttles
-requests and replies between them.
+round state machine) and, per connected player, an `Agent` (the player record)
+paired with a `ServerConnection` (the socket plumbing), and shuttles requests
+and replies between them.
 
 ```
 QMdmmServer ──► Server ──► LogicRunner ──► QMdmmCore::Logic
   (CLI)         (listens)    │  (one game)      (state machine)
                              │
-                          ServerAgentP  ◄── Socket ──►  Client ──► QMdmmGui / bot
-                          (one per player)  (TCP/local/WS)   (mirrors state)
+                   Agent + ServerConnection ◄── Socket ──► Client ──► QMdmmGui / bot
+                   (one pair per player)      (TCP/local/WS)  (mirrors state)
 ```
 
 ## QMdmmCore
@@ -60,9 +61,11 @@ which is what makes it unit-testable with no network involved.
   exposes request signals and reply slots mirroring `Logic`, and keeps a local
   `Room` mirror of the game state.
 - **`LogicRunner`** — one complete game. Owns a `Logic` (moved to a dedicated
-  worker thread) and a set of `ServerAgentP`, one per player.
+  worker thread) and, per player, an `Agent` plus a `ServerConnection`.
 - **`Agent`** — the server's record of one player: name, screen name,
-  `AgentState`, and (while online) the `Socket`.
+  `AgentState`.
+- **`ServerConnection`** — the wire side of one player: the `Socket`, the
+  request timer, and the protocol dispatch. Paired one-to-one with an `Agent`.
 - **`Socket`** — a thin wrapper over `QTcpSocket` / `QLocalSocket` /
   `QWebSocket` that serializes and deserializes `Packet`s. One class, three
   transports.
@@ -70,8 +73,8 @@ which is what makes it unit-testable with no network involved.
 ### The LogicRunner bridge
 
 `LogicRunnerP` is the glue. It connects `Logic`'s request signals to the
-`ServerAgentP` request slots (which send a `Request` packet to that player's
-client) and the `ServerAgentP` reply callbacks back to `Logic`'s reply slots.
+`ServerConnection` request slots (which send a `Request` packet to that player's
+client) and the `ServerConnection` reply callbacks back to `Logic`'s reply slots.
 Because `Logic` lives on a worker thread while the agents live on the server
 thread, these connections are queued.
 
@@ -90,7 +93,7 @@ A full round flows like this:
    `gameOver`, otherwise the next round starts.
 
 The client never talks to `Logic` directly — only through the packets
-`ServerAgentP` relays.
+`ServerConnection` relays.
 
 ### Reconnect
 

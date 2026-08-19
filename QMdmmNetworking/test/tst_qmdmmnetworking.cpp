@@ -173,8 +173,8 @@ void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
 
     QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
     QVERIFY(runnerP != nullptr);
-    QMdmmNetworking::p::ServerAgentP *agent1p = runnerP->agents.value(QStringLiteral("p1"));
-    QVERIFY(agent1p != nullptr);
+    QMdmmNetworking::p::ServerConnection *conn1p = runnerP->connections.value(QStringLiteral("p1"));
+    QVERIFY(conn1p != nullptr);
 
     // Three round events broadcast while p1 was gone (drive the room slots directly, as the
     // roundEventLog_recordsAndClearsEvents test does).
@@ -194,7 +194,7 @@ void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
     // broadcasts made while p1 was offline above are not counted).
     QList<QMdmmCore::Protocol::NotifyId> allNotifies;
     QList<QMdmmCore::Protocol::NotifyId> replayedNotifies;
-    connect(agent1p, &QMdmmNetworking::p::ServerAgentP::sendPacket, [&](const QMdmmCore::Packet &packet) {
+    connect(conn1p, &QMdmmNetworking::p::ServerConnection::sendPacket, [&](const QMdmmCore::Packet &packet) {
         const QMdmmCore::Protocol::NotifyId id = packet.notifyId();
         allNotifies << id;
         if (id == Protocol::NotifyStoneScissorsCloth || id == Protocol::NotifyActionOrder || id == Protocol::NotifyAction || id == Protocol::NotifyUpgrade) {
@@ -322,31 +322,31 @@ void tst_QMdmmNetworking::roundEventLog_recordsAndClearsEvents()
 
     QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
     QVERIFY(runnerP != nullptr);
-    QMdmmNetworking::p::ServerAgentP *agent1p = runnerP->agents.value(QStringLiteral("p1"));
-    QVERIFY(agent1p != nullptr);
-    QVERIFY(agent1p->roundEventLog.isEmpty());
+    QMdmmNetworking::p::ServerConnection *conn1p = runnerP->connections.value(QStringLiteral("p1"));
+    QVERIFY(conn1p != nullptr);
+    QVERIFY(conn1p->roundEventLog.isEmpty());
 
     // ssc and action-order each append their packet to the agent's log, in order.
     QHash<QString, Data::StoneScissorsCloth> ssc;
     ssc.insert(QStringLiteral("p1"), Data::Stone);
     ssc.insert(QStringLiteral("p2"), Data::Cloth);
     runnerP->sscResult(ssc);
-    QVERIFY(agent1p->roundEventLog.size() == 1);
-    QVERIFY(agent1p->roundEventLog.at(0).notifyId() == Protocol::NotifyStoneScissorsCloth);
+    QVERIFY(conn1p->roundEventLog.size() == 1);
+    QVERIFY(conn1p->roundEventLog.at(0).notifyId() == Protocol::NotifyStoneScissorsCloth);
 
     QHash<int, QString> order;
     order.insert(1, QStringLiteral("p1"));
     order.insert(2, QStringLiteral("p2"));
     runnerP->actionOrderResult(order);
-    QVERIFY(agent1p->roundEventLog.size() == 2);
-    QVERIFY(agent1p->roundEventLog.at(1).notifyId() == Protocol::NotifyActionOrder);
+    QVERIFY(conn1p->roundEventLog.size() == 2);
+    QVERIFY(conn1p->roundEventLog.at(1).notifyId() == Protocol::NotifyActionOrder);
     // Regression: the order array must carry every player (off-by-one dropped the last one).
-    const QJsonArray orderArr = agent1p->roundEventLog.at(1).value().toArray();
+    const QJsonArray orderArr = conn1p->roundEventLog.at(1).value().toArray();
     QVERIFY(orderArr.size() == order.size());
 
     // roundOver drops the current round's events.
     runnerP->roundOver();
-    QVERIFY(agent1p->roundEventLog.isEmpty());
+    QVERIFY(conn1p->roundEventLog.isEmpty());
 
     // upgradeResult logs the upgrade event, then the new-round start drops the log again.
     QHash<QString, QList<Data::UpgradeItem>> upgrades;
@@ -354,7 +354,7 @@ void tst_QMdmmNetworking::roundEventLog_recordsAndClearsEvents()
     items << Data::UpgradeMaxHp;
     upgrades.insert(QStringLiteral("p1"), items);
     runnerP->upgradeResult(upgrades);
-    QVERIFY(agent1p->roundEventLog.isEmpty());
+    QVERIFY(conn1p->roundEventLog.isEmpty());
 }
 
 // At the end of a round (upgradeResult), a player still offline (never reconnected) abandons the
@@ -384,13 +384,13 @@ void tst_QMdmmNetworking::roundOverAbandonment_endsGameIfAgentOffline()
 
     QMdmmNetworking::p::LogicRunnerP *runnerP = runner.findChild<QMdmmNetworking::p::LogicRunnerP *>();
     QVERIFY(runnerP != nullptr);
-    QMdmmNetworking::p::ServerAgentP *agent2p = runnerP->agents.value(QStringLiteral("p2"));
-    QVERIFY(agent2p != nullptr);
+    QMdmmNetworking::p::ServerConnection *conn2p = runnerP->connections.value(QStringLiteral("p2"));
+    QVERIFY(conn2p != nullptr);
 
     // Observe what p2 (the still-online agent) receives.
     QList<QMdmmCore::Protocol::NotifyId> notifies;
     QStringList winners;
-    connect(agent2p, &QMdmmNetworking::p::ServerAgentP::sendPacket, [&](const QMdmmCore::Packet &packet) {
+    connect(conn2p, &QMdmmNetworking::p::ServerConnection::sendPacket, [&](const QMdmmCore::Packet &packet) {
         const QMdmmCore::Protocol::NotifyId id = packet.notifyId();
         notifies << id;
         if (id == Protocol::NotifyGameOver) {
@@ -417,7 +417,7 @@ void tst_QMdmmNetworking::roundOverAbandonment_endsGameIfAgentOffline()
     // The runner announced game-over, and the round-over abandonment path returned before any
     // round-event broadcast, so nothing was logged.
     QCOMPARE(gameOverCount, 1);
-    QVERIFY(agent2p->roundEventLog.isEmpty());
+    QVERIFY(conn2p->roundEventLog.isEmpty());
 }
 
 namespace {

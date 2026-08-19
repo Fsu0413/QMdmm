@@ -21,31 +21,37 @@
 namespace QMdmmNetworking {
 namespace p {
 
-class QMDMMNETWORKING_PRIVATE_EXPORT ServerAgentP : public Agent
+// The server-side plumbing for one connected player: the socket, the request timer, the current
+// request state, the protocol dispatch tables, and the round-event log. It is a *companion* to an
+// Agent (composition, not inheritance): the Agent owns the player identity (name / screen name /
+// state), while the ServerConnection owns everything tied to the wire. This split lets a
+// socket-less local agent exist later without dragging socket machinery into the Agent type.
+class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnection : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerAgentP::*)(const QJsonValue &)> notifyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)(const QJsonValue &)> replyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerAgentP::*)()> defaultReplyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> replyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> defaultReplyCallback;
 
     static int requestTimeoutGracePeriod;
 
 public:
-    ServerAgentP(const QString &name, LogicRunnerP *parent);
-    ~ServerAgentP() override;
+    ServerConnection(Agent *agent, LogicRunnerP *parent);
+    ~ServerConnection() override;
 
     void setSocket(Socket *_socket);
 
     QPointer<Socket> socket;
+    Agent *agent;
     LogicRunnerP *p;
 
     QMdmmCore::Protocol::RequestId currentRequest;
     QJsonValue currentRequestValue;
     QTimer *requestTimer;
 
-    // Round-event log: every round-event packet this agent has broadcast (ssc / action-order /
-    // action / upgrade), in send order. The list index IS the round-event sequence number (events
+    // Round-event log: every round-event packet this connection has broadcast (ssc / action-order
+    // / action / upgrade), in send order. The list index IS the round-event sequence number (events
     // are appended in broadcast order, and the client counts one per event it receives), so no
     // explicit sequence is stored and no sorting is needed. Used for the per-agent precise
     // catch-up on reconnect (backlog "precise catch-up"): a reconnecting client is replayed only
@@ -113,7 +119,8 @@ public:
 
     LogicRunner *q;
 
-    QHash<QString, ServerAgentP *> agents;
+    QHash<QString, Agent *> agents;
+    QHash<QString, ServerConnection *> connections;
 
     QThread *logicThread;
     QPointer<QMdmmCore::Logic> logic;
