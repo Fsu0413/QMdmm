@@ -48,6 +48,24 @@ ServerConnection::ServerConnection(Agent *agent, LogicRunnerP *parent)
     requestTimer->setInterval(p->conf.requestTimeout() + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
+
+    // Wire the Agent's notification signals to this connection's encode-and-send slots. The
+    // Agent forwards a notifyXxx() call as the corresponding xxxNotified signal; this connection
+    // turns the strong-typed notification back into a wire packet and sends it.
+    connect(agent, &Agent::logicConfigurationNotified, this, &ServerConnection::sendLogicConfigurationNotified);
+    connect(agent, &Agent::agentStateChangeNotified, this, &ServerConnection::sendAgentStateChangeNotified);
+    connect(agent, &Agent::playerAddNotified, this, &ServerConnection::sendPlayerAddNotified);
+    connect(agent, &Agent::playerRemoveNotified, this, &ServerConnection::sendPlayerRemoveNotified);
+    connect(agent, &Agent::gameStartNotified, this, &ServerConnection::sendGameStartNotified);
+    connect(agent, &Agent::roundStartNotified, this, &ServerConnection::sendRoundStartNotified);
+    connect(agent, &Agent::stoneScissorsClothNotified, this, &ServerConnection::sendStoneScissorsClothNotified);
+    connect(agent, &Agent::actionOrderNotified, this, &ServerConnection::sendActionOrderNotified);
+    connect(agent, &Agent::actionNotified, this, &ServerConnection::sendActionNotified);
+    connect(agent, &Agent::roundOverNotified, this, &ServerConnection::sendRoundOverNotified);
+    connect(agent, &Agent::upgradeNotified, this, &ServerConnection::sendUpgradeNotified);
+    connect(agent, &Agent::gameOverNotified, this, &ServerConnection::sendGameOverNotified);
+    connect(agent, &Agent::speakNotified, this, &ServerConnection::sendSpeakNotified);
+    connect(agent, &Agent::operateNotified, this, &ServerConnection::sendOperateNotified);
 }
 
 ServerConnection::~ServerConnection() = default;
@@ -327,12 +345,12 @@ void ServerConnection::requestUpgrade(int remainingTimes)
     addRequest(QMdmmCore::Protocol::RequestUpgrade, remainingTimes);
 }
 
-void ServerConnection::notifyLogicConfiguration()
+void ServerConnection::sendLogicConfigurationNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, p->conf));
 }
 
-void ServerConnection::notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnection::sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -340,7 +358,7 @@ void ServerConnection::notifyAgentStateChanged(const QString &playerName, const 
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
-void ServerConnection::notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnection::sendPlayerAddNotified(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -349,24 +367,24 @@ void ServerConnection::notifyPlayerAdded(const QString &playerName, const QStrin
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
-void ServerConnection::notifyPlayerRemoved(const QString &playerName)
+void ServerConnection::sendPlayerRemoveNotified(const QString &playerName)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerRemoved, ob));
 }
 
-void ServerConnection::notifyGameStart()
+void ServerConnection::sendGameStartNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameStart, {}));
 }
 
-void ServerConnection::notifyRoundStart()
+void ServerConnection::sendRoundStartNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerConnection::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void ServerConnection::sendStoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
     QJsonObject ob;
     for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
@@ -376,7 +394,7 @@ void ServerConnection::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::
     emit sendPacket(packet);
 }
 
-void ServerConnection::notifyActionOrder(const QHash<int, QString> &result)
+void ServerConnection::sendActionOrderNotified(const QHash<int, QString> &result)
 {
     QJsonArray arr;
     for (int i = 1; i <= result.count(); ++i)
@@ -386,7 +404,7 @@ void ServerConnection::notifyActionOrder(const QHash<int, QString> &result)
     emit sendPacket(packet);
 }
 
-void ServerConnection::notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void ServerConnection::sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -416,12 +434,12 @@ void ServerConnection::notifyAction(const QString &playerName, QMdmmCore::Data::
     emit sendPacket(packet);
 }
 
-void ServerConnection::notifyRoundOver()
+void ServerConnection::sendRoundOverNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerConnection::notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void ServerConnection::sendUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     QJsonObject ob;
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
@@ -450,12 +468,12 @@ void ServerConnection::replayMissedRoundEvents(int lastRoundEventSeq)
         emit sendPacket(roundEventLog.at(i));
 }
 
-void ServerConnection::notifyGameOver(const QStringList &playerNames)
+void ServerConnection::sendGameOverNotified(const QStringList &playerNames)
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
 }
 
-void ServerConnection::notifySpoken(const QString &playerName, const QString &content)
+void ServerConnection::sendSpeakNotified(const QString &playerName, const QString &content)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -463,7 +481,7 @@ void ServerConnection::notifySpoken(const QString &playerName, const QString &co
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpoken, ob));
 }
 
-void ServerConnection::notifyOperated(const QString &playerName, const QJsonValue &todo)
+void ServerConnection::sendOperateNotified(const QString &playerName, const QJsonValue &todo)
 {
     Q_UNIMPLEMENTED();
     Q_UNUSED(playerName);
@@ -533,8 +551,8 @@ void LogicRunnerP::agentStateChanged(const QMdmmCore::Data::AgentState &state)
     if (changedAgent == nullptr)
         return;
 
-    foreach (ServerConnection *conn, connections)
-        conn->notifyAgentStateChanged(changedAgent->objectName(), state);
+    foreach (Agent *agent, agents)
+        agent->notifyAgentStateChange(changedAgent->objectName(), state);
 }
 
 void LogicRunnerP::agentSpoken(const QJsonValue &value)
@@ -545,8 +563,8 @@ void LogicRunnerP::agentSpoken(const QJsonValue &value)
 
     QString s = value.toString();
     if (!s.isEmpty()) {
-        foreach (ServerConnection *conn, connections)
-            conn->notifySpoken(speakConn->agent->objectName(), s);
+        foreach (Agent *agent, agents)
+            agent->notifySpeak(speakConn->agent->objectName(), s);
     }
 }
 
@@ -556,8 +574,8 @@ void LogicRunnerP::agentOperated(const QJsonValue &value)
     if (operateConn == nullptr)
         return;
 
-    foreach (ServerConnection *conn, connections)
-        conn->notifyOperated(operateConn->agent->objectName(), value);
+    foreach (Agent *agent, agents)
+        agent->notifyOperate(operateConn->agent->objectName(), value);
 }
 
 void LogicRunnerP::socketDisconnected()
@@ -619,8 +637,8 @@ void LogicRunnerP::socketDisconnected()
         Q_ASSERT(takenAgent == disconnectedConn->agent);
         Q_ASSERT(takenConn == disconnectedConn);
 
-        foreach (ServerConnection *conn, connections)
-            conn->notifyPlayerRemoved(playerName);
+        foreach (Agent *agent, agents)
+            agent->notifyPlayerRemove(playerName);
         emit removePlayer(playerName);
 
         disconnectedConn->agent->deleteLater();
@@ -652,10 +670,10 @@ void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
 {
-    // Each connection records the round event it broadcasts in its own roundEventLog (see
-    // ServerConnection::notifyStoneScissorsCloth), for the per-agent reconnect catch-up.
-    foreach (ServerConnection *conn, connections)
-        conn->notifyStoneScissorsCloth(replies);
+    // Each agent records the round event it broadcasts in its connection's roundEventLog (see
+    // ServerConnection::sendStoneScissorsClothNotified), for the per-agent reconnect catch-up.
+    foreach (Agent *agent, agents)
+        agent->notifyStoneScissorsCloth(replies);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -668,8 +686,8 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
-    foreach (ServerConnection *conn, connections)
-        conn->notifyActionOrder(result);
+    foreach (Agent *agent, agents)
+        agent->notifyActionOrder(result);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -691,8 +709,8 @@ void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    foreach (ServerConnection *conn, connections)
-        conn->notifyAction(playerName, action, toPlayer, toPlace);
+    foreach (Agent *agent, agents)
+        agent->notifyAction(playerName, action, toPlayer, toPlace);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -723,15 +741,15 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
         }
     }
 
-    foreach (ServerConnection *conn, connections)
-        conn->notifyUpgrade(upgrades);
+    foreach (Agent *agent, agents)
+        agent->notifyUpgrade(upgrades);
 
     // The upgrade phase finished without a game over. Advance to the next round.
     // This mirrors the initial kick-off in addSocket(): announce the new round to
     // every agent (so clients reset their local room via notifyRoundStart) and
     // then start it. Without this, the match stalls after the very first round.
-    foreach (ServerConnection *conn, connections)
-        conn->notifyRoundStart();
+    foreach (Agent *agent, agents)
+        agent->notifyRoundStart();
 
     // A new round begins: drop the previous round's events so the next round's log restarts empty
     // (the client resets its per-round event counter on notifyRoundStart, mirroring this).
@@ -749,14 +767,14 @@ void LogicRunnerP::roundOver()
     foreach (ServerConnection *conn, connections)
         conn->clearRoundEventLog();
 
-    foreach (ServerConnection *conn, connections)
-        conn->notifyRoundOver();
+    foreach (Agent *agent, agents)
+        agent->notifyRoundOver();
 }
 
 void LogicRunnerP::gameOver(const QStringList &winners)
 {
-    foreach (ServerConnection *conn, connections)
-        conn->notifyGameOver(winners);
+    foreach (Agent *agent, agents)
+        agent->notifyGameOver(winners);
 }
 } // namespace p
 #endif
@@ -823,27 +841,27 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data
 
-    addedConn->notifyLogicConfiguration();
+    addedAgent->notifyLogicConfiguration();
 
     emit d->addPlayer(playerName);
 
-    foreach (p::ServerConnection *conn, d->connections)
-        conn->notifyPlayerAdded(playerName, screenName, agentState);
+    foreach (Agent *agent, d->agents)
+        agent->notifyPlayerAdd(playerName, screenName, agentState);
 
     // Tell the newly added agent about every player that joined before it.
-    // NOTE: iterate over the *existing* connections and report their identities,
-    // not the new player's name again (that would duplicate notifyPlayerAdded
+    // NOTE: iterate over the *existing* agents and report their identities,
+    // not the new player's name again (that would duplicate notifyPlayerAdd
     // for the new agent and make the client treat it as a fatal error).
-    foreach (p::ServerConnection *conn, d->connections) {
-        if (conn != addedConn)
-            addedConn->notifyPlayerAdded(conn->agent->objectName(), conn->agent->screenName(), conn->agent->state());
+    foreach (Agent *agent, d->agents) {
+        if (agent != addedAgent)
+            addedAgent->notifyPlayerAdd(agent->objectName(), agent->screenName(), agent->state());
     }
 
     if (full()) {
-        foreach (p::ServerConnection *conn, d->connections)
-            conn->notifyGameStart();
-        foreach (p::ServerConnection *conn, d->connections)
-            conn->notifyRoundStart();
+        foreach (Agent *agent, d->agents)
+            agent->notifyGameStart();
+        foreach (Agent *agent, d->agents)
+            agent->notifyRoundStart();
         emit d->roundStart();
     }
 
@@ -881,7 +899,7 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int las
     reconnectedConn->setSocket(socket);
 
     // Restore the online / trust flags that socketDisconnected cleared. setState emits
-    // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChanged
+    // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChange
     // broadcast to every agent -- this is what lets the other, still-connected clients see that
     // the player is back online.
     QMdmmCore::Data::AgentState state = reconnectedConn->agent->state();
@@ -890,12 +908,12 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int las
 
     // Resend the state snapshot to the reconnected client so it can rebuild its room: the logic
     // configuration, then every player (identity + current state). The client treats a duplicate
-    // notifyPlayerAdded as benign (ClientP::notifyPlayerAdded), and the notifyAgentStateChanged
+    // notifyPlayerAdd as benign (ClientP::notifyPlayerAdded), and the notifyAgentStateChange
     // broadcast above is dropped by the reconnected client until it has learned the players here.
-    reconnectedConn->notifyLogicConfiguration();
+    reconnectedConn->agent->notifyLogicConfiguration();
 
-    foreach (p::ServerConnection *conn, d->connections)
-        reconnectedConn->notifyPlayerAdded(conn->agent->objectName(), conn->agent->screenName(), conn->agent->state());
+    foreach (Agent *agent, d->agents)
+        reconnectedConn->agent->notifyPlayerAdd(agent->objectName(), agent->screenName(), agent->state());
 
     // Precise catch-up: replay the round events the client missed. The client reported how many
     // round events it received before the drop (lastRoundEventSeq, which doubles as the last

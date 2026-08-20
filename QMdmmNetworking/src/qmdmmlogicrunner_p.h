@@ -89,21 +89,23 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void requestAction(int currentOrder);
     void requestUpgrade(int remainingTimes);
 
-    // notifications
-    void notifyLogicConfiguration();
-    void notifyAgentStateChanged(const QString &playerName, const QMdmmCore::Data::AgentState &agentState);
-    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState);
-    void notifyPlayerRemoved(const QString &playerName);
-    void notifyGameStart();
-    void notifyRoundStart();
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
-    void notifyActionOrder(const QHash<int, QString> &result);
-    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
-    void notifyRoundOver();
-    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
-    void notifyGameOver(const QStringList &playerNames);
-    void notifySpoken(const QString &playerName, const QString &content);
-    void notifyOperated(const QString &playerName, const QJsonValue &todo);
+    // notifications (encode + send): these slots listen to the Agent's xxxNotified signals and
+    // turn each notification into a wire packet. The controller methods themselves (notifyXxx)
+    // now live on the Agent.
+    void sendLogicConfigurationNotified();
+    void sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState);
+    void sendPlayerAddNotified(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState);
+    void sendPlayerRemoveNotified(const QString &playerName);
+    void sendGameStartNotified();
+    void sendRoundStartNotified();
+    void sendStoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
+    void sendActionOrderNotified(const QHash<int, QString> &result);
+    void sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    void sendRoundOverNotified();
+    void sendUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
+    void sendGameOverNotified(const QStringList &playerNames);
+    void sendSpeakNotified(const QString &playerName, const QString &content);
+    void sendOperateNotified(const QString &playerName, const QJsonValue &todo);
 
     void requestTimeout();
     void executeDefaultReply();
