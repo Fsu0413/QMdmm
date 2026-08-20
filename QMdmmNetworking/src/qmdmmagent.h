@@ -26,9 +26,7 @@ namespace v0 {
 
 class Socket;
 
-// no "final" here since it is inherited.
-
-class QMDMMNETWORKING_EXPORT Agent : public QObject
+class QMDMMNETWORKING_EXPORT Agent final : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString screenName READ screenName WRITE setScreenName NOTIFY screenNameChanged FINAL)
