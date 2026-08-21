@@ -867,12 +867,18 @@ LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration
 LogicRunner::~LogicRunner() = default;
 
 /**
- * @brief Add a socket (a connected agent) to the game
+ * @brief Add an agent to the game
  * @param playerName the internal name of the player
  * @param screenName the screen name of the player
  * @param agentState the initial state of the agent
- * @param socket the socket of the connected client
+ * @param socket the socket of the connected client, or @c nullptr for a local agent
  * @return the newly added agent, or @c nullptr if the player name already exists
+ *
+ * This is the unified entry point for a player: it registers the agent (identity + controller
+ * interface) with the logic side and, when a @p socket is given, also creates the server-side wire
+ * plumbing (a @c ServerConnection) for the network path. For a local agent (operation side =
+ * GUI / Bot, no socket), no @c ServerConnection is created -- the operation side talks to the
+ * returned agent directly through its controller signals / methods.
  */
 Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket)
 {
@@ -883,11 +889,16 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     addedAgent->setScreenName(screenName);
     addedAgent->setState(agentState);
 
-    p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d);
-    addedConn->setSocket(socket);
-
     d->agents.insert(playerName, addedAgent);
-    d->connections.insert(playerName, addedConn);
+
+    // A local agent (operation side = GUI / Bot) has no socket, so no wire plumbing is created.
+    // Only a networked agent gets a ServerConnection, which turns the agent's controller signals
+    // into wire packets and owns the socket.
+    if (socket != nullptr) {
+        p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d);
+        addedConn->setSocket(socket);
+        d->connections.insert(playerName, addedConn);
+    }
 
     connect(addedAgent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
     connect(addedAgent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);

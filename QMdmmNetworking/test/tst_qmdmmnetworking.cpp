@@ -37,6 +37,7 @@ private slots:
     void reconnect_rebindsSocketAndRestoresState();
     void reconnect_replaysMissedRoundEvents();
     void signIn_reconnectsPlayerInNonCurrentRoom();
+    void addSocket_nullSocket_registersLocalAgent();
 };
 
 // Build a real loopback TCP connection and wrap the server side in a Socket, so the
@@ -294,6 +295,24 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     // room 2 (p3's room).
     QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p2->objectName()) != nullptr, 5000);
     QVERIFY(p3->room() == nullptr || p3->room()->player(p1->objectName()) == nullptr);
+}
+
+// addSocket with a null socket registers a socket-less "local" agent (operation side =
+// GUI / Bot): it joins the room and is reachable through agent(), without creating any
+// wire plumbing. A local agent has no socket, so there is nothing to disconnect.
+void tst_QMdmmNetworking::addSocket_nullSocket_registersLocalAgent()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(3);
+    conf.setRequestTimeout(60000);
+
+    LogicRunner runner(conf);
+
+    Agent *local = runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, nullptr);
+    QVERIFY(local != nullptr);
+    QCOMPARE(runner.agent(QStringLiteral("p1")), local);
+    QVERIFY(local->state().testFlag(Data::StateMaskOnline));
+    QVERIFY(!runner.full()); // playerNumPerRoom = 3, only one agent added
 }
 
 namespace {
