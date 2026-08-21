@@ -31,7 +31,7 @@ jobs:
           cmake -B build -G "Unix Makefiles"
           -DCMAKE_BUILD_TYPE=Release
           -DBUILD_TESTING=ON
-          -DQMDMM_EXPORT_PRIVATE=ON
+          -DQMDMM_EXPORT_PRIVATE=NO
           -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
 
       - name: Build
