@@ -18,15 +18,15 @@ namespace QMdmmNetworking {
 namespace p {
 
 QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnection::notifySpeak),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnection::notifyOperate),
+    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnection::receiveSpeak),
+    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnection::receiveOperate),
 };
 
 QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::replyStoneScissorsCloth),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::replyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::replyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::replyUpgrade),
+    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::decodeStoneScissorsClothReply),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::decodeActionOrderReply),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::decodeActionReply),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::decodeUpgradeReply),
 };
 
 QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnection::defaultReplyCallback {
@@ -66,6 +66,14 @@ ServerConnection::ServerConnection(Agent *agent, LogicRunnerP *parent)
     connect(agent, &Agent::gameOverNotified, this, &ServerConnection::sendGameOverNotified);
     connect(agent, &Agent::speakNotified, this, &ServerConnection::sendSpeakNotified);
     connect(agent, &Agent::operateNotified, this, &ServerConnection::sendOperateNotified);
+
+    // Wire the Agent's request signals to this connection's encode-and-send slots. The Agent
+    // forwards a requestXxx() call as the corresponding xxxRequested signal; this connection turns
+    // the strong-typed request back into a wire packet and sends it.
+    connect(agent, &Agent::stoneScissorsClothRequested, this, &ServerConnection::sendStoneScissorsClothRequested);
+    connect(agent, &Agent::actionOrderRequested, this, &ServerConnection::sendActionOrderRequested);
+    connect(agent, &Agent::actionRequested, this, &ServerConnection::sendActionRequested);
+    connect(agent, &Agent::upgradeRequested, this, &ServerConnection::sendUpgradeRequested);
 }
 
 ServerConnection::~ServerConnection() = default;
@@ -103,7 +111,7 @@ void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, cons
     }
 }
 
-void ServerConnection::replyStoneScissorsCloth(const QJsonValue &value)
+void ServerConnection::decodeStoneScissorsClothReply(const QJsonValue &value)
 {
 #define DEFAULTREPLY                      \
     do {                                  \
@@ -124,12 +132,12 @@ void ServerConnection::replyStoneScissorsCloth(const QJsonValue &value)
         DEFAULTREPLY;
     }
 
-    emit p->sscReply(agent->objectName(), ssc);
+    agent->stoneScissorsCloth(ssc);
 
 #undef DEFAULTREPLY
 }
 
-void ServerConnection::replyActionOrder(const QJsonValue &value)
+void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
 {
 #define DEFAULTREPLY               \
     do {                           \
@@ -148,12 +156,12 @@ void ServerConnection::replyActionOrder(const QJsonValue &value)
         ao << it->toInt();
     }
 
-    emit p->actionOrderReply(agent->objectName(), ao);
+    agent->actionOrder(ao);
 
 #undef DEFAULTREPLY
 }
 
-void ServerConnection::replyAction(const QJsonValue &value)
+void ServerConnection::decodeActionReply(const QJsonValue &value)
 {
 #define DEFAULTREPLY          \
     do {                      \
@@ -171,8 +179,8 @@ void ServerConnection::replyAction(const QJsonValue &value)
     QJsonValue vaction = arr.value(QStringLiteral("action"));
     if (!vaction.isDouble())
         DEFAULTREPLY;
-    QMdmmCore::Data::Action action = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
-    switch (action) {
+    QMdmmCore::Data::Action act = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
+    switch (act) {
     case QMdmmCore::Data::DoNothing:
     case QMdmmCore::Data::BuyKnife:
     case QMdmmCore::Data::BuyHorse:
@@ -186,7 +194,7 @@ void ServerConnection::replyAction(const QJsonValue &value)
     }
 
     QString toPlayer;
-    switch (action) {
+    switch (act) {
     case QMdmmCore::Data::Slash:
     case QMdmmCore::Data::Kick:
     case QMdmmCore::Data::LetMove: {
@@ -203,7 +211,7 @@ void ServerConnection::replyAction(const QJsonValue &value)
     }
 
     int toPlace = 0;
-    switch (action) {
+    switch (act) {
     case QMdmmCore::Data::Move:
     case QMdmmCore::Data::LetMove: {
         if (!arr.contains(QStringLiteral("toPlace")))
@@ -218,12 +226,12 @@ void ServerConnection::replyAction(const QJsonValue &value)
         break;
     }
 
-    emit p->actionReply(agent->objectName(), action, toPlayer, toPlace);
+    agent->action(act, toPlayer, toPlace);
 
 #undef DEFAULTREPLY
 }
 
-void ServerConnection::replyUpgrade(const QJsonValue &value)
+void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
 {
 #define DEFAULTREPLY           \
     do {                       \
@@ -251,14 +259,14 @@ void ServerConnection::replyUpgrade(const QJsonValue &value)
         ups << up;
     }
 
-    emit p->upgradeReply(agent->objectName(), ups);
+    agent->upgrade(ups);
 
 #undef DEFAULTREPLY
 }
 
 void ServerConnection::defaultReplyStoneScissorsCloth()
 {
-    emit p->sscReply(agent->objectName(), static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
+    agent->stoneScissorsCloth(static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
 }
 
 void ServerConnection::defaultReplyActionOrder()
@@ -271,12 +279,12 @@ void ServerConnection::defaultReplyActionOrder()
     while ((num--) != 0)
         ao.append(arr.takeAt(0).toInt());
 
-    emit p->actionOrderReply(agent->objectName(), ao);
+    agent->actionOrder(ao);
 }
 
 void ServerConnection::defaultReplyAction()
 {
-    emit p->actionReply(agent->objectName(), QMdmmCore::Data::DoNothing, {}, 0);
+    agent->action(QMdmmCore::Data::DoNothing, {}, 0);
 }
 
 void ServerConnection::defaultReplyUpgrade()
@@ -286,7 +294,7 @@ void ServerConnection::defaultReplyUpgrade()
     ups.reserve(times);
     while ((times--) != 0)
         ups << QMdmmCore::Data::UpgradeMaxHp;
-    emit p->upgradeReply(agent->objectName(), ups);
+    agent->upgrade(ups);
 }
 
 void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
@@ -315,7 +323,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
     }
 }
 
-void ServerConnection::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
+void ServerConnection::sendStoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
@@ -323,7 +331,7 @@ void ServerConnection::requestStoneScissorsCloth(const QStringList &playerNames,
     addRequest(QMdmmCore::Protocol::RequestStoneScissorsCloth, ob);
 }
 
-void ServerConnection::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void ServerConnection::sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     QJsonObject ob;
     QJsonArray arr;
@@ -335,12 +343,12 @@ void ServerConnection::requestActionOrder(const QList<int> &remainedOrders, int 
     addRequest(QMdmmCore::Protocol::RequestActionOrder, ob);
 }
 
-void ServerConnection::requestAction(int currentOrder)
+void ServerConnection::sendActionRequested(int currentOrder)
 {
     addRequest(QMdmmCore::Protocol::RequestAction, currentOrder);
 }
 
-void ServerConnection::requestUpgrade(int remainingTimes)
+void ServerConnection::sendUpgradeRequested(int remainingTimes)
 {
     addRequest(QMdmmCore::Protocol::RequestUpgrade, remainingTimes);
 }
@@ -505,6 +513,18 @@ void ServerConnection::executeDefaultReply()
     }
 }
 
+void ServerConnection::receiveSpeak(const QJsonValue &value)
+{
+    // The value is the Base64-encoded content sent by Client::notifySpeak. The server forwards it
+    // verbatim (it does not decode); the receiving client decodes it in ClientP::notifySpoken.
+    agent->speak(value.toString());
+}
+
+void ServerConnection::receiveOperate(const QJsonValue &value)
+{
+    agent->operate(value);
+}
+
 LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, LogicRunner *q)
     : QObject(q)
     , q(q)
@@ -555,27 +575,62 @@ void LogicRunnerP::agentStateChanged(const QMdmmCore::Data::AgentState &state)
         agent->notifyAgentStateChange(changedAgent->objectName(), state);
 }
 
-void LogicRunnerP::agentSpoken(const QJsonValue &value)
+void LogicRunnerP::agentSpoken(const QString &content)
 {
-    ServerConnection *speakConn = qobject_cast<ServerConnection *>(sender());
-    if (speakConn == nullptr)
+    Agent *speakAgent = qobject_cast<Agent *>(sender());
+    if (speakAgent == nullptr)
         return;
 
-    QString s = value.toString();
-    if (!s.isEmpty()) {
+    if (!content.isEmpty()) {
         foreach (Agent *agent, agents)
-            agent->notifySpeak(speakConn->agent->objectName(), s);
+            agent->notifySpeak(speakAgent->objectName(), content);
     }
 }
 
 void LogicRunnerP::agentOperated(const QJsonValue &value)
 {
-    ServerConnection *operateConn = qobject_cast<ServerConnection *>(sender());
-    if (operateConn == nullptr)
+    Agent *operateAgent = qobject_cast<Agent *>(sender());
+    if (operateAgent == nullptr)
         return;
 
     foreach (Agent *agent, agents)
-        agent->notifyOperate(operateConn->agent->objectName(), value);
+        agent->notifyOperate(operateAgent->objectName(), value);
+}
+
+void LogicRunnerP::agentStoneScissorsClothReplied(QMdmmCore::Data::StoneScissorsCloth ssc)
+{
+    Agent *repliedAgent = qobject_cast<Agent *>(sender());
+    if (repliedAgent == nullptr)
+        return;
+
+    emit sscReply(repliedAgent->objectName(), ssc);
+}
+
+void LogicRunnerP::agentActionOrderReplied(const QList<int> &order)
+{
+    Agent *repliedAgent = qobject_cast<Agent *>(sender());
+    if (repliedAgent == nullptr)
+        return;
+
+    emit actionOrderReply(repliedAgent->objectName(), order);
+}
+
+void LogicRunnerP::agentActionReplied(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace)
+{
+    Agent *repliedAgent = qobject_cast<Agent *>(sender());
+    if (repliedAgent == nullptr)
+        return;
+
+    emit actionReply(repliedAgent->objectName(), act, toPlayer, toPlace);
+}
+
+void LogicRunnerP::agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem> &items)
+{
+    Agent *repliedAgent = qobject_cast<Agent *>(sender());
+    if (repliedAgent == nullptr)
+        return;
+
+    emit upgradeReply(repliedAgent->objectName(), items);
 }
 
 void LogicRunnerP::socketDisconnected()
@@ -662,8 +717,8 @@ LogicRunnerP::~LogicRunnerP()
 void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
 {
     foreach (const QString &playerName, playerNames) {
-        ServerConnection *conn = connections.value(playerName);
-        conn->requestStoneScissorsCloth(playerNames, 0);
+        Agent *agent = agents.value(playerName);
+        agent->requestStoneScissorsCloth(playerNames, 0);
     }
 }
 
@@ -679,8 +734,8 @@ void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissors
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections)
 {
-    ServerConnection *conn = connections.value(playerName);
-    conn->requestActionOrder(availableOrders, maximumOrderNum, selections);
+    Agent *agent = agents.value(playerName);
+    agent->requestActionOrder(availableOrders, maximumOrderNum, selections);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -694,16 +749,16 @@ void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 void LogicRunnerP::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
 {
     foreach (const QString &playerName, playerNames) {
-        ServerConnection *conn = connections.value(playerName);
-        conn->requestStoneScissorsCloth(playerNames, strivedOrder);
+        Agent *agent = agents.value(playerName);
+        agent->requestStoneScissorsCloth(playerNames, strivedOrder);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestAction(const QString &playerName, int actionOrder)
 {
-    ServerConnection *conn = connections.value(playerName);
-    conn->requestAction(actionOrder);
+    Agent *agent = agents.value(playerName);
+    agent->requestAction(actionOrder);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -716,8 +771,8 @@ void LogicRunnerP::actionResult(const QString &playerName, QMdmmCore::Data::Acti
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 {
-    ServerConnection *conn = connections.value(playerName);
-    conn->requestUpgrade(upgradePoint);
+    Agent *agent = agents.value(playerName);
+    agent->requestUpgrade(upgradePoint);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -835,8 +890,12 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     d->connections.insert(playerName, addedConn);
 
     connect(addedAgent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
-    connect(addedConn, &p::ServerConnection::notifySpeak, d, &p::LogicRunnerP::agentSpoken);
-    connect(addedConn, &p::ServerConnection::notifyOperate, d, &p::LogicRunnerP::agentOperated);
+    connect(addedAgent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);
+    connect(addedAgent, &Agent::operated, d, &p::LogicRunnerP::agentOperated);
+    connect(addedAgent, &Agent::replyStoneScissorsCloth, d, &p::LogicRunnerP::agentStoneScissorsClothReplied);
+    connect(addedAgent, &Agent::replyActionOrder, d, &p::LogicRunnerP::agentActionOrderReplied);
+    connect(addedAgent, &Agent::replyAction, d, &p::LogicRunnerP::agentActionReplied);
+    connect(addedAgent, &Agent::replyUpgrade, d, &p::LogicRunnerP::agentUpgradeReplied);
 
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data

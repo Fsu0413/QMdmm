@@ -226,6 +226,105 @@ void Agent::notifyOperate(const QString &playerName, const QJsonValue &todo)
     emit operateNotified(playerName, todo, QPrivateSignal());
 }
 
+// Controller interface — requests (logic side → operation side).
+
+/**
+ * @brief Request a Stone-Scissors-Cloth choice.
+ * @param playerNames the players involved in the Stone-Scissors-Cloth
+ * @param strivedOrder the action order being strived for (0 if not applicable)
+ */
+void Agent::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
+{
+    emit stoneScissorsClothRequested(playerNames, strivedOrder, QPrivateSignal());
+}
+
+/**
+ * @brief Request the desired action order.
+ * @param remainedOrders the available (remained) orders
+ * @param maximumOrder the total number of action orders
+ * @param selectionNum the count of selections to make
+ */
+void Agent::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+{
+    emit actionOrderRequested(remainedOrders, maximumOrder, selectionNum, QPrivateSignal());
+}
+
+/**
+ * @brief Request an action.
+ * @param currentOrder the current action order
+ */
+void Agent::requestAction(int currentOrder)
+{
+    emit actionRequested(currentOrder, QPrivateSignal());
+}
+
+/**
+ * @brief Request an upgrade.
+ * @param remainingTimes the remaining upgrade points
+ */
+void Agent::requestUpgrade(int remainingTimes)
+{
+    emit upgradeRequested(remainingTimes, QPrivateSignal());
+}
+
+// Controller interface — replies and player actions (operation side → logic side).
+
+/**
+ * @brief Reply with a Stone-Scissors-Cloth choice.
+ * @param ssc the chosen Stone-Scissors-Cloth
+ */
+void Agent::stoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc)
+{
+    emit replyStoneScissorsCloth(ssc, QPrivateSignal());
+}
+
+/**
+ * @brief Reply with the desired action order.
+ * @param order the desired action order
+ */
+void Agent::actionOrder(const QList<int> &order)
+{
+    emit replyActionOrder(order, QPrivateSignal());
+}
+
+/**
+ * @brief Reply with an action.
+ * @param act the action to make
+ * @param toPlayer the target player name
+ * @param toPlace the target place
+ */
+void Agent::action(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace)
+{
+    emit replyAction(act, toPlayer, toPlace, QPrivateSignal());
+}
+
+/**
+ * @brief Reply with the upgrade choices.
+ * @param items the list of upgrade items
+ */
+void Agent::upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items)
+{
+    emit replyUpgrade(items, QPrivateSignal());
+}
+
+/**
+ * @brief The player speaks a message.
+ * @param content the content of the message
+ */
+void Agent::speak(const QString &content)
+{
+    emit spoken(content, QPrivateSignal());
+}
+
+/**
+ * @brief The player performs an operation.
+ * @param todo the operation data (semantics not yet defined)
+ */
+void Agent::operate(const QJsonValue &todo)
+{
+    emit operated(todo, QPrivateSignal());
+}
+
 /**
  * @fn Agent::screenNameChanged(const QString &name, QPrivateSignal)
  * @brief notify signal for property @c screenName
@@ -324,6 +423,71 @@ void Agent::notifyOperate(const QString &playerName, const QJsonValue &todo)
  * @brief emitted when another player's operation is notified
  * @param playerName the operating player
  * @param todo the operation
+ */
+
+/**
+ * @fn Agent::stoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
+ * @brief emitted when a Stone-Scissors-Cloth choice is requested
+ * @param playerNames the players involved in the Stone-Scissors-Cloth
+ * @param strivedOrder the action order being strived for
+ */
+
+/**
+ * @fn Agent::actionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum, QPrivateSignal)
+ * @brief emitted when the desired action order is requested
+ * @param remainedOrders the available (remained) orders
+ * @param maximumOrder the total number of action orders
+ * @param selectionNum the count of selections to make
+ */
+
+/**
+ * @fn Agent::actionRequested(int currentOrder, QPrivateSignal)
+ * @brief emitted when an action is requested
+ * @param currentOrder the current action order
+ */
+
+/**
+ * @fn Agent::upgradeRequested(int remainingTimes, QPrivateSignal)
+ * @brief emitted when an upgrade is requested
+ * @param remainingTimes the remaining upgrade points
+ */
+
+/**
+ * @fn Agent::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc, QPrivateSignal)
+ * @brief emitted when a Stone-Scissors-Cloth reply is made
+ * @param ssc the chosen Stone-Scissors-Cloth
+ */
+
+/**
+ * @fn Agent::replyActionOrder(const QList<int> &order, QPrivateSignal)
+ * @brief emitted when an action order reply is made
+ * @param order the desired action order
+ */
+
+/**
+ * @fn Agent::replyAction(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace, QPrivateSignal)
+ * @brief emitted when an action reply is made
+ * @param act the action to make
+ * @param toPlayer the target player name
+ * @param toPlace the target place
+ */
+
+/**
+ * @fn Agent::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal)
+ * @brief emitted when an upgrade reply is made
+ * @param items the list of upgrade items
+ */
+
+/**
+ * @fn Agent::spoken(const QString &content, QPrivateSignal)
+ * @brief emitted when the player speaks
+ * @param content the content of the message
+ */
+
+/**
+ * @fn Agent::operated(const QJsonValue &todo, QPrivateSignal)
+ * @brief emitted when the player operates
+ * @param todo the operation data
  */
 
 #ifndef DOXYGEN

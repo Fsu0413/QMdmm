@@ -67,6 +67,30 @@ public:
     void notifySpeak(const QString &playerName, const QString &content);
     void notifyOperate(const QString &playerName, const QJsonValue &todo);
 
+    // Controller interface — requests (logic side → operation side).
+    // Each method is the entry point the logic side (LogicRunner) calls to ask the player for
+    // input; it forwards the request as the corresponding xxxRequested signal, which the
+    // operation side (ServerConnection / GUI / Bot) listens to.
+    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
+    void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
+    void requestAction(int currentOrder);
+    void requestUpgrade(int remainingTimes);
+
+    // Controller interface — replies and player actions (operation side → logic side).
+    // Each bare-verb method is the entry point the operation side calls (ServerConnection after
+    // decoding a wire reply, or GUI / Bot directly); it forwards the reply as the corresponding
+    // replyXxx signal, which the logic side (LogicRunner) listens to.
+    void stoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void actionOrder(const QList<int> &order);
+    void action(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
+    void upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items);
+
+    // Controller interface — the player's own speech / operation, forwarded to the logic side as
+    // the spoken / operated signals. These are the operation-side counterparts of notifySpeak /
+    // notifyOperate (which notify the player about *others*).
+    void speak(const QString &content);
+    void operate(const QJsonValue &todo);
+
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
     void stateChanged(QMdmmCore::Data::AgentState, QPrivateSignal);
@@ -86,6 +110,22 @@ signals:
     void gameOverNotified(const QStringList &playerNames, QPrivateSignal);
     void speakNotified(const QString &playerName, const QString &content, QPrivateSignal);
     void operateNotified(const QString &playerName, const QJsonValue &todo, QPrivateSignal);
+
+    // Controller interface — requests forwarded to the operation side.
+    void stoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
+    void actionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum, QPrivateSignal);
+    void actionRequested(int currentOrder, QPrivateSignal);
+    void upgradeRequested(int remainingTimes, QPrivateSignal);
+
+    // Controller interface — replies forwarded to the logic side.
+    void replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc, QPrivateSignal);
+    void replyActionOrder(const QList<int> &order, QPrivateSignal);
+    void replyAction(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace, QPrivateSignal);
+    void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal);
+
+    // Controller interface — the player's own speech / operation forwarded to the logic side.
+    void spoken(const QString &content, QPrivateSignal);
+    void operated(const QJsonValue &todo, QPrivateSignal);
 
 #ifndef DOXYGEN
 private:

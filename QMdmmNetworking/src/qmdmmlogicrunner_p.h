@@ -63,31 +63,37 @@ public:
 
     void addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value);
 
-    // callbacks
-    void replyStoneScissorsCloth(const QJsonValue &value);
-    void replyActionOrder(const QJsonValue &value);
-    void replyAction(const QJsonValue &value);
-    void replyUpgrade(const QJsonValue &value);
+    // reply decode callbacks: validate the wire value and hand the strong-typed reply to the Agent
+    // (which then forwards it as the corresponding replyXxx signal). These keep only the JSON
+    // validation / type conversion, which is the wire's job; the controller logic lives on Agent.
+    void decodeStoneScissorsClothReply(const QJsonValue &value);
+    void decodeActionOrderReply(const QJsonValue &value);
+    void decodeActionReply(const QJsonValue &value);
+    void decodeUpgradeReply(const QJsonValue &value);
 
     void defaultReplyStoneScissorsCloth();
     void defaultReplyActionOrder();
     void defaultReplyAction();
     void defaultReplyUpgrade();
 
-signals:
-    void notifySpeak(const QJsonValue &value);
-    void notifyOperate(const QJsonValue &value);
+    // player speech / operation: hand the wire value to the Agent (which then forwards it as the
+    // spoken / operated signal). The wire only strips the value; the controller logic lives on Agent.
+    void receiveSpeak(const QJsonValue &value);
+    void receiveOperate(const QJsonValue &value);
 
+signals:
     void sendPacket(QMdmmCore::Packet packet);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(const QMdmmCore::Packet &packet);
 
-    // requests
-    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
-    void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
-    void requestAction(int currentOrder);
-    void requestUpgrade(int remainingTimes);
+    // requests (encode + send): these slots listen to the Agent's xxxRequested signals and turn
+    // each request into a wire packet. The controller methods themselves (requestXxx) now live on
+    // the Agent.
+    void sendStoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder);
+    void sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
+    void sendActionRequested(int currentOrder);
+    void sendUpgradeRequested(int remainingTimes);
 
     // notifications (encode + send): these slots listen to the Agent's xxxNotified signals and
     // turn each notification into a wire packet. The controller methods themselves (notifyXxx)
@@ -137,8 +143,12 @@ public:
 public slots: // NOLINT(readability-redundant-access-specifiers)
     // slots called from agent
     void agentStateChanged(const QMdmmCore::Data::AgentState &state);
-    void agentSpoken(const QJsonValue &value);
+    void agentSpoken(const QString &content);
     void agentOperated(const QJsonValue &value);
+    void agentStoneScissorsClothReplied(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void agentActionOrderReplied(const QList<int> &order);
+    void agentActionReplied(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
+    void agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem> &items);
     void socketDisconnected();
 
     // These slots are called from Logic
