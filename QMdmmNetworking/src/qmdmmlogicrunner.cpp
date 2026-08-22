@@ -86,9 +86,8 @@ void ServerConnection::setSocket(Socket *_socket)
     socket = _socket;
     if (socket != nullptr) {
         connect(socket, &Socket::packetReceived, this, &ServerConnection::packetReceived);
-        // The socket drop is forwarded through this connection's own signal so the room can
-        // locate the connection that owns the socket (the connection relays it, so sender() in
-        // LogicRunnerP::socketDisconnected is the connection, not the socket).
+        // The socket drop is handled by onSocketDisconnected, which translates it into an
+        // Agent event (see there). The room only ever deals with agents, never sockets.
         connect(socket, &Socket::socketDisconnected, this, &ServerConnection::onSocketDisconnected);
         connect(this, &ServerConnection::sendPacket, socket, &Socket::sendPacket);
     }
@@ -96,7 +95,26 @@ void ServerConnection::setSocket(Socket *_socket)
 
 void ServerConnection::onSocketDisconnected()
 {
-    emit socketDisconnected();
+    // Translate the socket drop into an Agent event (D-018: the socket is digested at the
+    // server/wire layer, and the room only ever sees agents). Clean up the socket, mark the
+    // agent offline, auto-reply any in-flight request so the logic keeps advancing, then emit
+    // the disconnect as an agent event -- the room then decides whether to drop the agent
+    // (not full) or preserve its seat for a reconnect (full).
+    if (socket != nullptr) {
+        socket->deleteLater();
+        socket = nullptr;
+    }
+
+    QMdmmCore::Data::AgentState state = agent->state();
+    state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
+    agent->setState(state);
+
+    // If there is an active request, answer it with the default reply so the logic is not left
+    // waiting on the gone player. executeDefaultReply handles the no-active-request case as a
+    // no-op (the not-full case, where the game has not started yet).
+    executeDefaultReply();
+
+    emit agentDisconnected(agent);
 }
 
 void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
@@ -638,26 +656,18 @@ void LogicRunnerP::agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem>
     emit upgradeReply(repliedAgent->objectName(), items);
 }
 
-void LogicRunnerP::socketDisconnected()
+void LogicRunnerP::agentDisconnected(Agent *disconnectedAgent)
 {
-    // The socket drop is relayed through ServerConnection::onSocketDisconnected (see
-    // ServerConnection::setSocket), so sender() is the connection, not the socket.
-    ServerConnection *disconnectedConn = qobject_cast<ServerConnection *>(sender());
-    if (disconnectedConn == nullptr)
+    if (disconnectedAgent == nullptr)
         return;
-
-    disconnectedConn->socket->deleteLater();
-    disconnectedConn->socket = nullptr;
 
     if (q->full()) {
         // case 1: room is full, so game has started.
-        // The seat is preserved (marked offline) so the player can reconnect. If they do not
-        // reconnect before the round is over, the game is abandoned: LogicRunnerP::upgradeResult
-        // detects the still-offline agent and ends the game (see the round-over check there).
-
-        QMdmmCore::Data::AgentState state = disconnectedConn->agent->state();
-        state.setFlag(QMdmmCore::Data::StateMaskOnline, false).setFlag(QMdmmCore::Data::StateMaskTrust, false);
-        disconnectedConn->agent->setState(state);
+        // ServerConnection::onSocketDisconnected already marked the agent offline and
+        // auto-replied the active request. The seat is preserved so the player can reconnect;
+        // if they do not reconnect before the round is over, the game is abandoned:
+        // LogicRunnerP::upgradeResult detects the still-offline agent and ends the game (see
+        // the round-over check there).
 
         // if all agents are disconnected, terminate the game.
         bool allDisconnected = true;
@@ -668,31 +678,24 @@ void LogicRunnerP::socketDisconnected()
             }
         }
 
-        if (allDisconnected) {
+        if (allDisconnected)
             emit q->gameOver(LogicRunner::QPrivateSignal());
-            return;
-        }
-
-        // If there is an active request, use default reply
-        // QMdmmNetworking::p::ServerConnection::executeDefaultReply handles it even if there is no active request
-        disconnectedConn->executeDefaultReply();
     } else {
         // case 2: room is not full, so game hasn't started
         // Agent should be deleted.
-        const QString playerName = disconnectedConn->agent->objectName();
+        const QString playerName = disconnectedAgent->objectName();
         Agent *takenAgent = agents.take(playerName);
         ServerConnection *takenConn = connections.take(playerName);
         Q_UNUSED(takenAgent);
-        Q_UNUSED(takenConn);
-        Q_ASSERT(takenAgent == disconnectedConn->agent);
-        Q_ASSERT(takenConn == disconnectedConn);
+        Q_ASSERT(takenAgent == disconnectedAgent);
+        Q_ASSERT(takenConn != nullptr);
 
         foreach (Agent *agent, agents)
             agent->notifyPlayerRemove(playerName);
         emit removePlayer(playerName);
 
-        disconnectedConn->agent->deleteLater();
-        disconnectedConn->deleteLater();
+        disconnectedAgent->deleteLater();
+        takenConn->deleteLater();
     }
 }
 
@@ -773,7 +776,7 @@ void LogicRunnerP::requestUpgrade(const QString &playerName, int upgradePoint)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
-    // Round-over abandonment check (see the comment in socketDisconnected): a player whose socket
+    // Round-over abandonment check (see the comment in agentDisconnected): a player whose socket
     // dropped mid-round is auto-replied so the logic keeps advancing, but if they have not
     // reconnected by the time the round is over, the game cannot continue. End it as a game over
     // (winners = the still-online agents) instead of notifying the upgrade result, matching
@@ -891,7 +894,7 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     // into wire packets and owns the socket.
     if (socket != nullptr) {
         p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d->conf, d);
-        connect(addedConn, &p::ServerConnection::socketDisconnected, d, &p::LogicRunnerP::socketDisconnected);
+        connect(addedConn, &p::ServerConnection::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
         addedConn->setSocket(socket);
         d->connections.insert(playerName, addedConn);
     }
@@ -942,7 +945,7 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
  * @return the reconnected agent, or @c nullptr if the player is unknown or still connected
  *
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
- * game has started) but whose socket was cleared by @c LogicRunnerP::socketDisconnected. It
+ * game has started) but whose socket was cleared by @c ServerConnection::onSocketDisconnected. It
  * rebinds the socket, restores the online / trust flags, resends the state snapshot so the
  * reconnecting client can rebuild its room view, and then replays only the round events the client
  * missed (every cached event after the first @p lastRoundEventSeq) instead of
@@ -956,15 +959,15 @@ Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int las
         return nullptr;
 
     // A still-connected agent is not a reconnect candidate: only an agent whose socket was
-    // cleared by socketDisconnected can be rebound here.
+    // cleared by onSocketDisconnected can be rebound here.
     if (reconnectedConn->socket != nullptr)
         return nullptr;
 
-    // Rebind the socket. setSocket is safe because socketDisconnected already set the old socket
+    // Rebind the socket. setSocket is safe because onSocketDisconnected already set the old socket
     // to nullptr before this point, so nothing gets double-deleted.
     reconnectedConn->setSocket(socket);
 
-    // Restore the online / trust flags that socketDisconnected cleared. setState emits
+    // Restore the online / trust flags that onSocketDisconnected cleared. setState emits
     // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChange
     // broadcast to every agent -- this is what lets the other, still-connected clients see that
     // the player is back online.

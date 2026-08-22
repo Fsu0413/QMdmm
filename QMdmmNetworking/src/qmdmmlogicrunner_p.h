@@ -83,7 +83,7 @@ public:
 
 signals:
     void sendPacket(QMdmmCore::Packet packet);
-    void socketDisconnected();
+    void agentDisconnected(Agent *agent);
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(const QMdmmCore::Packet &packet);
@@ -151,7 +151,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void agentActionOrderReplied(const QList<int> &order);
     void agentActionReplied(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem> &items);
-    void socketDisconnected();
+    void agentDisconnected(Agent *agent);
 
     // These slots are called from Logic
     void requestSscForAction(const QStringList &playerNames);
