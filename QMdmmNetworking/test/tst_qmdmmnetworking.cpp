@@ -28,6 +28,7 @@ private slots:
     void signIn_disconnectInNotFullRoom_removesPlayer();
     void signIn_reconnectsPlayerInNonCurrentRoom();
     void addAgent_registersLocalAgent();
+    void client_exposesSelfAgent();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -150,6 +151,17 @@ void tst_QMdmmNetworking::addAgent_registersLocalAgent()
     QCOMPARE(runner.agent(QStringLiteral("p1")), local);
     QVERIFY(local->state().testFlag(Data::StateMaskOnline));
     QVERIFY(!runner.full()); // playerNumPerRoom = 3, only one agent added
+}
+
+// The client pre-creates its own Agent on construction (symmetric to the server side where
+// the operation side creates the agent and hands it to LogicRunner), so the operation side
+// always has an Agent to drive even before any network connection. agent() exposes it, keyed
+// by the client's own objectName.
+void tst_QMdmmNetworking::client_exposesSelfAgent()
+{
+    Client client(ClientConfiguration {});
+    QVERIFY(client.agent() != nullptr);
+    QCOMPARE(client.agent()->objectName(), client.objectName());
 }
 
 namespace {

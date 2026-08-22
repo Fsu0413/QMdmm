@@ -32,6 +32,10 @@ public:
 
     ClientP(ClientConfiguration clientConfiguration, Client *q);
 
+    // Create and register this client's own Agent (name = the client's objectName), so the
+    // operation side (GUI / Bot) always has an Agent to drive.
+    void initSelfAgent();
+
     Client *q;
     ClientConfiguration clientConfiguration;
     QPointer<Socket> socket;

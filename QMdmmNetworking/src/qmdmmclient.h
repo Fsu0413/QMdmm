@@ -24,6 +24,8 @@ class ClientP;
 namespace v0 {
 #endif
 
+class Agent;
+
 struct QMDMMNETWORKING_EXPORT ClientConfiguration final : public QVariantMap
 {
     Q_GADGET
@@ -58,6 +60,9 @@ public:
 
     [[nodiscard]] QMdmmCore::Room *room();
     [[nodiscard]] const QMdmmCore::Room *room() const;
+
+    Agent *agent();
+    [[nodiscard]] const Agent *agent() const;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void notifySpeak(const QString &content);

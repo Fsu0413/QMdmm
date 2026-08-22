@@ -74,6 +74,18 @@ ClientP::ClientP(ClientConfiguration clientConfiguration, Client *q)
     connect(reconnectTimer, &QTimer::timeout, this, &ClientP::reconnectTimeout);
 }
 
+void ClientP::initSelfAgent()
+{
+    // The client pre-creates its own Agent so the operation side (GUI / Bot) always has an
+    // Agent to drive, symmetric to the server side where the operation side creates the agent
+    // and hands it to LogicRunner. Its name is the client's objectName, which is also what
+    // signIn reports as playerName, so the server's notifyPlayerAdded for ourselves updates this
+    // Agent in place.
+    Agent *self = new Agent(q->objectName(), this);
+    self->setScreenName(clientConfiguration.screenName());
+    agents.insert(q->objectName(), self);
+}
+
 // Qt documentation only mentioned "auto" here
 #define ONERRPRINTJSON(value)                                                     \
     auto onRet_ [[maybe_unused]] = qScopeGuard([this, value, func = __func__]() { \
@@ -321,12 +333,6 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
-    // A duplicate notifyPlayerAdded (player already tracked) is benign and
-    // must not be treated as a protocol error that tears down the connection.
-    if (agents.contains(playerName)) {
-        onRet_.dismiss();
-        return;
-    }
 
     QJsonValue vscreenName = ob.value(QStringLiteral("screenName"));
     if (!vscreenName.isString())
@@ -337,6 +343,22 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
     if (!vagentState.isDouble())
         return;
     QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
+
+    // The client pre-creates its own Agent on construction (keyed by the client's objectName).
+    // When the server reports ourselves back (sign-in confirm / state snapshot), update that
+    // Agent in place and add ourselves to the room mirror, instead of treating it as a duplicate.
+    if (Agent *agent = agents.value(playerName, nullptr); agent != nullptr) {
+        if (playerName == q->objectName()) {
+            room->addPlayer(playerName);
+            agent->setScreenName(screenName);
+            agent->setState(agentState);
+            emit q->notifyPlayerAdded(playerName, screenName, agentState, Client::QPrivateSignal());
+        }
+        // A duplicate notifyPlayerAdded for another already-tracked player (a reconnect state
+        // snapshot) is benign and must not be treated as a protocol error.
+        onRet_.dismiss();
+        return;
+    }
 
     if (room->addPlayer(playerName) == nullptr)
         return;

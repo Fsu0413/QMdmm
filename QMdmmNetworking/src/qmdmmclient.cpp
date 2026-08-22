@@ -122,6 +122,7 @@ Client::Client(ClientConfiguration clientConfiguration, QObject *parent)
     , d(new p::ClientP(std::move(clientConfiguration), this))
 {
     setObjectName(generateRandomString());
+    d->initSelfAgent();
 }
 
 /**
@@ -170,6 +171,24 @@ QMdmmCore::Room *Client::room()
 const QMdmmCore::Room *Client::room() const
 {
     return d->room;
+}
+
+/**
+ * @brief get this client's own agent
+ * @return this client's own agent
+ */
+Agent *Client::agent()
+{
+    return d->agents.value(objectName(), nullptr);
+}
+
+/**
+ * @brief get this client's own agent (const version)
+ * @return this client's own agent
+ */
+const Agent *Client::agent() const
+{
+    return d->agents.value(objectName(), nullptr);
 }
 
 /**
