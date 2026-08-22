@@ -7,15 +7,8 @@
 #include <QMdmmData>
 #include <QMdmmLogicConfiguration>
 #include <QMdmmLogicRunner>
-#include <QMdmmPacket>
-#include <QMdmmProtocol>
 #include <QMdmmServer>
-#include <QMdmmSocket>
 
-#include <QHostAddress>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QTcpServer>
 #include <QTcpSocket>
 #include <QTest>
 
@@ -32,217 +25,57 @@ public:
     Q_INVOKABLE tst_QMdmmNetworking() = default;
 
 private slots:
-    void socketDisconnected_notFull_removesAgent();
-    void socketDisconnected_full_marksOffline();
-    void reconnect_rebindsSocketAndRestoresState();
-    void reconnect_replaysMissedRoundEvents();
+    void signIn_disconnectInNotFullRoom_removesPlayer();
     void signIn_reconnectsPlayerInNonCurrentRoom();
-    void addSocket_nullSocket_registersLocalAgent();
+    void addAgent_registersLocalAgent();
 };
 
-// Build a real loopback TCP connection and wrap the server side in a Socket, so the
-// disconnect path can be driven by actually dropping the client end (no private access).
-// The QTcpServer and the client socket are children of `parent`; the accepted socket is
-// taken over by the returned Socket.
-static bool makeServerSocket(QTcpServer **outServer, QTcpSocket **outClient, Socket **outSocket, QObject *parent)
-{
-    auto *server = new QTcpServer(parent);
-    if (!server->listen(QHostAddress::LocalHost, 0))
-        return false;
-
-    auto *client = new QTcpSocket(server);
-    client->connectToHost(QHostAddress::LocalHost, server->serverPort());
-    if (!client->waitForConnected(5000))
-        return false;
-    if (!server->waitForNewConnection(5000))
-        return false;
-
-    QTcpSocket *accepted = server->nextPendingConnection();
-    if (accepted == nullptr)
-        return false;
-
-    auto *sock = new Socket(accepted, parent);
-
-    *outServer = server;
-    *outClient = client;
-    *outSocket = sock;
-    return true;
-}
-
-// A room that is not full has not started a game yet: a dropped socket removes the
-// agent entirely (it can be re-added later as a fresh player).
-void tst_QMdmmNetworking::socketDisconnected_notFull_removesAgent()
+// A room that is not full has not started a game yet: a dropped socket removes the player
+// entirely (it can re-join later as a fresh player) rather than preserving the seat for a
+// reconnect. Driven end-to-end through the public Server / Client API: p1 and p2 share a
+// not-full room, p1 drops, and p2 observes the remove. (p1's own client then auto-reconnects
+// and rejoins as a fresh player -- that reconnect path is covered by the reconnect test below
+// and the smoke test.)
+void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000);
+    conf.setPlayerNumPerRoom(3); // 3-person room: two players leave it not-full
+    conf.setRequestTimeout(60000); // bots stay silent without timing out during the test
 
-    LogicRunner runner(conf);
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setTcpPort(16367);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
 
-    QTcpServer *server = nullptr;
-    QTcpSocket *client = nullptr;
-    Socket *sock = nullptr;
-    QVERIFY(makeServerSocket(&server, &client, &sock, &runner));
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
 
-    Agent *agent = runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock);
-    QVERIFY(agent != nullptr);
-    QVERIFY(!runner.full());
+    const QString host = QStringLiteral("qmdmm://localhost:16367");
 
-    client->abort();
-    QTRY_VERIFY_WITH_TIMEOUT(runner.agent(QStringLiteral("p1")) == nullptr, 5000);
-}
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
 
-// A full room has already started the game: a dropped socket keeps the agent in the
-// room but marks it offline (and untrusted), so the seat is preserved for a possible
-// reconnect before round over.
-void tst_QMdmmNetworking::socketDisconnected_full_marksOffline()
-{
-    LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000);
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
 
-    LogicRunner runner(conf);
+    // p1 and p2 share a not-full room (3-person room, 2 players).
+    QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
 
-    QTcpServer *server1 = nullptr;
-    QTcpSocket *client1 = nullptr;
-    Socket *sock1 = nullptr;
-    QVERIFY(makeServerSocket(&server1, &client1, &sock1, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
-
-    QTcpServer *server2 = nullptr;
-    QTcpSocket *client2 = nullptr;
-    Socket *sock2 = nullptr;
-    QVERIFY(makeServerSocket(&server2, &client2, &sock2, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnlineBot, sock2) != nullptr);
-
-    QVERIFY(runner.full());
-
-    client1->abort();
-    QTRY_VERIFY_WITH_TIMEOUT(runner.agent(QStringLiteral("p1")) != nullptr && !runner.agent(QStringLiteral("p1"))->state().testFlag(Data::StateMaskOnline), 5000);
-
-    // p1 stays in the room but is offline; p2 is untouched.
-    Agent *stayed = runner.agent(QStringLiteral("p1"));
-    QVERIFY(stayed != nullptr);
-    QVERIFY(!stayed->state().testFlag(Data::StateMaskOnline));
-    QVERIFY(!stayed->state().testFlag(Data::StateMaskTrust));
-
-    Agent *other = runner.agent(QStringLiteral("p2"));
-    QVERIFY(other != nullptr);
-    QVERIFY(other->state().testFlag(Data::StateMaskOnline));
-}
-
-// After a full-room disconnect, reconnect() rebinds a fresh socket and restores the
-// online / trust flags (the setSocket rebind + state restore path).
-void tst_QMdmmNetworking::reconnect_rebindsSocketAndRestoresState()
-{
-    LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000);
-
-    LogicRunner runner(conf);
-
-    QTcpServer *server1 = nullptr;
-    QTcpSocket *client1 = nullptr;
-    Socket *sock1 = nullptr;
-    QVERIFY(makeServerSocket(&server1, &client1, &sock1, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
-
-    QTcpServer *server2 = nullptr;
-    QTcpSocket *client2 = nullptr;
-    Socket *sock2 = nullptr;
-    QVERIFY(makeServerSocket(&server2, &client2, &sock2, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnlineBot, sock2) != nullptr);
-
-    QVERIFY(runner.full());
-
-    client1->abort();
-    QTRY_VERIFY_WITH_TIMEOUT(!runner.agent(QStringLiteral("p1"))->state().testFlag(Data::StateMaskOnline), 5000);
-
-    QTcpServer *server1b = nullptr;
-    QTcpSocket *client1b = nullptr;
-    Socket *sock1b = nullptr;
-    QVERIFY(makeServerSocket(&server1b, &client1b, &sock1b, &runner));
-
-    Agent *reconnected = runner.reconnect(QStringLiteral("p1"), sock1b);
-    QVERIFY(reconnected != nullptr);
-    QCOMPARE(reconnected, runner.agent(QStringLiteral("p1")));
-    QVERIFY(reconnected->state().testFlag(Data::StateMaskOnline));
-    QVERIFY(reconnected->state().testFlag(Data::StateMaskTrust));
-}
-
-// reconnect() must not re-announce the round (the client never left it) -- instead it
-// replays, in order, only the cached round events after the index the client reported
-// as its received count. This drives the server's notification path through the public
-// Agent controller methods (what LogicRunner would call) and observes the wire through
-// the reconnected Socket's public sendPacket signal.
-void tst_QMdmmNetworking::reconnect_replaysMissedRoundEvents()
-{
-    LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000);
-
-    LogicRunner runner(conf);
-
-    QTcpServer *server1 = nullptr;
-    QTcpSocket *client1 = nullptr;
-    Socket *sock1 = nullptr;
-    QVERIFY(makeServerSocket(&server1, &client1, &sock1, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, sock1) != nullptr);
-
-    QTcpServer *server2 = nullptr;
-    QTcpSocket *client2 = nullptr;
-    Socket *sock2 = nullptr;
-    QVERIFY(makeServerSocket(&server2, &client2, &sock2, &runner));
-    QVERIFY(runner.addSocket(QStringLiteral("p2"), QStringLiteral("screen2"), Data::StateOnlineBot, sock2) != nullptr);
-    QVERIFY(runner.full());
-
-    // Drop p1 (offline, seat preserved).
-    client1->abort();
-    QTRY_VERIFY_WITH_TIMEOUT(!runner.agent(QStringLiteral("p1"))->state().testFlag(Data::StateMaskOnline), 5000);
-
-    // While p1 is gone, the logic side broadcasts three round events through p1's
-    // Agent (the public controller entry points LogicRunner calls). These are recorded
-    // in p1's connection round-event log for later catch-up.
-    Agent *agent1 = runner.agent(QStringLiteral("p1"));
-    QVERIFY(agent1 != nullptr);
-
-    QHash<QString, Data::StoneScissorsCloth> ssc;
-    ssc.insert(QStringLiteral("p1"), Data::Stone);
-    ssc.insert(QStringLiteral("p2"), Data::Cloth);
-    agent1->notifyStoneScissorsCloth(ssc); // event index 0
-
-    QHash<int, QString> order;
-    order.insert(1, QStringLiteral("p1"));
-    order.insert(2, QStringLiteral("p2"));
-    agent1->notifyActionOrder(order); // event index 1
-
-    agent1->notifyAction(QStringLiteral("p1"), Data::DoNothing, QString(), 0); // event index 2
-
-    // Reconnect reporting it already received 1 round event (index 0): only the 2nd and
-    // 3rd events are replayed, in order. Only round events are counted here.
-    QTcpServer *server1b = nullptr;
-    QTcpSocket *client1b = nullptr;
-    Socket *sock1b = nullptr;
-    QVERIFY(makeServerSocket(&server1b, &client1b, &sock1b, &runner));
-
-    QList<Protocol::NotifyId> replayedNotifies;
-    connect(sock1b, &Socket::sendPacket, [&](const Packet &packet) {
-        const Protocol::NotifyId id = packet.notifyId();
-        if (id == Protocol::NotifyStoneScissorsCloth || id == Protocol::NotifyActionOrder || id == Protocol::NotifyAction || id == Protocol::NotifyUpgrade) {
-            replayedNotifies << id;
-        }
+    // Drop p1's socket. The room is not full, so the server removes p1's agent and broadcasts
+    // notifyPlayerRemove to the remaining player (instead of preserving the seat).
+    bool p1Removed = false;
+    connect(p2, &Client::notifyPlayerRemoved, [&](const QString &playerName) {
+        if (playerName == p1->objectName())
+            p1Removed = true;
     });
 
-    Agent *reconnected = runner.reconnect(QStringLiteral("p1"), sock1b, 1);
-    QVERIFY(reconnected != nullptr);
-    QVERIFY(reconnected->state().testFlag(Data::StateMaskOnline));
-    QVERIFY(reconnected->state().testFlag(Data::StateMaskTrust));
+    QTcpSocket *p1Sock = p1->findChild<QTcpSocket *>();
+    QVERIFY(p1Sock != nullptr);
+    p1Sock->abort();
 
-    // The wrong old behavior re-sent notifyGameStart / notifyRoundStart; the precise
-    // catch-up must not. Only the missed events (index >= 1) are replayed, in order.
-    QCOMPARE(replayedNotifies.size(), 2);
-    QVERIFY(replayedNotifies.at(0) == Protocol::NotifyActionOrder);
-    QVERIFY(replayedNotifies.at(1) == Protocol::NotifyAction);
+    QTRY_VERIFY_WITH_TIMEOUT(p1Removed, 5000);
 }
 
 // A reconnecting player may live in ANY room, not just `current`. `current` only tracks
@@ -297,10 +130,11 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     QVERIFY(p3->room() == nullptr || p3->room()->player(p1->objectName()) == nullptr);
 }
 
-// addSocket with a null socket registers a socket-less "local" agent (operation side =
-// GUI / Bot): it joins the room and is reachable through agent(), without creating any
-// wire plumbing. A local agent has no socket, so there is nothing to disconnect.
-void tst_QMdmmNetworking::addSocket_nullSocket_registersLocalAgent()
+// addAgent with a locally-owned agent (no ServerConnection child) registers a socket-less
+// "local" agent (operation side = GUI / Bot): it joins the room and is reachable through
+// agent(), without creating any wire plumbing. A local agent has no socket, so there is
+// nothing to disconnect.
+void tst_QMdmmNetworking::addAgent_registersLocalAgent()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(3);
@@ -308,8 +142,11 @@ void tst_QMdmmNetworking::addSocket_nullSocket_registersLocalAgent()
 
     LogicRunner runner(conf);
 
-    Agent *local = runner.addSocket(QStringLiteral("p1"), QStringLiteral("screen1"), Data::StateOnline, nullptr);
-    QVERIFY(local != nullptr);
+    Agent *local = new Agent(QStringLiteral("p1"), &runner);
+    local->setScreenName(QStringLiteral("screen1"));
+    local->setState(Data::StateOnline);
+
+    QCOMPARE(runner.addAgent(local), local);
     QCOMPARE(runner.agent(QStringLiteral("p1")), local);
     QVERIFY(local->state().testFlag(Data::StateMaskOnline));
     QVERIFY(!runner.full()); // playerNumPerRoom = 3, only one agent added

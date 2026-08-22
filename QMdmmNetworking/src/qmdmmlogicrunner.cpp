@@ -798,7 +798,7 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
         agent->notifyUpgrade(upgrades);
 
     // The upgrade phase finished without a game over. Advance to the next round.
-    // This mirrors the initial kick-off in addSocket(): announce the new round to
+    // This mirrors the initial kick-off in addAgent(): announce the new round to
     // every agent (so clients reset their local room via notifyRoundStart) and
     // then start it. Without this, the match stalls after the very first round.
     foreach (Agent *agent, agents)
@@ -865,76 +865,75 @@ LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration
 LogicRunner::~LogicRunner() = default;
 
 /**
- * @brief Add an agent to the game
- * @param playerName the internal name of the player
- * @param screenName the screen name of the player
- * @param agentState the initial state of the agent
- * @param socket the socket of the connected client, or @c nullptr for a local agent
- * @return the newly added agent, or @c nullptr if the player name already exists
+ * @brief Add a pre-wired agent to the game
+ * @param agent the agent to add, already wired to its operation side (ServerConnection / GUI / Bot)
+ * @return the added agent, or @c nullptr if the player name already exists or @p agent is @c nullptr
  *
- * This is the unified entry point for a player: it registers the agent (identity + controller
- * interface) with the logic side and, when a @p socket is given, also creates the server-side wire
- * plumbing (a @c ServerConnection) for the network path. For a local agent (operation side =
- * GUI / Bot, no socket), no @c ServerConnection is created -- the operation side talks to the
- * returned agent directly through its controller signals / methods.
+ * This is the unified entry point for a player. The operation side creates the @c Agent and wires
+ * it up before calling this -- for the network path, ServerP also creates a @c ServerConnection
+ * (a child of the agent) and binds the socket on it; for a local player, GUI / Bot simply own the
+ * agent. This function only registers the agent with the logic side: it inserts the agent into the
+ * room, connects the agent's logic-port signals (replies / speech / operation) to the room, and
+ * broadcasts the join to every player. The socket / wire lifecycle is not LogicRunner's concern.
  */
-Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, Socket *socket)
+Agent *LogicRunner::addAgent(Agent *agent)
 {
+    if (agent == nullptr)
+        return nullptr;
+
+    const QString playerName = agent->objectName();
     if (d->agents.contains(playerName))
         return nullptr;
 
-    Agent *addedAgent = new Agent(playerName, d);
-    addedAgent->setScreenName(screenName);
-    addedAgent->setState(agentState);
+    d->agents.insert(playerName, agent);
 
-    d->agents.insert(playerName, addedAgent);
-
-    // A local agent (operation side = GUI / Bot) has no socket, so no wire plumbing is created.
-    // Only a networked agent gets a ServerConnection, which turns the agent's controller signals
-    // into wire packets and owns the socket.
-    if (socket != nullptr) {
-        p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d->conf, d);
-        connect(addedConn, &p::ServerConnection::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
-        addedConn->setSocket(socket);
-        d->connections.insert(playerName, addedConn);
+    // Register the agent's wire plumbing, if the operation side created one (network path). The
+    // ServerConnection is a child of the agent so it travels with it; it reports the socket drop
+    // as an Agent event (agentDisconnected) that the room listens to.
+    if (p::ServerConnection *conn = agent->findChild<p::ServerConnection *>(); conn != nullptr) {
+        connect(conn, &p::ServerConnection::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
+        d->connections.insert(playerName, conn);
     }
 
-    connect(addedAgent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
-    connect(addedAgent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);
-    connect(addedAgent, &Agent::operated, d, &p::LogicRunnerP::agentOperated);
-    connect(addedAgent, &Agent::replyStoneScissorsCloth, d, &p::LogicRunnerP::agentStoneScissorsClothReplied);
-    connect(addedAgent, &Agent::replyActionOrder, d, &p::LogicRunnerP::agentActionOrderReplied);
-    connect(addedAgent, &Agent::replyAction, d, &p::LogicRunnerP::agentActionReplied);
-    connect(addedAgent, &Agent::replyUpgrade, d, &p::LogicRunnerP::agentUpgradeReplied);
+    // Connect the agent's logic-port signals to the room (identity change / speech / operation /
+    // replies). The operation port (ServerConnection / GUI / Bot) is wired by whoever created the
+    // agent, not here.
+    connect(agent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
+    connect(agent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);
+    connect(agent, &Agent::operated, d, &p::LogicRunnerP::agentOperated);
+    connect(agent, &Agent::replyStoneScissorsCloth, d, &p::LogicRunnerP::agentStoneScissorsClothReplied);
+    connect(agent, &Agent::replyActionOrder, d, &p::LogicRunnerP::agentActionOrderReplied);
+    connect(agent, &Agent::replyAction, d, &p::LogicRunnerP::agentActionReplied);
+    connect(agent, &Agent::replyUpgrade, d, &p::LogicRunnerP::agentUpgradeReplied);
 
     // When a new agent is added, first we'd notify the logic configuration to client
     // This is also a signal to client that it should switch state for room data
 
-    addedAgent->notifyLogicConfiguration();
+    agent->notifyLogicConfiguration();
 
     emit d->addPlayer(playerName);
 
-    foreach (Agent *agent, d->agents)
-        agent->notifyPlayerAdd(playerName, screenName, agentState);
+    foreach (Agent *a, d->agents)
+        a->notifyPlayerAdd(playerName, agent->screenName(), agent->state());
 
     // Tell the newly added agent about every player that joined before it.
     // NOTE: iterate over the *existing* agents and report their identities,
     // not the new player's name again (that would duplicate notifyPlayerAdd
     // for the new agent and make the client treat it as a fatal error).
-    foreach (Agent *agent, d->agents) {
-        if (agent != addedAgent)
-            addedAgent->notifyPlayerAdd(agent->objectName(), agent->screenName(), agent->state());
+    foreach (Agent *a, d->agents) {
+        if (a != agent)
+            agent->notifyPlayerAdd(a->objectName(), a->screenName(), a->state());
     }
 
     if (full()) {
-        foreach (Agent *agent, d->agents)
-            agent->notifyGameStart();
-        foreach (Agent *agent, d->agents)
-            agent->notifyRoundStart();
+        foreach (Agent *a, d->agents)
+            a->notifyGameStart();
+        foreach (Agent *a, d->agents)
+            a->notifyRoundStart();
         emit d->roundStart();
     }
 
-    return addedAgent;
+    return agent;
 }
 
 /**

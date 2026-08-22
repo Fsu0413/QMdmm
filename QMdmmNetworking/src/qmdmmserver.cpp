@@ -4,6 +4,7 @@
 #include "qmdmmserver_p.h"
 
 #include "qmdmmagent.h"
+#include "qmdmmlogicrunner_p.h"
 
 #include <QLocalSocket>
 #include <QTcpSocket>
@@ -308,7 +309,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         // only tracks the room currently recruiting players; full rooms keep running in the
         // background and are deleted later on gameOver. So scan every LogicRunner child for the
         // offline agent and reconnect it in whichever room it is found. A still-online duplicate
-        // name falls through to addSocket below, which rejects it as a spurious "new player" error.
+        // name falls through to addAgent below, which rejects it as a spurious "new player" error.
         const auto runners = findChildren<LogicRunner *>();
         for (LogicRunner *runner : runners) {
             Agent *existing = runner->agent(playerName);
@@ -325,7 +326,17 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             connect(current, &LogicRunner::gameOver, this, &ServerP::logicRunnerGameOver);
         }
 
-        if (current->addSocket(playerName, screenName, agentState, socket) == nullptr)
+        // Assemble the agent on the operation side (network path): create the agent (identity +
+        // controller) and its wire plumbing (ServerConnection), bind the socket, then register the
+        // whole thing with the room via addAgent. The ServerConnection is a child of the agent so
+        // it travels with it; it reports socket drops as an Agent event the room listens to.
+        Agent *agent = new Agent(playerName, current);
+        agent->setScreenName(screenName);
+        agent->setState(agentState);
+        p::ServerConnection *conn = new p::ServerConnection(agent, logicConfiguration, agent);
+        conn->setSocket(socket);
+
+        if (current->addAgent(agent) == nullptr)
             break;
 
         return;
