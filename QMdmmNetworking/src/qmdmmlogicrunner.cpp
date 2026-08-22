@@ -38,14 +38,14 @@ QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnec
 
 int ServerConnection::requestTimeoutGracePeriod = 60;
 
-ServerConnection::ServerConnection(Agent *agent, LogicRunnerP *parent)
+ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
     : QObject(parent)
     , agent(agent)
-    , p(parent)
+    , conf(logicConfiguration)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
-    requestTimer->setInterval(p->conf.requestTimeout() + requestTimeoutGracePeriod);
+    requestTimer->setInterval(conf.requestTimeout() + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
 
@@ -86,12 +86,17 @@ void ServerConnection::setSocket(Socket *_socket)
     socket = _socket;
     if (socket != nullptr) {
         connect(socket, &Socket::packetReceived, this, &ServerConnection::packetReceived);
-        // Forward the socket drop directly to the room, so the room can find the
-        // connection that owns the socket and mark its agent offline (a socket-disconnected
-        // signal relayed through this connection would lose the identity of the agent).
-        connect(socket, &Socket::socketDisconnected, p, &LogicRunnerP::socketDisconnected);
+        // The socket drop is forwarded through this connection's own signal so the room can
+        // locate the connection that owns the socket (the connection relays it, so sender() in
+        // LogicRunnerP::socketDisconnected is the connection, not the socket).
+        connect(socket, &Socket::socketDisconnected, this, &ServerConnection::onSocketDisconnected);
         connect(this, &ServerConnection::sendPacket, socket, &Socket::sendPacket);
     }
+}
+
+void ServerConnection::onSocketDisconnected()
+{
+    emit socketDisconnected();
 }
 
 void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
@@ -355,7 +360,7 @@ void ServerConnection::sendUpgradeRequested(int remainingTimes)
 
 void ServerConnection::sendLogicConfigurationNotified()
 {
-    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, p->conf));
+    emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, conf));
 }
 
 void ServerConnection::sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
@@ -635,19 +640,9 @@ void LogicRunnerP::agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem>
 
 void LogicRunnerP::socketDisconnected()
 {
-    Socket *disconnectedSocket = qobject_cast<Socket *>(sender());
-    if (disconnectedSocket == nullptr)
-        return;
-
-    // The socket is connected directly (see ServerConnection::setSocket), so sender()
-    // is the Socket, not the connection. Locate the connection that owns it.
-    ServerConnection *disconnectedConn = nullptr;
-    foreach (ServerConnection *conn, connections) {
-        if (conn->socket == disconnectedSocket) {
-            disconnectedConn = conn;
-            break;
-        }
-    }
+    // The socket drop is relayed through ServerConnection::onSocketDisconnected (see
+    // ServerConnection::setSocket), so sender() is the connection, not the socket.
+    ServerConnection *disconnectedConn = qobject_cast<ServerConnection *>(sender());
     if (disconnectedConn == nullptr)
         return;
 
@@ -895,7 +890,8 @@ Agent *LogicRunner::addSocket(const QString &playerName, const QString &screenNa
     // Only a networked agent gets a ServerConnection, which turns the agent's controller signals
     // into wire packets and owns the socket.
     if (socket != nullptr) {
-        p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d);
+        p::ServerConnection *addedConn = new p::ServerConnection(addedAgent, d->conf, d);
+        connect(addedConn, &p::ServerConnection::socketDisconnected, d, &p::LogicRunnerP::socketDisconnected);
         addedConn->setSocket(socket);
         d->connections.insert(playerName, addedConn);
     }

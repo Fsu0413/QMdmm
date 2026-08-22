@@ -37,14 +37,14 @@ class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnection : public QObject
     static int requestTimeoutGracePeriod;
 
 public:
-    ServerConnection(Agent *agent, LogicRunnerP *parent);
+    ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~ServerConnection() override;
 
     void setSocket(Socket *_socket);
 
     QPointer<Socket> socket;
     Agent *agent;
-    LogicRunnerP *p;
+    QMdmmCore::LogicConfiguration conf;
 
     QMdmmCore::Protocol::RequestId currentRequest;
     QJsonValue currentRequestValue;
@@ -83,9 +83,11 @@ public:
 
 signals:
     void sendPacket(QMdmmCore::Packet packet);
+    void socketDisconnected();
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void packetReceived(const QMdmmCore::Packet &packet);
+    void onSocketDisconnected();
 
     // requests (encode + send): these slots listen to the Agent's xxxRequested signals and turn
     // each request into a wire packet. The controller methods themselves (requestXxx) now live on
