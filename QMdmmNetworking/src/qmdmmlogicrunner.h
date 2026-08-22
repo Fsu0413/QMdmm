@@ -23,7 +23,6 @@ namespace v0 {
 #endif
 
 class Agent;
-class Socket;
 
 // for a simpler logic, I decided to make LogicRunner handle only one complete game.
 // so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
@@ -44,7 +43,7 @@ public:
 
     // Functions to be called in Server thread
     Agent *addAgent(Agent *agent);
-    Agent *reconnect(const QString &playerName, Socket *socket, int lastRoundEventSeq = 0);
+    Agent *reconnectAgent(Agent *agent);
 
     Agent *agent(const QString &playerName);
     [[nodiscard]] const Agent *agent(const QString &playerName) const;

@@ -315,8 +315,22 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             Agent *existing = runner->agent(playerName);
             if (existing == nullptr || existing->state().testFlag(QMdmmCore::Data::StateMaskOnline))
                 continue;
-            if (runner->reconnect(playerName, socket, lastRoundEventSeq) != nullptr)
+
+            // D-018: the socket is digested at the wire layer and the room only deals with agents,
+            // so a reconnect is split across the two. Find the agent's wire plumbing, rebind the
+            // socket + replay the missed round events on it, then restore the agent's state +
+            // snapshot on the logic side.
+            p::ServerConnection *conn = existing->findChild<p::ServerConnection *>();
+            if (conn == nullptr) {
+                // A local agent has no wire; a sign-in over the wire cannot reconnect it.
+                socket->setHasError(true);
                 return;
+            }
+
+            conn->reconnect(socket, lastRoundEventSeq);
+            if (runner->reconnectAgent(existing) != nullptr)
+                return;
+
             socket->setHasError(true);
             return;
         }

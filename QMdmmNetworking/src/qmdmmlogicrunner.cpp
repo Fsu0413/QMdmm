@@ -499,6 +499,19 @@ void ServerConnection::replayMissedRoundEvents(int lastRoundEventSeq)
         emit sendPacket(roundEventLog.at(i));
 }
 
+void ServerConnection::reconnect(Socket *socket, int lastRoundEventSeq)
+{
+    // Rebind the socket. setSocket is safe because onSocketDisconnected already set the old
+    // socket to nullptr before this point, so nothing gets double-deleted.
+    setSocket(socket);
+
+    // Precise catch-up: replay the round events the client missed. The client reported how many
+    // round events it received before the drop (lastRoundEventSeq); every event this connection
+    // broadcast while the client was gone is replayed in send order, skipping the first
+    // `lastRoundEventSeq` (already received). See replayMissedRoundEvents.
+    replayMissedRoundEvents(lastRoundEventSeq);
+}
+
 void ServerConnection::sendGameOverNotified(const QStringList &playerNames)
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
@@ -937,62 +950,50 @@ Agent *LogicRunner::addAgent(Agent *agent)
 }
 
 /**
- * @brief Reconnect a previously disconnected agent by rebinding its socket
- * @param playerName the internal name of the player to reconnect
- * @param socket the new socket of the reconnecting client
- * @param lastRoundEventSeq the number of round events the client received before the drop (also the last sequence number)
- * @return the reconnected agent, or @c nullptr if the player is unknown or still connected
+ * @brief Reconnect a previously disconnected agent by restoring its state and room snapshot
+ * @param agent the offline agent to reconnect
+ * @return the reconnected agent, or @c nullptr if @p agent is @c nullptr, not in this room, or still online
  *
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
- * game has started) but whose socket was cleared by @c ServerConnection::onSocketDisconnected. It
- * rebinds the socket, restores the online / trust flags, resends the state snapshot so the
- * reconnecting client can rebuild its room view, and then replays only the round events the client
- * missed (every cached event after the first @p lastRoundEventSeq) instead of
- * re-announcing the round -- the client never left the round, so a replayed
- * @c notifyGameStart / @c notifyRoundStart would reset its local state and desync it.
+ * game has started) but whose socket was cleared by @c ServerConnection::onSocketDisconnected,
+ * which also marked the agent offline. This is the logic-side half of a reconnect: it restores
+ * the online / trust flags and resends the state snapshot so the reconnecting client can rebuild
+ * its room view. The wire-side half (rebind the socket + replay the missed round events) is
+ * @c ServerConnection::reconnect, called by the operation side (ServerP) that owns the socket.
+ * The room itself only ever deals with agents, never sockets (D-018).
  */
-Agent *LogicRunner::reconnect(const QString &playerName, Socket *socket, int lastRoundEventSeq)
+Agent *LogicRunner::reconnectAgent(Agent *agent)
 {
-    p::ServerConnection *reconnectedConn = d->connections.value(playerName, nullptr);
-    if (reconnectedConn == nullptr)
+    if (agent == nullptr)
         return nullptr;
 
-    // A still-connected agent is not a reconnect candidate: only an agent whose socket was
-    // cleared by onSocketDisconnected can be rebound here.
-    if (reconnectedConn->socket != nullptr)
+    // Only an agent that is already in this room can be reconnected.
+    if (d->agents.value(agent->objectName(), nullptr) != agent)
         return nullptr;
 
-    // Rebind the socket. setSocket is safe because onSocketDisconnected already set the old socket
-    // to nullptr before this point, so nothing gets double-deleted.
-    reconnectedConn->setSocket(socket);
+    // A still-online agent is not a reconnect candidate: only an agent that
+    // onSocketDisconnected marked offline can be reconnected here.
+    if (agent->state().testFlag(QMdmmCore::Data::StateMaskOnline))
+        return nullptr;
 
     // Restore the online / trust flags that onSocketDisconnected cleared. setState emits
     // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChange
     // broadcast to every agent -- this is what lets the other, still-connected clients see that
     // the player is back online.
-    QMdmmCore::Data::AgentState state = reconnectedConn->agent->state();
+    QMdmmCore::Data::AgentState state = agent->state();
     state.setFlag(QMdmmCore::Data::StateMaskOnline, true).setFlag(QMdmmCore::Data::StateMaskTrust, true);
-    reconnectedConn->agent->setState(state);
+    agent->setState(state);
 
     // Resend the state snapshot to the reconnected client so it can rebuild its room: the logic
     // configuration, then every player (identity + current state). The client treats a duplicate
     // notifyPlayerAdd as benign (ClientP::notifyPlayerAdded), and the notifyAgentStateChange
     // broadcast above is dropped by the reconnected client until it has learned the players here.
-    reconnectedConn->agent->notifyLogicConfiguration();
+    agent->notifyLogicConfiguration();
 
-    foreach (Agent *agent, d->agents)
-        reconnectedConn->agent->notifyPlayerAdd(agent->objectName(), agent->screenName(), agent->state());
+    foreach (Agent *a, d->agents)
+        agent->notifyPlayerAdd(a->objectName(), a->screenName(), a->state());
 
-    // Precise catch-up: replay the round events the client missed. The client reported how many
-    // round events it received before the drop (lastRoundEventSeq, which doubles as the last
-    // sequence number); every event this connection broadcast while the client was gone is
-    // replayed in send order, skipping the first `lastRoundEventSeq` (already received). The
-    // connection's own round-event log is naturally ordered by sequence number, so replay needs no
-    // sorting. This replaces the old notifyGameStart/notifyRoundStart replay, which made the
-    // still-in-round client reset its local state and desync from the server.
-    reconnectedConn->replayMissedRoundEvents(lastRoundEventSeq);
-
-    return reconnectedConn->agent;
+    return agent;
 }
 
 /**
