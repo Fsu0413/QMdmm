@@ -23,6 +23,7 @@ if (Qt6_FOUND)
 
     install(TARGETS QMdmmServer6
         COMPONENT "6"
+        DESTINATION "${CMAKE_INSTALL_BINDIR}"
         RUNTIME
         LIBRARY
     )
