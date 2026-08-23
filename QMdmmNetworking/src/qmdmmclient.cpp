@@ -107,9 +107,10 @@ inline QString generateRandomString()
  * @class Client
  * @brief The client that connects to a server and plays the game.
  *
- * A Client maintains the connection to a server (through a @c Socket), the local
- * @c Room where the game state is mirrored, and exposes requests / notifications to
- * drive a UI or an automated player.
+ * A Client maintains the connection to a server (through a @c Socket) and the local
+ * @c Room where the game state is mirrored. It converges to a pure connection: the
+ * controller interface (requests / notifications / replies / speech / operation) lives
+ * on its own @c Agent (see @c Client::agent()), which a UI or an automated player drives.
  */
 
 /**
@@ -176,10 +177,16 @@ const QMdmmCore::Room *Client::room() const
 /**
  * @brief get this client's own agent
  * @return this client's own agent
+ *
+ * The client pre-creates its own Agent on construction (symmetric to the server side where the
+ * operation side creates the agent and hands it to LogicRunner). The operation side (GUI / Bot)
+ * drives the controller interface through it: incoming requests arrive on its xxxRequested
+ * signals, and replies / speech / operation are sent back by calling its bare-verb methods
+ * (stoneScissorsCloth / actionOrder / action / upgrade) and speak / operate.
  */
 Agent *Client::agent()
 {
-    return d->agents.value(objectName(), nullptr);
+    return d->selfAgent;
 }
 
 /**
@@ -188,34 +195,7 @@ Agent *Client::agent()
  */
 const Agent *Client::agent() const
 {
-    return d->agents.value(objectName(), nullptr);
-}
-
-/**
- * @brief Notify the server that this client speaks a message
- * @param content the content of the message
- */
-void Client::notifySpeak(const QString &content)
-{
-    // Although JSON is native UTF-8 we decided to use Base64 anyway.
-    // This can make our request / response all in one line.
-    if (d->socket != nullptr)
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpeak, QString::fromLatin1(content.toUtf8().toBase64())));
-}
-
-/**
- * @brief Notify the server that this client operates
- * @param todo the operation data
- *
- * @note This is not implemented yet (the observe / operate semantics are undefined).
- */
-void Client::notifyOperate(const void *todo)
-{
-    Q_UNIMPLEMENTED();
-    Q_UNUSED(todo);
-
-    if (d->socket != nullptr)
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyOperate, {}));
+    return d->selfAgent;
 }
 
 /**
@@ -227,69 +207,6 @@ void Client::requestTimeout()
     if (d->socket != nullptr && d->currentRequest != QMdmmCore::Protocol::RequestInvalid) {
         d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
         emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, d->currentRequest, {}));
-    }
-}
-
-/**
- * @brief Reply to a Stone-Scissors-Cloth request
- * @param stoneScissorsCloth the chosen Stone-Scissors-Cloth
- */
-void Client::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth)
-{
-    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestStoneScissorsCloth) {
-        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestStoneScissorsCloth, static_cast<int>(stoneScissorsCloth)));
-    }
-}
-
-/**
- * @brief Reply to an action order request
- * @param actionOrder the desired action order
- */
-void Client::replyActionOrder(const QList<int> &actionOrder)
-{
-    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestActionOrder) {
-        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        QJsonArray arr;
-        foreach (int a, actionOrder)
-            arr.append(a);
-
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestActionOrder, arr));
-    }
-}
-
-/**
- * @brief Reply to an action request
- * @param action the action to make
- * @param toPlayer the target player name
- * @param toPlace the target place
- */
-void Client::replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
-{
-    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestAction) {
-        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        QJsonObject ob;
-        ob.insert(QStringLiteral("action"), static_cast<int>(action));
-        ob.insert(QStringLiteral("toPlayer"), toPlayer);
-        ob.insert(QStringLiteral("toPlace"), toPlace);
-
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestAction, ob));
-    }
-}
-
-/**
- * @brief Reply to an upgrade request
- * @param upgrades the list of upgrade items
- */
-void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
-{
-    if (d->socket != nullptr && d->currentRequest == QMdmmCore::Protocol::RequestUpgrade) {
-        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        QJsonArray arr;
-        foreach (QMdmmCore::Data::UpgradeItem it, upgrades)
-            arr.append(static_cast<int>(it));
-
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, arr));
     }
 }
 
@@ -308,33 +225,6 @@ void Client::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades)
  * @fn Client::socketErrorDisconnected(const QString &errorString, QPrivateSignal)
  * @brief emitted when the socket encounters an error and gets disconnected
  * @param errorString the error description
- */
-
-/**
- * @fn Client::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
- * @brief emitted when the server requests a Stone-Scissors-Cloth choice
- * @param playerNames the player names involved in the Stone-Scissors-Cloth
- * @param strivedOrder the action order being strived for (0 if not applicable)
- */
-
-/**
- * @fn Client::requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum, QPrivateSignal)
- * @brief emitted when the server requests the desired action order
- * @param remainedOrders the available (remained) orders
- * @param maximumOrder total number of action orders
- * @param selectionNum the count of selections to make
- */
-
-/**
- * @fn Client::requestAction(int currentOrder, QPrivateSignal)
- * @brief emitted when the server requests an action
- * @param currentOrder the current action order
- */
-
-/**
- * @fn Client::requestUpgrade(int remainingTimes, QPrivateSignal)
- * @brief emitted when the server requests an upgrade
- * @param remainingTimes the remaining upgrade points
  */
 
 #ifndef DOXYGEN

@@ -65,17 +65,9 @@ public:
     [[nodiscard]] const Agent *agent() const;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    void notifySpeak(const QString &content);
-    void notifyOperate(const void *todo);
-
     // There is no request timer called here. The timeout can be established in UI.
     // This function can be called for a timeout request, to generate a default reply and reply to server
     void requestTimeout();
-
-    void replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth stoneScissorsCloth);
-    void replyActionOrder(const QList<int> &actionOrder);
-    void replyAction(QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
-    void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &upgrades);
 
 signals:
     // Emitted once when the connection drops. The client then retries internally;
@@ -88,11 +80,6 @@ signals:
     void socketReconnectSucceeded(QPrivateSignal);
 
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);
-
-    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
-    void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum, QPrivateSignal);
-    void requestAction(int currentOrder, QPrivateSignal);
-    void requestUpgrade(int remainingTimes, QPrivateSignal);
 
 #ifndef DOXYGEN
 private:

@@ -99,6 +99,18 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
 
     void reconnectTimeout();
     void heartbeatTimeout();
+
+    // encode + send the client's own agent's replies / speech / operation to the server. These
+    // slots listen to the Agent's replyXxx / spoken / operated signals (the operation side drives
+    // the Agent's bare-verb methods / speak / operate, which forward as these signals), and turn
+    // them back into wire packets. This mirrors ServerConnection's send*Requested / send*Notified
+    // slots on the server side.
+    void sendStoneScissorsClothReply(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void sendActionOrderReply(const QList<int> &order);
+    void sendActionReply(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
+    void sendUpgradeReply(const QList<QMdmmCore::Data::UpgradeItem> &items);
+    void sendSpeak(const QString &content);
+    void sendOperate(const QJsonValue &todo);
 };
 } // namespace p
 } // namespace QMdmmNetworking

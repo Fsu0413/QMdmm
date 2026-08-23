@@ -85,6 +85,18 @@ void ClientP::initSelfAgent()
     self->setScreenName(clientConfiguration.screenName());
     agents.insert(q->objectName(), self);
     selfAgent = self;
+
+    // Wire the client's own agent's reply / speech / operation signals to the encode-and-send
+    // slots below. The operation side drives the Agent's bare-verb methods (stoneScissorsCloth /
+    // actionOrder / action / upgrade) and speak / operate, which forward as the replyXxx / spoken /
+    // operated signals; this client turns them back into wire packets. Mirrors the server side,
+    // where ServerConnection wires the Agent's xxxRequested / xxxNotified signals.
+    connect(self, &Agent::replyStoneScissorsCloth, this, &ClientP::sendStoneScissorsClothReply);
+    connect(self, &Agent::replyActionOrder, this, &ClientP::sendActionOrderReply);
+    connect(self, &Agent::replyAction, this, &ClientP::sendActionReply);
+    connect(self, &Agent::replyUpgrade, this, &ClientP::sendUpgradeReply);
+    connect(self, &Agent::spoken, this, &ClientP::sendSpeak);
+    connect(self, &Agent::operated, this, &ClientP::sendOperate);
 }
 
 // Qt documentation only mentioned "auto" here
@@ -125,7 +137,7 @@ void ClientP::requestStoneScissorsCloth(const QJsonValue &value)
         return;
     int strivedOrder = vstrivedOrder.toInt();
 
-    emit q->requestStoneScissorsCloth(playerNames, strivedOrder, Client::QPrivateSignal());
+    selfAgent->requestStoneScissorsCloth(playerNames, strivedOrder);
     onRet_.dismiss();
 }
 
@@ -165,7 +177,7 @@ void ClientP::requestActionOrder(const QJsonValue &value)
         return;
     int selectionNum = vselectionNum.toInt();
 
-    emit q->requestActionOrder(remainedOrders, maximumOrder, selectionNum, Client::QPrivateSignal());
+    selfAgent->requestActionOrder(remainedOrders, maximumOrder, selectionNum);
     onRet_.dismiss();
 }
 
@@ -178,7 +190,7 @@ void ClientP::requestAction(const QJsonValue &value)
         return;
     int currentOrder = value.toInt();
 
-    emit q->requestAction(currentOrder, Client::QPrivateSignal());
+    selfAgent->requestAction(currentOrder);
     onRet_.dismiss();
 }
 
@@ -191,7 +203,7 @@ void ClientP::requestUpgrade(const QJsonValue &value)
         return;
     int remainedTimes = value.toInt();
 
-    emit q->requestUpgrade(remainedTimes, Client::QPrivateSignal());
+    selfAgent->requestUpgrade(remainedTimes);
     onRet_.dismiss();
 }
 
@@ -753,6 +765,74 @@ bool ClientP::applyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeIt
     }
 
     return ret;
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendStoneScissorsClothReply(QMdmmCore::Data::StoneScissorsCloth ssc)
+{
+    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestStoneScissorsCloth) {
+        currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestStoneScissorsCloth, static_cast<int>(ssc)));
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendActionOrderReply(const QList<int> &order)
+{
+    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestActionOrder) {
+        currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        QJsonArray arr;
+        foreach (int a, order)
+            arr.append(a);
+
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestActionOrder, arr));
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendActionReply(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace)
+{
+    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestAction) {
+        currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        QJsonObject ob;
+        ob.insert(QStringLiteral("action"), static_cast<int>(act));
+        ob.insert(QStringLiteral("toPlayer"), toPlayer);
+        ob.insert(QStringLiteral("toPlace"), toPlace);
+
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestAction, ob));
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendUpgradeReply(const QList<QMdmmCore::Data::UpgradeItem> &items)
+{
+    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestUpgrade) {
+        currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        QJsonArray arr;
+        foreach (QMdmmCore::Data::UpgradeItem it, items)
+            arr.append(static_cast<int>(it));
+
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, arr));
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendSpeak(const QString &content)
+{
+    // Although JSON is native UTF-8 we decided to use Base64 anyway.
+    // This can make our request / response all in one line.
+    if (socket != nullptr)
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpeak, QString::fromLatin1(content.toUtf8().toBase64())));
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendOperate(const QJsonValue &todo)
+{
+    Q_UNIMPLEMENTED();
+    Q_UNUSED(todo);
+
+    if (socket != nullptr)
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyOperate, {}));
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

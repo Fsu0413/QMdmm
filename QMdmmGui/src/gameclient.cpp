@@ -146,18 +146,18 @@ QString QMdmmGameClient::placeName(int place) const
 
 void QMdmmGameClient::wireClient(Client *client)
 {
-    // request signals -> re-emit for QML
-    connect(client, &Client::requestStoneScissorsCloth, this,
-            [this](const QStringList &playerNames, int strivedOrder) { emit requestStoneScissorsCloth(playerNames, strivedOrder); });
-    connect(client, &Client::requestActionOrder, this,
-            [this](const QList<int> &remainedOrders, int maximumOrder, int selectionNum) { emit requestActionOrder(remainedOrders, maximumOrder, selectionNum); });
-    connect(client, &Client::requestAction, this, [this](int currentOrder) { emit requestAction(currentOrder); });
-    connect(client, &Client::requestUpgrade, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
-
-    // The client's own agent is the controller the operation side drives: incoming
-    // notifications arrive on it as xxxNotified signals. Requests still arrive on the client
-    // itself for now (request migration is a later step).
+    // The client's own agent is the controller the operation side drives: incoming requests
+    // arrive on it as xxxRequested signals, notifications as xxxNotified signals, and replies /
+    // speech are sent back through the same agent.
     Agent *agent = client->agent();
+
+    // request signals -> re-emit for QML
+    connect(agent, &Agent::stoneScissorsClothRequested, this,
+            [this](const QStringList &playerNames, int strivedOrder) { emit requestStoneScissorsCloth(playerNames, strivedOrder); });
+    connect(agent, &Agent::actionOrderRequested, this,
+            [this](const QList<int> &remainedOrders, int maximumOrder, int selectionNum) { emit requestActionOrder(remainedOrders, maximumOrder, selectionNum); });
+    connect(agent, &Agent::actionRequested, this, [this](int currentOrder) { emit requestAction(currentOrder); });
+    connect(agent, &Agent::upgradeRequested, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
 
     // notify signals -> re-emit (and keep the local view in sync)
     connect(agent, &Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const Data::AgentState &agentState) {
@@ -230,23 +230,26 @@ void QMdmmGameClient::addBot(const QString &name)
     bot->setObjectName(name);
 
     // Auto-reply: mirror the server's default-reply behavior so the room fills
-    // and the match progresses without a human driving the bot.
-    connect(bot, &Client::requestStoneScissorsCloth, bot,
-            [bot]() { bot->replyStoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
-    connect(bot, &Client::requestActionOrder, bot, [bot](const QList<int> &remainedOrders, int, int selectionNum) {
+    // and the match progresses without a human driving the bot. The bot's own
+    // agent is the controller: requests arrive on its xxxRequested signals, and
+    // replies are sent back through its bare-verb methods.
+    Agent *botAgent = bot->agent();
+    connect(botAgent, &Agent::stoneScissorsClothRequested, bot,
+            [botAgent]() { botAgent->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
+    connect(botAgent, &Agent::actionOrderRequested, bot, [botAgent](const QList<int> &remainedOrders, int, int selectionNum) {
         QList<int> ao;
         ao.reserve(selectionNum);
         for (int i = 0; i < selectionNum && i < remainedOrders.size(); ++i)
             ao.append(remainedOrders.at(i));
-        bot->replyActionOrder(ao);
+        botAgent->actionOrder(ao);
     });
-    connect(bot, &Client::requestAction, bot, [bot]() { bot->replyAction(Data::DoNothing, {}, 0); });
-    connect(bot, &Client::requestUpgrade, bot, [bot](int remainingTimes) {
+    connect(botAgent, &Agent::actionRequested, bot, [botAgent]() { botAgent->action(Data::DoNothing, {}, 0); });
+    connect(botAgent, &Agent::upgradeRequested, bot, [botAgent](int remainingTimes) {
         QList<Data::UpgradeItem> ups;
         ups.reserve(remainingTimes);
         for (int i = 0; i < remainingTimes; ++i)
             ups.append(Data::UpgradeMaxHp);
-        bot->replyUpgrade(ups);
+        botAgent->upgrade(ups);
     });
 
     bot->connectToHost(QString::fromLatin1(LOCAL_HOST), Data::StateOnlineBot);
@@ -317,7 +320,7 @@ void QMdmmGameClient::disconnectAll()
 void QMdmmGameClient::replySsc(int ssc)
 {
     if (m_human)
-        m_human->replyStoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(ssc));
+        m_human->agent()->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(ssc));
 }
 
 void QMdmmGameClient::replyActionOrder(const QVariantList &orders)
@@ -328,13 +331,13 @@ void QMdmmGameClient::replyActionOrder(const QVariantList &orders)
     ao.reserve(orders.size());
     for (const QVariant &v : orders)
         ao.append(v.toInt());
-    m_human->replyActionOrder(ao);
+    m_human->agent()->actionOrder(ao);
 }
 
 void QMdmmGameClient::replyAction(int action, const QString &toPlayer, int toPlace)
 {
     if (m_human)
-        m_human->replyAction(static_cast<Data::Action>(action), toPlayer, toPlace);
+        m_human->agent()->action(static_cast<Data::Action>(action), toPlayer, toPlace);
 }
 
 void QMdmmGameClient::replyUpgrade(const QVariantList &items)
@@ -345,13 +348,13 @@ void QMdmmGameClient::replyUpgrade(const QVariantList &items)
     ups.reserve(items.size());
     for (const QVariant &v : items)
         ups.append(static_cast<Data::UpgradeItem>(v.toInt()));
-    m_human->replyUpgrade(ups);
+    m_human->agent()->upgrade(ups);
 }
 
 void QMdmmGameClient::speak(const QString &text)
 {
     if (m_human && !text.isEmpty())
-        m_human->notifySpeak(text);
+        m_human->agent()->speak(text);
 }
 
 QVariantList QMdmmGameClient::actionListFor(const Player *from) const

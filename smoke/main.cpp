@@ -39,67 +39,72 @@ constexpr int BOT_REPLY_DELAY_MS = 30;
 
 void wireBot(Client *bot)
 {
-    QObject::connect(bot, &Client::requestStoneScissorsCloth, bot, [bot]() {
-        QTimer::singleShot(BOT_REPLY_DELAY_MS, bot, [bot]() { bot->replyStoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
+    // The bot drives its own agent (the controller the operation side owns): incoming requests
+    // arrive on the agent's xxxRequested signals, and replies are sent back through its bare-verb
+    // methods.
+    Agent *agent = bot->agent();
+
+    QObject::connect(agent, &Agent::stoneScissorsClothRequested, bot, [bot, agent]() {
+        QTimer::singleShot(BOT_REPLY_DELAY_MS, bot, [agent]() { agent->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
     });
-    QObject::connect(bot, &Client::requestActionOrder, bot, [bot](const QList<int> &remainedOrders, int, int selectionNum) {
+    QObject::connect(agent, &Agent::actionOrderRequested, bot, [agent](const QList<int> &remainedOrders, int, int selectionNum) {
         QList<int> ao;
         ao.reserve(selectionNum);
         for (int i = 0; i < selectionNum && i < remainedOrders.size(); ++i)
             ao.append(remainedOrders.at(i));
-        bot->replyActionOrder(ao);
+        agent->actionOrder(ao);
     });
     // A competent auto-player:
     //   1. Buy a knife (must be off Country).
     //   2. Slash a co-located enemy.
     //   3. Otherwise walk toward an enemy (star map: every place is adjacent
     //      only to Country, so X -> Country -> target).
-    QObject::connect(bot, &Client::requestAction, bot, [bot]() {
+    QObject::connect(agent, &Agent::actionRequested, bot, [bot, agent]() {
         const QString self = bot->objectName();
         Room *room = bot->room();
         if (room == nullptr) {
-            bot->replyAction(Data::DoNothing, {}, 0);
+            agent->action(Data::DoNothing, {}, 0);
             return;
         }
         Player *me = room->player(self);
         if (me == nullptr || !me->alive()) {
-            bot->replyAction(Data::DoNothing, {}, 0);
+            agent->action(Data::DoNothing, {}, 0);
             return;
         }
         if (!me->hasKnife()) {
             if (me->canBuyKnife()) {
-                bot->replyAction(Data::BuyKnife, {}, 0);
+                agent->action(Data::BuyKnife, {}, 0);
                 return;
             }
             // Can't buy right now (e.g. standing in Country) -> step to any
             // non-Country place so we can buy next turn.
             for (int p = 1; p < room->logicConfiguration().playerNumPerRoom() + 1; ++p) {
                 if (me->canMove(p)) {
-                    bot->replyAction(Data::Move, {}, p);
+                    agent->action(Data::Move, {}, p);
                     return;
                 }
             }
-            bot->replyAction(Data::DoNothing, {}, 0);
+            agent->action(Data::DoNothing, {}, 0);
             return;
         }
         // Slash a co-located enemy if any.
         for (Player *p : room->players())
             if (p->alive() && p->objectName() != self && p->place() == me->place()) {
-                bot->replyAction(Data::Slash, p->objectName(), -1);
+                agent->action(Data::Slash, p->objectName(), -1);
                 return;
             }
         // Otherwise step toward an enemy (star graph: via Country).
         for (Player *p : room->players())
             if (p->alive() && p->objectName() != self) {
                 const int dest = (me->place() == Data::Country) ? p->place() : Data::Country;
-                bot->replyAction(Data::Move, {}, dest);
+                agent->action(Data::Move, {}, dest);
                 return;
             }
-        bot->replyAction(Data::DoNothing, {}, 0);
+        agent->action(Data::DoNothing, {}, 0);
     });
     // Spend every earned upgrade point. The game only ends when a player has
     // maxed out knife + horse + max HP, so we must actually upgrade.
-    QObject::connect(bot, &Client::requestUpgrade, bot, [bot](int remainingTimes) {
+    QObject::connect(agent, &Agent::upgradeRequested, bot, [bot, agent](int remainingTimes) {
         QList<Data::UpgradeItem> ups;
         if (Room *room = bot->room()) {
             if (Player *me = room->player(bot->objectName())) {
@@ -116,7 +121,7 @@ void wireBot(Client *bot)
                 }
             }
         }
-        bot->replyUpgrade(ups);
+        agent->upgrade(ups);
     });
 }
 } // namespace
