@@ -37,7 +37,7 @@ class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnection : public QObject
     static int requestTimeoutGracePeriod;
 
 public:
-    ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent = nullptr);
     ~ServerConnection() override;
 
     void setSocket(Socket *_socket);

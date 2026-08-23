@@ -79,24 +79,6 @@ namespace v0 {
  */
 
 /**
- * @property LogicConfiguration::requestTimeout
- * @brief Request timeout, default 20
- * @todo move this configuration to server side
- */
-
-/**
- * @fn LogicConfiguration::requestTimeout() const
- * @brief getter of @c LogicConfiguration::requestTimeout
- * @return @c LogicConfiguration::requestTimeout
- */
-
-/**
- * @fn LogicConfiguration::setRequestTimeout(int requestTimeout)
- * @brief setter of @c LogicConfiguration::requestTimeout
- * @param requestTimeout @c LogicConfiguration::requestTimeout
- */
-
-/**
  * @property LogicConfiguration::initialKnifeDamage
  * @brief the "knife damage" when game starts, default 1
  */
@@ -312,7 +294,6 @@ const LogicConfiguration &LogicConfiguration::defaults()
     // clang-format off
     static const LogicConfiguration defaultInstance {
         qMakePair(QStringLiteral("playerNumPerRoom"), 3),
-        qMakePair(QStringLiteral("requestTimeout"), 20),
         qMakePair(QStringLiteral("initialKnifeDamage"), 1),
         qMakePair(QStringLiteral("maximumKnifeDamage"), 10),
         qMakePair(QStringLiteral("initialHorseDamage"), 2),
@@ -341,7 +322,6 @@ const LogicConfiguration &LogicConfiguration::v1()
     // clang-format off
     static const LogicConfiguration defaultInstance {
         qMakePair(QStringLiteral("playerNumPerRoom"), 3),
-        qMakePair(QStringLiteral("requestTimeout"), 20),
         qMakePair(QStringLiteral("initialKnifeDamage"), 1),
         qMakePair(QStringLiteral("maximumKnifeDamage"), 3),
         qMakePair(QStringLiteral("initialHorseDamage"), 3),
@@ -379,7 +359,6 @@ const LogicConfiguration &LogicConfiguration::v1()
 // NOLINTEND(bugprone-macro-parentheses)
 
 IMPLEMENTATION_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom, CONVERTTOTYPEINT, )
-IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, maximumKnifeDamage, MaximumKnifeDamage, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, initialHorseDamage, InitialHorseDamage, CONVERTTOTYPEINT, )
@@ -425,7 +404,6 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
     }
 
     CONF(playerNumPerRoom, isDouble);
-    CONF(requestTimeout, isDouble);
     CONF(initialKnifeDamage, isDouble);
     CONF(maximumKnifeDamage, isDouble);
     CONF(initialHorseDamage, isDouble);

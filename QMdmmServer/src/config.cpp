@@ -289,6 +289,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     CONFIG_ITEM(bool, serverConfiguration_, "websocket", stringToBool, WebsocketEnabled);
     CONFIG_ITEM(QString, serverConfiguration_, "websocket-name", , WebsocketName);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", stringToUint16, WebsocketPort);
+    CONFIG_ITEM(int, serverConfiguration_, "timeout", stringToInt, RequestTimeout);
 
     setting->endGroup();
 
@@ -329,7 +330,6 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         }
     }
 
-    CONFIG_ITEM(int, logicConfiguration_, "timeout", stringToInt, RequestTimeout);
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", stringToInt, MaximumKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "kick", stringToInt, InitialHorseDamage);
@@ -369,13 +369,13 @@ void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance t
     CONFIG_ITEM(bool, serverConfiguration_, "websocket", boolToString, websocketEnabled);
     CONFIG_ITEM(QString, serverConfiguration_, "websocket-name", , websocketName);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", uint16ToString, websocketPort);
+    CONFIG_ITEM(int, serverConfiguration_, "timeout", intToString, requestTimeout);
 
     setting->endGroup();
 
     setting->beginGroup(QStringLiteral("logic"));
 
     CONFIG_ITEM(int, logicConfiguration_, "players", intToString, playerNumPerRoom);
-    CONFIG_ITEM(int, logicConfiguration_, "timeout", intToString, requestTimeout);
     CONFIG_ITEM(int, logicConfiguration_, "slash", intToString, initialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", intToString, maximumKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "kick", intToString, initialHorseDamage);

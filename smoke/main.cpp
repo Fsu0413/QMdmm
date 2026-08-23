@@ -151,9 +151,11 @@ int main(int argc, char **argv)
     conf.setInitialHorseDamage(1);
     conf.setMaximumHorseDamage(8); // 7 upgrades to max
     conf.setPunishHpModifier(0); // keep the attacker alive when slashing
-    conf.setRequestTimeout(100); // be lenient in the headless environment
 
-    auto *server = new Server(ServerConfiguration::defaults(), conf, &app);
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setRequestTimeout(100); // be lenient in the headless environment
+
+    auto *server = new Server(serverConf, conf, &app);
     if (!server->listen()) {
         qWarning() << "smoke: server listen failed";
         return 2;

@@ -40,7 +40,6 @@ private slots:
     }
 
     TEST_CONFIGURATION(playerNumPerRoom, PlayerNumPerRoom, 3, 3, 5)
-    TEST_CONFIGURATION(requestTimeout, RequestTimeout, 20, 20, 30)
     TEST_CONFIGURATION(initialKnifeDamage, InitialKnifeDamage, 1, 1, 5)
     TEST_CONFIGURATION(maximumKnifeDamage, MaximumKnifeDamage, 10, 3, 30)
     TEST_CONFIGURATION(initialHorseDamage, InitialHorseDamage, 2, 3, 6)
@@ -69,7 +68,6 @@ private slots:
 
         static const QList<ConfigurationTestTriplet> testTriplets {
             {QStringLiteral("playerNumPerRoom"), 1, true},
-            {QStringLiteral("requestTimeout"), 2, true},
             {QStringLiteral("initialKnifeDamage"), 2, true},
             {QStringLiteral("maximumKnifeDamage"), 2, true},
             {QStringLiteral("initialHorseDamage"), 2, true},

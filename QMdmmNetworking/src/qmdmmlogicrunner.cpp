@@ -38,14 +38,14 @@ QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnec
 
 int ServerConnection::requestTimeoutGracePeriod = 60;
 
-ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
+ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)
     : QObject(parent)
     , agent(agent)
     , conf(logicConfiguration)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
-    requestTimer->setInterval(conf.requestTimeout() + requestTimeoutGracePeriod);
+    requestTimer->setInterval(requestTimeout + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
 

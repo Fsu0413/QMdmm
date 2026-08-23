@@ -61,6 +61,11 @@ namespace v0 {
  */
 
 /**
+ * @property ServerConfiguration::requestTimeout
+ * @brief The request timeout, default 20
+ */
+
+/**
  * @fn ServerConfiguration::tcpEnabled() const
  * @brief getter of @c ServerConfiguration::tcpEnabled
  * @return @c ServerConfiguration::tcpEnabled
@@ -145,6 +150,18 @@ namespace v0 {
  */
 
 /**
+ * @fn ServerConfiguration::requestTimeout() const
+ * @brief getter of @c ServerConfiguration::requestTimeout
+ * @return @c ServerConfiguration::requestTimeout
+ */
+
+/**
+ * @fn ServerConfiguration::setRequestTimeout(int requestTimeout)
+ * @brief setter of @c ServerConfiguration::requestTimeout
+ * @param requestTimeout @c ServerConfiguration::requestTimeout
+ */
+
+/**
  * @brief Get default values of configuration
  * @return default configuration
  */
@@ -159,6 +176,7 @@ const ServerConfiguration &ServerConfiguration::defaults()
         qMakePair(QStringLiteral("websocketEnabled"), true),
         qMakePair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
         qMakePair(QStringLiteral("websocketPort"), (int)(6367U)),
+        qMakePair(QStringLiteral("requestTimeout"), 20),
     };
     // clang-format on
 
@@ -168,6 +186,7 @@ const ServerConfiguration &ServerConfiguration::defaults()
 #define CONVERTTOTYPEBOOL(v) ((v).toBool())
 #define CONVERTTOTYPEUINT16T(v) ((uint16_t)((v).toInt()))
 #define CONVERTTOTYPEQSTRING(v) ((v).toString())
+#define CONVERTTOTYPEINT(v) ((v).toInt())
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type ServerConfiguration::valueName() const                                                     \
     {                                                                                               \
@@ -199,12 +218,14 @@ IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, localSocketName, Lo
 IMPLEMENTATION_CONFIGURATION(bool, websocketEnabled, WebsocketEnabled, CONVERTTOTYPEBOOL, )
 IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, websocketName, WebsocketName, CONVERTTOTYPEQSTRING, )
 IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTYPEUINT16T, )
+IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEINT, )
 
 #undef IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE
 #undef IMPLEMENTATION_CONFIGURATION
 #undef CONVERTTOTYPEQSTRING
 #undef CONVERTTOTYPEUINT16T
 #undef CONVERTTOTYPEBOOL
+#undef CONVERTTOTYPEINT
 
 #ifndef DOXYGEN
 } // namespace v0
@@ -347,7 +368,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         Agent *agent = new Agent(playerName, current);
         agent->setScreenName(screenName);
         agent->setState(agentState);
-        p::ServerConnection *conn = new p::ServerConnection(agent, logicConfiguration, agent);
+        p::ServerConnection *conn = new p::ServerConnection(agent, logicConfiguration, serverConfiguration.requestTimeout(), agent);
         conn->setSocket(socket);
 
         if (current->addAgent(agent) == nullptr)

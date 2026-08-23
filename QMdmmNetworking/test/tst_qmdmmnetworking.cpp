@@ -43,12 +43,12 @@ void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(3); // 3-person room: two players leave it not-full
-    conf.setRequestTimeout(60000); // bots stay silent without timing out during the test
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
     serverConf.setTcpPort(16367);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -91,12 +91,12 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000); // bots stay silent without timing out during the test
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
     serverConf.setTcpPort(16366);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -141,7 +141,6 @@ void tst_QMdmmNetworking::addAgent_registersLocalAgent()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(3);
-    conf.setRequestTimeout(60000);
 
     LogicRunner runner(conf);
 
@@ -176,7 +175,6 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
     conf.setPlayerNumPerRoom(2);
-    conf.setRequestTimeout(60000);
 
     LogicRunner runner(conf);
 
