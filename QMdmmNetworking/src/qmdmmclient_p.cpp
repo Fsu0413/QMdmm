@@ -97,6 +97,7 @@ void ClientP::initSelfAgent()
     connect(self, &Agent::replyUpgrade, this, &ClientP::sendUpgradeReply);
     connect(self, &Agent::spoken, this, &ClientP::sendSpeak);
     connect(self, &Agent::operated, this, &ClientP::sendOperate);
+    connect(self, &Agent::requestTimedOut, this, &ClientP::sendRequestTimeout);
 }
 
 // Qt documentation only mentioned "auto" here
@@ -833,6 +834,17 @@ void ClientP::sendOperate(const QJsonValue &todo)
 
     if (socket != nullptr)
         emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyOperate, {}));
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendRequestTimeout()
+{
+    // Give up on the current request: send a "definitely invalid" reply so the server applies
+    // its default reply logic, then stop tracking the request locally.
+    if (socket != nullptr && currentRequest != QMdmmCore::Protocol::RequestInvalid) {
+        currentRequest = QMdmmCore::Protocol::RequestInvalid;
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, currentRequest, {}));
+    }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

@@ -111,6 +111,10 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendUpgradeReply(const QList<QMdmmCore::Data::UpgradeItem> &items);
     void sendSpeak(const QString &content);
     void sendOperate(const QJsonValue &todo);
+    // The operation side gave up on the current request: stop tracking it and send a "give up"
+    // reply that triggers the server's default reply logic. Mirrors Client::requestTimeout before
+    // it moved to Agent (see D-019).
+    void sendRequestTimeout();
 };
 } // namespace p
 } // namespace QMdmmNetworking

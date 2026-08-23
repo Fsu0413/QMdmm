@@ -64,11 +64,6 @@ public:
     Agent *agent();
     [[nodiscard]] const Agent *agent() const;
 
-public slots: // NOLINT(readability-redundant-access-specifiers)
-    // There is no request timer called here. The timeout can be established in UI.
-    // This function can be called for a timeout request, to generate a default reply and reply to server
-    void requestTimeout();
-
 signals:
     // Emitted once when the connection drops. The client then retries internally;
     // this is the "connection lost" notice for the upper layer (distinct from

@@ -199,18 +199,6 @@ const Agent *Client::agent() const
 }
 
 /**
- * @brief Reply to the current request with a timeout (triggers the default reply on the server)
- */
-void Client::requestTimeout()
-{
-    // This should be a definitely invalid reply, to trigger default reply logic implemented in server.
-    if (d->socket != nullptr && d->currentRequest != QMdmmCore::Protocol::RequestInvalid) {
-        d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        emit d->socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, d->currentRequest, {}));
-    }
-}
-
-/**
  * @fn Client::socketConnectionLost(const QString &errorString, QPrivateSignal)
  * @brief emitted once when the connection drops and the client starts retrying internally
  * @param errorString the reason the connection dropped

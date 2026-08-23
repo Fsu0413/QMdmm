@@ -90,6 +90,12 @@ public:
     void action(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items);
 
+    // Controller interface — give up on the current request (operation side → logic side).
+    // The operation side calls this instead of replying when it cannot answer the current
+    // request; it forwards as the requestTimedOut signal, which the logic side (the client's
+    // connection) turns into a "give up" wire reply that triggers the server's default reply.
+    void requestTimeout();
+
     // Controller interface — the player's own speech / operation, forwarded to the logic side as
     // the spoken / operated signals. These are the operation-side counterparts of notifySpeak /
     // notifyOperate (which notify the player about *others*).
@@ -127,6 +133,10 @@ signals:
     void replyActionOrder(const QList<int> &order, QPrivateSignal);
     void replyAction(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace, QPrivateSignal);
     void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal);
+
+    // Controller interface — the operation side gave up on the current request, forwarded to the
+    // logic side (which turns it into a "give up" wire reply / default reply).
+    void requestTimedOut(QPrivateSignal);
 
     // Controller interface — the player's own speech / operation forwarded to the logic side.
     void spoken(const QString &content, QPrivateSignal);

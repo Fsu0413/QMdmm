@@ -308,6 +308,18 @@ void Agent::upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items)
 }
 
 /**
+ * @brief Give up on the current request (trigger the server's default reply).
+ *
+ * The operation side calls this instead of replying when it cannot answer the current request.
+ * It forwards as the @c requestTimedOut signal, which the logic side (the client's connection)
+ * turns into a "give up" wire reply.
+ */
+void Agent::requestTimeout()
+{
+    emit requestTimedOut(QPrivateSignal());
+}
+
+/**
  * @brief The player speaks a message.
  * @param content the content of the message
  */
@@ -476,6 +488,11 @@ void Agent::operate(const QJsonValue &todo)
  * @fn Agent::replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal)
  * @brief emitted when an upgrade reply is made
  * @param items the list of upgrade items
+ */
+
+/**
+ * @fn Agent::requestTimedOut(QPrivateSignal)
+ * @brief emitted when the operation side gives up on the current request
  */
 
 /**
