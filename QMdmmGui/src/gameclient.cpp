@@ -6,6 +6,7 @@
 #include <QRandomGenerator>
 #include <QVariantMap>
 
+#include <QMdmmAgent>
 #include <QMdmmLogicConfiguration>
 
 using namespace QMdmmCore;
@@ -153,41 +154,46 @@ void QMdmmGameClient::wireClient(Client *client)
     connect(client, &Client::requestAction, this, [this](int currentOrder) { emit requestAction(currentOrder); });
     connect(client, &Client::requestUpgrade, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
 
+    // The client's own agent is the controller the operation side drives: incoming
+    // notifications arrive on it as xxxNotified signals. Requests still arrive on the client
+    // itself for now (request migration is a later step).
+    Agent *agent = client->agent();
+
     // notify signals -> re-emit (and keep the local view in sync)
-    connect(client, &Client::notifyPlayerAdded, this, [this](const QString &playerName, const QString &screenName, const Data::AgentState &agentState) {
+    connect(agent, &Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const Data::AgentState &agentState) {
         m_screenNames.insert(playerName, screenName);
         m_agentStates.insert(playerName, agentState);
         emit playerAdded(playerName, screenName, static_cast<int>(agentState));
         emit playersChanged();
     });
-    connect(client, &Client::notifyPlayerRemoved, this, [this](const QString &playerName) {
+    connect(agent, &Agent::playerRemoveNotified, this, [this](const QString &playerName) {
         m_screenNames.remove(playerName);
         m_agentStates.remove(playerName);
         emit playerRemoved(playerName);
         emit playersChanged();
     });
-    connect(client, &Client::notifyGameStart, this, [this]() {
+    connect(agent, &Agent::gameStartNotified, this, [this]() {
         setGameState(GameState::Playing);
         emit gameStart();
     });
-    connect(client, &Client::notifyRoundStart, this, [this]() { emit roundStart(); });
-    connect(client, &Client::notifyRoundOver, this, [this]() { emit roundOver(); });
-    connect(client, &Client::notifyStoneScissorsCloth, this, [this](const QHash<QString, Data::StoneScissorsCloth> &replies) {
+    connect(agent, &Agent::roundStartNotified, this, [this]() { emit roundStart(); });
+    connect(agent, &Agent::roundOverNotified, this, [this]() { emit roundOver(); });
+    connect(agent, &Agent::stoneScissorsClothNotified, this, [this](const QHash<QString, Data::StoneScissorsCloth> &replies) {
         QVariantMap m;
         for (auto it = replies.constBegin(); it != replies.constEnd(); ++it)
             m.insert(it.key(), static_cast<int>(it.value()));
         emit sscResult(m);
     });
-    connect(client, &Client::notifyActionOrder, this, [this](const QHash<int, QString> &result) {
+    connect(agent, &Agent::actionOrderNotified, this, [this](const QHash<int, QString> &result) {
         QVariantMap m;
         for (auto it = result.constBegin(); it != result.constEnd(); ++it)
             m.insert(QString::number(it.key()), it.value());
         emit actionOrderResult(m);
     });
-    connect(client, &Client::notifyAction, this, [this](const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace) {
+    connect(agent, &Agent::actionNotified, this, [this](const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace) {
         emit actionResult(playerName, static_cast<int>(action), toPlayer, toPlace);
     });
-    connect(client, &Client::notifyUpgrade, this, [this](const QHash<QString, QList<Data::UpgradeItem>> &upgrades) {
+    connect(agent, &Agent::upgradeNotified, this, [this](const QHash<QString, QList<Data::UpgradeItem>> &upgrades) {
         QVariantMap m;
         for (auto it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
             QVariantList l;
@@ -198,11 +204,11 @@ void QMdmmGameClient::wireClient(Client *client)
         }
         emit upgradeResult(m);
     });
-    connect(client, &Client::notifyGameOver, this, [this](const QStringList &winners) {
+    connect(agent, &Agent::gameOverNotified, this, [this](const QStringList &winners) {
         setGameState(GameState::GameOver);
         emit gameOver(winners);
     });
-    connect(client, &Client::notifySpoken, this, [this](const QString &playerName, const QString &content) {
+    connect(agent, &Agent::speakNotified, this, [this](const QString &playerName, const QString &content) {
         QVariantMap entry;
         entry.insert(QStringLiteral("name"), playerName);
         entry.insert(QStringLiteral("screen"), screenName(playerName));

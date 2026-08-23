@@ -67,7 +67,7 @@ void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
     // Drop p1's socket. The room is not full, so the server removes p1's agent and broadcasts
     // notifyPlayerRemove to the remaining player (instead of preserving the seat).
     bool p1Removed = false;
-    connect(p2, &Client::notifyPlayerRemoved, [&](const QString &playerName) {
+    connect(p2->agent(), &Agent::playerRemoveNotified, [&](const QString &playerName) {
         if (playerName == p1->objectName())
             p1Removed = true;
     });

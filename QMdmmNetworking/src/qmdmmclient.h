@@ -94,19 +94,6 @@ signals:
     void requestAction(int currentOrder, QPrivateSignal);
     void requestUpgrade(int remainingTimes, QPrivateSignal);
 
-    void notifyPlayerAdded(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState, QPrivateSignal);
-    void notifyPlayerRemoved(const QString &playerName, QPrivateSignal);
-    void notifyGameStart(QPrivateSignal);
-    void notifyRoundStart(QPrivateSignal);
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &ssc, QPrivateSignal);
-    void notifyActionOrder(const QHash<int, QString> &actionOrderResult, QPrivateSignal);
-    void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
-    void notifyRoundOver(QPrivateSignal);
-    void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, QPrivateSignal);
-    void notifyGameOver(const QStringList &winners, QPrivateSignal);
-    void notifySpoken(const QString &playerName, const QString &content, QPrivateSignal);
-    void notifyOperated(QPrivateSignal);
-
 #ifndef DOXYGEN
 private:
     friend class p::ClientP;

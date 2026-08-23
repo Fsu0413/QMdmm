@@ -84,6 +84,7 @@ void ClientP::initSelfAgent()
     Agent *self = new Agent(q->objectName(), this);
     self->setScreenName(clientConfiguration.screenName());
     agents.insert(q->objectName(), self);
+    selfAgent = self;
 }
 
 // Qt documentation only mentioned "auto" here
@@ -352,7 +353,7 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
             room->addPlayer(playerName);
             agent->setScreenName(screenName);
             agent->setState(agentState);
-            emit q->notifyPlayerAdded(playerName, screenName, agentState, Client::QPrivateSignal());
+            selfAgent->notifyPlayerAdd(playerName, screenName, agentState);
         }
         // A duplicate notifyPlayerAdded for another already-tracked player (a reconnect state
         // snapshot) is benign and must not be treated as a protocol error.
@@ -368,7 +369,7 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
     agent->setState(agentState);
     agents.insert(playerName, agent);
 
-    emit q->notifyPlayerAdded(playerName, screenName, agentState, Client::QPrivateSignal());
+    selfAgent->notifyPlayerAdd(playerName, screenName, agentState);
     onRet_.dismiss();
 }
 
@@ -392,7 +393,7 @@ void ClientP::notifyPlayerRemoved(const QJsonValue &value)
     if (!room->removePlayer(playerName))
         return;
 
-    emit q->notifyPlayerRemoved(playerName, Client::QPrivateSignal());
+    selfAgent->notifyPlayerRemove(playerName);
 
     Agent *agent = agents.take(playerName);
     delete agent;
@@ -403,7 +404,7 @@ void ClientP::notifyPlayerRemoved(const QJsonValue &value)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::notifyGameStart(const QJsonValue &value [[maybe_unused]])
 {
-    emit q->notifyGameStart(Client::QPrivateSignal());
+    selfAgent->notifyGameStart();
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -416,7 +417,7 @@ void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
     room->prepareForRoundStart();
     // A new round begins: reset the round-event counter.
     lastRoundEventSeq = 0;
-    emit q->notifyRoundStart(Client::QPrivateSignal());
+    selfAgent->notifyRoundStart();
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -449,7 +450,7 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
     }
 
     ++lastRoundEventSeq;
-    emit q->notifyStoneScissorsCloth(replies, Client::QPrivateSignal());
+    selfAgent->notifyStoneScissorsCloth(replies);
     onRet_.dismiss();
 }
 
@@ -474,7 +475,7 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
     }
 
     ++lastRoundEventSeq;
-    emit q->notifyActionOrder(result, Client::QPrivateSignal());
+    selfAgent->notifyActionOrder(result);
     onRet_.dismiss();
 }
 
@@ -556,7 +557,7 @@ void ClientP::notifyAction(const QJsonValue &value)
     }
 
     ++lastRoundEventSeq;
-    emit q->notifyAction(playerName, action, toPlayer, toPlace, Client::QPrivateSignal());
+    selfAgent->notifyAction(playerName, action, toPlayer, toPlace);
 
     // This replyed action should always be success, since it is judged in Server
     // So if it fails, forcefully set the client as error, so it can disconnect the socket
@@ -568,7 +569,7 @@ void ClientP::notifyAction(const QJsonValue &value)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::notifyRoundOver(const QJsonValue &value [[maybe_unused]])
 {
-    emit q->notifyRoundOver(Client::QPrivateSignal());
+    selfAgent->notifyRoundOver();
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -608,7 +609,7 @@ void ClientP::notifyUpgrade(const QJsonValue &value)
     }
 
     ++lastRoundEventSeq;
-    emit q->notifyUpgrade(replies, Client::QPrivateSignal());
+    selfAgent->notifyUpgrade(replies);
 
     // This replyed upgrade should always be success, since it is judged in Server
     // So if it fails, forcefully set the client as error, so it can disconnect the socket
@@ -648,7 +649,7 @@ void ClientP::notifyGameOver(const QJsonValue &value)
         winners << winner;
     }
 
-    emit q->notifyGameOver(winners, Client::QPrivateSignal());
+    selfAgent->notifyGameOver(winners);
     onRet_.dismiss();
 }
 
@@ -677,7 +678,7 @@ void ClientP::notifySpoken(const QJsonValue &value)
         return;
     QString content = QString::fromUtf8(QByteArray::fromBase64(vContent.toString().toLatin1()));
 
-    emit q->notifySpoken(playerName, content, Client::QPrivateSignal());
+    selfAgent->notifySpeak(playerName, content);
     onRet_.dismiss();
 }
 

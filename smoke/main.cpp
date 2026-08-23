@@ -19,6 +19,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 
+#include <QMdmmAgent>
 #include <QMdmmClient>
 #include <QMdmmLogicConfiguration>
 #include <QMdmmPlayer>
@@ -157,11 +158,11 @@ int main(int argc, char **argv)
     // whole match can run unattended.
     auto *human = new Client(ClientConfiguration(), &app);
     wireBot(human);
-    QObject::connect(human, &Client::notifyGameStart, &app, [&]() {
+    QObject::connect(human->agent(), &Agent::gameStartNotified, &app, [&]() {
         ++gameStarts;
         qDebug() << "smoke: game started";
     });
-    QObject::connect(human, &Client::notifyRoundStart, &app, [&]() {
+    QObject::connect(human->agent(), &Agent::roundStartNotified, &app, [&]() {
         ++rounds;
         qDebug() << "smoke: round" << rounds << "started";
         if (rounds == 1 && !reconnectStarted) {
@@ -184,8 +185,8 @@ int main(int argc, char **argv)
         reconnected = true;
         qDebug() << "smoke: human reconnected";
     });
-    QObject::connect(human, &Client::notifyRoundOver, &app, [&]() { qDebug() << "smoke: round over"; });
-    QObject::connect(human, &Client::notifyGameOver, &app, [&](const QStringList &winners) {
+    QObject::connect(human->agent(), &Agent::roundOverNotified, &app, [&]() { qDebug() << "smoke: round over"; });
+    QObject::connect(human->agent(), &Agent::gameOverNotified, &app, [&](const QStringList &winners) {
         ++gameOvers;
         qDebug() << "smoke: GAME OVER, winners:" << winners;
         QTimer::singleShot(0, &app, &QCoreApplication::quit);
