@@ -11,6 +11,7 @@
 
 #include <QTcpSocket>
 #include <QTest>
+#include <QTimer>
 
 // NOLINTBEGIN
 
@@ -29,6 +30,7 @@ private slots:
     void signIn_reconnectsPlayerInNonCurrentRoom();
     void addAgent_registersLocalAgent();
     void client_exposesSelfAgent();
+    void localAgent_asyncReplyContract();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -162,6 +164,53 @@ void tst_QMdmmNetworking::client_exposesSelfAgent()
     Client client(ClientConfiguration {});
     QVERIFY(client.agent() != nullptr);
     QCOMPARE(client.agent()->objectName(), client.objectName());
+}
+
+// A local (socket-less) agent plays through the async reply contract: its operation side (here
+// the test itself) answers each xxxRequested signal asynchronously via singleShot(0), never
+// synchronously. This is the end-to-end check that a local agent -- no ServerConnection, no
+// socket -- can actually participate (receive a request, reply async, observe the result), not
+// merely be registered. The request/reply round-trip only completes because the reply is
+// deferred to the event loop, which is the contract's whole point.
+void tst_QMdmmNetworking::localAgent_asyncReplyContract()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(2);
+    conf.setRequestTimeout(60000);
+
+    LogicRunner runner(conf);
+
+    Agent *p1 = new Agent(QStringLiteral("p1"), &runner);
+    p1->setState(Data::StateOnline);
+    Agent *p2 = new Agent(QStringLiteral("p2"), &runner);
+    p2->setState(Data::StateOnlineBot);
+
+    int sscRequests = 0;
+    int sscResults = 0;
+
+    auto wireAsyncSscReply = [&](Agent *agent) {
+        QObject::connect(agent, &Agent::stoneScissorsClothRequested, &runner, [agent, &sscRequests]() {
+            ++sscRequests;
+            QTimer::singleShot(0, agent, [agent]() { agent->stoneScissorsCloth(Data::Stone); });
+        });
+    };
+    wireAsyncSscReply(p1);
+    wireAsyncSscReply(p2);
+
+    // The SSC result notification is the observable proof that the async reply round-tripped
+    // back through the logic side (Logic -> LogicRunnerP -> Agent::notifyStoneScissorsCloth).
+    QObject::connect(p1, &Agent::stoneScissorsClothNotified, &runner, [&sscResults](const QHash<QString, Data::StoneScissorsCloth> &) { ++sscResults; });
+
+    // Registering both agents fills the room and kicks off the game: gameStart + roundStart,
+    // then Logic starts driving the first SSC request on its thread.
+    QCOMPARE(runner.addAgent(p1), p1);
+    QCOMPARE(runner.addAgent(p2), p2);
+    QVERIFY(runner.full());
+
+    // Both agents got asked and their async replies produced at least one SSC result. A
+    // synchronous reply would never round-trip here; only the deferred singleShot(0) does.
+    QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 5000);
+    QVERIFY(sscRequests >= 2);
 }
 
 namespace {

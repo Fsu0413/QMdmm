@@ -71,6 +71,11 @@ public:
     // Each method is the entry point the logic side (LogicRunner) calls to ask the player for
     // input; it forwards the request as the corresponding xxxRequested signal, which the
     // operation side (ServerConnection / GUI / Bot) listens to.
+    //
+    // Reply contract: the operation side must answer *asynchronously* (e.g. via QTimer::singleShot
+    // or after an event-loop round-trip), never synchronously from inside the xxxRequested
+    // handler. A synchronous reply re-enters the request handler and violates the designed
+    // async request/reply flow (see ServerConnection::addRequest for the socket-less default).
     void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void requestAction(int currentOrder);

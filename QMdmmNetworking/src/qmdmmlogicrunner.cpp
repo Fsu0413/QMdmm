@@ -126,10 +126,15 @@ void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, cons
         emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeRequest, requestId, value));
         requestTimer->start();
     } else {
-        // We'd make this default reply in the event queue
-        // reasons are:
-        // 1. introducing time-consuming task in the request function is bad.
-        // 2. reply should be called asynchronous since this is the designed way for it
+        // No socket: the request cannot go over the wire, so the connection answers it itself
+        // with the default reply. This reply must be *asynchronous*, never synchronous -- the
+        // request/reply flow is event-driven by design:
+        // 1. addRequest is reached from a sendXxxRequested slot triggered by the Agent's
+        //    xxxRequested signal (i.e. from inside LogicRunnerP's request handler). Doing the
+        //    default reply synchronously there re-enters the request handler and stalls the
+        //    event loop with the reply's work.
+        // 2. The reply is designed to be delivered asynchronously; a synchronous reply would
+        //    reach the logic side before the request handler returns, breaking the ordering.
         QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerConnection::executeDefaultReply);
     }
 }
