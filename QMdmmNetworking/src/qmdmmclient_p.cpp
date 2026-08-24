@@ -839,11 +839,16 @@ void ClientP::sendOperate(const QJsonValue &todo)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::sendRequestTimeout()
 {
-    // Give up on the current request: send a "definitely invalid" reply so the server applies
-    // its default reply logic, then stop tracking the request locally.
+    // Give up on the current request: send a null-valued reply carrying the *current* request
+    // id, then stop tracking the request locally. Null is the protocol's "give up" marker --
+    // every legal reply value is non-null (SSC=int / actionOrder=array / action=object /
+    // upgrade=array), so null is unambiguous. The request id must be captured before resetting
+    // currentRequest: resetting it first made the reply carry RequestInvalid, which the server's
+    // `currentRequest == packet.requestId()` check dropped, so the give-up never reached it (D-020).
     if (socket != nullptr && currentRequest != QMdmmCore::Protocol::RequestInvalid) {
+        QMdmmCore::Protocol::RequestId requestId = currentRequest;
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, currentRequest, {}));
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, requestId, QJsonValue(QJsonValue::Null)));
     }
 }
 

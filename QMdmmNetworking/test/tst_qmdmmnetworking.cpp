@@ -31,6 +31,7 @@ private slots:
     void addAgent_registersLocalAgent();
     void client_exposesSelfAgent();
     void localAgent_asyncReplyContract();
+    void client_giveUpTriggersServerDefaultReply();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -209,6 +210,56 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
     // synchronous reply would never round-trip here; only the deferred singleShot(0) does.
     QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 5000);
     QVERIFY(sscRequests >= 2);
+}
+
+// A client whose operation side gives up on a request (Agent::requestTimeout) sends a null reply
+// carrying the *correct* request id, and the server recognizes the null value as the give-up
+// marker and applies its default reply -- so the logic keeps advancing instead of stalling or
+// erroring out. Driven end-to-end over a real TCP connection: p1 (a bot) answers SSC normally,
+// p2 (a "human") gives up, and p1 observing the SSC result is the proof that p2's default reply
+// was applied. This is the D-020 regression test (the old code reset currentRequest before
+// sending, so the give-up reply carried RequestInvalid and was dropped by the server).
+void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(2);
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setTcpPort(16365);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60000); // the server's own request timer must not fire during the test
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16365");
+
+    // Wire both agents BEFORE connecting: the first SSC request fires as soon as the room fills
+    // (p2 joins), and a signal connected after connectToHost would miss it.
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::stoneScissorsClothRequested, &server, [p1]() { QTimer::singleShot(0, p1->agent(), [p1]() { p1->agent()->stoneScissorsCloth(Data::Stone); }); });
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    int p2GiveUps = 0;
+    connect(p2->agent(), &Agent::stoneScissorsClothRequested, &server, [&p2GiveUps, p2]() {
+        ++p2GiveUps;
+        p2->agent()->requestTimeout();
+    });
+
+    // The observable proof: p1 receives the SSC result -- which only happens if the server
+    // applied p2's default reply (rather than dropping the give-up and stalling the logic).
+    int sscResults = 0;
+    connect(p1->agent(), &Agent::stoneScissorsClothNotified, &server, [&sscResults](const QHash<QString, Data::StoneScissorsCloth> &) { ++sscResults; });
+
+    // p1 joins first (room not full yet); p2 fills the room, kicking off the game + first SSC.
+    QVERIFY(p1->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+
+    QTRY_VERIFY_WITH_TIMEOUT(p2GiveUps >= 1, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 10000);
 }
 
 namespace {

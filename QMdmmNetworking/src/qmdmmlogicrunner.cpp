@@ -341,12 +341,20 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
     } else if (packet.type() == QMdmmCore::Protocol::TypeReply) {
         if (currentRequest == packet.requestId()) {
             requestTimer->stop();
-            currentRequest = QMdmmCore::Protocol::RequestInvalid;
-            void (ServerConnection::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
-            if (call != nullptr)
-                (this->*call)(packet.value());
-            else
-                socket->setHasError(true);
+            // A null reply value is the protocol's "give up" marker (every legal reply value is
+            // non-null), so it means the client has no answer and the default reply applies. Note
+            // executeDefaultReply reads currentRequest before clearing it, so it must be called
+            // *before* resetting currentRequest below.
+            if (packet.value().isNull()) {
+                executeDefaultReply();
+            } else {
+                currentRequest = QMdmmCore::Protocol::RequestInvalid;
+                void (ServerConnection::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+                if (call != nullptr)
+                    (this->*call)(packet.value());
+                else
+                    socket->setHasError(true);
+            }
         }
     }
 }
