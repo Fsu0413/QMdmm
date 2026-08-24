@@ -184,7 +184,10 @@ namespace v0 {
 
 /**
  * @var QMdmmCore::Data::AgentStateEnum Data::StateMaskTrust
- * @brief Mask of trust
+ * @brief Mask of the "managed" flag
+ *
+ * A managed (entrusted) player still replies from its own client; only a dropped player gets the
+ * server-side default reply (DoNothing). A reconnecting player must NOT be re-trusted by default.
  */
 
 /**
@@ -209,7 +212,7 @@ namespace v0 {
 
 /**
  * @var QMdmmCore::Data::AgentStateEnum Data::StateOnlineTrust
- * @brief State of online trusted
+ * @brief State of online and managed
  */
 
 /**

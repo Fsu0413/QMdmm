@@ -970,8 +970,9 @@ Agent *LogicRunner::addAgent(Agent *agent)
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
  * game has started) but whose socket was cleared by @c ServerConnection::onSocketDisconnected,
  * which also marked the agent offline. This is the logic-side half of a reconnect: it restores
- * the online / trust flags and resends the state snapshot so the reconnecting client can rebuild
- * its room view. The wire-side half (rebind the socket + replay the missed round events) is
+ * the online flag (not Trust -- the "managed" flag, see @c StateMaskTrust) and resends the state
+ * snapshot so the reconnecting client can rebuild its room view. The wire-side half (rebind the
+ * socket + replay the missed round events) is
  * @c ServerConnection::reconnect, called by the operation side (ServerP) that owns the socket.
  * The room itself only ever deals with agents, never sockets (D-018).
  */
@@ -989,12 +990,14 @@ Agent *LogicRunner::reconnectAgent(Agent *agent)
     if (agent->state().testFlag(QMdmmCore::Data::StateMaskOnline))
         return nullptr;
 
-    // Restore the online / trust flags that onSocketDisconnected cleared. setState emits
-    // stateChanged, which LogicRunnerP::agentStateChanged turns into a notifyAgentStateChange
-    // broadcast to every agent -- this is what lets the other, still-connected clients see that
-    // the player is back online.
+    // Restore the online flag that onSocketDisconnected cleared. Trust (the "managed" flag) is
+    // NOT restored by default: a reconnecting player must not be automatically trusted -- a
+    // managed player still replies from its own client, and only a dropped player gets the
+    // server-side default reply. setState emits stateChanged, which LogicRunnerP::agentStateChanged
+    // turns into a notifyAgentStateChange broadcast to every agent -- this is what lets the other,
+    // still-connected clients see that the player is back online.
     QMdmmCore::Data::AgentState state = agent->state();
-    state.setFlag(QMdmmCore::Data::StateMaskOnline, true).setFlag(QMdmmCore::Data::StateMaskTrust, true);
+    state.setFlag(QMdmmCore::Data::StateMaskOnline, true);
     agent->setState(state);
 
     // Resend the state snapshot to the reconnected client so it can rebuild its room: the logic
