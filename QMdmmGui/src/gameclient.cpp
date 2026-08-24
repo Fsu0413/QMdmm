@@ -12,6 +12,11 @@
 using namespace QMdmmCore;
 using namespace QMdmmNetworking;
 
+// Bridge between the QML GUI and the networking / core engine: owns the human
+// Client, optionally an in-process Server plus a few auto-replying bot Clients (so
+// a single user can fill a room and actually play a full match), and exposes a
+// QML-friendly view of the synchronized Room model.
+
 namespace {
 constexpr char LOCAL_HOST[] = "qmdmm://localhost:6366";
 } // namespace

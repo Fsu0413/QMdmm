@@ -3,26 +3,18 @@
 #ifndef QMDMMGUI_GAMECLIENT_H_
 #define QMDMMGUI_GAMECLIENT_H_
 
-#include <QObject>
-#include <QVariantList>
-#include <QStringList>
 #include <QHash>
+#include <QObject>
+#include <QStringList>
+#include <QVariantList>
 
 #include <QMdmmClient>
-#include <QMdmmRoom>
 #include <QMdmmPlayer>
+#include <QMdmmRoom>
 #include <QMdmmServer>
 
 QMDMM_EXPORT_NAME(QMdmmGameClient)
 
-/**
- * @brief Bridge between the QML GUI and the networking / core engine.
- *
- * Owns the human @c Client, optionally an in-process @c Server plus a few
- * auto-replying bot @c Client s (so a single user can fill a room and actually
- * play a full match), and exposes a QML-friendly view of the synchronized
- * @c Room model.
- */
 class QMdmmGameClient : public QObject
 {
     Q_OBJECT
