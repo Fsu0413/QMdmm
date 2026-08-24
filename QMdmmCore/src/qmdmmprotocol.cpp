@@ -25,6 +25,8 @@ namespace v0 {
 /**
  * @enum Protocol::RequestId
  * @brief The IDs for requests and replies
+ *
+ * No requests come from the server; all requests originate from the Logic.
  */
 
 /**
@@ -35,21 +37,32 @@ namespace v0 {
 /**
  * @var Protocol::RequestId Protocol::RequestStoneScissorsCloth
  * @brief A request of Stone-Scissors-Cloth
+ *
+ * Wire format — request: @c array { string playerName } playerNames, @c int strivedOrder
+ * (or @c 0 for action); reply: @c int ssc.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestActionOrder
  * @brief A request of action order
+ *
+ * Wire format — request: @c array { int } remainedOrders, @c int maximumOrder, @c int selectionNum;
+ * reply: @c array { int } orders.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestAction
  * @brief A request of action
+ *
+ * Wire format — request: @c int currentOrder; reply: @c int(Action) action, optional
+ * @c string toPlayer, optional @c int toPlace.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestUpgrade
  * @brief A request of upgrade
+ *
+ * Wire format — request: @c int remainingTimes; reply: @c array { int } item.
  */
 
 /**
@@ -70,11 +83,15 @@ namespace v0 {
 /**
  * @var Protocol::NotifyId Protocol::NotifyPongServer
  * @brief A notify from server of a ping-pong (heartbeat)
+ *
+ * Wire format: @c int ping-id.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyVersion
  * @brief A notify from server of version number
+ *
+ * Wire format: @c string versionNumber, @c int protocolVersion.
  */
 
 /**
@@ -85,66 +102,93 @@ namespace v0 {
 /**
  * @var Protocol::NotifyId Protocol::NotifyLogicConfiguration
  * @brief A notify from agent of logic configuration
+ *
+ * Wire format: broadcast, @c object (see QMdmmCore::LogicConfiguration in qmdmmlogic.h).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyAgentStateChanged
  * @brief A notify from agent of agent state
+ *
+ * Wire format: @c string playerName, @c int (AgentState) state.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyPlayerAdded
  * @brief A notify from agent of player added
+ *
+ * Wire format: @c string playerName, @c string screenName, @c int(AgentState) agentState.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyPlayerRemoved
  * @brief A notify from agent of player removed
+ *
+ * Wire format: @c string playerName.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyGameStart
  * @brief A notify from agent of game started
+ *
+ * Wire format: broadcast.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyRoundStart
  * @brief A notify from agent of round started
+ *
+ * Wire format: broadcast.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyStoneScissorsCloth
  * @brief A notify from agent of Stone-Scissors-Cloth
+ *
+ * Wire format: broadcast, @c object { int seq, string playerName: int ssc }.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyActionOrder
  * @brief A notify from agent of action order
+ *
+ * Wire format: broadcast, @c object { int seq, array { string playerName } order }.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyAction
  * @brief A notify from agent of action
+ *
+ * Wire format: broadcast, @c object { int seq, string playerName, int(Action) action, optional
+ * string toPlayer, optional int toPlace }.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyRoundOver
  * @brief A notify from agent of round over
+ *
+ * Wire format: broadcast.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyUpgrade
  * @brief A notify from agent of upgrade
+ *
+ * Wire format: broadcast, @c object { int seq, string playerName: array { int } item }.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyGameOver
  * @brief A notify from agent of game over
+ *
+ * Wire format: broadcast, @c string winnerPlayerName.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifySpoken
  * @brief A notify from agent of agent spoken
+ *
+ * Wire format: broadcast, @c string playerName, @c string content.
  */
 
 /**
@@ -162,16 +206,22 @@ namespace v0 {
 /**
  * @var Protocol::NotifyId Protocol::NotifyPingServer
  * @brief A notify to server of a ping-pong (heartbeat)
+ *
+ * Wire format: @c int ping-id.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifySignIn
  * @brief A notify to server of sign in
+ *
+ * Wire format: @c string playerName, @c string screenName, @c int(AgentState) agentState.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyObserve
  * @brief A notify to server of observe
+ *
+ * Wire format: @c string observerName, @c string playerName.
  *
  * @todo OB functionality
  */
@@ -184,6 +234,8 @@ namespace v0 {
 /**
  * @var Protocol::NotifyId Protocol::NotifySpeak
  * @brief A notify to agent of speaking
+ *
+ * Wire format: @c string.
  */
 
 /**
