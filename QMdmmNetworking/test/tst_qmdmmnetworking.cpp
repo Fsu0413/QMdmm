@@ -32,6 +32,7 @@ private slots:
     void client_exposesSelfAgent();
     void localAgent_asyncReplyContract();
     void client_giveUpTriggersServerDefaultReply();
+    void client_routesAgentStateChangeToSelfAgent();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -260,6 +261,53 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 
     QTRY_VERIFY_WITH_TIMEOUT(p2GiveUps >= 1, 5000);
     QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 10000);
+}
+
+// A player's state change (online -> offline on a drop) is broadcast to every client, and the
+// receiving client must route it out through its selfAgent's agentStateChangeNotified signal --
+// not just silently setState the mirror agent. This is the regression test for the D-019
+// clarification ("agent state must be routed over"): without the selfAgent->notifyAgentStateChange
+// call, the change updates the mirror agent's data but never reaches the operation side (GUI).
+void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setPlayerNumPerRoom(3); // not full: p2's drop marks it offline then removes it
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setTcpPort(16364);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60000);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16364");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+
+    // p2's mirror agent exists in p1's view.
+    QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
+
+    // Wire the observation BEFORE dropping p2: its state change (online -> offline) is broadcast
+    // to p1, whose selfAgent must route it out via agentStateChangeNotified.
+    bool stateRouted = false;
+    connect(p1->agent(), &Agent::agentStateChangeNotified, &server, [&stateRouted, p2](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p2->objectName() && !state.testFlag(Data::StateMaskOnline))
+            stateRouted = true;
+    });
+
+    QTcpSocket *p2Sock = p2->findChild<QTcpSocket *>();
+    QVERIFY(p2Sock != nullptr);
+    p2Sock->abort();
+
+    QTRY_VERIFY_WITH_TIMEOUT(stateRouted, 5000);
 }
 
 namespace {

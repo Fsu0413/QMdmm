@@ -323,7 +323,12 @@ void ClientP::notifyAgentStateChanged(const QJsonValue &value)
         return;
     QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
 
+    // Update the mirror agent's state (the "data" half), then route the change to selfAgent so
+    // the operation side (GUI) observes it via agentStateChangeNotified -- symmetric to how
+    // notifyPlayerAdd / notifyPlayerRemove / notifyAction / notifySpeak route to selfAgent, and
+    // to the server's agentStateChanged broadcast.
     agent->setState(agentState);
+    selfAgent->notifyAgentStateChange(playerName, agentState);
     onRet_.dismiss();
 }
 
