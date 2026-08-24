@@ -6,24 +6,12 @@
 #include <QDebug>
 #include <QIODevice>
 
-/**
- * @file qmdmmdebug.h
- * @brief QMdmm Debug stuff
- */
-
 using namespace QMdmmCore::p;
 
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
 #endif
-
-/**
- * @brief Set the device where QDebug outputs log to.
- * @param f The target output device
- *
- * By default Qt outputs log to a Qt defined buffer. This changes the buffer to our one, for collecting the log we generates
- */
 
 void qMdmmDebugSetDevice(QIODevice *f)
 {
