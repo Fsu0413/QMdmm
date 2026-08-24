@@ -24,11 +24,6 @@ namespace v0 {
 
 class Agent;
 
-// for a simpler logic, I decided to make LogicRunner handle only one complete game.
-// so that there will be less need to implement Lobby or something that a player may select the room he / she wants to join in.
-// If a player / agent exits mid-game, current practice would be to destroy this LogicRunner and its children and disconnect all the agents
-// Players who wants to continue playing need rejoin.
-
 // TODO: Implement Lobby when other contents are ready
 class QMDMMNETWORKING_EXPORT LogicRunner final : public QObject
 {
@@ -37,11 +32,9 @@ class QMDMMNETWORKING_EXPORT LogicRunner final : public QObject
 public:
     Q_DISABLE_COPY_MOVE(LogicRunner);
 
-    // Constructor and destructor: need to be called in Server thread (so that the LogicRunner instance is on Server thread)
     explicit LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
     ~LogicRunner() override;
 
-    // Functions to be called in Server thread
     Agent *addAgent(Agent *agent);
     Agent *reconnectAgent(Agent *agent);
 

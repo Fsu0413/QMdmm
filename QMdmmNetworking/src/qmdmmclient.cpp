@@ -202,6 +202,9 @@ const Agent *Client::agent() const
  * @fn Client::socketConnectionLost(const QString &errorString, QPrivateSignal)
  * @brief emitted once when the connection drops and the client starts retrying internally
  * @param errorString the reason the connection dropped
+ *
+ * This is the "connection lost" notice for the upper layer, distinct from
+ * @c socketErrorDisconnected(), which fires only after the automatic reconnect gives up.
  */
 
 /**

@@ -29,7 +29,6 @@ class SocketP;
 namespace v0 {
 #endif
 
-// Socket should be a wrapper for QObject, and do serialize / deserialize work of received data
 class QMDMMNETWORKING_EXPORT Socket : public QObject
 {
     Q_OBJECT
@@ -45,12 +44,10 @@ public:
 
     Q_DISABLE_COPY_MOVE(Socket);
 
-    // ctor for Server: pass an already-open socket here
     explicit Socket(QTcpSocket *t, QObject *parent = nullptr);
     explicit Socket(QLocalSocket *l, QObject *parent = nullptr);
     explicit Socket(QWebSocket *w, QObject *parent = nullptr);
 
-    // ctor for Client: late-bound to a socket when connectToHost is called
     explicit Socket(QObject *parent = nullptr);
     ~Socket() override;
 

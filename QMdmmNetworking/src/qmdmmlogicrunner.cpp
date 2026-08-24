@@ -868,10 +868,13 @@ namespace v0 {
  *
  * A LogicRunner owns the agents (server-side representations of connected clients) and
  * runs a @c QMdmmCore::Logic on a separate thread. It handles exactly one complete game:
- * when the game is over, the LogicRunner should be destroyed and all agents disconnected.
+ * when the game is over, the LogicRunner should be destroyed and all agents disconnected,
+ * and players who want to continue playing need to rejoin.
  *
  * @note This class is designed for one game only. Lobby / multi-room support is not
  * implemented yet.
+ * @note All methods must be called in the Server thread, where the LogicRunner instance
+ * lives.
  */
 
 /**

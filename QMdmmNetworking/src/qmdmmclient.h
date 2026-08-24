@@ -65,13 +65,8 @@ public:
     [[nodiscard]] const Agent *agent() const;
 
 signals:
-    // Emitted once when the connection drops. The client then retries internally;
-    // this is the "connection lost" notice for the upper layer (distinct from
-    // socketErrorDisconnected, which fires only after the automatic reconnect gives up).
     void socketConnectionLost(const QString &errorString, QPrivateSignal);
 
-    // Emitted when the client re-establishes the connection and re-signed in after
-    // a disconnect.
     void socketReconnectSucceeded(QPrivateSignal);
 
     void socketErrorDisconnected(const QString &errorString, QPrivateSignal);

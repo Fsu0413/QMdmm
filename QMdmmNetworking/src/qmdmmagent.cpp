@@ -15,11 +15,21 @@ namespace v0 {
 
 /**
  * @class Agent
- * @brief The agent representing a player on the server side.
+ * @brief The controller for one player, bridging the logic side and the operation side.
  *
- * An Agent is the server-side counterpart of a connected client. It stores the
- * screen name and the connection state of the player, and is used by @c LogicRunner
- * to send requests to and receive replies from the client.
+ * An Agent is the unified player abstraction with two ports:
+ * - the logic side (@c LogicRunner on the server, @c Client on the client) drives the
+ *   agent through the requestXxx / notifyXxx methods and listens to the replyXxx /
+ *   spoken / operated signals;
+ * - the operation side (@c ServerConnection for the wire, or GUI / Bot for a local
+ *   player) listens to the xxxRequested / xxxNotified signals and answers by calling
+ *   the bare-verb methods (stoneScissorsCloth / actionOrder / action / upgrade) and
+ *   speak / operate.
+ *
+ * Reply contract: the operation side must answer asynchronously (e.g. via
+ * QTimer::singleShot or after an event-loop round-trip), never synchronously from
+ * inside the xxxRequested handler. A synchronous reply re-enters the request handler
+ * and violates the designed async request / reply flow.
  */
 
 /**
