@@ -65,11 +65,6 @@ QMDMM_EXPORT_NAME(QMdmmData)
 
 Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 
-// Originally there was enum Place, but removed due to overdesign.
-// It is revealed that number of places should be same of number of players
-// So if we need City1, City2 and etc. we need as many Cities as the maximum supported player numbers
-// In theory the player numbers should be unlimitted since there is no difference between players
-// Added back of Enum Place but preserve the only "Country" value, for QMetaObject generation only
 enum Place : uint8_t
 {
     Country = 0,
