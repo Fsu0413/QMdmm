@@ -266,9 +266,9 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
     reset();
 
     // In-process server so a single user can actually play a full match.
-    LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(m_playerCount);
-    m_server = new Server(ServerConfiguration::defaults(), conf, this);
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(m_playerCount);
+    m_server = new Server(serverConf, LogicConfiguration::defaults(), this);
     if (!m_server->listen()) {
         setStatusMessage(tr("Failed to start local server"));
         delete m_server;

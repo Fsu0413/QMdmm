@@ -291,10 +291,6 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", stringToUint16, WebsocketPort);
     CONFIG_ITEM(int, serverConfiguration_, "timeout", stringToInt, RequestTimeout);
 
-    setting->endGroup();
-
-    setting->beginGroup(QStringLiteral("logic"));
-
     {
         int players = 0;
 
@@ -324,11 +320,15 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
             if (parser->isSet(QStringLiteral("players")))
                 qFatal("-%d can't be specified alongwith -n / --players", players);
 
-            logicConfiguration_.setPlayerNumPerRoom(players);
+            serverConfiguration_.setPlayerNumPerRoom(players);
         } else {
-            CONFIG_ITEM(int, logicConfiguration_, "players", stringToInt, PlayerNumPerRoom);
+            CONFIG_ITEM(int, serverConfiguration_, "players", stringToInt, PlayerNumPerRoom);
         }
     }
+
+    setting->endGroup();
+
+    setting->beginGroup(QStringLiteral("logic"));
 
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", stringToInt, MaximumKnifeDamage);
@@ -370,12 +370,12 @@ void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance t
     CONFIG_ITEM(QString, serverConfiguration_, "websocket-name", , websocketName);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "websocket-port", uint16ToString, websocketPort);
     CONFIG_ITEM(int, serverConfiguration_, "timeout", intToString, requestTimeout);
+    CONFIG_ITEM(int, serverConfiguration_, "players", intToString, playerNumPerRoom);
 
     setting->endGroup();
 
     setting->beginGroup(QStringLiteral("logic"));
 
-    CONFIG_ITEM(int, logicConfiguration_, "players", intToString, playerNumPerRoom);
     CONFIG_ITEM(int, logicConfiguration_, "slash", intToString, initialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", intToString, maximumKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "kick", intToString, initialHorseDamage);

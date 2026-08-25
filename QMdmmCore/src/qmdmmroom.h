@@ -33,7 +33,6 @@ class QMDMMCORE_EXPORT LogicConfiguration final : public QJsonObject
 {
     Q_GADGET
 
-    Q_PROPERTY(int playerNumPerRoom READ playerNumPerRoom WRITE setPlayerNumPerRoom DESIGNABLE false FINAL)
     Q_PROPERTY(int initialKnifeDamage READ initialKnifeDamage WRITE setInitialKnifeDamage DESIGNABLE false FINAL)
     Q_PROPERTY(int maximumKnifeDamage READ maximumKnifeDamage WRITE setMaximumKnifeDamage DESIGNABLE false FINAL)
     Q_PROPERTY(int initialHorseDamage READ initialHorseDamage WRITE setInitialHorseDamage DESIGNABLE false FINAL)
@@ -66,10 +65,6 @@ public:
     using QJsonObject::QJsonObject;
     using QJsonObject::operator=;
 #endif
-
-    // TODO: move to ServerConfiguration
-    [[nodiscard]] int playerNumPerRoom() const;
-    void setPlayerNumPerRoom(int playerNumPerRoom);
 
     // standard configuration
     [[nodiscard]] int initialKnifeDamage() const;

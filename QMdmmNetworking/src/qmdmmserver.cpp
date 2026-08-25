@@ -61,6 +61,11 @@ namespace v0 {
  */
 
 /**
+ * @property ServerConfiguration::playerNumPerRoom
+ * @brief The player number per room, default 3
+ */
+
+/**
  * @property ServerConfiguration::requestTimeout
  * @brief The request timeout, default 20
  */
@@ -150,6 +155,18 @@ namespace v0 {
  */
 
 /**
+ * @fn ServerConfiguration::playerNumPerRoom() const
+ * @brief getter of @c ServerConfiguration::playerNumPerRoom
+ * @return @c ServerConfiguration::playerNumPerRoom
+ */
+
+/**
+ * @fn ServerConfiguration::setPlayerNumPerRoom(int playerNumPerRoom)
+ * @brief setter of @c ServerConfiguration::playerNumPerRoom
+ * @param playerNumPerRoom @c ServerConfiguration::playerNumPerRoom
+ */
+
+/**
  * @fn ServerConfiguration::requestTimeout() const
  * @brief getter of @c ServerConfiguration::requestTimeout
  * @return @c ServerConfiguration::requestTimeout
@@ -176,6 +193,7 @@ const ServerConfiguration &ServerConfiguration::defaults()
         qMakePair(QStringLiteral("websocketEnabled"), true),
         qMakePair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
         qMakePair(QStringLiteral("websocketPort"), (int)(6367U)),
+        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
         qMakePair(QStringLiteral("requestTimeout"), 20),
     };
     // clang-format on
@@ -218,6 +236,7 @@ IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, localSocketName, Lo
 IMPLEMENTATION_CONFIGURATION(bool, websocketEnabled, WebsocketEnabled, CONVERTTOTYPEBOOL, )
 IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(QString, websocketName, WebsocketName, CONVERTTOTYPEQSTRING, )
 IMPLEMENTATION_CONFIGURATION(uint16_t, websocketPort, WebsocketPort, CONVERTTOTYPEUINT16T, )
+IMPLEMENTATION_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEINT, )
 
 #undef IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE
@@ -357,7 +376,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         }
 
         if (current == nullptr || current->full()) {
-            current = new LogicRunner(logicConfiguration, this);
+            current = new LogicRunner(logicConfiguration, serverConfiguration.playerNumPerRoom(), this);
             connect(current, &LogicRunner::gameOver, this, &ServerP::logicRunnerGameOver);
         }
 

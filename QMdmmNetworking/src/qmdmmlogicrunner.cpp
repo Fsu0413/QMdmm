@@ -574,10 +574,11 @@ void ServerConnection::receiveOperate(const QJsonValue &value)
     agent->operate(value);
 }
 
-LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, LogicRunner *q)
+LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int playerNumPerRoom, LogicRunner *q)
     : QObject(q)
     , q(q)
     , conf(std::move(logicConfiguration))
+    , playerNumPerRoom(playerNumPerRoom)
 {
     logicThread = new QThread(this);
     logic = new QMdmmCore::Logic(conf);
@@ -880,11 +881,12 @@ namespace v0 {
 /**
  * @brief ctor.
  * @param logicConfiguration The configuration of the logic
+ * @param playerNumPerRoom The player number per room
  * @param parent QObject parent.
  */
-LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent)
+LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, int playerNumPerRoom, QObject *parent)
     : QObject(parent)
-    , d(new p::LogicRunnerP(logicConfiguration, this))
+    , d(new p::LogicRunnerP(logicConfiguration, playerNumPerRoom, this))
 {
 }
 
@@ -1037,11 +1039,11 @@ const Agent *LogicRunner::agent(const QString &playerName) const
 
 /**
  * @brief if the room is full
- * @return @c true if the number of agents reaches @c LogicConfiguration::playerNumPerRoom
+ * @return @c true if the number of agents reaches @c ServerConfiguration::playerNumPerRoom
  */
 bool LogicRunner::full() const
 {
-    return d->agents.count() >= d->conf.playerNumPerRoom();
+    return d->agents.count() >= d->playerNumPerRoom;
 }
 
 /**

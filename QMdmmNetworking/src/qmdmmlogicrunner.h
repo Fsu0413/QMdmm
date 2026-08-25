@@ -32,7 +32,7 @@ class QMDMMNETWORKING_EXPORT LogicRunner final : public QObject
 public:
     Q_DISABLE_COPY_MOVE(LogicRunner);
 
-    explicit LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, QObject *parent = nullptr);
+    explicit LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, int playerNumPerRoom, QObject *parent = nullptr);
     ~LogicRunner() override;
 
     Agent *addAgent(Agent *agent);

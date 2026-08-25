@@ -29,12 +29,6 @@ namespace v0 {
  */
 
 /**
- * @property LogicConfiguration::playerNumPerRoom
- * @brief Player number per room, default 3
- * @todo move this configuration to server side
- */
-
-/**
  * @enum LogicConfiguration::PunishHpRoundStrategy
  * @brief The round strategy of punishing HP
  *
@@ -64,18 +58,6 @@ namespace v0 {
  *
  * @var LogicConfiguration::PunishHpRoundStrategy LogicConfiguration::RoundToNearest45
  * Round all number to nearest integer. Round down if the first digit after dot is <= 4, round up else. See table above.
- */
-
-/**
- * @fn LogicConfiguration::playerNumPerRoom() const
- * @brief getter of @c LogicConfiguration::playerNumPerRoom
- * @return @c LogicConfiguration::playerNumPerRoom
- */
-
-/**
- * @fn LogicConfiguration::setPlayerNumPerRoom(int playerNumPerRoom)
- * @brief setter of @c LogicConfiguration::playerNumPerRoom
- * @param playerNumPerRoom @c LogicConfiguration::playerNumPerRoom
  */
 
 /**
@@ -293,7 +275,6 @@ const LogicConfiguration &LogicConfiguration::defaults()
 {
     // clang-format off
     static const LogicConfiguration defaultInstance {
-        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
         qMakePair(QStringLiteral("initialKnifeDamage"), 1),
         qMakePair(QStringLiteral("maximumKnifeDamage"), 10),
         qMakePair(QStringLiteral("initialHorseDamage"), 2),
@@ -321,7 +302,6 @@ const LogicConfiguration &LogicConfiguration::v1()
 {
     // clang-format off
     static const LogicConfiguration defaultInstance {
-        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
         qMakePair(QStringLiteral("initialKnifeDamage"), 1),
         qMakePair(QStringLiteral("maximumKnifeDamage"), 3),
         qMakePair(QStringLiteral("initialHorseDamage"), 3),
@@ -358,7 +338,6 @@ const LogicConfiguration &LogicConfiguration::v1()
 
 // NOLINTEND(bugprone-macro-parentheses)
 
-IMPLEMENTATION_CONFIGURATION(int, playerNumPerRoom, PlayerNumPerRoom, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, maximumKnifeDamage, MaximumKnifeDamage, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, initialHorseDamage, InitialHorseDamage, CONVERTTOTYPEINT, )
@@ -403,7 +382,6 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
         }                                                     \
     }
 
-    CONF(playerNumPerRoom, isDouble);
     CONF(initialKnifeDamage, isDouble);
     CONF(maximumKnifeDamage, isDouble);
     CONF(initialHorseDamage, isDouble);

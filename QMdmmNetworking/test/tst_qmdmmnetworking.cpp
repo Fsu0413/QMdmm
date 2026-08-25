@@ -44,9 +44,9 @@ private slots:
 void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(3); // 3-person room: two players leave it not-full
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3); // 3-person room: two players leave it not-full
     serverConf.setTcpPort(16367);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
@@ -92,9 +92,9 @@ void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
 void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
     serverConf.setTcpPort(16366);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
@@ -142,9 +142,8 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
 void tst_QMdmmNetworking::addAgent_registersLocalAgent()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(3);
 
-    LogicRunner runner(conf);
+    LogicRunner runner(conf, 3);
 
     Agent *local = new Agent(QStringLiteral("p1"), &runner);
     local->setScreenName(QStringLiteral("screen1"));
@@ -176,9 +175,8 @@ void tst_QMdmmNetworking::client_exposesSelfAgent()
 void tst_QMdmmNetworking::localAgent_asyncReplyContract()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
 
-    LogicRunner runner(conf);
+    LogicRunner runner(conf, 2);
 
     Agent *p1 = new Agent(QStringLiteral("p1"), &runner);
     p1->setState(Data::StateOnline);
@@ -223,9 +221,9 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
 void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(2);
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
     serverConf.setTcpPort(16365);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
@@ -271,9 +269,9 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
 {
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(3); // not full: p2's drop marks it offline then removes it
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3); // not full: p2's drop marks it offline then removes it
     serverConf.setTcpPort(16364);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);

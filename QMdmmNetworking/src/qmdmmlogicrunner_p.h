@@ -129,7 +129,7 @@ class QMDMMNETWORKING_PRIVATE_EXPORT LogicRunnerP : public QObject
     Q_OBJECT
 
 public:
-    LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, LogicRunner *q);
+    LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int playerNumPerRoom, LogicRunner *q);
     ~LogicRunnerP() override;
 
     LogicRunner *q;
@@ -141,6 +141,7 @@ public:
     QPointer<QMdmmCore::Logic> logic;
 
     QMdmmCore::LogicConfiguration conf;
+    int playerNumPerRoom;
 
     // No qRegisterMetaType<>() is needed for the queued signals / slots below: their argument
     // types are QMdmmCore::Data enums / flags (auto-registered via Q_ENUM_NS / Q_FLAG_NS) plus

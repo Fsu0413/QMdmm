@@ -39,6 +39,7 @@ struct QMDMMNETWORKING_EXPORT ServerConfiguration final : public QJsonObject
     Q_PROPERTY(bool websocketEnabled READ websocketEnabled WRITE setWebsocketEnabled DESIGNABLE false FINAL)
     Q_PROPERTY(QString websocketName READ websocketName WRITE setWebsocketName DESIGNABLE false FINAL)
     Q_PROPERTY(uint16_t websocketPort READ websocketPort WRITE setWebsocketPort DESIGNABLE false FINAL)
+    Q_PROPERTY(int playerNumPerRoom READ playerNumPerRoom WRITE setPlayerNumPerRoom DESIGNABLE false FINAL)
     Q_PROPERTY(int requestTimeout READ requestTimeout WRITE setRequestTimeout DESIGNABLE false FINAL)
 
 public:
@@ -66,6 +67,8 @@ public:
     void setWebsocketName(const QString &websocketName);
     [[nodiscard]] uint16_t websocketPort() const;
     void setWebsocketPort(uint16_t websocketPort);
+    [[nodiscard]] int playerNumPerRoom() const;
+    void setPlayerNumPerRoom(int playerNumPerRoom);
     [[nodiscard]] int requestTimeout() const;
     void setRequestTimeout(int requestTimeout);
 };

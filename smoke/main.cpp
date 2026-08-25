@@ -78,7 +78,7 @@ void wireBot(Client *bot)
             }
             // Can't buy right now (e.g. standing in Country) -> step to any
             // non-Country place so we can buy next turn.
-            for (int p = 1; p < room->logicConfiguration().playerNumPerRoom() + 1; ++p) {
+            for (int p = 1; p < room->players().count() + 1; ++p) {
                 if (me->canMove(p)) {
                     agent->action(Data::Move, {}, p);
                     return;
@@ -143,7 +143,6 @@ int main(int argc, char **argv)
     // upgrades to max out, so the game runs long enough for the disconnect ->
     // reconnect scenario below to happen mid-game.
     LogicConfiguration conf = LogicConfiguration::defaults();
-    conf.setPlayerNumPerRoom(playerCount);
     conf.setInitialMaxHp(1); // one hit kills -> rounds can actually end
     conf.setMaximumMaxHp(8); // 7 upgrades to max
     conf.setInitialKnifeDamage(1);
@@ -153,6 +152,7 @@ int main(int argc, char **argv)
     conf.setPunishHpModifier(0); // keep the attacker alive when slashing
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(playerCount);
     serverConf.setRequestTimeout(100); // be lenient in the headless environment
 
     auto *server = new Server(serverConf, conf, &app);
