@@ -123,8 +123,14 @@ set(CPACK_RPM_PACKAGE_LICENSE "AGPLv3")
 set(CPACK_PACKAGE_CONTACT "Frank Su <fsu0413@vip.qq.com>")
 
 if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
-    # TODO: add DEB / RPM package dependencies
     list(APPEND CPACK_GENERATOR RPM DEB)
+    # Runtime Qt6 dependencies for the "6" (runtime) component.
+    # DEB names omit the "t64" suffix: on 64-bit trixie the t64 packages
+    # "Provide" the plain names, so they resolve across bookworm/trixie.
+    set(CPACK_DEBIAN_6_PACKAGE_DEPENDS
+        "libqt6core6, libqt6gui6, libqt6network6, libqt6websockets6, libqt6qml6, libqt6quick6, libqt6quickwidgets6, libqt6widgets6, qml-module-qtquick")
+    set(CPACK_RPM_6_PACKAGE_REQUIRES
+        "qt6-qtbase, qt6-qtwebsockets, qt6-qtdeclarative")
 endif()
 
 include(CPack)
