@@ -39,7 +39,7 @@ add_library(QMdmmNetworking INTERFACE)
 auto_generate_header_file_for_target(QMdmmNetworking "${QMDMMNETWORKING_HEADERS}")
 install(FILES ${QMDMMNETWORKING_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking"
-    COMPONENT "dev6"
+    COMPONENT "dev-common"
 )
 target_include_directories(QMdmmNetworking
     INTERFACE src
@@ -49,7 +49,7 @@ if (QMDMM_EXPORT_PRIVATE)
     target_sources(QMdmmNetworkingPrivate PRIVATE ${QMDMMNETWORKING_PRIVATE_HEADERS})
     install(FILES ${QMDMMNETWORKING_PRIVATE_HEADERS}
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking/private/${PROJECT_VERSION}"
-        COMPONENT "private-dev6"
+        COMPONENT "private-dev-common"
     )
     target_link_libraries(QMdmmNetworkingPrivate
         INTERFACE QMdmmNetworking

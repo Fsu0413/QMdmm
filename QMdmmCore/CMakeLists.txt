@@ -53,7 +53,7 @@ add_library(QMdmmCore INTERFACE)
 auto_generate_header_file_for_target(QMdmmCore "${QMDMMCORE_HEADERS}")
 install(FILES ${QMDMMCORE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore"
-    COMPONENT "dev6"
+    COMPONENT "dev-common"
 )
 if (NOT BUILD_SHARED_LIBS)
     target_compile_definitions(QMdmmCore
@@ -116,7 +116,7 @@ if (QMDMM_EXPORT_PRIVATE)
     target_sources(QMdmmCorePrivate PRIVATE ${QMDMMCORE_PRIVATE_HEADERS})
     install(FILES ${QMDMMCORE_PRIVATE_HEADERS}
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore/private/${PROJECT_VERSION}"
-        COMPONENT "private-dev6"
+        COMPONENT "private-dev-common"
     )
     target_link_libraries(QMdmmCorePrivate
         INTERFACE QMdmmCore
