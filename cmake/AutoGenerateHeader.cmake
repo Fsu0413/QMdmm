@@ -63,7 +63,7 @@ if (DEFINED PROJECT_NAME)
                 install(FILES ${header_generated_paths}
                     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${target}"
                     OPTIONAL
-                    COMPONENT "dev"
+                    COMPONENT "dev6"
                 )
             endif()
         endforeach()
