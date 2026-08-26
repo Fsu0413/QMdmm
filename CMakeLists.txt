@@ -52,7 +52,7 @@ include(AutoGenerateHeader)
 set(QT6_EXTRA_COMPONENTS_NEEDED)
 
 if (BUILD_TESTING)
-    list(APPEND QT6_EXTRA_COMPONENTS_NEEDED Test)
+    list(APPEND QT6_EXTRA_COMPONENTS_NEEDED Test QuickTest)
 endif()
 
 # Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.

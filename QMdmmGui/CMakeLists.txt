@@ -67,3 +67,7 @@ install(TARGETS QMdmm6
     RUNTIME
     BUNDLE
 )
+
+if (BUILD_TESTING)
+    add_subdirectory(test)
+endif()
