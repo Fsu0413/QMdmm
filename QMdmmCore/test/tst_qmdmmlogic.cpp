@@ -438,6 +438,46 @@ private slots:
         QVERIFY(up.count() > 0);
         QCOMPARE(p->maxHp(), beforeMaxHp + 1);
     }
+
+    // I. actionReply must reject unknown players and wrong states (guards that
+    //    return false before any feasibility check).
+    void QMdmmLogicactionReplyNegative()
+    {
+        l->roundStart();
+
+        // Wrong state: still negotiating SSC/action-order, not yet in Action.
+        {
+            QSignalSpy res(l.get(), &Logic::actionResult);
+            QVERIFY(!l->actionReply(QStringLiteral("test1"), Data::DoNothing, {}, 0));
+            QCOMPARE(res.length(), 0);
+        }
+
+        // Unknown player while in the Action state.
+        {
+            l->sscReply(QStringLiteral("test1"), Data::Stone);
+            l->sscReply(QStringLiteral("test2"), Data::Stone);
+            l->sscReply(QStringLiteral("test3"), Data::Scissors);
+            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+
+            QSignalSpy res(l.get(), &Logic::actionResult);
+            QVERIFY(!l->actionReply(QStringLiteral("ghost"), Data::DoNothing, {}, 0));
+            QCOMPARE(res.length(), 0);
+        }
+    }
+
+    // J. upgradeReply must reject an unknown player even in the Upgrade state.
+    void QMdmmLogicupgradeReplyNegative()
+    {
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+        QVERIFY(!l->upgradeReply(QStringLiteral("ghost"), {Data::UpgradeMaxHp}));
+        QCOMPARE(up.length(), 0);
+    }
 };
 
 namespace {
