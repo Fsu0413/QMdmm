@@ -13,26 +13,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, ubuntu-26.04-arm, macos-latest, macos-26-intel]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: "6.10.*"
-          modules: "qtwebsockets"
-          cache: true
+      - name: Install Qt (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qt6-base-dev qt6-websockets-dev qt6-declarative-dev qt6-tools-dev
+
+      - name: Install Qt (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install qt
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: >
-          cmake -B build -G "Unix Makefiles"
-          -DCMAKE_BUILD_TYPE=Release
-          -DBUILD_TESTING=ON
-          -DQMDMM_EXPORT_PRIVATE=NO
-          -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+        run: |
+          cmake_args=(-B build -G "Unix Makefiles"
+            -DCMAKE_BUILD_TYPE=Release
+            -DBUILD_TESTING=ON
+            -DQMDMM_EXPORT_PRIVATE=NO)
+          if [ -n "${CMAKE_PREFIX_PATH:-}" ]; then
+            cmake_args+=(-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH")
+          fi
+          cmake "${cmake_args[@]}"
 
       - name: Build
         run: cmake --build build --parallel
@@ -52,18 +61,16 @@ jobs:
         run: brew install doxygen
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: "6.10.*"
-          modules: "qtwebsockets"
-          cache: true
+        run: |
+          brew install qt
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> "$GITHUB_ENV"
 
       - name: Configure
         run: >
           cmake -B build -G "Unix Makefiles"
           -DCMAKE_BUILD_TYPE=Release
           -DBUILD_TESTING=OFF
-          -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+          -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
 
       - name: Build docs
         run: cmake --build build --target QMdmm_docs
