@@ -65,11 +65,15 @@ TestCase {
 
         // The server asks the human for a rock-paper-scissors pick.
         tryCompare(ssc, "count", 1, 15000)
+
+        // The auto-replying bot keeps the match advancing on its own (and the human
+        // falls back to the server's default reply on later rounds), so sscResult is
+        // broadcast once per round and keeps growing. Require the human's reply to
+        // produce *at least one more* result rather than an exact count — an exact
+        // match races the auto-advancing game (observed flaky on CI: count reached 194).
+        var before = sscResult.count
         game.replySsc(0) // rock
 
-        // Once the human and the auto-replying bot have both replied, the server
-        // resolves the pick and broadcasts the result — proof the reply round trip
-        // (human -> server) actually advanced the match.
-        tryCompare(sscResult, "count", 1, 15000)
+        tryVerify(function() { return sscResult.count > before; }, 15000)
     }
 }
