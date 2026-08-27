@@ -36,10 +36,10 @@ QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnec
     std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::defaultReplyUpgrade),
 };
 
-// Extra tolerance in milliseconds added on top of ServerConfiguration::requestTimeout
-// (which is in seconds) for the request timer. The timer only backstops abnormal cases
-// (D-020): a healthy client replies or gives up on its own, so the grace period just
-// absorbs ordinary network jitter.
+// Extra tolerance in seconds added on top of ServerConfiguration::requestTimeout for the
+// request timer. The timer only backstops abnormal cases (D-020): a healthy client replies
+// or gives up on its own; if it does neither within requestTimeout + grace, the server
+// treats the timeout as a disconnect (see ServerConnection::requestTimeout).
 int ServerConnection::requestTimeoutGracePeriod = 60;
 
 ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)
@@ -49,7 +49,7 @@ ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfigura
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
-    requestTimer->setInterval(requestTimeout * 1000 + requestTimeoutGracePeriod);
+    requestTimer->setInterval((requestTimeout + requestTimeoutGracePeriod) * 1000);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
 
@@ -551,9 +551,12 @@ void ServerConnection::sendOperateNotified(const QString &playerName, const QJso
 
 void ServerConnection::requestTimeout()
 {
-    if (socket != nullptr)
-        socket->setHasError(true);
-    executeDefaultReply();
+    // The client neither replied nor gave up within requestTimeout + grace. Treat the timeout
+    // as a disconnect (D-020 follow-up): onSocketDisconnected drops the socket, marks the agent
+    // offline, default-replies the in-flight request, and lets the room decide (preserve the
+    // seat for a reconnect, or drop the agent when the room is not full). Reusing it keeps the
+    // timeout and the socket-drop on the same disconnect path.
+    onSocketDisconnected();
 }
 
 void ServerConnection::executeDefaultReply()
