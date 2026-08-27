@@ -92,12 +92,18 @@ if (Qt6_FOUND)
         COMPONENT "6"
         RUNTIME
         LIBRARY
+        NAMELINK_COMPONENT "dev6"
     )
 
-    install(TARGETS QMdmmNetworking6
-        COMPONENT "dev6"
-        ARCHIVE
-    )
+    # On Linux/macOS with BUILD_SHARED_LIBS=ON, the ARCHIVE rule would install
+    # the real .so plus all version symlinks into dev6, duplicating the "6"
+    # component. Keep ARCHIVE for Windows DLL import libraries and static libs.
+    if (WIN32 OR NOT BUILD_SHARED_LIBS)
+        install(TARGETS QMdmmNetworking6
+            COMPONENT "dev6"
+            ARCHIVE
+        )
+    endif()
 
     if (QMDMM_EXPORT_PRIVATE)
         add_library(QMdmmNetworkingPrivate6 INTERFACE)
