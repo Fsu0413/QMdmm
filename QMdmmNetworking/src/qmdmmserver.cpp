@@ -67,7 +67,12 @@ namespace v0 {
 
 /**
  * @property ServerConfiguration::requestTimeout
- * @brief The request timeout, default 20
+ * @brief The request timeout in milliseconds, default 500
+ *
+ * The server's request timer only backstops abnormal cases now (D-020): a healthy
+ * client replies or explicitly gives up on its own, so the timer fires only when the
+ * client is gone or stuck. A longer default avoids mistaking ordinary network jitter
+ * for a timeout.
  */
 
 /**
@@ -194,7 +199,7 @@ const ServerConfiguration &ServerConfiguration::defaults()
         qMakePair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
         qMakePair(QStringLiteral("websocketPort"), (int)(6367U)),
         qMakePair(QStringLiteral("playerNumPerRoom"), 3),
-        qMakePair(QStringLiteral("requestTimeout"), 20),
+        qMakePair(QStringLiteral("requestTimeout"), 500),
     };
     // clang-format on
 
