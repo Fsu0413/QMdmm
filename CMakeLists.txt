@@ -124,6 +124,8 @@ set(CPACK_PACKAGE_CONTACT "Frank Su <fsu0413@vip.qq.com>")
 
 if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     list(APPEND CPACK_GENERATOR RPM DEB)
+    # Write cpack_add_component DEPENDS (dev6 -> 6 + dev-common) into DEB Depends.
+    set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)
     # Runtime Qt6 dependencies for the "6" (runtime) component.
     # DEB names omit the "t64" suffix: on 64-bit trixie the t64 packages
     # "Provide" the plain names, so they resolve across bookworm/trixie.
@@ -131,6 +133,15 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
         "libqt6core6, libqt6gui6, libqt6network6, libqt6websockets6, libqt6qml6, libqt6quick6, libqt6quickwidgets6, libqt6widgets6, qml-module-qtquick")
     set(CPACK_RPM_6_PACKAGE_REQUIRES
         "qt6-qtbase, qt6-qtwebsockets, qt6-qtdeclarative")
+    # Dev dependencies for "dev6": what is needed to build against the libs
+    # (headers + CMake config; Qt6::WebSockets lives in the qtbase modules).
+    set(CPACK_DEBIAN_DEV6_PACKAGE_DEPENDS "qt6-base-dev, qt6-declarative-dev")
+    set(CPACK_RPM_DEV6_PACKAGE_REQUIRES "qt6-qtbase-devel, qt6-qtdeclarative-devel")
+    # dev-common / doc intentionally carry no Qt dependencies: dev-common is
+    # version-agnostic headers only. CPack emits one harmless
+    # "CPACK_DEBIAN_PACKAGE_DEPENDS not set" note for dev-common — expected.
+    # CPackRPM does not auto-write inter-component Requires; revisit when RPM
+    # packaging is actually exercised (only DEB has been verified so far).
 endif()
 
 include(CPack)
