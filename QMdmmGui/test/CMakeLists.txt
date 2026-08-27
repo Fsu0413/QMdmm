@@ -44,9 +44,16 @@ target_compile_definitions(tst_qmdmmgui6 PRIVATE
 
 add_test(NAME "QMdmmGui - gui smoke - Qt6" COMMAND tst_qmdmmgui6)
 
-# Headless Linux runners need the offscreen platform plugin + software renderer.
+# Headless runners need a renderer that does not depend on a GPU. Linux has no
+# display at all, so it also needs the offscreen QPA platform. macOS Intel
+# runners have no Metal GPU, so force the software renderer there too (the cocoa
+# platform still works, but the default Metal RHI backend stalls on startup).
 if (UNIX AND NOT APPLE)
     set_tests_properties("QMdmmGui - gui smoke - Qt6" PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software"
+    )
+elseif (APPLE)
+    set_tests_properties("QMdmmGui - gui smoke - Qt6" PROPERTIES
+        ENVIRONMENT "QT_QUICK_BACKEND=software"
     )
 endif()
