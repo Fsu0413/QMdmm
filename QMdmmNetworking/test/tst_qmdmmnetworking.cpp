@@ -28,6 +28,7 @@ public:
 private slots:
     void signIn_disconnectInNotFullRoom_removesPlayer();
     void signIn_reconnectsPlayerInNonCurrentRoom();
+    void reconnectDoesNotAutoTrust();
     void addAgent_registersLocalAgent();
     void client_exposesSelfAgent();
     void localAgent_asyncReplyContract();
@@ -133,6 +134,57 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     // room 2 (p3's room).
     QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p2->objectName()) != nullptr, 5000);
     QVERIFY(p3->room() == nullptr || p3->room()->player(p1->objectName()) == nullptr);
+}
+
+// D-021 regression: a reconnect restores the player's Online flag but must NOT auto-mark the
+// player Trusted. Trust ("managed") is only toggled from the player's own client UI; the server
+// must never default a reconnecting player to Trust (the old reconnectAgent set StateMaskTrust on
+// reconnect, which is the bug this guards against). p2, still connected in the same full room,
+// observes p1's reconnected state via the agentStateChangeNotified broadcast: the drop first
+// marks p1 offline (Online cleared), then the reconnect must report it online with Trust clear.
+void tst_QMdmmNetworking::reconnectDoesNotAutoTrust()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16363);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16363");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+
+    // p2 observes p1's state broadcasts. The drop reports p1 offline (Online cleared); only the
+    // reconnect broadcasts p1 online again, and it must do so with Trust still clear. If the old
+    // auto-Trust behavior regressed, no broadcast would ever carry Online-without-Trust and this
+    // flag stays false, failing the assertion below.
+    bool p1OnlineNotTrusted = false;
+    connect(p2->agent(), &Agent::agentStateChangeNotified, &server, [&p1OnlineNotTrusted, p1](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p1->objectName() && state.testFlag(Data::StateMaskOnline) && !state.testFlag(Data::StateMaskTrust))
+            p1OnlineNotTrusted = true;
+    });
+
+    QTcpSocket *p1Sock = p1->findChild<QTcpSocket *>();
+    QVERIFY(p1Sock != nullptr);
+
+    bool reconnected = false;
+    connect(p1, &Client::socketReconnectSucceeded, &server, [&reconnected]() { reconnected = true; });
+    p1Sock->abort();
+
+    QTRY_VERIFY_WITH_TIMEOUT(reconnected, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(p1OnlineNotTrusted, 5000);
 }
 
 // addAgent with a locally-owned agent (no ServerConnection child) registers a socket-less
