@@ -44,11 +44,10 @@ target_compile_definitions(tst_qmdmmgui6 PRIVATE
 
 add_test(NAME "QMdmmGui - gui smoke - Qt6" COMMAND tst_qmdmmgui6)
 
-# Headless runners need a renderer and QPA platform that do not depend on a
-# GPU or a display. Linux has no display; macOS Intel runners stall in the
-# cocoa platform on startup. The offscreen QPA platform + software renderer
-# sidesteps both, so use it on every Unix runner.
-if (UNIX)
+# To prevent initializing a real display in headless CI run, recognize the CI
+# environment variable.
+# As far as I know both GitHub Actions and Jenkins set this environment variable.
+if (( DEFINED ENV{CI} ) AND "$ENV{CI}")
     set_tests_properties("QMdmmGui - gui smoke - Qt6" PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software"
     )
