@@ -51,7 +51,7 @@ void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
     serverConf.setTcpPort(16367);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
-    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
+    serverConf.setRequestTimeout(60); // bots stay silent without timing out during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -99,7 +99,7 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     serverConf.setTcpPort(16366);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
-    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
+    serverConf.setRequestTimeout(60); // bots stay silent without timing out during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -151,7 +151,7 @@ void tst_QMdmmNetworking::reconnectDoesNotAutoTrust()
     serverConf.setTcpPort(16363);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
-    serverConf.setRequestTimeout(60000); // bots stay silent without timing out during the test
+    serverConf.setRequestTimeout(60); // bots stay silent without timing out during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -279,7 +279,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
     serverConf.setTcpPort(16365);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
-    serverConf.setRequestTimeout(60000); // the server's own request timer must not fire during the test
+    serverConf.setRequestTimeout(60); // the server's own request timer must not fire during the test
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());
@@ -327,7 +327,7 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     serverConf.setTcpPort(16364);
     serverConf.setLocalEnabled(false);
     serverConf.setWebsocketEnabled(false);
-    serverConf.setRequestTimeout(60000);
+    serverConf.setRequestTimeout(60);
 
     Server server(serverConf, conf);
     QVERIFY(server.listen());

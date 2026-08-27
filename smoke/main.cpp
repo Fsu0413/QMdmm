@@ -153,7 +153,6 @@ int main(int argc, char **argv)
 
     ServerConfiguration serverConf = ServerConfiguration::defaults();
     serverConf.setPlayerNumPerRoom(playerCount);
-    serverConf.setRequestTimeout(100); // be lenient in the headless environment
 
     auto *server = new Server(serverConf, conf, &app);
     if (!server->listen()) {

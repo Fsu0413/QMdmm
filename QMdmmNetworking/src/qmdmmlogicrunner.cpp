@@ -36,10 +36,11 @@ QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnec
     std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::defaultReplyUpgrade),
 };
 
-// Extra tolerance added on top of ServerConfiguration::requestTimeout for the request
-// timer. The timer only backstops abnormal cases (D-020): a healthy client replies or
-// gives up on its own, so the grace period just absorbs ordinary network jitter.
-int ServerConnection::requestTimeoutGracePeriod = 500;
+// Extra tolerance in milliseconds added on top of ServerConfiguration::requestTimeout
+// (which is in seconds) for the request timer. The timer only backstops abnormal cases
+// (D-020): a healthy client replies or gives up on its own, so the grace period just
+// absorbs ordinary network jitter.
+int ServerConnection::requestTimeoutGracePeriod = 60;
 
 ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)
     : QObject(parent)
@@ -48,7 +49,7 @@ ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfigura
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , requestTimer(new QTimer(this))
 {
-    requestTimer->setInterval(requestTimeout + requestTimeoutGracePeriod);
+    requestTimer->setInterval(requestTimeout * 1000 + requestTimeoutGracePeriod);
     requestTimer->setSingleShot(true);
     connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
 
