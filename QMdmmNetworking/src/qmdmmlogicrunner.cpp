@@ -815,8 +815,7 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
                 if (onlineAgent->state().testFlag(QMdmmCore::Data::StateMaskOnline))
                     winners << onlineAgent->objectName();
             }
-            gameOver(winners);
-            emit q->gameOver(LogicRunner::QPrivateSignal());
+            gameOver(winners); // broadcasts notifyGameOver and emits q->gameOver (D-023)
             return;
         }
     }
@@ -855,6 +854,12 @@ void LogicRunnerP::gameOver(const QStringList &winners)
 {
     foreach (Agent *agent, agents)
         agent->notifyGameOver(winners);
+
+    // A natural game over (a player maxed out all three stats) must tear down the room the same
+    // way the round-over abandonment path does: emit LogicRunner::gameOver so the Server resets
+    // `current` and deletes this runner (D-023). Without this, a naturally finished room leaks and
+    // `current` keeps pointing at it.
+    emit q->gameOver(LogicRunner::QPrivateSignal());
 }
 } // namespace p
 #endif
