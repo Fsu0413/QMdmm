@@ -66,11 +66,18 @@ TestCase {
         // The server asks the human for a rock-paper-scissors pick.
         tryCompare(ssc, "count", 1, 15000)
 
-        // The auto-replying bot keeps the match advancing on its own (and the human
-        // falls back to the server's default reply on later rounds), so sscResult is
-        // broadcast once per round and keeps growing. Require the human's reply to
-        // produce *at least one more* result rather than an exact count — an exact
-        // match races the auto-advancing game (observed flaky on CI: count reached 194).
+        // The auto-replying bot answers its own SSC request, so the human's reply
+        // below completes the round and produces an sscResult broadcast. Require the
+        // human's reply to yield *at least one more* result rather than an exact
+        // count — an exact count depends on how the match advances, which is
+        // fragile: under the old 80 ms request-timeout default the auto-advancing
+        // match kept settling and the count reached 194.
+        //
+        // Note: this test intentionally does NOT rely on the request-timeout
+        // fallback. requestTimeout is now seconds-scale (20 s + 60 s grace, see
+        // ServerConfiguration), far longer than the 15 s window below, so a human
+        // that stops replying leaves the match waiting; the bot's auto-reply is
+        // the only thing driving progress.
         var before = sscResult.count
         game.replySsc(0) // rock
 
