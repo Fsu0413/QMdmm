@@ -40,8 +40,8 @@ The engine. The important types:
 - **`Room`** — a set of `Player`s plus a `LogicConfiguration`. Tracks alive /
   dead, and answers `isRoundOver()` / `isGameOver()`.
 - **`Player`** — one player's state: HP, knife, horse, position, upgrade points.
-- **`LogicConfiguration`** — the game rules (players per room, damage and HP
-  ranges, punish rules, the LetMove toggle, …). JSON-serializable.
+- **`LogicConfiguration`** — the game rules (damage and HP ranges, punish
+  rules, the LetMove toggle, …). JSON-serializable.
 - **`Data`** — enums and flags: `StoneScissorsCloth`, `Action`, `UpgradeItem`,
   `Place`, `AgentState`, `DamageReason`.
 - **`Protocol`** — the wire format: `Packet` (`Request` / `Reply` / `Notify`)
@@ -53,8 +53,9 @@ which is what makes it unit-testable with no network involved.
 ## QMdmmNetworking
 
 - **`Server`** — accepts connections and manages game rooms. Holds a
-  `ServerConfiguration` (which transports to listen on) and a
-  `LogicConfiguration` (the rules for every game). Each `signIn` adds a player
+  `ServerConfiguration` (which transports to listen on, the players-per-room
+  size, and the request timeout) and a `LogicConfiguration` (the rules for
+  every game). Each `signIn` adds a player
   to the recruiting room or, once that room is full, spins up a new
   `LogicRunner` for the next room.
 - **`Client`** — the player-facing end. `connectToHost` + sign-in, then it
