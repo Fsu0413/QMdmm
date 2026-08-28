@@ -551,12 +551,13 @@ void ServerConnection::sendOperateNotified(const QString &playerName, const QJso
 
 void ServerConnection::requestTimeout()
 {
-    // The client neither replied nor gave up within requestTimeout + grace. Treat the timeout
-    // as a disconnect (D-020 follow-up): onSocketDisconnected drops the socket, marks the agent
-    // offline, default-replies the in-flight request, and lets the room decide (preserve the
-    // seat for a reconnect, or drop the agent when the room is not full). Reusing it keeps the
-    // timeout and the socket-drop on the same disconnect path.
-    onSocketDisconnected();
+    // A silent client is gone: setHasError(true) disconnects the socket, which walks the
+    // disconnect path (onSocketDisconnected marks the agent offline and lets the room preserve
+    // the seat or drop the agent). The default reply is issued right away so the logic is not
+    // left waiting on the gone player.
+    if (socket != nullptr)
+        socket->setHasError(true);
+    executeDefaultReply();
 }
 
 void ServerConnection::executeDefaultReply()
