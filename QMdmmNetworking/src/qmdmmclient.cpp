@@ -183,6 +183,10 @@ const QMdmmCore::Room *Client::room() const
  * drives the controller interface through it: incoming requests arrive on its xxxRequested
  * signals, and replies / speech / operation are sent back by calling its bare-verb methods
  * (stoneScissorsCloth / actionOrder / action / upgrade) and speak / operate.
+ *
+ * The returned pointer is the stable handle stored by initSelfAgent(), not a lookup by
+ * objectName(): the operation side may rename the client (setObjectName) after construction,
+ * which would detach an objectName-based lookup from the self Agent.
  */
 Agent *Client::agent()
 {
