@@ -326,6 +326,16 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         }
     }
 
+    // Validate the resolved room size. A game needs at least two players (rock-paper-scissors
+    // action-order resolution requires an opponent), so a size below 2 is rejected outright.
+    // Anything above 9 is still allowed, but 9 is the soft cap: every extra player inflates the
+    // chance of a rock-paper-scissors tie during action-order resolution, so warn without rejecting.
+    const int roomSize = serverConfiguration_.playerNumPerRoom();
+    if (roomSize < 2)
+        qFatal("players must be at least 2 (got %d)", roomSize);
+    if (roomSize > 9)
+        qWarning("players %d exceeds the soft cap of 9 (rock-paper-scissors ties become more likely)", roomSize);
+
     setting->endGroup();
 
     setting->beginGroup(QStringLiteral("logic"));
