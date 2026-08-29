@@ -290,7 +290,11 @@ void Agent::stoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc)
 
 /**
  * @brief Reply with the desired action order.
- * @param order the desired action order
+ * @param order the desired action order, one entry per requested selection: an order number
+ * in range @c 1..maximumOrder to strive for it, or @c 0 to yield that selection (the player
+ * accepts whatever order is left over and stops competing for it). Yielding is an explicit
+ * reply, distinct from requestTimeout(), which gives up and lets the server answer with its
+ * default reply.
  */
 void Agent::actionOrder(const QList<int> &order)
 {
@@ -483,7 +487,8 @@ void Agent::operate(const QJsonValue &todo)
 /**
  * @fn Agent::replyActionOrder(const QList<int> &order, QPrivateSignal)
  * @brief emitted when an action order reply is made
- * @param order the desired action order
+ * @param order the desired action order, where @c 0 entries yield that selection (accept the
+ * assigned order) instead of striving for it
  */
 
 /**

@@ -33,6 +33,7 @@ private slots:
     void client_exposesSelfAgent();
     void localAgent_asyncReplyContract();
     void client_giveUpTriggersServerDefaultReply();
+    void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
 };
@@ -312,6 +313,78 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 
     QTRY_VERIFY_WITH_TIMEOUT(p2GiveUps >= 1, 5000);
     QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 10000);
+}
+
+// A client yields the action-order contest by replying with a 0 sentinel -- the "yield" marker:
+// accept whatever order is assigned and stop competing. Yielding is an explicit reply carrying
+// semantics, distinct from requestTimeout()'s null give-up (which makes the server answer with
+// its default reply). The 0 sentinel must round-trip the wire (ClientP encodes it into the JSON
+// array, ServerConnection decodes it back) and reach the core Logic, which counts the yield and
+// hands the leftover order to the yielder. In a 3-player room p1/p2 win the SSC (Stone beats p3's
+// Scissors) and enter the action-order negotiation; p1 yields while p2 strives for order 1. p2
+// reaching the action phase is the proof that p1's yield was applied -- if the 0 sentinel had not
+// round-tripped, the logic would stall in the action-order phase waiting for p1's selection.
+void tst_QMdmmNetworking::client_actionOrderYieldAcceptsAssignment()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3);
+    serverConf.setTcpPort(16361);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60); // the server's request timer must not fire during the test
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16361");
+
+    // Wire the replies before connecting: the first SSC request fires as soon as the room fills
+    // (p3 joins), and a signal connected after connectToHost would miss it. p1 and p2 play Stone,
+    // p3 plays Scissors, so Stone beats Scissors and the SSC winners are [p1, p2] -- two winners
+    // enter the action-order negotiation (a single winner would just take every order without it).
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::stoneScissorsClothRequested, &server, [p1]() { p1->agent()->stoneScissorsCloth(Data::Stone); });
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::stoneScissorsClothRequested, &server, [p2]() { p2->agent()->stoneScissorsCloth(Data::Stone); });
+    auto *p3 = new Client(ClientConfiguration(), &server);
+    connect(p3->agent(), &Agent::stoneScissorsClothRequested, &server, [p3]() { p3->agent()->stoneScissorsCloth(Data::Scissors); });
+
+    // p1 yields its action-order selection (0 sentinel); p2 strives for order 1.
+    int p1ActionOrderRequests = 0;
+    connect(p1->agent(), &Agent::actionOrderRequested, &server, [p1, &p1ActionOrderRequests](const QList<int> &, int, int) {
+        ++p1ActionOrderRequests;
+        p1->agent()->actionOrder({0});
+    });
+    connect(p2->agent(), &Agent::actionOrderRequested, &server, [p2](const QList<int> &, int, int) { p2->agent()->actionOrder({1}); });
+
+    // p2 (order 1) acts first, then p1 (assigned the leftover order 2); both reply DoNothing to
+    // keep the turn moving. p2 reaching the action phase is the proof p1's yield took effect.
+    int p2ActionRequests = 0;
+    int p1ActionRequests = 0;
+    connect(p2->agent(), &Agent::actionRequested, &server, [p2, &p2ActionRequests](int) {
+        ++p2ActionRequests;
+        p2->agent()->action(Data::DoNothing, {}, 0);
+    });
+    connect(p1->agent(), &Agent::actionRequested, &server, [p1, &p1ActionRequests](int) {
+        ++p1ActionRequests;
+        p1->agent()->action(Data::DoNothing, {}, 0);
+    });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p3->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p3->room() != nullptr && p3->room()->player(p1->objectName()) != nullptr, 5000);
+
+    // p1 entered the action-order negotiation and yielded.
+    QTRY_VERIFY_WITH_TIMEOUT(p1ActionOrderRequests >= 1, 5000);
+
+    // The game advanced past the action-order phase into the action phase for both winners.
+    QTRY_VERIFY_WITH_TIMEOUT(p2ActionRequests >= 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(p1ActionRequests >= 1, 10000);
 }
 
 // A player's state change (online -> offline on a drop) is broadcast to every client, and the
