@@ -108,16 +108,28 @@ void wireBot(Client *bot)
         QList<Data::UpgradeItem> ups;
         if (Room *room = bot->room()) {
             if (Player *me = room->player(bot->objectName())) {
+                // Each stat has its own remaining-upgrade count. Track them and decrement as we
+                // spend the budget so a single request never over-allocates one stat: the old
+                // `canUpgradeKnife()`-only loop re-checked the mirror player's unchanged stat every
+                // iteration, so a large upgradePoint batch replied with the same (now-maxed) item
+                // repeatedly and the server-side application then failed (Q_ASSERT in LogicP::upgrade).
+                int knifeLeft = me->upgradeKnifeRemainingTimes();
+                int horseLeft = me->upgradeHorseRemainingTimes();
+                int maxHpLeft = me->upgradeMaxHpRemainingTimes();
                 int budget = remainingTimes;
                 while (budget-- > 0) {
-                    if (me->canUpgradeKnife())
+                    if (knifeLeft > 0) {
                         ups << Data::UpgradeKnife;
-                    else if (me->canUpgradeHorse())
+                        --knifeLeft;
+                    } else if (horseLeft > 0) {
                         ups << Data::UpgradeHorse;
-                    else if (me->canUpgradeMaxHp())
+                        --horseLeft;
+                    } else if (maxHpLeft > 0) {
                         ups << Data::UpgradeMaxHp;
-                    else
+                        --maxHpLeft;
+                    } else {
                         break; // already maxed everything; this player would win
+                    }
                 }
             }
         }
