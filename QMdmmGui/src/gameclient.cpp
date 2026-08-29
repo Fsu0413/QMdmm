@@ -339,6 +339,16 @@ void QMdmmGameClient::replyActionOrder(const QVariantList &orders)
     m_human->agent()->actionOrder(ao);
 }
 
+void QMdmmGameClient::yieldActionOrder(int selectionNum)
+{
+    // Yield the whole action-order negotiation: reply with a 0 sentinel for every
+    // selection requested, telling the server to auto-assign whatever orders are
+    // left. The reply must carry exactly `selectionNum` entries (one per selection),
+    // and a 0 means "accept the leftover order and stop competing for it".
+    if (m_human && selectionNum > 0)
+        m_human->agent()->actionOrder(QList<int>(selectionNum, 0));
+}
+
 void QMdmmGameClient::replyAction(int action, const QString &toPlayer, int toPlace)
 {
     if (m_human)

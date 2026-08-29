@@ -79,6 +79,10 @@
         <translation>确认顺序</translation>
     </message>
     <message>
+        <source>Yield (auto-assign)</source>
+        <translation>弃权（自动分配）</translation>
+    </message>
+    <message>
         <source>Your turn to act</source>
         <translation>轮到你行动</translation>
     </message>

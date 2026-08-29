@@ -54,6 +54,7 @@ public:
     // Request replies (for the human player)
     Q_INVOKABLE void replySsc(int ssc);
     Q_INVOKABLE void replyActionOrder(const QVariantList &orders);
+    Q_INVOKABLE void yieldActionOrder(int selectionNum);
     Q_INVOKABLE void replyAction(int action, const QString &toPlayer, int toPlace);
     Q_INVOKABLE void replyUpgrade(const QVariantList &items);
     Q_INVOKABLE void speak(const QString &text);

@@ -169,12 +169,21 @@ Item {
                     }
                 }
             }
-            Button {
-                height: 56; width: 200
-                source: "../assets/btn.png"
-                text: qsTr("Confirm order")
-                enabled: orderRemaining === 0
-                onClicked: { game.replyActionOrder(orderSelected); activeRequest = ""; }
+            Row {
+                spacing: 12
+                Button {
+                    height: 56; width: 200
+                    source: "../assets/btn.png"
+                    text: qsTr("Confirm order")
+                    enabled: orderRemaining === 0
+                    onClicked: { game.replyActionOrder(orderSelected); activeRequest = ""; }
+                }
+                Button {
+                    height: 56; width: 200
+                    source: "../assets/btn.png"
+                    text: qsTr("Yield (auto-assign)")
+                    onClicked: { game.yieldActionOrder(orderNeed); activeRequest = ""; }
+                }
             }
         }
 
