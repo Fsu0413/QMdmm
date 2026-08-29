@@ -34,6 +34,7 @@ private slots:
     void localAgent_asyncReplyContract();
     void client_giveUpTriggersServerDefaultReply();
     void client_routesAgentStateChangeToSelfAgent();
+    void server_disconnectsOnAbnormalPacket();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -358,6 +359,51 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     p2Sock->abort();
 
     QTRY_VERIFY_WITH_TIMEOUT(stateRouted, 5000);
+}
+
+// A client sending a packet the server does not expect from a client -- here an invalid packet
+// type -- is an abnormal case (D-025): the server must drop the connection rather than silently
+// ignore the packet. In a not-full room the drop removes the misbehaving player, so the remaining
+// player observes notifyPlayerRemove. The invalid packet is written straight onto the client's raw
+// TCP socket (the public Client API has no "send arbitrary packet" entry point).
+void tst_QMdmmNetworking::server_disconnectsOnAbnormalPacket()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3); // not full with two players: the drop removes, not preserves
+    serverConf.setTcpPort(16362);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16362");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+
+    bool p2Removed = false;
+    connect(p1->agent(), &Agent::playerRemoveNotified, &server, [&p2Removed, p2](const QString &playerName) {
+        if (playerName == p2->objectName())
+            p2Removed = true;
+    });
+
+    // Write an invalid packet type (99) straight onto p2's raw socket. fromJson accepts it (all
+    // fields are well-formed numbers), but no dispatch branch handles type 99, so it is abnormal.
+    QTcpSocket *p2Sock = p2->findChild<QTcpSocket *>();
+    QVERIFY(p2Sock != nullptr);
+    p2Sock->write("{\"type\":99,\"requestId\":0,\"notifyId\":0,\"value\":null}\n");
+    p2Sock->flush();
+
+    QTRY_VERIFY_WITH_TIMEOUT(p2Removed, 5000);
 }
 
 namespace {

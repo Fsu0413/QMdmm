@@ -870,15 +870,31 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
             (this->*call)(packet.value());
         else
             socket->setHasError(true);
-    } else if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
+        return;
+    }
+
+    if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
+        // A notify from the server (pong / version) or from an agent (broadcast) is decoded and
+        // handed to the Agent.
         if (((packet.notifyId() & QMdmmCore::Protocol::NotifyFromServerMask) != 0) || ((packet.notifyId() & QMdmmCore::Protocol::NotifyFromAgentMask) != 0)) {
             void (ClientP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
                 socket->setHasError(true);
+            return;
         }
+
+        // A client-bound notify echoed back (or an invalid notify id) is abnormal: drop the
+        // connection (D-025). The client is the replying side, so it has no "default reply" of its
+        // own -- a drop is all there is to do; the existing reconnect path takes over from here.
+        socket->setHasError(true);
+        return;
     }
+
+    // A reply or an invalid/unknown packet type from the server is abnormal: replies only
+    // originate from the client (D-025).
+    socket->setHasError(true);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

@@ -335,14 +335,30 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
         return;
 
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
+        // A notify addressed to the agent (speak / operate) is decoded and handed to the Agent.
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToAgentMask) != 0) {
             void (ServerConnection::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
                 socket->setHasError(true);
+            return;
         }
-    } else if (packet.type() == QMdmmCore::Protocol::TypeReply) {
+
+        // A notify addressed to the server (ping / sign-in) is handled by ServerP, which is also
+        // connected to this socket's packetReceived; this connection leaves it alone.
+        if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToServerMask) != 0)
+            return;
+
+        // Anything else is an abnormal notify (a server/agent-bound notify echoed back, or an
+        // invalid notify id): drop the connection and answer any in-flight request with its
+        // default reply so the logic is not left waiting on a misbehaving client (D-025).
+        socket->setHasError(true);
+        executeDefaultReply();
+        return;
+    }
+
+    if (packet.type() == QMdmmCore::Protocol::TypeReply) {
         if (currentRequest == packet.requestId()) {
             requestTimer->stop();
             // A null reply value is the protocol's "give up" marker (every legal reply value is
@@ -359,8 +375,20 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
                 else
                     socket->setHasError(true);
             }
+            return;
         }
+
+        // A reply that does not match the in-flight request is an ordering mismatch: drop the
+        // connection and answer the in-flight request with its default reply (D-025).
+        socket->setHasError(true);
+        executeDefaultReply();
+        return;
     }
+
+    // A request or an invalid/unknown packet type from the client is abnormal: requests only
+    // originate from the Logic. Drop the connection and answer any in-flight request (D-025).
+    socket->setHasError(true);
+    executeDefaultReply();
 }
 
 void ServerConnection::sendStoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder)
