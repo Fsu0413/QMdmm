@@ -206,6 +206,146 @@ private slots:
         QVERIFY(act.count() > 0);
     }
 
+    // All winners yield (0 sentinel): leftover orders are assigned automatically
+    // and the engine advances to Action.
+    void QMdmmLogicactionOrderAllYield()
+    {
+        l->roundStart();
+
+        QSignalSpy ord(l.get(), &Logic::actionOrderResult);
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {0}));
+
+        QVERIFY(ord.count() > 0);
+        QVERIFY(act.count() > 0);
+        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test2"));
+    }
+
+    // Partial yield: one winner yields, the other picks. The picker keeps its
+    // order, the yielder receives the leftover one.
+    void QMdmmLogicactionOrderPartialYield()
+    {
+        l->roundStart();
+
+        QSignalSpy ord(l.get(), &Logic::actionOrderResult);
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {1}));
+
+        QVERIFY(ord.count() > 0);
+        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test2"));
+        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test1"));
+    }
+
+    // Yield by times: a player with two action opportunities can yield one and
+    // pick the other (D-024 "yield per opportunity").
+    void QMdmmLogicactionOrderYieldByTimes()
+    {
+        l->addPlayer(QStringLiteral("test4"));
+        l->roundStart();
+
+        QSignalSpy ord(l.get(), &Logic::actionOrderResult);
+
+        // test1/test2 win twice each (two losers), orders 1..4.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+        l->sscReply(QStringLiteral("test4"), Data::Scissors);
+
+        // test1 yields once and picks order 1; test2 picks orders 2 and 3.
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0, 1}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2, 3}));
+
+        QVERIFY(ord.count() > 0);
+        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test2"));
+        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test2"));
+        QCOMPARE(l->d->confirmedActionOrders.value(4), QStringLiteral("test1"));
+    }
+
+    // Yield plus conflict: a yielder sits out while two others fight over the
+    // same order; the conflict loser and the yielder get the leftover orders.
+    void QMdmmLogicactionOrderYieldWithConflict()
+    {
+        l->addPlayer(QStringLiteral("test4"));
+        l->roundStart();
+
+        QSignalSpy tie(l.get(), &Logic::requestSscForActionOrder);
+        QSignalSpy act(l.get(), &Logic::requestAction);
+
+        // Three winners (test1/test2/test3), one loser -> orders 1..3.
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Stone);
+        l->sscReply(QStringLiteral("test4"), Data::Scissors);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {1}));
+        QVERIFY(l->actionOrderReply(QStringLiteral("test3"), {1}));
+
+        QVERIFY(tie.count() > 0);
+
+        // test2 wins the tie-break SSC (Cloth beats Stone).
+        l->sscReply(QStringLiteral("test2"), Data::Cloth);
+        l->sscReply(QStringLiteral("test3"), Data::Stone);
+
+        QVERIFY(act.count() > 0);
+        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test2"));
+        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test3"));
+    }
+
+    // Reject invalid replies: out-of-range order, wrong length, unknown player,
+    // duplicated order, and a second reply from an already-answered player.
+    void QMdmmLogicactionOrderReplyValidation()
+    {
+        l->roundStart();
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+
+        // Out-of-range order (maximumOrderNum == 2).
+        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {3}));
+        // Wrong length (selections == 1).
+        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 2}));
+        // Unknown player.
+        QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {0}));
+        // None of the above advanced the state.
+        QCOMPARE(l->state(), Logic::ActionOrder);
+
+        // Valid pick, then a duplicated reply is rejected.
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+    }
+
+    // A player with two opportunities must not pick the same order twice.
+    void QMdmmLogicactionOrderReplyDuplicateOrder()
+    {
+        l->addPlayer(QStringLiteral("test4"));
+        l->roundStart();
+
+        l->sscReply(QStringLiteral("test1"), Data::Stone);
+        l->sscReply(QStringLiteral("test2"), Data::Stone);
+        l->sscReply(QStringLiteral("test3"), Data::Scissors);
+        l->sscReply(QStringLiteral("test4"), Data::Scissors);
+
+        // Duplicated order within a single reply (selections == 2).
+        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 1}));
+        QCOMPARE(l->state(), Logic::ActionOrder);
+    }
+
     void QMdmmLogicactionReply()
     {
         l->roundStart();

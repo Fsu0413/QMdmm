@@ -252,16 +252,46 @@ bool Logic::sscReply(const QString &playerName, Data::StoneScissorsCloth ssc)
  * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
  * Can be only called from @c Logic::ActionOrder state.
+ *
+ * The reply must contain exactly as many entries as the selections that were
+ * requested from the player. Each entry is either an order the player wants to
+ * strive for (in range @c 1..maximumOrderNum, not already confirmed, and not
+ * duplicated) or @c 0 to yield that action opportunity — the player accepts
+ * whatever order is left over and stops competing for it.
  */
 bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
     if (d->players.contains(playerName)) {
         if (d->state == ActionOrder) {
-            foreach (int order, desiredOrder)
-                d->desiredActionOrders.insert(order, playerName);
-            d->actionOrder();
+            const int selections = d->actionOrderRemainingSelections.value(playerName, -1);
+            if (selections >= 0 && desiredOrder.length() == selections) {
+                const int maximumOrderNum = d->sscForActionWinners.length();
+                QList<int> chosenOrders;
+                int yields = 0;
+                bool valid = true;
 
-            return true;
+                foreach (int order, desiredOrder) {
+                    if (order == 0) {
+                        ++yields;
+                    } else if (order >= 1 && order <= maximumOrderNum && !d->confirmedActionOrders.contains(order) && !chosenOrders.contains(order)) {
+                        chosenOrders << order;
+                    } else {
+                        valid = false;
+                        break;
+                    }
+                }
+
+                if (valid) {
+                    foreach (int order, chosenOrders)
+                        d->desiredActionOrders.insert(order, playerName);
+                    if (yields > 0)
+                        d->actionOrderYieldedPlayers.insert(playerName);
+                    d->actionOrderRemainingSelections.remove(playerName);
+                    d->actionOrder();
+
+                    return true;
+                }
+            }
         }
     }
     return false;

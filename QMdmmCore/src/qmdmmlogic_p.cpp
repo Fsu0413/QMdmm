@@ -112,6 +112,7 @@ void LogicP::sscForAction()
             startSscForAction();
         } else {
             confirmedActionOrders.clear();
+            actionOrderYieldedPlayers.clear();
             startActionOrder();
         }
     }
@@ -139,28 +140,46 @@ void LogicP::startActionOrder()
             ++it;
     }
 
-    if (remainingActionCount.count() == 1) {
-        foreach (int n, remainingActionOrders)
-            confirmedActionOrders[n] = remainingActionCount.constBegin().key();
-        remainingActionCount.clear();
+    // Players who yielded (accepted whatever order is left) no longer compete;
+    // they are excluded from the next request round and assigned automatically.
+    QHash<QString, int> strivingActionCount;
+    for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it) {
+        if (!actionOrderYieldedPlayers.contains(it.key()))
+            strivingActionCount.insert(it.key(), it.value());
     }
 
-    if (remainingActionCount.isEmpty()) {
+    if (strivingActionCount.count() <= 1) {
+        // At most one player is still competing, so every remaining order can be
+        // assigned automatically. Hand the leftover orders (ascending) to whoever
+        // still has unconfirmed picks — yielders and, if any, a single conflict
+        // loser — in name order for determinism. Yielders accept whatever order
+        // they get, so the exact pairing carries no semantic weight.
+        QStringList remainingPlayers = remainingActionCount.keys();
+        remainingPlayers.sort();
+        int orderIndex = 0;
+        foreach (const QString &player, remainingPlayers) {
+            const int count = remainingActionCount.value(player);
+            for (int k = 0; k < count; ++k)
+                confirmedActionOrders[remainingActionOrders[orderIndex++]] = player;
+        }
+
         emit q->actionOrderResult(confirmedActionOrders, Logic::QPrivateSignal());
         currentActionOrder = 0;
         startAction();
     } else {
         desiredActionOrders.clear();
+        actionOrderRemainingSelections.clear();
+        for (QHash<QString, int>::const_iterator it = strivingActionCount.constBegin(); it != strivingActionCount.constEnd(); ++it)
+            actionOrderRemainingSelections.insert(it.key(), it.value());
         state = Logic::ActionOrder;
-        for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it)
+        for (QHash<QString, int>::const_iterator it = strivingActionCount.constBegin(); it != strivingActionCount.constEnd(); ++it)
             emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(sscForActionWinners.length()), it.value(), Logic::QPrivateSignal());
     }
 }
 
 void LogicP::actionOrder()
 {
-    // TODO: support 0 as yielding selection / accepting arbitrary order
-    if (desiredActionOrders.size() + confirmedActionOrders.size() == sscForActionWinners.length())
+    if (actionOrderRemainingSelections.isEmpty())
         startSscForActionOrder();
 }
 

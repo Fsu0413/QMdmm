@@ -7,6 +7,8 @@
 
 #include "qmdmmroom.h"
 
+#include <QSet>
+
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
 namespace QMdmmCore {
@@ -27,6 +29,8 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
     QStringList sscForActionWinners;
     QMultiHash<int, QString> desiredActionOrders;
     QHash<int, QString> confirmedActionOrders;
+    QHash<QString, int> actionOrderRemainingSelections;
+    QSet<QString> actionOrderYieldedPlayers;
     int currentStrivingActionOrder;
     QHash<QString, Data::StoneScissorsCloth> sscForActionOrderReplies;
     int currentActionOrder;
