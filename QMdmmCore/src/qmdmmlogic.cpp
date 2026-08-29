@@ -285,7 +285,7 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
                     foreach (int order, chosenOrders)
                         d->desiredActionOrders.insert(order, playerName);
                     if (yields > 0)
-                        d->actionOrderYieldedPlayers.insert(playerName);
+                        d->actionOrderYields[playerName] += yields;
                     d->actionOrderRemainingSelections.remove(playerName);
                     d->actionOrder();
 

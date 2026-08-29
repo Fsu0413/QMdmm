@@ -7,6 +7,7 @@
 #include "qmdmmroom.h"
 
 #include <QHash>
+#include <QSet>
 
 namespace QMdmmCore {
 
@@ -112,7 +113,7 @@ void LogicP::sscForAction()
             startSscForAction();
         } else {
             confirmedActionOrders.clear();
-            actionOrderYieldedPlayers.clear();
+            actionOrderYields.clear();
             startActionOrder();
         }
     }
@@ -140,20 +141,22 @@ void LogicP::startActionOrder()
             ++it;
     }
 
-    // Players who yielded (accepted whatever order is left) no longer compete;
-    // they are excluded from the next request round and assigned automatically.
+    // A single winner (only one distinct player in sscForActionWinners) takes
+    // every order without negotiation. Yielded opportunities are not striven for:
+    // a player's remaining selections minus its yields is what still needs a pick.
+    const bool singleWinner = QSet<QString>(sscForActionWinners.constBegin(), sscForActionWinners.constEnd()).size() == 1;
     QHash<QString, int> strivingActionCount;
     for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it) {
-        if (!actionOrderYieldedPlayers.contains(it.key()))
-            strivingActionCount.insert(it.key(), it.value());
+        const int striving = it.value() - actionOrderYields.value(it.key(), 0);
+        if (striving > 0)
+            strivingActionCount.insert(it.key(), striving);
     }
 
-    if (strivingActionCount.count() <= 1) {
-        // At most one player is still competing, so every remaining order can be
-        // assigned automatically. Hand the leftover orders (ascending) to whoever
-        // still has unconfirmed picks — yielders and, if any, a single conflict
-        // loser — in name order for determinism. Yielders accept whatever order
-        // they get, so the exact pairing carries no semantic weight.
+    if (singleWinner || strivingActionCount.isEmpty()) {
+        // Nothing left to fight for: a single winner, or every remaining pick has
+        // been yielded. Hand the leftover orders (ascending) to whoever still has
+        // unconfirmed selections, in name order for determinism. Yielders accept
+        // whatever order they get, so the exact pairing carries no semantic weight.
         QStringList remainingPlayers = remainingActionCount.keys();
         remainingPlayers.sort();
         int orderIndex = 0;
@@ -167,6 +170,9 @@ void LogicP::startActionOrder()
         currentActionOrder = 0;
         startAction();
     } else {
+        // Still contested: request the remaining selections from each striving
+        // player. A player who lost an SSC struggle keeps competing (re-picks),
+        // rather than being defaulted to whatever is left.
         desiredActionOrders.clear();
         actionOrderRemainingSelections.clear();
         for (QHash<QString, int>::const_iterator it = strivingActionCount.constBegin(); it != strivingActionCount.constEnd(); ++it)

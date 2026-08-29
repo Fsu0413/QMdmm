@@ -275,13 +275,15 @@ private slots:
     }
 
     // Yield plus conflict: a yielder sits out while two others fight over the
-    // same order; the conflict loser and the yielder get the leftover orders.
+    // same order. The conflict loser must re-pick (not be defaulted), and only
+    // then does the yielder get the leftover order.
     void QMdmmLogicactionOrderYieldWithConflict()
     {
         l->addPlayer(QStringLiteral("test4"));
         l->roundStart();
 
         QSignalSpy tie(l.get(), &Logic::requestSscForActionOrder);
+        QSignalSpy req(l.get(), &Logic::requestActionOrder);
         QSignalSpy act(l.get(), &Logic::requestAction);
 
         // Three winners (test1/test2/test3), one loser -> orders 1..3.
@@ -289,6 +291,9 @@ private slots:
         l->sscReply(QStringLiteral("test2"), Data::Stone);
         l->sscReply(QStringLiteral("test3"), Data::Stone);
         l->sscReply(QStringLiteral("test4"), Data::Scissors);
+
+        // First request round: one request per winner.
+        QCOMPARE(req.count(), 3);
 
         QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
         QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {1}));
@@ -300,10 +305,15 @@ private slots:
         l->sscReply(QStringLiteral("test2"), Data::Cloth);
         l->sscReply(QStringLiteral("test3"), Data::Stone);
 
+        // The conflict loser (test3) is asked again to re-pick, rather than being
+        // defaulted to a leftover order.
+        QCOMPARE(req.count(), 4);
+        QVERIFY(l->actionOrderReply(QStringLiteral("test3"), {2}));
+
         QVERIFY(act.count() > 0);
         QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test2"));
-        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test1"));
-        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test3"));
+        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test3"));
+        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test1"));
     }
 
     // Reject invalid replies: out-of-range order, wrong length, unknown player,
@@ -454,9 +464,12 @@ private slots:
 
         QVERIFY(reqTie.count() > 0);
 
-        // Non-tie SSC resolves the struggle (Cloth beats Stone here); Action follows.
+        // Non-tie SSC resolves the struggle (Cloth beats Stone here). The loser
+        // then re-picks the remaining order; only then does Action follow.
         l->sscReply(QStringLiteral("test1"), Data::Stone);
         l->sscReply(QStringLiteral("test2"), Data::Cloth);
+
+        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {2}));
 
         QVERIFY(act.count() > 0);
     }
