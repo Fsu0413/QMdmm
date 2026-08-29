@@ -49,6 +49,63 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+  coverage:
+    name: Code coverage (gcovr)
+    runs-on: ubuntu-26.04
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Qt (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qt6-base-dev qt6-websockets-dev qt6-declarative-dev qt6-tools-dev
+
+      - name: Install gcovr
+        run: pip3 install gcovr
+
+      - name: Configure
+        run: >
+          cmake -B build -G "Unix Makefiles"
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DQMDMM_EXPORT_PRIVATE=NO
+          -DCMAKE_C_FLAGS="--coverage"
+          -DCMAKE_CXX_FLAGS="--coverage"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          mkdir -p build/coverage
+          gcovr --root . \
+            --filter 'QMdmmCore/src/' \
+            --filter 'QMdmmNetworking/src/' \
+            --filter 'QMdmmGui/src/' \
+            --filter 'QMdmmServer/src/' \
+            --html-details build/coverage/index.html \
+            --print-summary
+
+      - name: Publish to qmdmm-coverage
+        env:
+          COVERAGE_TOKEN: ${{ secrets.QMDMM_DOCS_TOKEN }}
+        run: |
+          cd build/coverage
+          touch .nojekyll
+          git init -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "coverage: publish gcovr HTML report for ${{ github.sha }}"
+          git remote add origin "https://x-access-token:${COVERAGE_TOKEN}@github.com/nemn9852/qmdmm-coverage.git"
+          git push -f origin main
+
   docs:
     name: Publish API docs
     runs-on: macos-latest
