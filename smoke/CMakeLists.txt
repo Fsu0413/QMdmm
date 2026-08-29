@@ -21,6 +21,11 @@ set_target_properties(qmdmm_smoke PROPERTIES
 
 # Register as a CTest test (consistent with the other tests in this project,
 # which are gated behind BUILD_TESTING).
+#
+# Two cases cover the playerNumPerRoom boundary: the default (2, the minimum
+# valid room) and the high end (8 players) so a room-size regression at either
+# end of the supported 2..9 range is caught.
 if (BUILD_TESTING)
     add_test(NAME qmdmm_smoke COMMAND $<TARGET_FILE:qmdmm_smoke>)
+    add_test(NAME qmdmm_smoke_8players COMMAND $<TARGET_FILE:qmdmm_smoke> 8)
 endif()

@@ -130,7 +130,18 @@ int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
 
-    const int playerCount = 2;
+    // Optional player-count argument exercises the playerNumPerRoom boundary. It defaults to 2,
+    // the minimum valid room size; callers (e.g. the 8-player CTest case below) can pass a larger
+    // value to check the game stays playable at the high end. The value is taken verbatim (no
+    // clamping) so out-of-bounds probe runs can also observe how the room behaves unvalidated.
+    int playerCount = 2;
+    if (app.arguments().size() > 1) {
+        bool parsed = false;
+        const int requested = app.arguments().at(1).toInt(&parsed);
+        if (parsed)
+            playerCount = requested;
+    }
+
     int rounds = 0;
     int gameOvers = 0;
     int gameStarts = 0;
