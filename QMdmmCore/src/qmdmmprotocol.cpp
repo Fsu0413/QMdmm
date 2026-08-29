@@ -429,75 +429,59 @@ bool Packet::hasError(QString *errorString) const
 /**
  * @brief deserialize the byte array
  * @param serialized the serialized byte array
- * @param errorString (out) the optional error string
  * @return the deserialized packet
  *
  * This does the opposite of @c Packet::serialize() function.
+ * The error, if any, is only observable through @c Packet::hasError().
  */
-Packet Packet::fromJson(const QByteArray &serialized, QString *errorString)
+Packet Packet::fromJson(const QByteArray &serialized)
 {
-    if (errorString == nullptr) {
-        static QString _errorString;
-        errorString = &_errorString;
-    }
-
-    errorString->clear();
-
     Packet ret;
 
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(serialized, &err);
 
     if (err.error != QJsonParseError::NoError) {
-        *errorString = QStringLiteral("Json error: ").append(err.errorString());
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("Json error: ").append(err.errorString());
         return ret;
     }
 
     if (!doc.isObject()) {
-        *errorString = QStringLiteral("Document is not object");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("Document is not object");
         return ret;
     }
 
     *(ret.d) = doc.object();
 
     if (!ret.d->contains(QStringLiteral("type"))) {
-        *errorString = QStringLiteral("'type' is non-existent");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'type' is non-existent");
         return ret;
     }
     if (!ret.d->value(QStringLiteral("type")).isDouble()) {
-        *errorString = QStringLiteral("'type' is not number");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'type' is not number");
         return ret;
     }
 
     if (!ret.d->contains(QStringLiteral("requestId"))) {
-        *errorString = QStringLiteral("'requestId' is non-existent");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'requestId' is non-existent");
         return ret;
     }
     if (!ret.d->value(QStringLiteral("requestId")).isDouble()) {
-        *errorString = QStringLiteral("'requestId' is not number");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'requestId' is not number");
         return ret;
     }
 
     if (!ret.d->contains(QStringLiteral("notifyId"))) {
-        *errorString = QStringLiteral("'notifyId' is non-existent");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'notifyId' is non-existent");
         return ret;
     }
     if (!ret.d->value(QStringLiteral("notifyId")).isDouble()) {
-        *errorString = QStringLiteral("'notifyId' is not number");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'notifyId' is not number");
         return ret;
     }
 
     if (!ret.d->contains(QStringLiteral("value"))) {
-        *errorString = QStringLiteral("'value' is non-existent");
-        ret.d->error = *errorString;
+        ret.d->error = QStringLiteral("'value' is non-existent");
         return ret;
     }
 

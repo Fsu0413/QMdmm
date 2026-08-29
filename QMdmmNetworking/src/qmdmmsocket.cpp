@@ -70,10 +70,10 @@ SocketP::SocketP(Socket *q)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 bool SocketP::packetReceived(const QByteArray &arr)
 {
-    QString packetError;
-    QMdmmCore::Packet packet = QMdmmCore::Packet::fromJson(arr, &packetError);
+    QMdmmCore::Packet packet = QMdmmCore::Packet::fromJson(arr);
 
-    if (packet.hasError()) {
+    QString packetError;
+    if (packet.hasError(&packetError)) {
         // Don't process more package for this connection. It is not guaranteed to be the desired client
         errorOccurred(packetError);
         q->setHasError(true);

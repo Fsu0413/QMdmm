@@ -157,13 +157,11 @@ private slots:
         QFETCH(QString, errorString);
 
         QString actualErrorString;
-        QString actualErrorString2;
 
-        Packet p = Packet::fromJson(input, &actualErrorString);
+        Packet p = Packet::fromJson(input);
 
+        QCOMPARE(p.hasError(&actualErrorString), !errorString.isEmpty());
         QCOMPARE(errorString, actualErrorString);
-        QCOMPARE(p.hasError(&actualErrorString2), !actualErrorString.isEmpty());
-        QCOMPARE(actualErrorString, actualErrorString2);
 
         if (actualErrorString.isEmpty()) {
             QCOMPARE(p.type(), Protocol::TypeRequest);
@@ -177,12 +175,12 @@ private slots:
     void QMdmmPacketfromJsonhasError2()
     {
         {
-            // coverage for errorString = nullptr
-            (void)Packet::fromJson(QByteArray("some_invalid"), nullptr).hasError();
+            // coverage for the no-errorString overload of hasError()
+            (void)Packet::fromJson(QByteArray("some_invalid")).hasError();
         }
         {
             QString actualErrorString;
-            (void)Packet::fromJson(QByteArray("some_invalid"), nullptr).hasError(&actualErrorString);
+            (void)Packet::fromJson(QByteArray("some_invalid")).hasError(&actualErrorString);
 
             bool r = actualErrorString.startsWith(QStringLiteral("Json error: "));
             QVERIFY(r);
@@ -191,13 +189,11 @@ private slots:
             // Check of a notify JSON
             QByteArray input = R"json({"type": 3, "requestId": 2, "notifyId": 8193, "value": "Fsu0413"})json";
             QString actualErrorString;
-            QString actualErrorString2;
 
-            Packet p = Packet::fromJson(input, &actualErrorString);
+            Packet p = Packet::fromJson(input);
 
+            QCOMPARE(p.hasError(&actualErrorString), false);
             QVERIFY(actualErrorString.isEmpty());
-            QCOMPARE(p.hasError(&actualErrorString2), !actualErrorString.isEmpty());
-            QCOMPARE(actualErrorString, actualErrorString2);
 
             if (actualErrorString.isEmpty()) {
                 QCOMPARE(p.type(), Protocol::TypeNotify);

@@ -118,7 +118,7 @@ public:
     }
     bool hasError(QString *errorString = nullptr) const;
 
-    static QMDMMCORE_EXPORT Packet fromJson(const QByteArray &serialized, QString *errorString = nullptr);
+    static QMDMMCORE_EXPORT Packet fromJson(const QByteArray &serialized);
 
 #ifndef DOXYGEN
 private:
