@@ -43,13 +43,13 @@ TestCase {
     }
 
     function test_replyDrivesTheMatch() {
-        var ssc = createTemporaryObject(signalSpyComponent, testCase, {
+        var rps = createTemporaryObject(signalSpyComponent, testCase, {
                                             target: game,
-                                            signalName: "requestStoneScissorsCloth"
+                                            signalName: "requestRockPaperScissors"
                                         });
-        var sscResult = createTemporaryObject(signalSpyComponent, testCase, {
+        var rpsResult = createTemporaryObject(signalSpyComponent, testCase, {
                                                   target: game,
-                                                  signalName: "sscResult"
+                                                  signalName: "rpsResult"
                                               });
 
         game.playerCount = 2;
@@ -57,10 +57,10 @@ TestCase {
         tryCompare(game, "gameState", "playing", 15000);
 
         // The server asks the human for a rock-paper-scissors pick.
-        tryCompare(ssc, "count", 1, 15000);
+        tryCompare(rps, "count", 1, 15000);
 
-        // The auto-replying bot answers its own SSC request, so the human's reply
-        // below completes the round and produces an sscResult broadcast. Require the
+        // The auto-replying bot answers its own RPS request, so the human's reply
+        // below completes the round and produces an rpsResult broadcast. Require the
         // human's reply to yield *at least one more* result rather than an exact
         // count — an exact count depends on how the match advances, which is
         // fragile: under the old 80 ms request-timeout default the auto-advancing
@@ -71,11 +71,11 @@ TestCase {
         // ServerConfiguration), far longer than the 15 s window below, so a human
         // that stops replying leaves the match waiting; the bot's auto-reply is
         // the only thing driving progress.
-        var before = sscResult.count;
-        game.replySsc(0); // rock
+        var before = rpsResult.count;
+        game.replyRps(0); // rock
 
         tryVerify(function () {
-            return sscResult.count > before;
+            return rpsResult.count > before;
         }, 15000);
     }
 
