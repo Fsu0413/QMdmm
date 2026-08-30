@@ -60,9 +60,6 @@ private slots:
             bool r = l->addPlayer(QStringLiteral("test11"));
             QVERIFY(!r);
         }
-
-        // case 4: d->players.contains(playerName) returns false, d->room->addPlayer(playerName) returns nullptr
-        // This is Q_UNREACHABLE so do not test
     }
 
     void QMdmmLogicremovePlayer()
@@ -86,9 +83,6 @@ private slots:
             bool r = l->removePlayer(QStringLiteral("test1"));
             QVERIFY(!r);
         }
-
-        // case 4: d->players.contains(playerName) returns true, d->room->removePlayer(playerName) returns false
-        // This is Q_UNREACHABLE so do not test
     }
 
     void QMdmmLogicroundStart()

@@ -19,7 +19,6 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
 
     Logic *q;
     Room *room;
-    QStringList players;
 
     Logic::State state;
 

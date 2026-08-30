@@ -151,15 +151,10 @@ Logic::State Logic::state() const noexcept
 bool Logic::addPlayer(const QString &playerName)
 {
     if (d->state == BeforeRoundStart) {
-        if (!d->players.contains(playerName)) {
-            if (d->room->addPlayer(playerName) != nullptr) {
-                d->players << playerName;
-                d->room->resetUpgrades();
+        if (d->room->addPlayer(playerName) != nullptr) {
+            d->room->resetUpgrades();
 
-                return true;
-            }
-
-            Q_UNREACHABLE();
+            return true;
         }
     }
 
@@ -176,15 +171,10 @@ bool Logic::addPlayer(const QString &playerName)
 bool Logic::removePlayer(const QString &playerName)
 {
     if (d->state == BeforeRoundStart) {
-        if (d->players.contains(playerName)) {
-            if (d->room->removePlayer(playerName)) {
-                d->players.removeAll(playerName);
-                d->room->resetUpgrades();
+        if (d->room->removePlayer(playerName)) {
+            d->room->resetUpgrades();
 
-                return true;
-            }
-
-            Q_UNREACHABLE();
+            return true;
         }
     }
 
@@ -201,7 +191,7 @@ bool Logic::roundStart()
 {
     if (d->state == BeforeRoundStart) {
         // a game must be started for player number >= 2
-        if (d->players.length() >= 2) {
+        if (d->room->playerNames().length() >= 2) {
             d->room->prepareForRoundStart();
             d->startRpsForAction();
 
@@ -222,7 +212,7 @@ bool Logic::roundStart()
  */
 bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
 {
-    if (d->players.contains(playerName)) {
+    if (d->room->player(playerName) != nullptr) {
         if (d->state == RpsForAction) {
             if (!d->rpsForActionReplies.contains(playerName)) {
                 d->rpsForActionReplies.insert(playerName, rps);
@@ -261,7 +251,7 @@ bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
  */
 bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
-    if (d->players.contains(playerName)) {
+    if (d->room->player(playerName) != nullptr) {
         if (d->state == ActionOrder) {
             const int selections = d->actionOrderRemainingSelections.value(playerName, -1);
             if (selections >= 0 && desiredOrder.length() == selections) {
@@ -309,7 +299,7 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
  */
 bool Logic::actionReply(const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace)
 {
-    if (d->players.contains(playerName)) {
+    if (d->room->player(playerName) != nullptr) {
         if (d->state == Action) {
             if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
                 d->applyAction(playerName, action, toPlayer, toPlace);
@@ -333,7 +323,7 @@ bool Logic::actionReply(const QString &playerName, Data::Action action, const QS
  */
 bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeItem> &items)
 {
-    if (d->players.contains(playerName)) {
+    if (d->room->player(playerName) != nullptr) {
         if (d->state == Upgrade) {
             d->upgrades.insert(playerName, items);
             d->upgrade();
