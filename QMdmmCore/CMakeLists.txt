@@ -81,15 +81,6 @@ else()
         message(AUTHOR_WARNING "Coverage generation is not supported in MSVC")
     endif()
 endif()
-if (NOT MSVC)
-    target_compile_options(QMdmmCore
-        INTERFACE -Wall -Wextra
-    )
-else()
-    target_compile_options(QMdmmCore
-        INTERFACE -W4 -wd4251
-    )
-endif()
 get_target_property(QMDMMCORE_GENERATED_FILES QMdmmCore SOURCES)
 if (NOT QMDMMCORE_GENERATED_FILES)
     unset(QMDMMCORE_GENERATED_FILES)
@@ -127,7 +118,8 @@ if (MSVC)
     target_compile_options(QMdmmCore
         INTERFACE "-W4"
                   "-wd4251"
-                  "-we4596"
+                  "-wd4275"
+                  "-we4596" # Needed for standard compliance
     )
 else()
     target_compile_options(QMdmmCore
