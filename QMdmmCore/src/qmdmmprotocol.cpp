@@ -41,31 +41,31 @@ namespace v0 {
  * @var Protocol::RequestId Protocol::RequestRockPaperScissors
  * @brief A request of Rock-Paper-Scissors
  *
- * Wire format — request: @c array { string playerName } playerNames, @c int strivedOrder
- * (or @c 0 for action); reply: @c int rps.
+ * Wire format — request: @c {"playerNames": [string], "strivedOrder": int} (a @c strivedOrder of
+ * @c 0 selects an action instead of a strived order); reply: @c int rps.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestActionOrder
  * @brief A request of action order
  *
- * Wire format — request: @c array { int } remainedOrders, @c int maximumOrder, @c int selectionNum;
- * reply: @c array { int } orders.
+ * Wire format — request: @c {"remainedOrders": [int], "maximumOrder": int, "selectionNum": int};
+ * reply: @c [int] orders.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestAction
  * @brief A request of action
  *
- * Wire format — request: @c int currentOrder; reply: @c int(Action) action, optional
- * @c string toPlayer, optional @c int toPlace.
+ * Wire format — request: @c int currentOrder; reply: @c {"action": int(Action),
+ * "toPlayer": string (optional), "toPlace": int (optional)}.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestUpgrade
  * @brief A request of upgrade
  *
- * Wire format — request: @c int remainingTimes; reply: @c array { int } item.
+ * Wire format — request: @c int remainingTimes; reply: @c [int] item.
  */
 
 /**
@@ -87,14 +87,18 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifyPongServer
  * @brief A notify from server of a ping-pong (heartbeat)
  *
- * Wire format: @c int ping-id.
+ * Wire format: @c int64 epoch-milliseconds timestamp (echoed from the ping).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyVersion
  * @brief A notify from server of version number
  *
- * Wire format: @c string versionNumber, @c int protocolVersion.
+ * Wire format: @c {"versionNumber": string, "protocolVersion": int}.
+ *
+ * When @c protocolVersion differs from @c Protocol::version() the client silently aborts the
+ * sign-in handshake (it neither signs in nor emits a signal); a @c versionNumber mismatch is
+ * currently a no-op.
  */
 
 /**
@@ -113,85 +117,87 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifyAgentStateChanged
  * @brief A notify from agent of agent state
  *
- * Wire format: @c string playerName, @c int (AgentState) state.
+ * Wire format: @c {"playerName": string, "agentState": int (AgentState)}.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyPlayerAdded
  * @brief A notify from agent of player added
  *
- * Wire format: @c string playerName, @c string screenName, @c int(AgentState) agentState.
+ * Wire format: @c {"playerName": string, "screenName": string, "agentState": int (AgentState)}.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyPlayerRemoved
  * @brief A notify from agent of player removed
  *
- * Wire format: @c string playerName.
+ * Wire format: @c {"playerName": string}.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyGameStart
  * @brief A notify from agent of game started
  *
- * Wire format: broadcast.
+ * Wire format: broadcast, empty @c object.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyRoundStart
  * @brief A notify from agent of round started
  *
- * Wire format: broadcast.
+ * Wire format: broadcast, empty @c object.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyRockPaperScissors
  * @brief A notify from agent of Rock-Paper-Scissors
  *
- * Wire format: broadcast, @c object { int seq, string playerName: int rps }.
+ * Wire format: broadcast, @c {playerName: int rps} (an object keyed by player name, value is the
+ * Rock-Paper-Scissors choice).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyActionOrder
  * @brief A notify from agent of action order
  *
- * Wire format: broadcast, @c object { int seq, array { string playerName } order }.
+ * Wire format: broadcast, @c [string] (an array where index @c i is the player taking order @c i).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyAction
  * @brief A notify from agent of action
  *
- * Wire format: broadcast, @c object { int seq, string playerName, int(Action) action, optional
- * string toPlayer, optional int toPlace }.
+ * Wire format: broadcast, @c {"playerName": string, "action": int (Action),
+ * "toPlayer": string (optional), "toPlace": int (optional)}.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyRoundOver
  * @brief A notify from agent of round over
  *
- * Wire format: broadcast.
+ * Wire format: broadcast, empty @c object.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyUpgrade
  * @brief A notify from agent of upgrade
  *
- * Wire format: broadcast, @c object { int seq, string playerName: array { int } item }.
+ * Wire format: broadcast, @c {playerName: [int item]} (an object keyed by player name, value is
+ * the list of upgrade items).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyGameOver
  * @brief A notify from agent of game over
  *
- * Wire format: broadcast, @c string winnerPlayerName.
+ * Wire format: broadcast, @c [string] (the array of winning player names).
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifySpoken
  * @brief A notify from agent of agent spoken
  *
- * Wire format: broadcast, @c string playerName, @c string content.
+ * Wire format: broadcast, @c {"playerName": string, "content": string}.
  */
 
 /**
@@ -210,21 +216,22 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifyPingServer
  * @brief A notify to server of a ping-pong (heartbeat)
  *
- * Wire format: @c int ping-id.
+ * Wire format: @c int64 epoch-milliseconds timestamp.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifySignIn
  * @brief A notify to server of sign in
  *
- * Wire format: @c string playerName, @c string screenName, @c int(AgentState) agentState.
+ * Wire format: @c {"playerName": string, "screenName": string, "agentState": int (AgentState),
+ * "lastRoundEventSeq": int}.
  */
 
 /**
  * @var Protocol::NotifyId Protocol::NotifyObserve
  * @brief A notify to server of observe
  *
- * Wire format: @c string observerName, @c string playerName.
+ * Wire format: @c {"observerName": string, "playerName": string}.
  *
  * @todo OB functionality
  */
@@ -238,7 +245,7 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifySpeak
  * @brief A notify to agent of speaking
  *
- * Wire format: @c string.
+ * Wire format: @c string (base64-encoded UTF-8 content).
  */
 
 /**
@@ -320,6 +327,19 @@ PacketData &PacketData::operator=(const QJsonObject &ob) noexcept(noexcept(QJson
  * @brief A packet for QMdmm protocol
  *
  * A packet of QMdmm Protocol is a JSON object, encoded in a single line.
+ *
+ * The top-level object carries four keys:
+ * - @c "type": @c int, one of Protocol::PacketType.
+ * - @c "requestId": @c int, one of Protocol::RequestId. Meaningful only for request/reply packets,
+ *   and @c Protocol::RequestInvalid for notify/invalid packets.
+ * - @c "notifyId": @c int, one of Protocol::NotifyId. Meaningful only for notify packets, and
+ *   @c Protocol::NotifyInvalid for request/reply/invalid packets.
+ * - @c "value": the payload. Its shape depends on the requestId (for request/reply) or notifyId
+ *   (for notify); see the per-ID documentation below.
+ *
+ * Unknown keys are preserved and ignored: @c PacketData derives from @c QJsonObject, so
+ * deserialization copies the whole object and only validates the four keys above. Extra keys
+ * round-trip through @c serialize() unchanged and are not rejected.
  */
 
 /**
