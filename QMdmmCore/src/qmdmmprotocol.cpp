@@ -6,6 +6,9 @@
 #include <QJsonValue>
 #include <QSharedData>
 
+#include <cmath>
+#include <limits>
+
 /**
  * @file qmdmmprotocol.h
  * @brief QMdmm protocol definitions
@@ -426,6 +429,82 @@ bool Packet::hasError(QString *errorString) const
     return !d->error.isEmpty();
 }
 
+namespace {
+
+bool isPacketTypeValid(int type)
+{
+    switch (static_cast<Protocol::PacketType>(type)) {
+    case Protocol::TypeInvalid:
+    case Protocol::TypeRequest:
+    case Protocol::TypeReply:
+    case Protocol::TypeNotify:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool isRequestIdValid(int requestId)
+{
+    switch (static_cast<Protocol::RequestId>(requestId)) {
+    case Protocol::RequestInvalid:
+    case Protocol::RequestRockPaperScissors:
+    case Protocol::RequestActionOrder:
+    case Protocol::RequestAction:
+    case Protocol::RequestUpgrade:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool isNotifyIdValid(int notifyId)
+{
+    switch (static_cast<Protocol::NotifyId>(notifyId)) {
+    case Protocol::NotifyInvalid:
+    case Protocol::NotifyPongServer:
+    case Protocol::NotifyVersion:
+    case Protocol::NotifyLogicConfiguration:
+    case Protocol::NotifyAgentStateChanged:
+    case Protocol::NotifyPlayerAdded:
+    case Protocol::NotifyPlayerRemoved:
+    case Protocol::NotifyGameStart:
+    case Protocol::NotifyRoundStart:
+    case Protocol::NotifyRockPaperScissors:
+    case Protocol::NotifyActionOrder:
+    case Protocol::NotifyAction:
+    case Protocol::NotifyRoundOver:
+    case Protocol::NotifyUpgrade:
+    case Protocol::NotifyGameOver:
+    case Protocol::NotifySpoken:
+    case Protocol::NotifyOperated:
+    case Protocol::NotifyPingServer:
+    case Protocol::NotifySignIn:
+    case Protocol::NotifyObserve:
+    case Protocol::NotifySpeak:
+    case Protocol::NotifyOperate:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// JSON numbers are doubles; enum fields must be integral values. Returns true and
+// stores the value in @p out if @p value is a whole number that fits in an int.
+// Rejects fractional values (e.g. 1.5) and out-of-int-range values (e.g. 1e30),
+// which toInt() would otherwise silently truncate or wrap.
+bool toIntegral(const QJsonValue &value, int *out)
+{
+    const double d = value.toDouble();
+    if (d != std::floor(d) || d < static_cast<double>(std::numeric_limits<int>::min()) || d > static_cast<double>(std::numeric_limits<int>::max()))
+        return false;
+
+    *out = static_cast<int>(d);
+    return true;
+}
+
+} // namespace
+
 /**
  * @brief deserialize the byte array
  * @param serialized the serialized byte array
@@ -453,6 +532,7 @@ Packet Packet::fromJson(const QByteArray &serialized)
 
     *(ret.d) = doc.object();
 
+    int typeInt = 0;
     if (!ret.d->contains(QStringLiteral("type"))) {
         ret.d->error = QStringLiteral("'type' is non-existent");
         return ret;
@@ -461,7 +541,16 @@ Packet Packet::fromJson(const QByteArray &serialized)
         ret.d->error = QStringLiteral("'type' is not number");
         return ret;
     }
+    if (!toIntegral(ret.d->value(QStringLiteral("type")), &typeInt)) {
+        ret.d->error = QStringLiteral("'type' is not an integer");
+        return ret;
+    }
+    if (!isPacketTypeValid(typeInt)) {
+        ret.d->error = QStringLiteral("'type' is out of range");
+        return ret;
+    }
 
+    int requestIdInt = 0;
     if (!ret.d->contains(QStringLiteral("requestId"))) {
         ret.d->error = QStringLiteral("'requestId' is non-existent");
         return ret;
@@ -470,7 +559,16 @@ Packet Packet::fromJson(const QByteArray &serialized)
         ret.d->error = QStringLiteral("'requestId' is not number");
         return ret;
     }
+    if (!toIntegral(ret.d->value(QStringLiteral("requestId")), &requestIdInt)) {
+        ret.d->error = QStringLiteral("'requestId' is not an integer");
+        return ret;
+    }
+    if (!isRequestIdValid(requestIdInt)) {
+        ret.d->error = QStringLiteral("'requestId' is out of range");
+        return ret;
+    }
 
+    int notifyIdInt = 0;
     if (!ret.d->contains(QStringLiteral("notifyId"))) {
         ret.d->error = QStringLiteral("'notifyId' is non-existent");
         return ret;
@@ -479,10 +577,51 @@ Packet Packet::fromJson(const QByteArray &serialized)
         ret.d->error = QStringLiteral("'notifyId' is not number");
         return ret;
     }
+    if (!toIntegral(ret.d->value(QStringLiteral("notifyId")), &notifyIdInt)) {
+        ret.d->error = QStringLiteral("'notifyId' is not an integer");
+        return ret;
+    }
+    if (!isNotifyIdValid(notifyIdInt)) {
+        ret.d->error = QStringLiteral("'notifyId' is out of range");
+        return ret;
+    }
 
     if (!ret.d->contains(QStringLiteral("value"))) {
         ret.d->error = QStringLiteral("'value' is non-existent");
         return ret;
+    }
+
+    const auto type = static_cast<Protocol::PacketType>(typeInt);
+    const auto requestId = static_cast<Protocol::RequestId>(requestIdInt);
+    const auto notifyId = static_cast<Protocol::NotifyId>(notifyIdInt);
+
+    if (type == Protocol::TypeRequest || type == Protocol::TypeReply) {
+        if (requestId == Protocol::RequestInvalid) {
+            ret.d->error = QStringLiteral("'requestId' is invalid for a request/reply packet");
+            return ret;
+        }
+        if (notifyId != Protocol::NotifyInvalid) {
+            ret.d->error = QStringLiteral("'notifyId' should be invalid for a request/reply packet");
+            return ret;
+        }
+    } else if (type == Protocol::TypeNotify) {
+        if (notifyId == Protocol::NotifyInvalid) {
+            ret.d->error = QStringLiteral("'notifyId' is invalid for a notify packet");
+            return ret;
+        }
+        if (requestId != Protocol::RequestInvalid) {
+            ret.d->error = QStringLiteral("'requestId' should be invalid for a notify packet");
+            return ret;
+        }
+    } else {
+        if (requestId != Protocol::RequestInvalid) {
+            ret.d->error = QStringLiteral("'requestId' should be invalid for an invalid packet");
+            return ret;
+        }
+        if (notifyId != Protocol::NotifyInvalid) {
+            ret.d->error = QStringLiteral("'notifyId' should be invalid for an invalid packet");
+            return ret;
+        }
     }
 
     return ret;

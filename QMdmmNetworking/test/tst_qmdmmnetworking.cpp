@@ -469,8 +469,8 @@ void tst_QMdmmNetworking::server_disconnectsOnAbnormalPacket()
             p2Removed = true;
     });
 
-    // Write an invalid packet type (99) straight onto p2's raw socket. fromJson accepts it (all
-    // fields are well-formed numbers), but no dispatch branch handles type 99, so it is abnormal.
+    // Write a packet with an out-of-range type (99) straight onto p2's raw socket. fromJson rejects
+    // it at the protocol layer (enum range check), so the socket marks itself errored and p2 drops.
     QTcpSocket *p2Sock = p2->findChild<QTcpSocket *>();
     QVERIFY(p2Sock != nullptr);
     p2Sock->write("{\"type\":99,\"requestId\":0,\"notifyId\":0,\"value\":null}\n");
