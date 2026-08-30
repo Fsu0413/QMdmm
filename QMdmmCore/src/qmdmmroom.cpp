@@ -8,6 +8,8 @@
 
 #include <QString>
 
+#include <cmath>
+#include <limits>
 #include <utility>
 
 using namespace QMdmmCore::p;
@@ -26,6 +28,12 @@ namespace v0 {
 /**
  * @class LogicConfiguration
  * @brief Contains configurations of logic
+ *
+ * A set of game-rule parameters (knife / horse damage, maximum HP, punish HP and a few behavior toggles)
+ * stored as a @c QJsonObject, one key per field. It is sent to clients as @c NotifyLogicConfiguration and
+ * parsed on the receiving side by @c LogicConfiguration::deserialize(). Two canned presets are provided:
+ * @c LogicConfiguration::defaults() matches MDMM Version 2 rules and @c LogicConfiguration::v1() matches the
+ * legacy Version 1 rules.
  */
 
 /**
@@ -360,41 +368,88 @@ IMPLEMENTATION_CONFIGURATION(bool, canBuyOnlyInInitialCity, CanBuyOnlyInInitialC
  * @param value the value to be deserialized
  * @return if the deserialize succeeded.
  * @note It is possible to convert the value to @c QJsonObject and directly assign the value, since this class inherits @c QJsonObject, but the value check in this function will be nonexistent then.
+ *
+ * The value must be an object containing every configuration key. Each numeric field must be a non-negative
+ * whole number (fractions, NaN and negative values are rejected); @c punishHpRoundStrategy must be a valid
+ * @c PunishHpRoundStrategy; and each "initial" value must not exceed its "maximum" counterpart
+ * (e.g. @c initialKnifeDamage <= @c maximumKnifeDamage).
  */
 bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readability-function-cognitive-complexity)
 {
     if (!value.isObject())
         return false;
 
-    QJsonObject ob = value.toObject();
+    const QJsonObject ob = value.toObject();
     QJsonObject result;
 
-#define CONF(member, check)                                   \
-    {                                                         \
-        if (ob.contains(QStringLiteral(#member))) {           \
-            QJsonValue v = ob.value(QStringLiteral(#member)); \
-            if (v.check())                                    \
-                result.insert(QStringLiteral(#member), v);    \
-            else                                              \
-                return false;                                 \
-        } else {                                              \
-            return false;                                     \
-        }                                                     \
+    int initialKnifeDamage = 0;
+    int maximumKnifeDamage = 0;
+    int initialHorseDamage = 0;
+    int maximumHorseDamage = 0;
+    int initialMaxHp = 0;
+    int maximumMaxHp = 0;
+    int punishHpModifier = 0;
+    int punishHpRoundStrategy = 0;
+
+    // A numeric field must be a non-negative whole number: JSON numbers are doubles, so reject fractions
+    // (e.g. 1.5), NaN, negatives, and values that do not fit in an int, which toInt() would otherwise
+    // silently truncate or wrap.
+    const auto parseNonNegativeInt = [](const QJsonValue &v, int *out) {
+        if (!v.isDouble())
+            return false;
+
+        const double d = v.toDouble();
+        if (d != std::floor(d) || d < 0.0 || d > static_cast<double>(std::numeric_limits<int>::max()))
+            return false;
+
+        *out = static_cast<int>(d);
+        return true;
+    };
+
+#define CONF_INT(member, out)                                                      \
+    {                                                                              \
+        if (!ob.contains(QStringLiteral(#member)))                                 \
+            return false;                                                          \
+        if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &(out)))       \
+            return false;                                                          \
+        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
     }
 
-    CONF(initialKnifeDamage, isDouble);
-    CONF(maximumKnifeDamage, isDouble);
-    CONF(initialHorseDamage, isDouble);
-    CONF(maximumHorseDamage, isDouble);
-    CONF(initialMaxHp, isDouble);
-    CONF(maximumMaxHp, isDouble);
-    CONF(punishHpModifier, isDouble);
-    CONF(punishHpRoundStrategy, isDouble);
-    CONF(zeroHpAsDead, isBool);
-    CONF(enableLetMove, isBool);
-    CONF(canBuyOnlyInInitialCity, isBool);
+    CONF_INT(initialKnifeDamage, initialKnifeDamage);
+    CONF_INT(maximumKnifeDamage, maximumKnifeDamage);
+    CONF_INT(initialHorseDamage, initialHorseDamage);
+    CONF_INT(maximumHorseDamage, maximumHorseDamage);
+    CONF_INT(initialMaxHp, initialMaxHp);
+    CONF_INT(maximumMaxHp, maximumMaxHp);
+    CONF_INT(punishHpModifier, punishHpModifier);
+    CONF_INT(punishHpRoundStrategy, punishHpRoundStrategy);
 
-#undef CONF
+#undef CONF_INT
+
+#define CONF_BOOL(member)                                                          \
+    {                                                                              \
+        if (!ob.contains(QStringLiteral(#member)))                                 \
+            return false;                                                          \
+        if (!ob.value(QStringLiteral(#member)).isBool())                           \
+            return false;                                                          \
+        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+    }
+
+    CONF_BOOL(zeroHpAsDead);
+    CONF_BOOL(enableLetMove);
+    CONF_BOOL(canBuyOnlyInInitialCity);
+
+#undef CONF_BOOL
+
+    if (punishHpRoundStrategy > static_cast<int>(PlusOne))
+        return false;
+
+    if (initialKnifeDamage > maximumKnifeDamage)
+        return false;
+    if (initialHorseDamage > maximumHorseDamage)
+        return false;
+    if (initialMaxHp > maximumMaxHp)
+        return false;
 
     *this = result;
     return true;

@@ -7,6 +7,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+#include <limits>
+
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
@@ -90,6 +92,58 @@ private slots:
 
         QTest::newRow("valid") << QJsonValue(ob) << true;
         QTest::newRow("notObject") << QJsonValue(QJsonValue::Null) << false;
+
+        // Value-level validation (defensive programming): negative / fraction / NaN /
+        // enum-out-of-range / initial-exceeds-maximum must all be rejected.
+        QJsonObject validOb {
+            {QStringLiteral("initialKnifeDamage"), 1},
+            {QStringLiteral("maximumKnifeDamage"), 10},
+            {QStringLiteral("initialHorseDamage"), 2},
+            {QStringLiteral("maximumHorseDamage"), 10},
+            {QStringLiteral("initialMaxHp"), 10},
+            {QStringLiteral("maximumMaxHp"), 20},
+            {QStringLiteral("punishHpModifier"), 2},
+            {QStringLiteral("punishHpRoundStrategy"), static_cast<int>(LogicConfiguration::RoundToNearest45)},
+            {QStringLiteral("zeroHpAsDead"), true},
+            {QStringLiteral("enableLetMove"), true},
+            {QStringLiteral("canBuyOnlyInInitialCity"), false},
+        };
+
+        {
+            QJsonObject negativeOb = validOb;
+            negativeOb.insert(QStringLiteral("initialKnifeDamage"), -1);
+            QTest::newRow("negative") << QJsonValue(negativeOb) << false;
+        }
+        {
+            QJsonObject fractionOb = validOb;
+            fractionOb.insert(QStringLiteral("initialKnifeDamage"), 1.5);
+            QTest::newRow("fraction") << QJsonValue(fractionOb) << false;
+        }
+        {
+            QJsonObject nanOb = validOb;
+            nanOb.insert(QStringLiteral("initialKnifeDamage"), std::numeric_limits<double>::quiet_NaN());
+            QTest::newRow("nan") << QJsonValue(nanOb) << false;
+        }
+        {
+            QJsonObject enumOb = validOb;
+            enumOb.insert(QStringLiteral("punishHpRoundStrategy"), 4);
+            QTest::newRow("enumOutOfRange") << QJsonValue(enumOb) << false;
+        }
+        {
+            QJsonObject knifeOb = validOb;
+            knifeOb.insert(QStringLiteral("initialKnifeDamage"), 11);
+            QTest::newRow("initialKnifeGreaterThanMaximum") << QJsonValue(knifeOb) << false;
+        }
+        {
+            QJsonObject horseOb = validOb;
+            horseOb.insert(QStringLiteral("initialHorseDamage"), 11);
+            QTest::newRow("initialHorseGreaterThanMaximum") << QJsonValue(horseOb) << false;
+        }
+        {
+            QJsonObject maxHpOb = validOb;
+            maxHpOb.insert(QStringLiteral("initialMaxHp"), 21);
+            QTest::newRow("initialMaxHpGreaterThanMaximum") << QJsonValue(maxHpOb) << false;
+        }
     }
     void QMdmmLogicConfigurationdeserialize()
     {
