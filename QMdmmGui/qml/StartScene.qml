@@ -4,18 +4,18 @@ import QtQuick 6.5
 
 Item {
     id: scene
+
+    signal aboutClicked
+    signal configureClicked
+    signal startGameClicked
+
     anchors.fill: parent
 
-    signal startGameClicked
-    signal configureClicked
-    signal aboutClicked
-
     Item {
-        y: 512
         height: 384
-
-        x: parent.width / 8 * 3
         width: parent.width / 4
+        x: parent.width / 8 * 3
+        y: 512
 
         Grid {
             anchors.fill: parent
@@ -23,30 +23,27 @@ Item {
 
             Button {
                 height: parent.height / 3
-                width: parent.width
-
                 source: "../assets/btn.png"
                 text: qsTr("Start game")
+                width: parent.width
 
                 onClicked: scene.startGameClicked()
             }
 
             Button {
                 height: parent.height / 3
-                width: parent.width
-
                 source: "../assets/btn.png"
                 text: qsTr("Configuration")
+                width: parent.width
 
                 onClicked: scene.configureClicked()
             }
 
             Button {
                 height: parent.height / 3
-                width: parent.width
-
                 source: "../assets/btn.png"
                 text: qsTr("About")
+                width: parent.width
 
                 onClicked: scene.aboutClicked()
             }

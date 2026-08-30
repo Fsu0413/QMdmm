@@ -12,59 +12,52 @@ import QMdmm.Gui 1.0
 // the GUI previously lacked.
 TestCase {
     id: testCase
-    name: "GameClient"
 
     property var game: null
 
-    Component {
-        id: gameComponent
-        GameClient {}
-    }
-
-    Component {
-        id: signalSpyComponent
-        SignalSpy {}
+    function cleanup() {
+        if (game !== null) {
+            game.disconnectAll();
+            game.destroy();
+        }
+        game = null;
     }
 
     function init() {
-        game = gameComponent.createObject(testCase)
-        verify(game !== null, "GameClient should instantiate")
-    }
-
-    function cleanup() {
-        if (game !== null) {
-            game.disconnectAll()
-            game.destroy()
-        }
-        game = null
+        game = gameComponent.createObject(testCase);
+        verify(game !== null, "GameClient should instantiate");
     }
 
     function test_localGameFillsRoomAndStarts() {
         // 1 human + 1 auto-replying bot -> room fills and the match starts.
-        game.playerCount = 2
-        game.startLocalGame("Tester")
+        game.playerCount = 2;
+        game.startLocalGame("Tester");
 
-        tryCompare(game, "gameState", "playing", 15000)
-        compare(game.players.length, 2)
-        verify(game.isYou(game.localName))
+        tryCompare(game, "gameState", "playing", 15000);
+        compare(game.players.length, 2);
+        verify(game.isYou(game.localName));
 
-        game.disconnectAll()
-        compare(game.gameState, "start")
-        compare(game.players.length, 0)
+        game.disconnectAll();
+        compare(game.gameState, "start");
+        compare(game.players.length, 0);
     }
 
     function test_replyDrivesTheMatch() {
-        var ssc = createTemporaryObject(signalSpyComponent, testCase,
-                                        { target: game, signalName: "requestStoneScissorsCloth" })
-        var sscResult = createTemporaryObject(signalSpyComponent, testCase,
-                                              { target: game, signalName: "sscResult" })
+        var ssc = createTemporaryObject(signalSpyComponent, testCase, {
+                                            target: game,
+                                            signalName: "requestStoneScissorsCloth"
+                                        });
+        var sscResult = createTemporaryObject(signalSpyComponent, testCase, {
+                                                  target: game,
+                                                  signalName: "sscResult"
+                                              });
 
-        game.playerCount = 2
-        game.startLocalGame("Tester")
-        tryCompare(game, "gameState", "playing", 15000)
+        game.playerCount = 2;
+        game.startLocalGame("Tester");
+        tryCompare(game, "gameState", "playing", 15000);
 
         // The server asks the human for a rock-paper-scissors pick.
-        tryCompare(ssc, "count", 1, 15000)
+        tryCompare(ssc, "count", 1, 15000);
 
         // The auto-replying bot answers its own SSC request, so the human's reply
         // below completes the round and produces an sscResult broadcast. Require the
@@ -78,9 +71,27 @@ TestCase {
         // ServerConfiguration), far longer than the 15 s window below, so a human
         // that stops replying leaves the match waiting; the bot's auto-reply is
         // the only thing driving progress.
-        var before = sscResult.count
-        game.replySsc(0) // rock
+        var before = sscResult.count;
+        game.replySsc(0); // rock
 
-        tryVerify(function() { return sscResult.count > before; }, 15000)
+        tryVerify(function () {
+            return sscResult.count > before;
+        }, 15000);
+    }
+
+    name: "GameClient"
+
+    Component {
+        id: gameComponent
+
+        GameClient {
+        }
+    }
+
+    Component {
+        id: signalSpyComponent
+
+        SignalSpy {
+        }
     }
 }

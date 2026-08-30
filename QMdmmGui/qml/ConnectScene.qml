@@ -4,11 +4,12 @@ import QtQuick 6.5
 
 Item {
     id: scene
-    anchors.fill: parent
 
     signal back
-    signal startLocal(string name)
     signal connectOnline(string host, string name)
+    signal startLocal(string name)
+
+    anchors.fill: parent
 
     // dim background
     Rectangle {
@@ -18,157 +19,178 @@ Item {
 
     Item {
         anchors.centerIn: parent
-        width: 720
         height: 560
+        width: 720
 
         Rectangle {
             anchors.fill: parent
+            border.color: "#555"
             color: "#1b1b1b"
             radius: 12
-            border.color: "#555"
         }
 
         Text {
             id: title
+
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.topMargin: 24
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Connect Game")
             color: "white"
             font.pixelSize: 40
+            text: qsTr("Connect Game")
         }
 
         Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 60
             anchors.top: title.bottom
             anchors.topMargin: 24
-            anchors.left: parent.left
-            anchors.leftMargin: 60
-            text: qsTr("Your name")
             color: "#ccc"
+            text: qsTr("Your name")
         }
+
         Rectangle {
             id: nameBox
-            anchors.top: title.bottom
-            anchors.topMargin: 56
+
             anchors.left: parent.left
             anchors.leftMargin: 60
-            width: 600
-            height: 56
-            color: "#000"
+            anchors.top: title.bottom
+            anchors.topMargin: 56
             border.color: "#666"
+            color: "#000"
+            height: 56
             radius: 6
+            width: 600
+
             TextInput {
                 id: nameInput
+
                 anchors.fill: parent
                 anchors.margins: 8
                 color: "white"
-                text: "You"
                 font.pixelSize: 28
+                text: "You"
                 verticalAlignment: TextInput.AlignVCenter
             }
         }
 
         // Local mode
         Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 60
             anchors.top: nameBox.bottom
             anchors.topMargin: 28
+            color: "#ccc"
+            text: qsTr("Local play (in-process server + bots fill the room)")
+        }
+
+        Text {
             anchors.left: parent.left
             anchors.leftMargin: 60
-            text: qsTr("Local play (in-process server + bots fill the room)")
-            color: "#ccc"
-        }
-        Text {
             anchors.top: nameBox.bottom
             anchors.topMargin: 64
-            anchors.left: parent.left
-            anchors.leftMargin: 60
-            text: qsTr("Players: ") + game.playerCount
             color: "white"
             font.pixelSize: 28
+            text: qsTr("Players: ") + game.playerCount
         }
+
         Button {
-            height: 48; width: 48
-            anchors.top: nameBox.bottom
-            anchors.topMargin: 56
             anchors.left: parent.left
             anchors.leftMargin: 200
-            source: "../assets/btn.png"
-            text: "-"
-            onClicked: game.playerCount = Math.max(1, game.playerCount - 1)
-        }
-        Button {
-            height: 48; width: 48
             anchors.top: nameBox.bottom
             anchors.topMargin: 56
+            height: 48
+            source: "../assets/btn.png"
+            text: "-"
+            width: 48
+
+            onClicked: game.playerCount = Math.max(1, game.playerCount - 1)
+        }
+
+        Button {
             anchors.left: parent.left
             anchors.leftMargin: 260
+            anchors.top: nameBox.bottom
+            anchors.topMargin: 56
+            height: 48
             source: "../assets/btn.png"
             text: "+"
+            width: 48
+
             onClicked: game.playerCount = Math.min(6, game.playerCount + 1)
         }
+
         Button {
-            height: 56
-            width: 220
-            anchors.top: nameBox.bottom
-            anchors.topMargin: 52
             anchors.right: parent.right
             anchors.rightMargin: 60
+            anchors.top: nameBox.bottom
+            anchors.topMargin: 52
+            height: 56
             source: "../assets/btn.png"
             text: qsTr("Start local game")
+            width: 220
+
             onClicked: scene.startLocal(nameInput.text)
         }
 
         // Online mode
         Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 60
             anchors.top: parent.top
             anchors.topMargin: 300
-            anchors.left: parent.left
-            anchors.leftMargin: 60
-            text: qsTr("Online mode (connect to an external server, e.g. qmdmm://host:6366)")
             color: "#ccc"
+            text: qsTr("Online mode (connect to an external server, e.g. qmdmm://host:6366)")
         }
+
         Rectangle {
             id: hostBox
-            anchors.top: parent.top
-            anchors.topMargin: 332
+
             anchors.left: parent.left
             anchors.leftMargin: 60
-            width: 420
-            height: 48
-            color: "#000"
+            anchors.top: parent.top
+            anchors.topMargin: 332
             border.color: "#666"
+            color: "#000"
+            height: 48
             radius: 6
+            width: 420
+
             TextInput {
                 id: hostInput
+
                 anchors.fill: parent
                 anchors.margins: 8
                 color: "white"
-                text: "qmdmm://localhost:6366"
                 font.pixelSize: 22
+                text: "qmdmm://localhost:6366"
                 verticalAlignment: TextInput.AlignVCenter
             }
         }
+
         Button {
-            height: 56
-            width: 180
-            anchors.top: parent.top
-            anchors.topMargin: 328
             anchors.right: parent.right
             anchors.rightMargin: 60
+            anchors.top: parent.top
+            anchors.topMargin: 328
+            height: 56
             source: "../assets/btn.png"
             text: qsTr("Connect")
+            width: 180
+
             onClicked: scene.connectOnline(hostInput.text, nameInput.text)
         }
 
         Button {
-            height: 48
-            width: 120
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             anchors.left: parent.left
             anchors.leftMargin: 60
+            height: 48
             source: "../assets/btn.png"
             text: qsTr("Back")
+            width: 120
+
             onClicked: scene.back()
         }
     }

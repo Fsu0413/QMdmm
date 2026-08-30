@@ -6,13 +6,11 @@ Item {
     anchors.fill: parent
 
     Item {
-        visible: true
-
         height: 1024
-        width: Math.max(800, parent.width * 1024 / Math.max(0.1, parent.height))
-
-        transformOrigin: Item.TopLeft
         scale: parent.height / 1024
+        transformOrigin: Item.TopLeft
+        visible: true
+        width: Math.max(800, parent.width * 1024 / Math.max(0.1, parent.height))
 
         RootItem {
             // All visual children can assume the height is never changed
