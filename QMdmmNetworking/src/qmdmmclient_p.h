@@ -53,6 +53,10 @@ public:
     QString host;
     int reconnectAttempts;
     bool reconnectInProgress;
+    // Whether a connection is currently up (connectSocket succeeded and no disconnect happened
+    // yet). Backs Client::isConnected(); tracked explicitly because the QPointer<Socket> stays
+    // non-null until deleteLater() is processed, so it cannot be used for a synchronous query.
+    bool connected;
 
     QMdmmCore::Protocol::RequestId currentRequest;
     QMdmmCore::Data::AgentState initialState;

@@ -429,6 +429,18 @@ bool Socket::connectToHost(const QString &host)
 }
 
 /**
+ * @brief Actively disconnect the underlying transport.
+ *
+ * Disconnects the underlying socket (and releases it) if one is currently active. The
+ * wrapper itself stays usable: a later @c connectToHost() creates a fresh transport.
+ */
+void Socket::disconnectFromHost()
+{
+    if (d != nullptr)
+        d->disconnectFromHost();
+}
+
+/**
  * @fn Socket::sendPacket(QMdmmCore::Packet packet)
  * @brief emitted when a packet should be sent to the peer
  * @param packet the packet to be sent

@@ -58,6 +58,9 @@ public:
 
     bool connectToHost(const QString &host, QMdmmCore::Data::AgentState initialState);
 
+    void disconnectFromHost();
+    [[nodiscard]] bool isConnected() const;
+
     [[nodiscard]] QMdmmCore::Room *room();
     [[nodiscard]] const QMdmmCore::Room *room() const;
 

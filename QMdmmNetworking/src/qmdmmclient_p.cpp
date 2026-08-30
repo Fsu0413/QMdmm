@@ -63,6 +63,7 @@ ClientP::ClientP(ClientConfiguration clientConfiguration, Client *q)
     , reconnectTimer(new QTimer(this))
     , reconnectAttempts(0)
     , reconnectInProgress(false)
+    , connected(false)
     , currentRequest(QMdmmCore::Protocol::RequestInvalid)
     , initialState(QMdmmCore::Data::StateOffline)
 {
@@ -646,6 +647,7 @@ void ClientP::notifyGameOver(const QJsonValue &value)
 
     if (socket != nullptr) {
         heartbeatTimer->stop();
+        connected = false;
         disconnect(socket);
         socket->disconnect(this);
 
@@ -915,6 +917,8 @@ void ClientP::handleSocketGone(const QString &errorString)
     if (socket == nullptr)
         return;
 
+    connected = false;
+
     // Detach first so a second signal from the same socket (error + disconnected
     // often fire back to back) can't re-enter this handler.
     socket->disconnect(this);
@@ -938,11 +942,14 @@ bool ClientP::connectSocket()
     connect(socket, &Socket::socketDisconnected, this, &ClientP::socketDisconnected);
     connect(socket, &Socket::socketErrorOccurred, this, &ClientP::socketErrorOccurred);
     connect(socket, &Socket::packetReceived, this, &ClientP::socketPacketReceived);
-    if (socket->connectToHost(host))
+    if (socket->connectToHost(host)) {
+        connected = true;
         return true;
+    }
 
     // The host does not map to a known transport. Drop the socketless wrapper so
     // socket stays null and the caller can report the failure.
+    connected = false;
     socket->disconnect(this);
     socket->deleteLater();
     return false;

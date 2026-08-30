@@ -157,6 +157,43 @@ bool Client::connectToHost(const QString &host, QMdmmCore::Data::AgentState init
 }
 
 /**
+ * @brief Actively disconnect from the server.
+ *
+ * Stops the automatic reconnect loop and drops the underlying socket without going through the
+ * "connection lost" path, so no @c socketConnectionLost / @c socketErrorDisconnected signal is
+ * emitted (the caller already knows it disconnected). A later @c connectToHost() reconnects as a
+ * fresh session.
+ */
+void Client::disconnectFromHost()
+{
+    d->reconnectTimer->stop();
+    d->heartbeatTimer->stop();
+    d->reconnectInProgress = false;
+    d->connected = false;
+    d->currentRequest = QMdmmCore::Protocol::RequestInvalid;
+
+    if (d->socket != nullptr) {
+        // Detach the socket's signals first so the drop does not enter handleSocketGone and
+        // re-arm the reconnect loop.
+        d->socket->disconnect(d);
+        d->socket->disconnectFromHost();
+        d->socket->deleteLater();
+    }
+}
+
+/**
+ * @brief whether the client currently has an active connection
+ * @return @c true if a connection is up, @c false otherwise
+ *
+ * Returns @c true once @c connectToHost() successfully initiates the connection, and @c false
+ * after a drop, an error, @c disconnectFromHost() or the server's game-over teardown.
+ */
+bool Client::isConnected() const
+{
+    return d->connected;
+}
+
+/**
  * @brief get the local room where the game state is mirrored
  * @return the local room, or @c nullptr if not yet connected
  */

@@ -36,6 +36,7 @@ private slots:
     void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
+    void client_disconnectFromHostStopsAutoReconnect();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -477,6 +478,55 @@ void tst_QMdmmNetworking::server_disconnectsOnAbnormalPacket()
     p2Sock->flush();
 
     QTRY_VERIFY_WITH_TIMEOUT(p2Removed, 5000);
+}
+
+// A client can actively disconnect via disconnectFromHost(): the reconnect loop is stopped, no
+// "connection lost" / "reconnect succeeded" signal fires (those are the passive-drop notices),
+// and isConnected() flips to false immediately. The upper layer stays in control and can
+// reconnect with a fresh connectToHost. This is the A1 regression test: before the API existed
+// the only way to disconnect was destroying the whole Client.
+void tst_QMdmmNetworking::client_disconnectFromHostStopsAutoReconnect()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16360);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16360");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(!p1->isConnected());
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QVERIFY(p1->isConnected());
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    bool connectionLost = false;
+    bool reconnectSucceeded = false;
+    connect(p1, &Client::socketConnectionLost, &server, [&connectionLost](const QString &) { connectionLost = true; });
+    connect(p1, &Client::socketReconnectSucceeded, &server, [&reconnectSucceeded]() { reconnectSucceeded = true; });
+
+    p1->disconnectFromHost();
+    QVERIFY(!p1->isConnected());
+
+    // The reconnect loop is stopped: even after the first retry interval (500ms) elapses the
+    // client stays disconnected, and neither passive-drop signal has fired.
+    QTest::qWait(700);
+    QVERIFY(!p1->isConnected());
+    QVERIFY(!connectionLost);
+    QVERIFY(!reconnectSucceeded);
+
+    // A fresh connectToHost reconnects normally.
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QVERIFY(p1->isConnected());
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
 }
 
 namespace {

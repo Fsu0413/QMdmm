@@ -55,6 +55,7 @@ public:
     [[nodiscard]] bool hasError() const;
 
     bool connectToHost(const QString &host);
+    void disconnectFromHost();
 
 signals:
     void sendPacket(QMdmmCore::Packet);
