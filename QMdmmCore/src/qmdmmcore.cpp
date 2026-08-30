@@ -91,23 +91,35 @@ namespace v0 {
  */
 
 /**
- * @enum Data::StoneScissorsCloth
- * @brief Stone-Scissors-Cloth variables.
+ * @enum Data::RockPaperScissors
+ * @brief Rock-Paper-Scissors variables.
  */
 
 /**
- * @var QMdmmCore::Data::StoneScissorsCloth Data::Stone
- * @brief Stone
+ * @var QMdmmCore::Data::RockPaperScissors Data::Rock
+ * @brief Rock
  */
 
 /**
- * @var QMdmmCore::Data::StoneScissorsCloth Data::Scissors
+ * @var QMdmmCore::Data::RockPaperScissors Data::Paper
+ * @brief Paper
+ */
+
+/**
+ * @var QMdmmCore::Data::RockPaperScissors Data::Scissors
  * @brief Scissors
  */
 
 /**
- * @var QMdmmCore::Data::StoneScissorsCloth Data::Cloth
- * @brief Cloth
+ * @var QMdmmCore::Data::RockPaperScissors Data::Stone
+ * @brief Equivalent to Rock
+ */
+
+/**
+ * @var QMdmmCore::Data::RockPaperScissors Data::Cloth
+ * @brief Equivalent to Paper
+ *
+ * @note Paper is called Cloth in Chinese.
  */
 
 /**
@@ -229,36 +241,36 @@ namespace v0 {
  */
 
 namespace {
-constexpr bool sscGreater(Data::StoneScissorsCloth op1, Data::StoneScissorsCloth op2) noexcept
+constexpr bool rpsGreater(Data::RockPaperScissors op1, Data::RockPaperScissors op2) noexcept
 {
-    return (op1 == Data::Stone && op2 == Data::Scissors) || (op1 == Data::Scissors && op2 == Data::Cloth) || (op1 == Data::Cloth && op2 == Data::Stone);
+    return (op1 == Data::Rock && op2 == Data::Scissors) || (op1 == Data::Scissors && op2 == Data::Paper) || (op1 == Data::Paper && op2 == Data::Rock);
 }
 } // namespace
 
 /**
- * @brief Judges winners of a Stone-Scissors-Cloth output
+ * @brief Judges winners of a Rock-Paper-Scissors output
  * @param judgers A kv-pair of the value a player outputs
  * @return A list of winners, with each value duplicates multiple times. The duplication times is equal to the number of players loses.
  *
- * This is the core logic of which Stone-Scissors-Cloth.
+ * This is the core logic of which Rock-Paper-Scissors.
  * Our rule is that winners can do actions on determined sequence by times that equals to the number of players loses.
  */
-QStringList Data::stoneScissorsClothWinners(const QHash<QString, Data::StoneScissorsCloth> &judgers)
+QStringList Data::rockPaperScissorsWinners(const QHash<QString, Data::RockPaperScissors> &judgers)
 {
-    QMap<Data::StoneScissorsCloth, QStringList> judgersMap;
+    QMap<Data::RockPaperScissors, QStringList> judgersMap;
 
-    for (QHash<QString, Data::StoneScissorsCloth>::const_iterator it = judgers.constBegin(); it != judgers.constEnd(); ++it)
+    for (QHash<QString, Data::RockPaperScissors>::const_iterator it = judgers.constBegin(); it != judgers.constEnd(); ++it)
         judgersMap[it.value()] << it.key();
 
     if (judgersMap.count() == 2) {
-        QMap<Data::StoneScissorsCloth, QStringList>::const_iterator it1 = judgersMap.constBegin();
-        QMap<Data::StoneScissorsCloth, QStringList>::const_iterator it2 = judgersMap.constBegin();
+        QMap<Data::RockPaperScissors, QStringList>::const_iterator it1 = judgersMap.constBegin();
+        QMap<Data::RockPaperScissors, QStringList>::const_iterator it2 = judgersMap.constBegin();
         ++it2;
 
-        Data::StoneScissorsCloth type1 = it1.key();
-        Data::StoneScissorsCloth type2 = it2.key();
+        Data::RockPaperScissors type1 = it1.key();
+        Data::RockPaperScissors type2 = it2.key();
 
-        if (!sscGreater(type1, type2))
+        if (!rpsGreater(type1, type2))
             std::swap(it1, it2);
 
         // now it1.value is winner, it2.value is loser

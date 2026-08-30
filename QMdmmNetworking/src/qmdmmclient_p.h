@@ -63,7 +63,7 @@ public:
     // the last received round-event sequence number.
     int lastRoundEventSeq = 0;
 
-    void requestStoneScissorsCloth(const QJsonValue &value);
+    void requestRockPaperScissors(const QJsonValue &value);
     void requestActionOrder(const QJsonValue &value);
     void requestAction(const QJsonValue &value);
     void requestUpgrade(const QJsonValue &value);
@@ -76,7 +76,7 @@ public:
     void notifyPlayerRemoved(const QJsonValue &value);
     void notifyGameStart(const QJsonValue &value);
     void notifyRoundStart(const QJsonValue &value);
-    void notifyStoneScissorsCloth(const QJsonValue &value);
+    void notifyRockPaperScissors(const QJsonValue &value);
     void notifyActionOrder(const QJsonValue &value);
     void notifyAction(const QJsonValue &value);
     void notifyRoundOver(const QJsonValue &value);
@@ -105,7 +105,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     // the Agent's bare-verb methods / speak / operate, which forward as these signals), and turn
     // them back into wire packets. This mirrors ServerConnection's send*Requested / send*Notified
     // slots on the server side.
-    void sendStoneScissorsClothReply(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void sendRockPaperScissorsReply(QMdmmCore::Data::RockPaperScissors rps);
     void sendActionOrderReply(const QList<int> &order);
     void sendActionReply(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void sendUpgradeReply(const QList<QMdmmCore::Data::UpgradeItem> &items);

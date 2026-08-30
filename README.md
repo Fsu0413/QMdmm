@@ -114,7 +114,7 @@ The wire protocol is JSON-based. Packets come in three kinds
 (`Protocol::PacketType`):
 
 - **Request** — the server (`Logic`) asks an agent to make a decision:
-  `StoneScissorsCloth`, `ActionOrder`, `Action`, `Upgrade`.
+  `RockPaperScissors`, `ActionOrder`, `Action`, `Upgrade`.
 - **Reply** — the agent's answer to a request.
 - **Notify** — a one-way message. Four masks split notifications by direction:
 

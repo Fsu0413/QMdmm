@@ -23,7 +23,7 @@ namespace v0 {
  *   spoken / operated signals;
  * - the operation side (@c ServerConnection for the wire, or GUI / Bot for a local
  *   player) listens to the xxxRequested / xxxNotified signals and answers by calling
- *   the bare-verb methods (stoneScissorsCloth / actionOrder / action / upgrade) and
+ *   the bare-verb methods (rockPaperScissors / actionOrder / action / upgrade) and
  *   speak / operate.
  *
  * Reply contract: the operation side must answer asynchronously (e.g. via
@@ -161,12 +161,12 @@ void Agent::notifyRoundStart()
 }
 
 /**
- * @brief Notify the player of the stone-scissors-cloth replies of a round.
- * @param replies the stone-scissors-cloth choice of each player
+ * @brief Notify the player of the RockPaperScissors replies of a round.
+ * @param replies the RockPaperScissors choice of each player
  */
-void Agent::notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void Agent::notifyRockPaperScissors(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
 {
-    emit stoneScissorsClothNotified(replies, QPrivateSignal());
+    emit rockPaperScissorsNotified(replies, QPrivateSignal());
 }
 
 /**
@@ -239,13 +239,13 @@ void Agent::notifyOperate(const QString &playerName, const QJsonValue &todo)
 // Controller interface — requests (logic side → operation side).
 
 /**
- * @brief Request a Stone-Scissors-Cloth choice.
- * @param playerNames the players involved in the Stone-Scissors-Cloth
+ * @brief Request a Rock-Paper-Scissors choice.
+ * @param playerNames the players involved in the Rock-Paper-Scissors
  * @param strivedOrder the action order being strived for (0 if not applicable)
  */
-void Agent::requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder)
+void Agent::requestRockPaperScissors(const QStringList &playerNames, int strivedOrder)
 {
-    emit stoneScissorsClothRequested(playerNames, strivedOrder, QPrivateSignal());
+    emit rockPaperScissorsRequested(playerNames, strivedOrder, QPrivateSignal());
 }
 
 /**
@@ -280,12 +280,12 @@ void Agent::requestUpgrade(int remainingTimes)
 // Controller interface — replies and player actions (operation side → logic side).
 
 /**
- * @brief Reply with a Stone-Scissors-Cloth choice.
- * @param ssc the chosen Stone-Scissors-Cloth
+ * @brief Reply with a Rock-Paper-Scissors choice.
+ * @param rps the chosen Rock-Paper-Scissors
  */
-void Agent::stoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc)
+void Agent::rockPaperScissors(QMdmmCore::Data::RockPaperScissors rps)
 {
-    emit replyStoneScissorsCloth(ssc, QPrivateSignal());
+    emit replyRockPaperScissors(rps, QPrivateSignal());
 }
 
 /**
@@ -400,8 +400,8 @@ void Agent::operate(const QJsonValue &todo)
  */
 
 /**
- * @fn Agent::stoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, QPrivateSignal)
- * @brief emitted when the stone-scissors-cloth replies are notified
+ * @fn Agent::rockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies, QPrivateSignal)
+ * @brief emitted when the RockPaperScissors replies are notified
  * @param replies the choice of each player
  */
 
@@ -452,9 +452,9 @@ void Agent::operate(const QJsonValue &todo)
  */
 
 /**
- * @fn Agent::stoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
- * @brief emitted when a Stone-Scissors-Cloth choice is requested
- * @param playerNames the players involved in the Stone-Scissors-Cloth
+ * @fn Agent::rockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
+ * @brief emitted when a Rock-Paper-Scissors choice is requested
+ * @param playerNames the players involved in the Rock-Paper-Scissors
  * @param strivedOrder the action order being strived for
  */
 
@@ -479,9 +479,9 @@ void Agent::operate(const QJsonValue &todo)
  */
 
 /**
- * @fn Agent::replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc, QPrivateSignal)
- * @brief emitted when a Stone-Scissors-Cloth reply is made
- * @param ssc the chosen Stone-Scissors-Cloth
+ * @fn Agent::replyRockPaperScissors(QMdmmCore::Data::RockPaperScissors rps, QPrivateSignal)
+ * @brief emitted when a Rock-Paper-Scissors reply is made
+ * @param rps the chosen Rock-Paper-Scissors
  */
 
 /**

@@ -23,14 +23,14 @@ QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue
 };
 
 QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::decodeStoneScissorsClothReply),
+    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnection::decodeRockPaperScissorsReply),
     std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::decodeActionOrderReply),
     std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::decodeActionReply),
     std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::decodeUpgradeReply),
 };
 
 QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnection::defaultReplyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ServerConnection::defaultReplyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnection::defaultReplyRockPaperScissors),
     std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::defaultReplyActionOrder),
     std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::defaultReplyAction),
     std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::defaultReplyUpgrade),
@@ -62,7 +62,7 @@ ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfigura
     connect(agent, &Agent::playerRemoveNotified, this, &ServerConnection::sendPlayerRemoveNotified);
     connect(agent, &Agent::gameStartNotified, this, &ServerConnection::sendGameStartNotified);
     connect(agent, &Agent::roundStartNotified, this, &ServerConnection::sendRoundStartNotified);
-    connect(agent, &Agent::stoneScissorsClothNotified, this, &ServerConnection::sendStoneScissorsClothNotified);
+    connect(agent, &Agent::rockPaperScissorsNotified, this, &ServerConnection::sendRockPaperScissorsNotified);
     connect(agent, &Agent::actionOrderNotified, this, &ServerConnection::sendActionOrderNotified);
     connect(agent, &Agent::actionNotified, this, &ServerConnection::sendActionNotified);
     connect(agent, &Agent::roundOverNotified, this, &ServerConnection::sendRoundOverNotified);
@@ -74,7 +74,7 @@ ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfigura
     // Wire the Agent's request signals to this connection's encode-and-send slots. The Agent
     // forwards a requestXxx() call as the corresponding xxxRequested signal; this connection turns
     // the strong-typed request back into a wire packet and sends it.
-    connect(agent, &Agent::stoneScissorsClothRequested, this, &ServerConnection::sendStoneScissorsClothRequested);
+    connect(agent, &Agent::rockPaperScissorsRequested, this, &ServerConnection::sendRockPaperScissorsRequested);
     connect(agent, &Agent::actionOrderRequested, this, &ServerConnection::sendActionOrderRequested);
     connect(agent, &Agent::actionRequested, this, &ServerConnection::sendActionRequested);
     connect(agent, &Agent::upgradeRequested, this, &ServerConnection::sendUpgradeRequested);
@@ -143,28 +143,28 @@ void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, cons
     }
 }
 
-void ServerConnection::decodeStoneScissorsClothReply(const QJsonValue &value)
+void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
 {
-#define DEFAULTREPLY                      \
-    do {                                  \
-        defaultReplyStoneScissorsCloth(); \
-        return;                           \
+#define DEFAULTREPLY                     \
+    do {                                 \
+        defaultReplyRockPaperScissors(); \
+        return;                          \
     } while (0)
 
     if (!value.isDouble())
         DEFAULTREPLY;
 
-    QMdmmCore::Data::StoneScissorsCloth ssc = static_cast<QMdmmCore::Data::StoneScissorsCloth>(value.toInt());
-    switch (ssc) {
-    case QMdmmCore::Data::Stone:
+    QMdmmCore::Data::RockPaperScissors rps = static_cast<QMdmmCore::Data::RockPaperScissors>(value.toInt());
+    switch (rps) {
+    case QMdmmCore::Data::Rock:
+    case QMdmmCore::Data::Paper:
     case QMdmmCore::Data::Scissors:
-    case QMdmmCore::Data::Cloth:
         break;
     default:
         DEFAULTREPLY;
     }
 
-    agent->stoneScissorsCloth(ssc);
+    agent->rockPaperScissors(rps);
 
 #undef DEFAULTREPLY
 }
@@ -296,9 +296,9 @@ void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
 #undef DEFAULTREPLY
 }
 
-void ServerConnection::defaultReplyStoneScissorsCloth()
+void ServerConnection::defaultReplyRockPaperScissors()
 {
-    agent->stoneScissorsCloth(static_cast<QMdmmCore::Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3));
+    agent->rockPaperScissors(static_cast<QMdmmCore::Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3));
 }
 
 void ServerConnection::defaultReplyActionOrder()
@@ -391,12 +391,12 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
     executeDefaultReply();
 }
 
-void ServerConnection::sendStoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder)
+void ServerConnection::sendRockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
     ob.insert(QStringLiteral("strivedOrder"), strivedOrder);
-    addRequest(QMdmmCore::Protocol::RequestStoneScissorsCloth, ob);
+    addRequest(QMdmmCore::Protocol::RequestRockPaperScissors, ob);
 }
 
 void ServerConnection::sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
@@ -460,12 +460,12 @@ void ServerConnection::sendRoundStartNotified()
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerConnection::sendStoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void ServerConnection::sendRockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
 {
     QJsonObject ob;
-    for (QHash<QString, QMdmmCore::Data::StoneScissorsCloth>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
+    for (QHash<QString, QMdmmCore::Data::RockPaperScissors>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
         ob.insert(it.key(), static_cast<int>(it.value()));
-    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyStoneScissorsCloth, ob);
+    QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyRockPaperScissors, ob);
     roundEventLog.append(packet);
     emit sendPacket(packet);
 }
@@ -627,7 +627,7 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
     CONNECTRUNNERTOLOGIC(addPlayer);
     CONNECTRUNNERTOLOGIC(removePlayer);
     CONNECTRUNNERTOLOGIC(roundStart);
-    CONNECTRUNNERTOLOGIC(sscReply);
+    CONNECTRUNNERTOLOGIC(rpsReply);
     CONNECTRUNNERTOLOGIC(actionOrderReply);
     CONNECTRUNNERTOLOGIC(actionReply);
     CONNECTRUNNERTOLOGIC(upgradeReply);
@@ -636,11 +636,11 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
 
 #define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection)
 
-    CONNECTLOGICTORUNNER(requestSscForAction);
-    CONNECTLOGICTORUNNER(sscResult);
+    CONNECTLOGICTORUNNER(requestRpsForAction);
+    CONNECTLOGICTORUNNER(rpsResult);
     CONNECTLOGICTORUNNER(requestActionOrder);
     CONNECTLOGICTORUNNER(actionOrderResult);
-    CONNECTLOGICTORUNNER(requestSscForActionOrder);
+    CONNECTLOGICTORUNNER(requestRpsForActionOrder);
     CONNECTLOGICTORUNNER(requestAction);
     CONNECTLOGICTORUNNER(actionResult);
     CONNECTLOGICTORUNNER(requestUpgrade);
@@ -683,13 +683,13 @@ void LogicRunnerP::agentOperated(const QJsonValue &value)
         agent->notifyOperate(operateAgent->objectName(), value);
 }
 
-void LogicRunnerP::agentStoneScissorsClothReplied(QMdmmCore::Data::StoneScissorsCloth ssc)
+void LogicRunnerP::agentRockPaperScissorsReplied(QMdmmCore::Data::RockPaperScissors rps)
 {
     Agent *repliedAgent = qobject_cast<Agent *>(sender());
     if (repliedAgent == nullptr)
         return;
 
-    emit sscReply(repliedAgent->objectName(), ssc);
+    emit rpsReply(repliedAgent->objectName(), rps);
 }
 
 void LogicRunnerP::agentActionOrderReplied(const QList<int> &order)
@@ -775,21 +775,21 @@ LogicRunnerP::~LogicRunnerP()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicRunnerP::requestSscForAction(const QStringList &playerNames)
+void LogicRunnerP::requestRpsForAction(const QStringList &playerNames)
 {
     foreach (const QString &playerName, playerNames) {
         Agent *agent = agents.value(playerName);
-        agent->requestStoneScissorsCloth(playerNames, 0);
+        agent->requestRockPaperScissors(playerNames, 0);
     }
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicRunnerP::sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies)
+void LogicRunnerP::rpsResult(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
 {
     // Each agent records the round event it broadcasts in its connection's roundEventLog (see
-    // ServerConnection::sendStoneScissorsClothNotified), for the per-agent reconnect catch-up.
+    // ServerConnection::sendRockPaperScissorsNotified), for the per-agent reconnect catch-up.
     foreach (Agent *agent, agents)
-        agent->notifyStoneScissorsCloth(replies);
+        agent->notifyRockPaperScissors(replies);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -807,11 +807,11 @@ void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicRunnerP::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder)
+void LogicRunnerP::requestRpsForActionOrder(const QStringList &playerNames, int strivedOrder)
 {
     foreach (const QString &playerName, playerNames) {
         Agent *agent = agents.value(playerName);
-        agent->requestStoneScissorsCloth(playerNames, strivedOrder);
+        agent->requestRockPaperScissors(playerNames, strivedOrder);
     }
 }
 
@@ -973,7 +973,7 @@ Agent *LogicRunner::addAgent(Agent *agent)
     connect(agent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
     connect(agent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);
     connect(agent, &Agent::operated, d, &p::LogicRunnerP::agentOperated);
-    connect(agent, &Agent::replyStoneScissorsCloth, d, &p::LogicRunnerP::agentStoneScissorsClothReplied);
+    connect(agent, &Agent::replyRockPaperScissors, d, &p::LogicRunnerP::agentRockPaperScissorsReplied);
     connect(agent, &Agent::replyActionOrder, d, &p::LogicRunnerP::agentActionOrderReplied);
     connect(agent, &Agent::replyAction, d, &p::LogicRunnerP::agentActionReplied);
     connect(agent, &Agent::replyUpgrade, d, &p::LogicRunnerP::agentUpgradeReplied);

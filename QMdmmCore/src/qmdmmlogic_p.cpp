@@ -95,22 +95,22 @@ bool LogicP::applyAction(const QString &fromPlayer, Data::Action action, const Q
     return false;
 }
 
-void LogicP::startSscForAction()
+void LogicP::startRpsForAction()
 {
-    sscForActionReplies.clear();
-    sscForActionWinners.clear();
-    state = Logic::SscForAction;
-    emit q->requestSscForAction(room->alivePlayerNames(), Logic::QPrivateSignal());
+    rpsForActionReplies.clear();
+    rpsForActionWinners.clear();
+    state = Logic::RpsForAction;
+    emit q->requestRpsForAction(room->alivePlayerNames(), Logic::QPrivateSignal());
 }
 
-void LogicP::sscForAction()
+void LogicP::rpsForAction()
 {
-    if (sscForActionReplies.count() == room->alivePlayersCount()) {
-        emit q->sscResult(sscForActionReplies, Logic::QPrivateSignal());
-        sscForActionWinners = Data::stoneScissorsClothWinners(sscForActionReplies);
-        if (sscForActionWinners.isEmpty()) {
+    if (rpsForActionReplies.count() == room->alivePlayersCount()) {
+        emit q->rpsResult(rpsForActionReplies, Logic::QPrivateSignal());
+        rpsForActionWinners = Data::rockPaperScissorsWinners(rpsForActionReplies);
+        if (rpsForActionWinners.isEmpty()) {
             // restart due to tie
-            startSscForAction();
+            startRpsForAction();
         } else {
             confirmedActionOrders.clear();
             actionOrderYields.clear();
@@ -125,7 +125,7 @@ void LogicP::startActionOrder()
     QList<int> remainingActionOrders;
 
     int i = 1;
-    foreach (const QString &player, sscForActionWinners) {
+    foreach (const QString &player, rpsForActionWinners) {
         remainingActionCount[player] = remainingActionCount.value(player, 0) + 1;
         remainingActionOrders << (i++);
     }
@@ -141,10 +141,10 @@ void LogicP::startActionOrder()
             ++it;
     }
 
-    // A single winner (only one distinct player in sscForActionWinners) takes
+    // A single winner (only one distinct player in rpsForActionWinners) takes
     // every order without negotiation. Yielded opportunities are not striven for:
     // a player's remaining selections minus its yields is what still needs a pick.
-    const bool singleWinner = QSet<QString>(sscForActionWinners.constBegin(), sscForActionWinners.constEnd()).size() == 1;
+    const bool singleWinner = QSet<QString>(rpsForActionWinners.constBegin(), rpsForActionWinners.constEnd()).size() == 1;
     QHash<QString, int> strivingActionCount;
     for (QHash<QString, int>::const_iterator it = remainingActionCount.constBegin(); it != remainingActionCount.constEnd(); ++it) {
         const int striving = it.value() - actionOrderYields.value(it.key(), 0);
@@ -171,7 +171,7 @@ void LogicP::startActionOrder()
         startAction();
     } else {
         // Still contested: request the remaining selections from each striving
-        // player. A player who lost an SSC struggle keeps competing (re-picks),
+        // player. A player who lost an RPS struggle keeps competing (re-picks),
         // rather than being defaulted to whatever is left.
         desiredActionOrders.clear();
         actionOrderRemainingSelections.clear();
@@ -179,17 +179,17 @@ void LogicP::startActionOrder()
             actionOrderRemainingSelections.insert(it.key(), it.value());
         state = Logic::ActionOrder;
         for (QHash<QString, int>::const_iterator it = strivingActionCount.constBegin(); it != strivingActionCount.constEnd(); ++it)
-            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(sscForActionWinners.length()), it.value(), Logic::QPrivateSignal());
+            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(rpsForActionWinners.length()), it.value(), Logic::QPrivateSignal());
     }
 }
 
 void LogicP::actionOrder()
 {
     if (actionOrderRemainingSelections.isEmpty())
-        startSscForActionOrder();
+        startRpsForActionOrder();
 }
 
-void LogicP::startSscForActionOrder()
+void LogicP::startRpsForActionOrder()
 {
     QList<int> orders = desiredActionOrders.uniqueKeys();
     foreach (int order, orders) {
@@ -203,7 +203,7 @@ void LogicP::startSscForActionOrder()
         startActionOrder();
     } else {
         currentStrivingActionOrder = 0;
-        for (int i = 1; i <= sscForActionWinners.length(); ++i) {
+        for (int i = 1; i <= rpsForActionWinners.length(); ++i) {
             if (desiredActionOrders.constFind(i) != desiredActionOrders.constEnd()) {
                 currentStrivingActionOrder = i;
                 break;
@@ -212,30 +212,30 @@ void LogicP::startSscForActionOrder()
 
         Q_ASSERT(currentStrivingActionOrder != 0);
         QStringList striving = desiredActionOrders.values(currentStrivingActionOrder);
-        sscForActionOrderReplies.clear();
-        state = Logic::SscForActionOrder;
-        emit q->requestSscForActionOrder(striving, currentStrivingActionOrder, Logic::QPrivateSignal());
+        rpsForActionOrderReplies.clear();
+        state = Logic::RpsForActionOrder;
+        emit q->requestRpsForActionOrder(striving, currentStrivingActionOrder, Logic::QPrivateSignal());
     }
 }
 
-void LogicP::sscForActionOrder()
+void LogicP::rpsForActionOrder()
 {
-    if (QStringList striving = desiredActionOrders.values(currentStrivingActionOrder); sscForActionOrderReplies.count() == striving.count()) {
-        emit q->sscResult(sscForActionOrderReplies, Logic::QPrivateSignal());
-        if (QStringList sscForActionOrderWinners = Data::stoneScissorsClothWinners(sscForActionOrderReplies); !sscForActionOrderWinners.isEmpty()) {
-            foreach (const QString &winner, sscForActionOrderWinners)
+    if (QStringList striving = desiredActionOrders.values(currentStrivingActionOrder); rpsForActionOrderReplies.count() == striving.count()) {
+        emit q->rpsResult(rpsForActionOrderReplies, Logic::QPrivateSignal());
+        if (QStringList rpsForActionOrderWinners = Data::rockPaperScissorsWinners(rpsForActionOrderReplies); !rpsForActionOrderWinners.isEmpty()) {
+            foreach (const QString &winner, rpsForActionOrderWinners)
                 striving.removeAll(winner);
             foreach (const QString &loser, striving)
                 desiredActionOrders.remove(currentStrivingActionOrder, loser);
         }
-        startSscForActionOrder();
+        startRpsForActionOrder();
     }
 }
 
 void LogicP::startAction()
 {
     if (!room->isRoundOver()) {
-        while (++currentActionOrder <= sscForActionWinners.length()) {
+        while (++currentActionOrder <= rpsForActionWinners.length()) {
             QString currentPlayer = confirmedActionOrders.value(currentActionOrder);
             Player *p = room->player(currentPlayer);
             if (p->alive()) {
@@ -245,7 +245,7 @@ void LogicP::startAction()
             }
         }
 
-        startSscForAction();
+        startRpsForAction();
     } else {
         emit q->roundOver(Logic::QPrivateSignal());
         startUpgrade();

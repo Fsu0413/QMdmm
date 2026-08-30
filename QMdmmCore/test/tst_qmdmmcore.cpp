@@ -40,29 +40,29 @@ private slots:
         QCOMPARE(r, result);
     }
 
-    void QMdmmDatastoneScissorsClothWinners_data()
+    void QMdmmDatarockPaperScissorsWinners_data()
     {
-        typedef QHash<QString, Data::StoneScissorsCloth> JudgeHash;
+        typedef QHash<QString, Data::RockPaperScissors> JudgeHash;
 
         QTest::addColumn<JudgeHash>("judgers");
         QTest::addColumn<QStringList>("result");
 
         QTest::newRow("tie-allsame") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Stone),
-            std::make_pair(QStringLiteral("2"), Data::Stone),
-            std::make_pair(QStringLiteral("3"), Data::Stone),
-            std::make_pair(QStringLiteral("4"), Data::Stone),
+            std::make_pair(QStringLiteral("1"), Data::Rock),
+            std::make_pair(QStringLiteral("2"), Data::Rock),
+            std::make_pair(QStringLiteral("3"), Data::Rock),
+            std::make_pair(QStringLiteral("4"), Data::Rock),
         } << QStringList {};
         QTest::newRow("tie-alldiff") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Stone),
+            std::make_pair(QStringLiteral("1"), Data::Rock),
             std::make_pair(QStringLiteral("2"), Data::Scissors),
-            std::make_pair(QStringLiteral("3"), Data::Cloth),
-            std::make_pair(QStringLiteral("4"), Data::Stone),
+            std::make_pair(QStringLiteral("3"), Data::Paper),
+            std::make_pair(QStringLiteral("4"), Data::Rock),
         } << QStringList {};
-        QTest::newRow("stone-vs-scissors") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Stone),
+        QTest::newRow("rock-vs-scissors") << JudgeHash {
+            std::make_pair(QStringLiteral("1"), Data::Rock),
             std::make_pair(QStringLiteral("2"), Data::Scissors),
-            std::make_pair(QStringLiteral("3"), Data::Stone),
+            std::make_pair(QStringLiteral("3"), Data::Rock),
             std::make_pair(QStringLiteral("4"), Data::Scissors),
         } << QStringList {
             QStringLiteral("1"),
@@ -70,25 +70,25 @@ private slots:
             QStringLiteral("3"),
             QStringLiteral("3"),
         };
-        QTest::newRow("cloth-vs-stone") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Stone),
-            std::make_pair(QStringLiteral("2"), Data::Cloth),
-            std::make_pair(QStringLiteral("3"), Data::Cloth),
-            std::make_pair(QStringLiteral("4"), Data::Cloth),
+        QTest::newRow("paper-vs-rock") << JudgeHash {
+            std::make_pair(QStringLiteral("1"), Data::Rock),
+            std::make_pair(QStringLiteral("2"), Data::Paper),
+            std::make_pair(QStringLiteral("3"), Data::Paper),
+            std::make_pair(QStringLiteral("4"), Data::Paper),
         } << QStringList {
             QStringLiteral("2"),
             QStringLiteral("3"),
             QStringLiteral("4"),
         };
     }
-    void QMdmmDatastoneScissorsClothWinners()
+    void QMdmmDatarockPaperScissorsWinners()
     {
-        typedef QHash<QString, Data::StoneScissorsCloth> JudgeHash;
+        typedef QHash<QString, Data::RockPaperScissors> JudgeHash;
 
         QFETCH(JudgeHash, judgers);
         QFETCH(QStringList, result);
 
-        QStringList r = Data::stoneScissorsClothWinners(judgers);
+        QStringList r = Data::rockPaperScissorsWinners(judgers);
         foreach (const QString &a, result)
             r.removeOne(a);
 
@@ -127,8 +127,8 @@ private slots:
 
     void QMdmmUtilitiesenumList2VariantList1()
     {
-        QList<Data::StoneScissorsCloth> l {Data::Stone, Data::Scissors, Data::Cloth, Data::Stone};
-        QVariantList s {static_cast<int>(Data::Stone), static_cast<int>(Data::Scissors), static_cast<int>(Data::Cloth), static_cast<int>(Data::Stone)};
+        QList<Data::RockPaperScissors> l {Data::Rock, Data::Scissors, Data::Paper, Data::Rock};
+        QVariantList s {static_cast<int>(Data::Rock), static_cast<int>(Data::Scissors), static_cast<int>(Data::Paper), static_cast<int>(Data::Rock)};
 
         QVariantList r = Utilities::enumList2VariantList(l);
         QCOMPARE(r, s);

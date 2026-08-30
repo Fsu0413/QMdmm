@@ -30,11 +30,11 @@ QMdmmServer ──► Server ──► LogicRunner ──► QMdmmCore::Logic
 The engine. The important types:
 
 - **`Logic`** — the round state machine. It walks through `BeforeRoundStart →
-  SscForAction → ActionOrder → SscForActionOrder → Action → Upgrade` (see
-  `Logic::State`). Drive it by calling its reply slots (`sscReply`,
+  RpsForAction → ActionOrder → RpsForActionOrder → Action → Upgrade` (see
+  `Logic::State`). Drive it by calling its reply slots (`rpsReply`,
   `actionOrderReply`, `actionReply`, `upgradeReply`); it reacts by emitting
-  request signals (`requestSscForAction`, `requestActionOrder`,
-  `requestAction`, `requestUpgrade`) and result signals (`sscResult`,
+  request signals (`requestRpsForAction`, `requestActionOrder`,
+  `requestAction`, `requestUpgrade`) and result signals (`RpsResult`,
   `actionOrderResult`, `actionResult`, `roundOver`, `upgradeResult`,
   `gameOver`).
 - **`Room`** — a set of `Player`s plus a `LogicConfiguration`. Tracks alive /
@@ -42,7 +42,7 @@ The engine. The important types:
 - **`Player`** — one player's state: HP, knife, horse, position, upgrade points.
 - **`LogicConfiguration`** — the game rules (damage and HP ranges, punish
   rules, the LetMove toggle, …). JSON-serializable.
-- **`Data`** — enums and flags: `StoneScissorsCloth`, `Action`, `UpgradeItem`,
+- **`Data`** — enums and flags: `RockPaperScissors`, `Action`, `UpgradeItem`,
   `Place`, `AgentState`, `DamageReason`.
 - **`Protocol`** — the wire format: `Packet` (`Request` / `Reply` / `Notify`)
   and the `RequestId` / `NotifyId` enums.
@@ -82,9 +82,9 @@ thread, these connections are queued.
 A full round flows like this:
 
 1. The room fills → `Logic::roundStart()`.
-2. `Logic` emits `requestSscForAction` → every agent asks its client for a
-   rock-paper-scissors pick → `sscResult` decides the acting order.
-3. `Logic` emits `requestActionOrder` (a tie-break SSC if needed) → the order
+2. `Logic` emits `requestRpsForAction` → every agent asks its client for a
+   rock-paper-scissors pick → `rpsResult` decides the acting order.
+3. `Logic` emits `requestActionOrder` (a tie-break RPS if needed) → the order
    is fixed.
 4. `Logic` emits `requestAction` for each player in order → each acts (buy /
    slash / kick / move / let-move) → `actionResult`.

@@ -182,7 +182,7 @@ const QMdmmCore::Room *Client::room() const
  * operation side creates the agent and hands it to LogicRunner). The operation side (GUI / Bot)
  * drives the controller interface through it: incoming requests arrive on its xxxRequested
  * signals, and replies / speech / operation are sent back by calling its bare-verb methods
- * (stoneScissorsCloth / actionOrder / action / upgrade) and speak / operate.
+ * (rockPaperScissors / actionOrder / action / upgrade) and speak / operate.
  *
  * The returned pointer is the stable handle stored by initSelfAgent(), not a lookup by
  * objectName(): the operation side may rename the client (setObjectName) after construction,

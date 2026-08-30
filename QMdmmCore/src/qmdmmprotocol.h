@@ -27,7 +27,7 @@ enum RequestId : uint8_t
     // No requests is from server, all requests are from Logic
     RequestInvalid = 0,
 
-    RequestStoneScissorsCloth, // request: array { string playerName } playerNames, int strivedOrder (or 0 for action) reply: int ssc
+    RequestRockPaperScissors, // request: array { string playerName } playerNames, int strivedOrder (or 0 for action) reply: int rps
     RequestActionOrder, // request: array { int } remainedOrders, int maximumOrder, int selectionNum, reply: array { int } orders
     RequestAction, // request: int currentOrder, reply: int(Action) action, optional string toPlayer, optional int toPlace
     RequestUpgrade, // request: int remaningTimes, reply: array { int } item
@@ -48,7 +48,7 @@ enum NotifyId : uint16_t
     NotifyPlayerRemoved, // string playerName
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyStoneScissorsCloth, // broadcast, object { int seq, string playerName: int ssc }
+    NotifyRockPaperScissors, // broadcast, object { int seq, string playerName: int rps }
     NotifyActionOrder, // broadcast, object { int seq, array { string playerName } order }
     NotifyAction, // broadcast, object { int seq, string playerName, int(Action) action, optional string toPlayer, optional int toPlace }
     NotifyRoundOver, // broadcast

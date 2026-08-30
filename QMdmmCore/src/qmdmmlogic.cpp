@@ -45,29 +45,29 @@ namespace v0 {
  * <td>When @c Logic::addPlayer() or @c Logic::removePlayer() is called, all the upgrades are cleared.
  * </tr>
  * <tr>
- * <td>@c Logic::SscForAction
- * <td>Stone-Scissors-Cloth is requested for actions. This is always the first request per action time.
- * <td>@c Logic::sscReply()
- * <td>@c Logic::requestSscForAction() is emitted when this state enters, @c Logic::sscResult() is emitted when this state exits to report the result.<br />
- *     If result is a tie @c Logic::SscForAction re-enters.<br />
+ * <td>@c Logic::RpsForAction
+ * <td>Rock-Paper-Scissors is requested for actions. This is always the first request per action time.
+ * <td>@c Logic::rpsReply()
+ * <td>@c Logic::requestRpsForAction() is emitted when this state enters, @c Logic::rpsResult() is emitted when this state exits to report the result.<br />
+ *     If result is a tie @c Logic::RpsForAction re-enters.<br />
  *     If there is only one winner, he / she gets all the action orders and @c Logic::Action enters.<br />
  *     Else @c Logic::ActionOrder enters.
  * </tr>
  * <tr>
  * <td>@c Logic::ActionOrder
- * <td>If multiple winners has determined in the @c Logic::SscForAction state, then in this action time the winners should determine the action order.
+ * <td>If multiple winners has determined in the @c Logic::RpsForAction state, then in this action time the winners should determine the action order.
  * <td>@c Logic::actionOrderReply()
  * <td>@c Logic::requestActionOrder() is emitted when this state enters.<br />
- *     If multiple agents chose same action order, @c Logic::SscForActionOrder enters.<br />
+ *     If multiple agents chose same action order, @c Logic::RpsForActionOrder enters.<br />
  *     Else the actions are got by the choosers, @c Logic::actionOrderResult() is emitted and @c Logic::Action enters.
  * </tr>
  * <tr>
- * <td>@c Logic::SscForActionOrder
- * <td>If multiple winners chose same action order, request Stone-Scissors-Cloth to determine who can actually get the action order.
- * <td>@c Logic::sscReply()
- * <td>@c Logic::requestSscForActionOrder() is emitted when this state enters, @c Logic::sscResult() is emitted when this state exits to report the result.<br />
- *     If result is a tie @c Logic::SscForActionOrder re-enters.<br />
- *     If the result is not a tie, but there are multiple winners, @c Logic::SscForActionOrder re-enters with only winners are requested.<br />
+ * <td>@c Logic::RpsForActionOrder
+ * <td>If multiple winners chose same action order, request Rock-Paper-Scissors to determine who can actually get the action order.
+ * <td>@c Logic::rpsReply()
+ * <td>@c Logic::requestRpsForActionOrder() is emitted when this state enters, @c Logic::rpsResult() is emitted when this state exits to report the result.<br />
+ *     If result is a tie @c Logic::RpsForActionOrder re-enters.<br />
+ *     If the result is not a tie, but there are multiple winners, @c Logic::RpsForActionOrder re-enters with only winners are requested.<br />
  *     Else the action order is got by the winner. Then if there are still undetermined action orders, @c Logic::ActionOrder enters, else @c Logic::actionOrderResult() is emitted and @c Logic::Action enters.
  * </tr>
  * <tr>
@@ -100,14 +100,14 @@ namespace v0 {
  * @var Logic::State Logic::BeforeRoundStart
  * @brief The game / round has not yet started yet. Typically due to waiting for preparation of agents.
  *
- * @var Logic::State Logic::SscForAction
- * @brief Stone-Scissors-Cloth is requested for actions. This is always the first request per action time.
+ * @var Logic::State Logic::RpsForAction
+ * @brief Rock-Paper-Scissors is requested for actions. This is always the first request per action time.
  *
  * @var Logic::State Logic::ActionOrder
- * @brief If multiple winners has determined in the @c Logic::SscForAction state, then in this action time the winners should determine the action order.
+ * @brief If multiple winners has determined in the @c Logic::RpsForAction state, then in this action time the winners should determine the action order.
  *
- * @var Logic::State Logic::SscForActionOrder
- * @brief If multiple winners chose same action order, request Stone-Scissors-Cloth to determine who can actually get the action order.
+ * @var Logic::State Logic::RpsForActionOrder
+ * @brief If multiple winners chose same action order, request Rock-Paper-Scissors to determine who can actually get the action order.
  *
  * @var Logic::State Logic::Action
  * @brief Request action then apply the action.
@@ -203,7 +203,7 @@ bool Logic::roundStart()
         // a game must be started for player number >= 2
         if (d->players.length() >= 2) {
             d->room->prepareForRoundStart();
-            d->startSscForAction();
+            d->startRpsForAction();
 
             return true;
         }
@@ -213,29 +213,29 @@ bool Logic::roundStart()
 }
 
 /**
- * @brief Receive Stone-Scissors-Cloth result
+ * @brief Receive Rock-Paper-Scissors result
  * @param playerName the internal name of the player
- * @param ssc the Stone-Scissors-Cloth of the player
+ * @param rps the Rock-Paper-Scissors of the player
  * @return true if state matches and operation succeeded (or there are no action), otherwise false
  *
- * Can be only called from @c Logic::SscForAction or @c Logic::SscForActionOrder state.
+ * Can be only called from @c Logic::RpsForAction or @c Logic::RpsForActionOrder state.
  */
-bool Logic::sscReply(const QString &playerName, Data::StoneScissorsCloth ssc)
+bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
 {
     if (d->players.contains(playerName)) {
-        if (d->state == SscForAction) {
-            if (!d->sscForActionReplies.contains(playerName)) {
-                d->sscForActionReplies.insert(playerName, ssc);
-                d->sscForAction();
+        if (d->state == RpsForAction) {
+            if (!d->rpsForActionReplies.contains(playerName)) {
+                d->rpsForActionReplies.insert(playerName, rps);
+                d->rpsForAction();
 
                 return true;
             }
         }
 
-        if (d->state == SscForActionOrder) {
-            if (!d->sscForActionOrderReplies.contains(playerName)) {
-                d->sscForActionOrderReplies.insert(playerName, ssc);
-                d->sscForActionOrder();
+        if (d->state == RpsForActionOrder) {
+            if (!d->rpsForActionOrderReplies.contains(playerName)) {
+                d->rpsForActionOrderReplies.insert(playerName, rps);
+                d->rpsForActionOrder();
 
                 return true;
             }
@@ -265,7 +265,7 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
         if (d->state == ActionOrder) {
             const int selections = d->actionOrderRemainingSelections.value(playerName, -1);
             if (selections >= 0 && desiredOrder.length() == selections) {
-                const int maximumOrderNum = d->sscForActionWinners.length();
+                const int maximumOrderNum = d->rpsForActionWinners.length();
                 QList<int> chosenOrders;
                 int yields = 0;
                 bool valid = true;
@@ -346,19 +346,19 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
 }
 
 /**
- * @fn Logic::requestSscForAction(const QStringList &playerNames, QPrivateSignal)
- * @brief emits when Stone-Scissors-Cloth is requested for actions
+ * @fn Logic::requestRpsForAction(const QStringList &playerNames, QPrivateSignal)
+ * @brief emits when Rock-Paper-Scissors is requested for actions
  * @param playerNames the requested player names, without dead players
  *
- * Can be only emitted in @c Logic::SscForAction state.
+ * Can be only emitted in @c Logic::RpsForAction state.
  */
 
 /**
- * @fn Logic::sscResult(const QHash<QString, QMdmmData::StoneScissorsCloth> &replies, QPrivateSignal)
- * @brief emits when Stone-Scissors-Cloth is all replied
- * @param replies the replies of Stone-Scissors-Cloth (key = internal name of player, value = Stone-Scissors-Cloth)
+ * @fn Logic::rpsResult(const QHash<QString, QMdmmData::RockPaperScissors> &replies, QPrivateSignal)
+ * @brief emits when Rock-Paper-Scissors is all replied
+ * @param replies the replies of Rock-Paper-Scissors (key = internal name of player, value = Rock-Paper-Scissors)
  *
- * Can be only emitted in @c Logic::SscForAction and @c Logic::SscForActionOrder state.
+ * Can be only emitted in @c Logic::RpsForAction and @c Logic::RpsForActionOrder state.
  */
 
 /**
@@ -381,12 +381,12 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  */
 
 /**
- * @fn Logic::requestSscForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
- * @brief emits when Stone-Scissors-Cloth is requested for striving for a specific action order
+ * @fn Logic::requestRpsForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal)
+ * @brief emits when Rock-Paper-Scissors is requested for striving for a specific action order
  * @param playerNames the requested player names with same desired action order
  * @param strivedOrder the strived action order
  *
- * Can be only emitted in @c Logic::SscForActionOrder state.
+ * Can be only emitted in @c Logic::RpsForActionOrder state.
  */
 
 /**

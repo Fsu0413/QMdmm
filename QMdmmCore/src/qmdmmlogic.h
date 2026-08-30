@@ -35,9 +35,9 @@ public:
     enum State : uint8_t
     {
         BeforeRoundStart,
-        SscForAction,
+        RpsForAction,
         ActionOrder,
-        SscForActionOrder,
+        RpsForActionOrder,
         Action,
         Upgrade,
     };
@@ -55,17 +55,17 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     bool removePlayer(const QString &playerName);
     bool roundStart();
 
-    bool sscReply(const QString &playerName, Data::StoneScissorsCloth ssc);
+    bool rpsReply(const QString &playerName, Data::RockPaperScissors rps);
     bool actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
     bool actionReply(const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace);
     bool upgradeReply(const QString &playerName, const QList<Data::UpgradeItem> &items);
 
 signals: // NOLINT(readability-redundant-access-specifiers)
-    void requestSscForAction(const QStringList &playerNames, QPrivateSignal);
-    void sscResult(const QHash<QString, Data::StoneScissorsCloth> &replies, QPrivateSignal);
+    void requestRpsForAction(const QStringList &playerNames, QPrivateSignal);
+    void rpsResult(const QHash<QString, Data::RockPaperScissors> &replies, QPrivateSignal);
     void requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections, QPrivateSignal);
     void actionOrderResult(const QHash<int, QString> &result, QPrivateSignal);
-    void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
+    void requestRpsForActionOrder(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
     void requestAction(const QString &playerName, int actionOrder, QPrivateSignal);
     void actionResult(const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
     void roundOver(QPrivateSignal);

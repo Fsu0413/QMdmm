@@ -3,7 +3,7 @@
 // Headless smoke test for the networked gameplay loop used by the GUI's
 // "local game" mode: an in-process Server plus N Clients (1 human + bots)
 // connected over the loopback TCP socket. Verifies the full
-// SSC -> action-order -> action -> upgrade -> round/game over pipeline actually
+// RPS -> action-order -> action -> upgrade -> round/game over pipeline actually
 // runs to completion without a human in the loop. It also drops the human's
 // connection mid-game to exercise the client's automatic reconnect (re-establish
 // the socket + re-sign in) and the server's reconnect path (setSocket rebind +
@@ -44,8 +44,8 @@ void wireBot(Client *bot)
     // methods.
     Agent *agent = bot->agent();
 
-    QObject::connect(agent, &Agent::stoneScissorsClothRequested, bot, [bot, agent]() {
-        QTimer::singleShot(BOT_REPLY_DELAY_MS, bot, [agent]() { agent->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
+    QObject::connect(agent, &Agent::rockPaperScissorsRequested, bot, [bot, agent]() {
+        QTimer::singleShot(BOT_REPLY_DELAY_MS, bot, [agent]() { agent->rockPaperScissors(static_cast<Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3)); });
     });
     QObject::connect(agent, &Agent::actionOrderRequested, bot, [agent](const QList<int> &remainedOrders, int, int selectionNum) {
         QList<int> ao;

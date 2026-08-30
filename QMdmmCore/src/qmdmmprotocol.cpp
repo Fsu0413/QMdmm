@@ -35,11 +35,11 @@ namespace v0 {
  */
 
 /**
- * @var Protocol::RequestId Protocol::RequestStoneScissorsCloth
- * @brief A request of Stone-Scissors-Cloth
+ * @var Protocol::RequestId Protocol::RequestRockPaperScissors
+ * @brief A request of Rock-Paper-Scissors
  *
  * Wire format — request: @c array { string playerName } playerNames, @c int strivedOrder
- * (or @c 0 for action); reply: @c int ssc.
+ * (or @c 0 for action); reply: @c int rps.
  */
 
 /**
@@ -142,10 +142,10 @@ namespace v0 {
  */
 
 /**
- * @var Protocol::NotifyId Protocol::NotifyStoneScissorsCloth
- * @brief A notify from agent of Stone-Scissors-Cloth
+ * @var Protocol::NotifyId Protocol::NotifyRockPaperScissors
+ * @brief A notify from agent of Rock-Paper-Scissors
  *
- * Wire format: broadcast, @c object { int seq, string playerName: int ssc }.
+ * Wire format: broadcast, @c object { int seq, string playerName: int rps }.
  */
 
 /**

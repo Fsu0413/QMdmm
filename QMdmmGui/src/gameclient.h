@@ -52,7 +52,7 @@ public:
     Q_INVOKABLE void disconnectAll();
 
     // Request replies (for the human player)
-    Q_INVOKABLE void replySsc(int ssc);
+    Q_INVOKABLE void replyRps(int rps);
     Q_INVOKABLE void replyActionOrder(const QVariantList &orders);
     Q_INVOKABLE void yieldActionOrder(int selectionNum);
     Q_INVOKABLE void replyAction(int action, const QString &toPlayer, int toPlace);
@@ -76,7 +76,7 @@ signals:
     void statusMessageChanged(const QString &);
     void playerCountChanged();
 
-    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
+    void requestRockPaperScissors(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void requestAction(int currentOrder);
     void requestUpgrade(int remainingTimes);
@@ -86,7 +86,7 @@ signals:
     void gameStart();
     void roundStart();
     void roundOver();
-    void sscResult(const QVariantMap &results);
+    void rpsResult(const QVariantMap &results);
     void actionOrderResult(const QVariantMap &result);
     void actionResult(const QString &playerName, int action, const QString &toPlayer, int toPlace);
     void upgradeResult(const QVariantMap &upgrades);

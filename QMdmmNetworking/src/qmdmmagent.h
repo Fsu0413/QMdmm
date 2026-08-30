@@ -54,7 +54,7 @@ public:
     void notifyPlayerRemove(const QString &playerName);
     void notifyGameStart();
     void notifyRoundStart();
-    void notifyStoneScissorsCloth(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
+    void notifyRockPaperScissors(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies);
     void notifyActionOrder(const QHash<int, QString> &result);
     void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void notifyRoundOver();
@@ -63,12 +63,12 @@ public:
     void notifySpeak(const QString &playerName, const QString &content);
     void notifyOperate(const QString &playerName, const QJsonValue &todo);
 
-    void requestStoneScissorsCloth(const QStringList &playerNames, int strivedOrder);
+    void requestRockPaperScissors(const QStringList &playerNames, int strivedOrder);
     void requestActionOrder(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void requestAction(int currentOrder);
     void requestUpgrade(int remainingTimes);
 
-    void stoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void rockPaperScissors(QMdmmCore::Data::RockPaperScissors rps);
     void actionOrder(const QList<int> &order);
     void action(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items);
@@ -88,7 +88,7 @@ signals:
     void playerRemoveNotified(const QString &playerName, QPrivateSignal);
     void gameStartNotified(QPrivateSignal);
     void roundStartNotified(QPrivateSignal);
-    void stoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies, QPrivateSignal);
+    void rockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies, QPrivateSignal);
     void actionOrderNotified(const QHash<int, QString> &result, QPrivateSignal);
     void actionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
     void roundOverNotified(QPrivateSignal);
@@ -97,12 +97,12 @@ signals:
     void speakNotified(const QString &playerName, const QString &content, QPrivateSignal);
     void operateNotified(const QString &playerName, const QJsonValue &todo, QPrivateSignal);
 
-    void stoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
+    void rockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder, QPrivateSignal);
     void actionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum, QPrivateSignal);
     void actionRequested(int currentOrder, QPrivateSignal);
     void upgradeRequested(int remainingTimes, QPrivateSignal);
 
-    void replyStoneScissorsCloth(QMdmmCore::Data::StoneScissorsCloth ssc, QPrivateSignal);
+    void replyRockPaperScissors(QMdmmCore::Data::RockPaperScissors rps, QPrivateSignal);
     void replyActionOrder(const QList<int> &order, QPrivateSignal);
     void replyAction(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace, QPrivateSignal);
     void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal);

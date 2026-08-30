@@ -25,7 +25,7 @@ constexpr int MaxReconnectAttempts = 5;
 } // namespace
 
 QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> ClientP::requestCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestStoneScissorsCloth, &ClientP::requestStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ClientP::requestRockPaperScissors),
     std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ClientP::requestActionOrder),
     std::make_pair(QMdmmCore::Protocol::RequestAction, &ClientP::requestAction),
     std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ClientP::requestUpgrade),
@@ -43,7 +43,7 @@ QHash<QMdmmCore::Protocol::NotifyId, void (ClientP::*)(const QJsonValue &)> Clie
     std::make_pair(QMdmmCore::Protocol::NotifyPlayerRemoved, &ClientP::notifyPlayerRemoved),
     std::make_pair(QMdmmCore::Protocol::NotifyGameStart, &ClientP::notifyGameStart),
     std::make_pair(QMdmmCore::Protocol::NotifyRoundStart, &ClientP::notifyRoundStart),
-    std::make_pair(QMdmmCore::Protocol::NotifyStoneScissorsCloth, &ClientP::notifyStoneScissorsCloth),
+    std::make_pair(QMdmmCore::Protocol::NotifyRockPaperScissors, &ClientP::notifyRockPaperScissors),
     std::make_pair(QMdmmCore::Protocol::NotifyActionOrder, &ClientP::notifyActionOrder),
     std::make_pair(QMdmmCore::Protocol::NotifyAction, &ClientP::notifyAction),
     std::make_pair(QMdmmCore::Protocol::NotifyRoundOver, &ClientP::notifyRoundOver),
@@ -87,11 +87,11 @@ void ClientP::initSelfAgent()
     selfAgent = self;
 
     // Wire the client's own agent's reply / speech / operation signals to the encode-and-send
-    // slots below. The operation side drives the Agent's bare-verb methods (stoneScissorsCloth /
+    // slots below. The operation side drives the Agent's bare-verb methods (rockPaperScissors /
     // actionOrder / action / upgrade) and speak / operate, which forward as the replyXxx / spoken /
     // operated signals; this client turns them back into wire packets. Mirrors the server side,
     // where ServerConnection wires the Agent's xxxRequested / xxxNotified signals.
-    connect(self, &Agent::replyStoneScissorsCloth, this, &ClientP::sendStoneScissorsClothReply);
+    connect(self, &Agent::replyRockPaperScissors, this, &ClientP::sendRockPaperScissorsReply);
     connect(self, &Agent::replyActionOrder, this, &ClientP::sendActionOrderReply);
     connect(self, &Agent::replyAction, this, &ClientP::sendActionReply);
     connect(self, &Agent::replyUpgrade, this, &ClientP::sendUpgradeReply);
@@ -110,7 +110,7 @@ void ClientP::initSelfAgent()
     });
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void ClientP::requestStoneScissorsCloth(const QJsonValue &value)
+void ClientP::requestRockPaperScissors(const QJsonValue &value)
 {
     ONERRPRINTJSON(value);
 
@@ -138,7 +138,7 @@ void ClientP::requestStoneScissorsCloth(const QJsonValue &value)
         return;
     int strivedOrder = vstrivedOrder.toInt();
 
-    selfAgent->requestStoneScissorsCloth(playerNames, strivedOrder);
+    selfAgent->requestRockPaperScissors(playerNames, strivedOrder);
     onRet_.dismiss();
 }
 
@@ -439,7 +439,7 @@ void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
+void ClientP::notifyRockPaperScissors(const QJsonValue &value)
 {
     ONERRPRINTJSON(value);
 
@@ -447,28 +447,28 @@ void ClientP::notifyStoneScissorsCloth(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    QHash<QString, QMdmmCore::Data::StoneScissorsCloth> replies;
+    QHash<QString, QMdmmCore::Data::RockPaperScissors> replies;
     for (QJsonObject::const_iterator it = ob.constBegin(); it != ob.constEnd(); ++it) {
         QString playerName = it.key();
         if (!agents.contains(playerName))
             return;
-        QJsonValue vssc = it.value();
-        if (!vssc.isDouble())
+        QJsonValue vrps = it.value();
+        if (!vrps.isDouble())
             return;
-        QMdmmCore::Data::StoneScissorsCloth ssc = static_cast<QMdmmCore::Data::StoneScissorsCloth>(vssc.toInt());
-        switch (ssc) {
-        case QMdmmCore::Data::Stone:
+        QMdmmCore::Data::RockPaperScissors rps = static_cast<QMdmmCore::Data::RockPaperScissors>(vrps.toInt());
+        switch (rps) {
+        case QMdmmCore::Data::Rock:
+        case QMdmmCore::Data::Paper:
         case QMdmmCore::Data::Scissors:
-        case QMdmmCore::Data::Cloth:
             break;
         default:
             return;
         }
-        replies.insert(playerName, ssc);
+        replies.insert(playerName, rps);
     }
 
     ++lastRoundEventSeq;
-    selfAgent->notifyStoneScissorsCloth(replies);
+    selfAgent->notifyRockPaperScissors(replies);
     onRet_.dismiss();
 }
 
@@ -774,11 +774,11 @@ bool ClientP::applyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeIt
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void ClientP::sendStoneScissorsClothReply(QMdmmCore::Data::StoneScissorsCloth ssc)
+void ClientP::sendRockPaperScissorsReply(QMdmmCore::Data::RockPaperScissors rps)
 {
-    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestStoneScissorsCloth) {
+    if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestRockPaperScissors) {
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
-        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestStoneScissorsCloth, static_cast<int>(ssc)));
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestRockPaperScissors, static_cast<int>(rps)));
     }
 }
 
@@ -846,7 +846,7 @@ void ClientP::sendRequestTimeout()
 {
     // Give up on the current request: send a null-valued reply carrying the *current* request
     // id, then stop tracking the request locally. Null is the protocol's "give up" marker --
-    // every legal reply value is non-null (SSC=int / actionOrder=array / action=object /
+    // every legal reply value is non-null (RPS=int / actionOrder=array / action=object /
     // upgrade=array), so null is unambiguous. The request id must be captured before resetting
     // currentRequest: resetting it first made the reply carry RequestInvalid, which the server's
     // `currentRequest == packet.requestId()` check dropped, so the give-up never reached it (D-020).

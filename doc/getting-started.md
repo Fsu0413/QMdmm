@@ -61,7 +61,7 @@ connect to its request signals and answer through its reply slots:
 
 | Request signal | Reply slot |
 |---|---|
-| `requestStoneScissorsCloth` | `replyStoneScissorsCloth` |
+| `requestRockPaperScissors` | `replyRockPaperScissors` |
 | `requestActionOrder` | `replyActionOrder` |
 | `requestAction` | `replyAction` |
 | `requestUpgrade` | `replyUpgrade` |

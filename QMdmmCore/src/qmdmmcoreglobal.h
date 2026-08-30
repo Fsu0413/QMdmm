@@ -80,13 +80,16 @@ enum DamageReason : uint8_t
 };
 Q_ENUM_NS(DamageReason)
 
-enum StoneScissorsCloth : uint8_t
+enum RockPaperScissors : uint8_t
 {
-    Stone,
-    Scissors,
-    Cloth,
+    Rock = 0,
+    Paper = 2,
+    Scissors = 1,
+
+    Stone = Rock,
+    Cloth = Paper,
 };
-Q_ENUM_NS(StoneScissorsCloth)
+Q_ENUM_NS(RockPaperScissors)
 
 enum Action : uint8_t
 {
@@ -131,7 +134,8 @@ Q_FLAG_NS(AgentState)
     return (p1 == Country) != (p2 == Country);
 }
 
-[[nodiscard]] QMDMMCORE_EXPORT QStringList stoneScissorsClothWinners(const QHash<QString, Data::StoneScissorsCloth> &judgers);
+[[nodiscard]] QMDMMCORE_EXPORT QStringList rockPaperScissorsWinners(const QHash<QString, Data::RockPaperScissors> &judgers);
+
 } // namespace Data
 
 namespace Global {

@@ -44,7 +44,7 @@ private slots:
 
         // case 2
         {
-            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {});
             Protocol::PacketType t = p.type();
             QCOMPARE(t, Protocol::TypeRequest);
         }
@@ -68,9 +68,9 @@ private slots:
 
         // case 2
         {
-            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {});
             Protocol::RequestId t = p.requestId();
-            QCOMPARE(t, Protocol::RequestStoneScissorsCloth);
+            QCOMPARE(t, Protocol::RequestRockPaperScissors);
         }
 
         // case 3
@@ -92,7 +92,7 @@ private slots:
 
         // case 2
         {
-            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+            Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {});
             Protocol::NotifyId t = p.notifyId();
             QCOMPARE(t, Protocol::NotifyInvalid);
         }
@@ -116,7 +116,7 @@ private slots:
 
         // case 2
         {
-            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {1});
+            Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {1});
             QJsonValue t = p.value();
             QVERIFY(!t.isNull());
             QCOMPARE(t.toInt(), 1);
@@ -126,7 +126,7 @@ private slots:
     void QMdmmPacketserialize()
     {
         {
-            Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {1});
+            Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {1});
             QByteArray arr = p;
 
             // The Json object created by Qt is sorted by key
@@ -210,7 +210,7 @@ private slots:
     {
         // coverage for Q_DECLARE_METATYPE
 
-        Packet p(Protocol::TypeRequest, Protocol::RequestStoneScissorsCloth, {});
+        Packet p(Protocol::TypeRequest, Protocol::RequestRockPaperScissors, {});
         QVariant v = QVariant::fromValue<Packet>(p);
         QCOMPARE(v.value<Packet>().serialize(), p.serialize());
     }

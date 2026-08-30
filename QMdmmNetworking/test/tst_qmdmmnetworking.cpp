@@ -237,39 +237,39 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
     Agent *p2 = new Agent(QStringLiteral("p2"), &runner);
     p2->setState(Data::StateOnlineBot);
 
-    int sscRequests = 0;
-    int sscResults = 0;
+    int rpsRequests = 0;
+    int rpsResults = 0;
 
-    auto wireAsyncSscReply = [&](Agent *agent) {
-        QObject::connect(agent, &Agent::stoneScissorsClothRequested, &runner, [agent, &sscRequests]() {
-            ++sscRequests;
-            QTimer::singleShot(0, agent, [agent]() { agent->stoneScissorsCloth(Data::Stone); });
+    auto wireAsyncRpsReply = [&](Agent *agent) {
+        QObject::connect(agent, &Agent::rockPaperScissorsRequested, &runner, [agent, &rpsRequests]() {
+            ++rpsRequests;
+            QTimer::singleShot(0, agent, [agent]() { agent->rockPaperScissors(Data::Rock); });
         });
     };
-    wireAsyncSscReply(p1);
-    wireAsyncSscReply(p2);
+    wireAsyncRpsReply(p1);
+    wireAsyncRpsReply(p2);
 
-    // The SSC result notification is the observable proof that the async reply round-tripped
-    // back through the logic side (Logic -> LogicRunnerP -> Agent::notifyStoneScissorsCloth).
-    QObject::connect(p1, &Agent::stoneScissorsClothNotified, &runner, [&sscResults](const QHash<QString, Data::StoneScissorsCloth> &) { ++sscResults; });
+    // The RPS result notification is the observable proof that the async reply round-tripped
+    // back through the logic side (Logic -> LogicRunnerP -> Agent::notifyRockPaperScissors).
+    QObject::connect(p1, &Agent::rockPaperScissorsNotified, &runner, [&rpsResults](const QHash<QString, Data::RockPaperScissors> &) { ++rpsResults; });
 
     // Registering both agents fills the room and kicks off the game: gameStart + roundStart,
-    // then Logic starts driving the first SSC request on its thread.
+    // then Logic starts driving the first RPS request on its thread.
     QCOMPARE(runner.addAgent(p1), p1);
     QCOMPARE(runner.addAgent(p2), p2);
     QVERIFY(runner.full());
 
-    // Both agents got asked and their async replies produced at least one SSC result. A
+    // Both agents got asked and their async replies produced at least one RPS result. A
     // synchronous reply would never round-trip here; only the deferred singleShot(0) does.
-    QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 5000);
-    QVERIFY(sscRequests >= 2);
+    QTRY_VERIFY_WITH_TIMEOUT(rpsResults >= 1, 5000);
+    QVERIFY(rpsRequests >= 2);
 }
 
 // A client whose operation side gives up on a request (Agent::requestTimeout) sends a null reply
 // carrying the *correct* request id, and the server recognizes the null value as the give-up
 // marker and applies its default reply -- so the logic keeps advancing instead of stalling or
-// erroring out. Driven end-to-end over a real TCP connection: p1 (a bot) answers SSC normally,
-// p2 (a "human") gives up, and p1 observing the SSC result is the proof that p2's default reply
+// erroring out. Driven end-to-end over a real TCP connection: p1 (a bot) answers RPS normally,
+// p2 (a "human") gives up, and p1 observing the RPS result is the proof that p2's default reply
 // was applied. This is the D-020 regression test (the old code reset currentRequest before
 // sending, so the give-up reply carried RequestInvalid and was dropped by the server).
 void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
@@ -288,31 +288,31 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 
     const QString host = QStringLiteral("qmdmm://localhost:16365");
 
-    // Wire both agents BEFORE connecting: the first SSC request fires as soon as the room fills
+    // Wire both agents BEFORE connecting: the first RPS request fires as soon as the room fills
     // (p2 joins), and a signal connected after connectToHost would miss it.
     auto *p1 = new Client(ClientConfiguration(), &server);
-    connect(p1->agent(), &Agent::stoneScissorsClothRequested, &server, [p1]() { QTimer::singleShot(0, p1->agent(), [p1]() { p1->agent()->stoneScissorsCloth(Data::Stone); }); });
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { QTimer::singleShot(0, p1->agent(), [p1]() { p1->agent()->rockPaperScissors(Data::Rock); }); });
 
     auto *p2 = new Client(ClientConfiguration(), &server);
     int p2GiveUps = 0;
-    connect(p2->agent(), &Agent::stoneScissorsClothRequested, &server, [&p2GiveUps, p2]() {
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [&p2GiveUps, p2]() {
         ++p2GiveUps;
         p2->agent()->requestTimeout();
     });
 
-    // The observable proof: p1 receives the SSC result -- which only happens if the server
+    // The observable proof: p1 receives the RPS result -- which only happens if the server
     // applied p2's default reply (rather than dropping the give-up and stalling the logic).
-    int sscResults = 0;
-    connect(p1->agent(), &Agent::stoneScissorsClothNotified, &server, [&sscResults](const QHash<QString, Data::StoneScissorsCloth> &) { ++sscResults; });
+    int rpsResults = 0;
+    connect(p1->agent(), &Agent::rockPaperScissorsNotified, &server, [&rpsResults](const QHash<QString, Data::RockPaperScissors> &) { ++rpsResults; });
 
-    // p1 joins first (room not full yet); p2 fills the room, kicking off the game + first SSC.
+    // p1 joins first (room not full yet); p2 fills the room, kicking off the game + first RPS.
     QVERIFY(p1->connectToHost(host, Data::StateOnlineBot));
     QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
 
     QVERIFY(p2->connectToHost(host, Data::StateOnline));
 
     QTRY_VERIFY_WITH_TIMEOUT(p2GiveUps >= 1, 5000);
-    QTRY_VERIFY_WITH_TIMEOUT(sscResults >= 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(rpsResults >= 1, 10000);
 }
 
 // A client yields the action-order contest by replying with a 0 sentinel -- the "yield" marker:
@@ -320,7 +320,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 // semantics, distinct from requestTimeout()'s null give-up (which makes the server answer with
 // its default reply). The 0 sentinel must round-trip the wire (ClientP encodes it into the JSON
 // array, ServerConnection decodes it back) and reach the core Logic, which counts the yield and
-// hands the leftover order to the yielder. In a 3-player room p1/p2 win the SSC (Stone beats p3's
+// hands the leftover order to the yielder. In a 3-player room p1/p2 win the RPS (Rock beats p3's
 // Scissors) and enter the action-order negotiation; p1 yields while p2 strives for order 1. p2
 // reaching the action phase is the proof that p1's yield was applied -- if the 0 sentinel had not
 // round-tripped, the logic would stall in the action-order phase waiting for p1's selection.
@@ -340,16 +340,16 @@ void tst_QMdmmNetworking::client_actionOrderYieldAcceptsAssignment()
 
     const QString host = QStringLiteral("qmdmm://localhost:16361");
 
-    // Wire the replies before connecting: the first SSC request fires as soon as the room fills
-    // (p3 joins), and a signal connected after connectToHost would miss it. p1 and p2 play Stone,
-    // p3 plays Scissors, so Stone beats Scissors and the SSC winners are [p1, p2] -- two winners
+    // Wire the replies before connecting: the first RPS request fires as soon as the room fills
+    // (p3 joins), and a signal connected after connectToHost would miss it. p1 and p2 play Rock,
+    // p3 plays Scissors, so Rock beats Scissors and the RPS winners are [p1, p2] -- two winners
     // enter the action-order negotiation (a single winner would just take every order without it).
     auto *p1 = new Client(ClientConfiguration(), &server);
-    connect(p1->agent(), &Agent::stoneScissorsClothRequested, &server, [p1]() { p1->agent()->stoneScissorsCloth(Data::Stone); });
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
     auto *p2 = new Client(ClientConfiguration(), &server);
-    connect(p2->agent(), &Agent::stoneScissorsClothRequested, &server, [p2]() { p2->agent()->stoneScissorsCloth(Data::Stone); });
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() { p2->agent()->rockPaperScissors(Data::Rock); });
     auto *p3 = new Client(ClientConfiguration(), &server);
-    connect(p3->agent(), &Agent::stoneScissorsClothRequested, &server, [p3]() { p3->agent()->stoneScissorsCloth(Data::Scissors); });
+    connect(p3->agent(), &Agent::rockPaperScissorsRequested, &server, [p3]() { p3->agent()->rockPaperScissors(Data::Scissors); });
 
     // p1 yields its action-order selection (0 sentinel); p2 strives for order 1.
     int p1ActionOrderRequests = 0;

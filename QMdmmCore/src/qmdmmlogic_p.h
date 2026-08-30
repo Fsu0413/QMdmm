@@ -23,14 +23,14 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
 
     Logic::State state;
 
-    QHash<QString, Data::StoneScissorsCloth> sscForActionReplies;
-    QStringList sscForActionWinners;
+    QHash<QString, Data::RockPaperScissors> rpsForActionReplies;
+    QStringList rpsForActionWinners;
     QMultiHash<int, QString> desiredActionOrders;
     QHash<int, QString> confirmedActionOrders;
     QHash<QString, int> actionOrderRemainingSelections;
     QHash<QString, int> actionOrderYields;
     int currentStrivingActionOrder;
-    QHash<QString, Data::StoneScissorsCloth> sscForActionOrderReplies;
+    QHash<QString, Data::RockPaperScissors> rpsForActionOrderReplies;
     int currentActionOrder;
     QHash<QString, QList<Data::UpgradeItem>> upgrades;
 
@@ -39,12 +39,12 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
     bool applyAction(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace);
 
     // Functions:
-    void startSscForAction();
-    void sscForAction();
+    void startRpsForAction();
+    void rpsForAction();
     void startActionOrder();
     void actionOrder();
-    void startSscForActionOrder();
-    void sscForActionOrder();
+    void startRpsForActionOrder();
+    void rpsForActionOrder();
     void startAction();
     void startUpgrade();
     void upgrade();

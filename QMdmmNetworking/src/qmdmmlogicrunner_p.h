@@ -50,7 +50,7 @@ public:
     QJsonValue currentRequestValue;
     QTimer *requestTimer;
 
-    // Round-event log: every round-event packet this connection has broadcast (ssc / action-order
+    // Round-event log: every round-event packet this connection has broadcast (rps / action-order
     // / action / upgrade), in send order. The list index IS the round-event sequence number (events
     // are appended in broadcast order, and the client counts one per event it receives), so no
     // explicit sequence is stored and no sorting is needed. Used for the per-agent precise
@@ -71,12 +71,12 @@ public:
     // reply decode callbacks: validate the wire value and hand the strong-typed reply to the Agent
     // (which then forwards it as the corresponding replyXxx signal). These keep only the JSON
     // validation / type conversion, which is the wire's job; the controller logic lives on Agent.
-    void decodeStoneScissorsClothReply(const QJsonValue &value);
+    void decodeRockPaperScissorsReply(const QJsonValue &value);
     void decodeActionOrderReply(const QJsonValue &value);
     void decodeActionReply(const QJsonValue &value);
     void decodeUpgradeReply(const QJsonValue &value);
 
-    void defaultReplyStoneScissorsCloth();
+    void defaultReplyRockPaperScissors();
     void defaultReplyActionOrder();
     void defaultReplyAction();
     void defaultReplyUpgrade();
@@ -97,7 +97,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     // requests (encode + send): these slots listen to the Agent's xxxRequested signals and turn
     // each request into a wire packet. The controller methods themselves (requestXxx) now live on
     // the Agent.
-    void sendStoneScissorsClothRequested(const QStringList &playerNames, int strivedOrder);
+    void sendRockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder);
     void sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
     void sendActionRequested(int currentOrder);
     void sendUpgradeRequested(int remainingTimes);
@@ -111,7 +111,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendPlayerRemoveNotified(const QString &playerName);
     void sendGameStartNotified();
     void sendRoundStartNotified();
-    void sendStoneScissorsClothNotified(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
+    void sendRockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies);
     void sendActionOrderNotified(const QHash<int, QString> &result);
     void sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void sendRoundOverNotified();
@@ -153,18 +153,18 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void agentStateChanged(const QMdmmCore::Data::AgentState &state);
     void agentSpoken(const QString &content);
     void agentOperated(const QJsonValue &value);
-    void agentStoneScissorsClothReplied(QMdmmCore::Data::StoneScissorsCloth ssc);
+    void agentRockPaperScissorsReplied(QMdmmCore::Data::RockPaperScissors rps);
     void agentActionOrderReplied(const QList<int> &order);
     void agentActionReplied(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void agentUpgradeReplied(const QList<QMdmmCore::Data::UpgradeItem> &items);
     void agentDisconnected(Agent *agent);
 
     // These slots are called from Logic
-    void requestSscForAction(const QStringList &playerNames);
-    void sscResult(const QHash<QString, QMdmmCore::Data::StoneScissorsCloth> &replies);
+    void requestRpsForAction(const QStringList &playerNames);
+    void rpsResult(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies);
     void requestActionOrder(const QString &playerName, const QList<int> &availableOrders, int maximumOrderNum, int selections);
     void actionOrderResult(const QHash<int, QString> &result);
-    void requestSscForActionOrder(const QStringList &playerNames, int strivedOrder);
+    void requestRpsForActionOrder(const QStringList &playerNames, int strivedOrder);
     void requestAction(const QString &playerName, int actionOrder);
     void actionResult(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void requestUpgrade(const QString &playerName, int upgradePoint);
@@ -177,7 +177,7 @@ signals: // NOLINT(readability-redundant-access-specifiers)
     void addPlayer(const QString &playerName);
     void removePlayer(const QString &playerName);
     void roundStart();
-    void sscReply(const QString &playerName, QMdmmCore::Data::StoneScissorsCloth ssc);
+    void rpsReply(const QString &playerName, QMdmmCore::Data::RockPaperScissors rps);
     void actionOrderReply(const QString &playerName, const QList<int> &desiredOrder);
     void actionReply(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void upgradeReply(const QString &playerName, const QList<QMdmmCore::Data::UpgradeItem> &items);

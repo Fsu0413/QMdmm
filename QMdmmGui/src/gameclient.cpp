@@ -157,8 +157,8 @@ void QMdmmGameClient::wireClient(Client *client)
     Agent *agent = client->agent();
 
     // request signals -> re-emit for QML
-    connect(agent, &Agent::stoneScissorsClothRequested, this,
-            [this](const QStringList &playerNames, int strivedOrder) { emit requestStoneScissorsCloth(playerNames, strivedOrder); });
+    connect(agent, &Agent::rockPaperScissorsRequested, this,
+            [this](const QStringList &playerNames, int strivedOrder) { emit requestRockPaperScissors(playerNames, strivedOrder); });
     connect(agent, &Agent::actionOrderRequested, this,
             [this](const QList<int> &remainedOrders, int maximumOrder, int selectionNum) { emit requestActionOrder(remainedOrders, maximumOrder, selectionNum); });
     connect(agent, &Agent::actionRequested, this, [this](int currentOrder) { emit requestAction(currentOrder); });
@@ -183,11 +183,11 @@ void QMdmmGameClient::wireClient(Client *client)
     });
     connect(agent, &Agent::roundStartNotified, this, [this]() { emit roundStart(); });
     connect(agent, &Agent::roundOverNotified, this, [this]() { emit roundOver(); });
-    connect(agent, &Agent::stoneScissorsClothNotified, this, [this](const QHash<QString, Data::StoneScissorsCloth> &replies) {
+    connect(agent, &Agent::rockPaperScissorsNotified, this, [this](const QHash<QString, Data::RockPaperScissors> &replies) {
         QVariantMap m;
         for (auto it = replies.constBegin(); it != replies.constEnd(); ++it)
             m.insert(it.key(), static_cast<int>(it.value()));
-        emit sscResult(m);
+        emit rpsResult(m);
     });
     connect(agent, &Agent::actionOrderNotified, this, [this](const QHash<int, QString> &result) {
         QVariantMap m;
@@ -239,8 +239,8 @@ void QMdmmGameClient::addBot(const QString &name)
     // agent is the controller: requests arrive on its xxxRequested signals, and
     // replies are sent back through its bare-verb methods.
     Agent *botAgent = bot->agent();
-    connect(botAgent, &Agent::stoneScissorsClothRequested, bot,
-            [botAgent]() { botAgent->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(QRandomGenerator::global()->generate() % 3)); });
+    connect(botAgent, &Agent::rockPaperScissorsRequested, bot,
+            [botAgent]() { botAgent->rockPaperScissors(static_cast<Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3)); });
     connect(botAgent, &Agent::actionOrderRequested, bot, [botAgent](const QList<int> &remainedOrders, int, int selectionNum) {
         QList<int> ao;
         ao.reserve(selectionNum);
@@ -322,10 +322,10 @@ void QMdmmGameClient::disconnectAll()
     setStatusMessage(tr("Disconnected"));
 }
 
-void QMdmmGameClient::replySsc(int ssc)
+void QMdmmGameClient::replyRps(int rps)
 {
     if (m_human)
-        m_human->agent()->stoneScissorsCloth(static_cast<Data::StoneScissorsCloth>(ssc));
+        m_human->agent()->rockPaperScissors(static_cast<Data::RockPaperScissors>(rps));
 }
 
 void QMdmmGameClient::replyActionOrder(const QVariantList &orders)

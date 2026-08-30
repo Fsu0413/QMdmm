@@ -194,11 +194,11 @@ Item {
             radius: 8
         }
 
-        // SSC
+        // rps
         Column {
             anchors.centerIn: parent
             spacing: 12
-            visible: activeRequest === "ssc"
+            visible: activeRequest === "rps"
 
             Text {
                 color: "white"
@@ -218,7 +218,7 @@ Item {
                     width: 120
 
                     onClicked: {
-                        game.replySsc(0);
+                        game.replyRps(0);
                         activeRequest = "";
                     }
                 }
@@ -230,7 +230,7 @@ Item {
                     width: 120
 
                     onClicked: {
-                        game.replySsc(1);
+                        game.replyRps(1);
                         activeRequest = "";
                     }
                 }
@@ -242,7 +242,7 @@ Item {
                     width: 120
 
                     onClicked: {
-                        game.replySsc(2);
+                        game.replyRps(2);
                         activeRequest = "";
                     }
                 }
@@ -455,8 +455,8 @@ Item {
             activeRequest = "order";
         }
 
-        function onRequestStoneScissorsCloth(playerNames, strivedOrder) {
-            activeRequest = "ssc";
+        function onRequestRockPaperScissors(playerNames, strivedOrder) {
+            activeRequest = "rps";
         }
 
         function onRequestUpgrade(remainingTimes) {
