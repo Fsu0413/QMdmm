@@ -508,20 +508,57 @@ Server::Server(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfigur
 /**
  * @brief Start listening on all enabled transports
  * @return @c true if all enabled transports are listening successfully
+ *
+ * Each enabled transport is started independently; a transport that fails to start emits
+ * @c listenError() with its name and the underlying error string, so the caller can tell which
+ * transport failed and why (the aggregate return value alone cannot). The return value is
+ * @c false if any enabled transport failed.
  */
 bool Server::listen()
 {
     bool ret = true;
 
-    if (d->serverConfiguration.tcpEnabled())
-        ret = d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort()) && ret;
-    if (d->serverConfiguration.localEnabled())
-        ret = d->l->listen(d->serverConfiguration.localSocketName()) && ret;
-    if (d->serverConfiguration.websocketEnabled())
-        ret = d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort()) && ret;
+    if (d->serverConfiguration.tcpEnabled() && !d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort())) {
+        emit listenError(QStringLiteral("tcp"), d->t->errorString(), QPrivateSignal());
+        ret = false;
+    }
+
+    if (d->serverConfiguration.localEnabled() && !d->l->listen(d->serverConfiguration.localSocketName())) {
+        emit listenError(QStringLiteral("local"), d->l->errorString(), QPrivateSignal());
+        ret = false;
+    }
+
+    if (d->serverConfiguration.websocketEnabled() && !d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort())) {
+        emit listenError(QStringLiteral("websocket"), d->w->errorString(), QPrivateSignal());
+        ret = false;
+    }
 
     return ret;
 }
+
+/**
+ * @brief Stop listening on all enabled transports.
+ *
+ * Closes every listening socket that @c listen() started, releasing the ports / local-socket
+ * names so they can be reused. Already-accepted connections are left untouched; only the
+ * listening sockets are shut down. Safe to call even if the server is not currently listening.
+ */
+void Server::close()
+{
+    if (d->t != nullptr)
+        d->t->close();
+    if (d->l != nullptr)
+        d->l->close();
+    if (d->w != nullptr)
+        d->w->close();
+}
+
+/**
+ * @fn Server::listenError(const QString &transportName, const QString &errorString, QPrivateSignal)
+ * @brief emitted when a transport fails to start listening in @c listen()
+ * @param transportName which transport failed: @c "tcp", @c "local" or @c "websocket"
+ * @param errorString the transport's own description of the failure
+ */
 
 // No need to delete d.
 // It will always be deleted by QObject dtor

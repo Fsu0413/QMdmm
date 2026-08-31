@@ -9,6 +9,7 @@
 #include <QMdmmLogicRunner>
 #include <QMdmmServer>
 
+#include <QTcpServer>
 #include <QTcpSocket>
 #include <QTest>
 #include <QTimer>
@@ -37,6 +38,7 @@ private slots:
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
     void client_disconnectFromHostStopsAutoReconnect();
+    void server_listenErrorAndClose();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -527,6 +529,44 @@ void tst_QMdmmNetworking::client_disconnectFromHostStopsAutoReconnect()
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
     QVERIFY(p1->isConnected());
     QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+}
+
+// The server reports per-transport listen failures via listenError (the aggregate return value
+// alone can't tell which transport broke), and close() shuts the listening sockets down so a
+// later listen() can bind again. This is the A2 regression test.
+void tst_QMdmmNetworking::server_listenErrorAndClose()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    // Occupy a TCP port so the server's TCP transport cannot bind it.
+    QTcpServer blocker;
+    QVERIFY(blocker.listen(QHostAddress::Any, 16361));
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setTcpPort(16361);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+
+    Server server(serverConf, conf);
+
+    QString errorTransport;
+    QString errorString;
+    connect(&server, &Server::listenError, [&](const QString &transport, const QString &err) {
+        errorTransport = transport;
+        errorString = err;
+    });
+
+    // The port is taken, so listen() fails and reports which transport broke.
+    QVERIFY(!server.listen());
+    QCOMPARE(errorTransport, QStringLiteral("tcp"));
+    QVERIFY(!errorString.isEmpty());
+
+    // Free the port; the server can now bind it, close() releases it, and a second listen()
+    // binds again (proving the listening socket was actually shut down).
+    blocker.close();
+    QVERIFY(server.listen());
+    server.close();
+    QVERIFY(server.listen());
 }
 
 namespace {

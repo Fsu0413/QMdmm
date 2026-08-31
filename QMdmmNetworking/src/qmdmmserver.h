@@ -85,6 +85,10 @@ public:
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     bool listen();
+    void close();
+
+signals:
+    void listenError(const QString &transportName, const QString &errorString, QPrivateSignal);
 
 #ifndef DOXYGEN
 private:
