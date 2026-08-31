@@ -96,9 +96,10 @@ namespace v0 {
  *
  * Wire format: @c {"versionNumber": string, "protocolVersion": int}.
  *
- * When @c protocolVersion differs from @c Protocol::version() the client silently aborts the
- * sign-in handshake (it neither signs in nor emits a signal); a @c versionNumber mismatch is
- * currently a no-op.
+ * When @c protocolVersion differs from @c Protocol::version() the client disconnects: the wire
+ * protocol is incompatible, so it drops the connection via @c disconnectFromHost() rather than
+ * entering the auto-reconnect loop (which would re-hit the same mismatch). A @c versionNumber
+ * mismatch is tolerated — the wire protocol is still compatible — and is currently a no-op.
  */
 
 /**

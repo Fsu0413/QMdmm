@@ -252,13 +252,19 @@ void ClientP::notifyVersion(const QJsonValue &value)
         return;
     int protocolVersion = vprotocolVersion.toInt();
 
-    if (protocolVersion != QMdmmCore::Protocol::version())
+    if (protocolVersion != QMdmmCore::Protocol::version()) {
+        // The wire protocol is incompatible: this is not a transient connection failure, so
+        // disconnect cleanly instead of falling into the auto-reconnect loop (which would hit
+        // the same mismatch again forever) or silently aborting the sign-in and leaving the
+        // client in a connected-but-never-signed-in state.
+        onRet_.dismiss();
+        q->disconnectFromHost();
         return;
+    }
 
     if (QVersionNumber::fromString(versionNumber) != QMdmmCore::Global::version()) {
-        // how to deal with this?
-        // Theoratically it should be compatible with each other.
-        // noop for now....
+        // The client version differs, but the wire protocol is compatible, so the handshake can
+        // proceed; the mismatch is tolerated (no-op) for now.
     }
 
     // sign in process

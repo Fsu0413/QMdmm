@@ -7,6 +7,7 @@
 #include <QMdmmData>
 #include <QMdmmLogicConfiguration>
 #include <QMdmmLogicRunner>
+#include <QMdmmProtocol>
 #include <QMdmmServer>
 
 #include <QTcpServer>
@@ -38,6 +39,7 @@ private slots:
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
     void client_disconnectFromHostStopsAutoReconnect();
+    void client_disconnectsOnProtocolVersionMismatch();
     void server_listenErrorAndClose();
 };
 
@@ -529,6 +531,37 @@ void tst_QMdmmNetworking::client_disconnectFromHostStopsAutoReconnect()
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
     QVERIFY(p1->isConnected());
     QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+}
+
+// A protocolVersion mismatch is a hard incompatibility, not a transient failure: the client must
+// disconnect cleanly (via disconnectFromHost) instead of silently aborting sign-in or looping in
+// auto-reconnect against a server it can never talk to. This is the B6 regression test, driven by
+// a raw TCP server that greets every incoming client with a mismatched protocolVersion.
+void tst_QMdmmNetworking::client_disconnectsOnProtocolVersionMismatch()
+{
+    QTcpServer rawServer;
+    QVERIFY(rawServer.listen(QHostAddress::Any, 16371));
+
+    QObject::connect(&rawServer, &QTcpServer::newConnection, &rawServer, [&rawServer]() {
+        QTcpSocket *sock = rawServer.nextPendingConnection();
+        QJsonObject ob;
+        ob.insert(QStringLiteral("versionNumber"), QStringLiteral("9.9.9"));
+        ob.insert(QStringLiteral("protocolVersion"), QMdmmCore::Protocol::version() + 1); // mismatched
+        sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyVersion, ob).serialize().append('\n'));
+        sock->flush();
+    });
+
+    const QString host = QStringLiteral("qmdmm://localhost:16371");
+
+    auto *p1 = new Client(ClientConfiguration(), &rawServer);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+
+    // The client drops the connection on the mismatch (never reaching a signed-in state).
+    QTRY_VERIFY_WITH_TIMEOUT(!p1->isConnected(), 5000);
+
+    // No auto-reconnect: past the first retry interval the client is still disconnected.
+    QTest::qWait(700);
+    QVERIFY(!p1->isConnected());
 }
 
 // The server reports per-transport listen failures via listenError (the aggregate return value
