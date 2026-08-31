@@ -13,6 +13,7 @@
 #include <QWebSocket>
 
 #include <cstdint>
+#include <optional>
 
 QMDMM_EXPORT_NAME(QMdmmSocket)
 
@@ -42,6 +43,26 @@ public:
         TypeQWebSocket,
     };
 
+    /**
+     * The kind of error a Socket can be in. Kept as a stable, transport-agnostic code rather than
+     * a mapping of each transport's native error enums, so it does not change across Qt versions.
+     */
+    enum ErrorCode : uint8_t
+    {
+        NoError,
+        TransportError, // the underlying transport reported an error
+        ProtocolError, // a malformed / invalid packet was received, or a protocol violation
+    };
+
+    /**
+     * A value type describing a socket error: a stable code plus a human-readable description.
+     */
+    struct Error
+    {
+        ErrorCode code = NoError;
+        QString errorString;
+    };
+
     Q_DISABLE_COPY_MOVE(Socket);
 
     explicit Socket(QTcpSocket *t, QObject *parent = nullptr);
@@ -51,7 +72,10 @@ public:
     explicit Socket(QObject *parent = nullptr);
     ~Socket() override;
 
-    void setHasError(bool hasError);
+    [[nodiscard]] Type type() const;
+
+    void setError(Error error);
+    [[nodiscard]] std::optional<Error> error() const;
     [[nodiscard]] bool hasError() const;
 
     bool connectToHost(const QString &host);
@@ -61,7 +85,7 @@ signals:
     void sendPacket(QMdmmCore::Packet);
 
     void packetReceived(QMdmmCore::Packet, QPrivateSignal);
-    void socketErrorOccurred(const QString &errorString, QPrivateSignal);
+    void socketErrorOccurred(Error error, QPrivateSignal);
     void socketDisconnected(QPrivateSignal);
 
 #ifndef DOXYGEN
@@ -84,5 +108,7 @@ using v0::Socket;
 #endif
 
 } // namespace QMdmmNetworking
+
+Q_DECLARE_METATYPE(QMdmmNetworking::Socket::Error)
 
 #endif

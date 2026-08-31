@@ -105,7 +105,7 @@ void ClientP::initSelfAgent()
 #define ONERRPRINTJSON(value)                                                     \
     auto onRet_ [[maybe_unused]] = qScopeGuard([this, value, func = __func__]() { \
         if (socket != nullptr)                                                    \
-            socket->setHasError(true);                                            \
+            socket->setError({Socket::ProtocolError, {}});                        \
         QByteArray json(QJsonDocument({value}).toJson(QJsonDocument::Indented));  \
         qDebug("%s fails with Json value: %s", func, json.constData());           \
     });
@@ -217,7 +217,7 @@ void ClientP::notifyPongServer(const QJsonValue &value)
     bool ok = false;
     int64_t pongTime = value.toVariant().toLongLong(&ok);
     if (!ok) {
-        socket->setHasError(true);
+        socket->setError({Socket::ProtocolError, {}});
         return;
     }
 
@@ -871,7 +871,7 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
         if (call != nullptr)
             (this->*call)(packet.value());
         else
-            socket->setHasError(true);
+            socket->setError({Socket::ProtocolError, {}});
         return;
     }
 
@@ -883,26 +883,26 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
-                socket->setHasError(true);
+                socket->setError({Socket::ProtocolError, {}});
             return;
         }
 
         // A client-bound notify echoed back (or an invalid notify id) is abnormal: drop the
         // connection (D-025). The client is the replying side, so it has no "default reply" of its
         // own -- a drop is all there is to do; the existing reconnect path takes over from here.
-        socket->setHasError(true);
+        socket->setError({Socket::ProtocolError, {}});
         return;
     }
 
     // A reply or an invalid/unknown packet type from the server is abnormal: replies only
     // originate from the client (D-025).
-    socket->setHasError(true);
+    socket->setError({Socket::ProtocolError, {}});
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void ClientP::socketErrorOccurred(const QString &errorString)
+void ClientP::socketErrorOccurred(const Socket::Error &error)
 {
-    handleSocketGone(errorString);
+    handleSocketGone(error.errorString);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

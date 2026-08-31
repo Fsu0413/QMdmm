@@ -98,7 +98,7 @@ public:
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     void socketPacketReceived(const QMdmmCore::Packet &packet);
-    void socketErrorOccurred(const QString &errorString);
+    void socketErrorOccurred(const Socket::Error &error);
     void socketDisconnected();
 
     void reconnectTimeout();

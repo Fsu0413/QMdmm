@@ -315,7 +315,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         // NOLINTBEGIN(bugprone-macro-parentheses)
 
         // no do .. while (0) here since I'd like 'break' to exit outside this block
-        // where "socket->hasError(true)" should be done
+        // where "socket->setError(...)" should be done
 #define CONF(member, check, convert)                      \
     {                                                     \
         if (!ob.contains(QStringLiteral(#member)))        \
@@ -368,7 +368,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             p::ServerConnection *conn = existing->findChild<p::ServerConnection *>();
             if (conn == nullptr) {
                 // A local agent has no wire; a sign-in over the wire cannot reconnect it.
-                socket->setHasError(true);
+                socket->setError({Socket::ProtocolError, {}});
                 return;
             }
 
@@ -376,7 +376,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             if (runner->reconnectAgent(existing) != nullptr)
                 return;
 
-            socket->setHasError(true);
+            socket->setError({Socket::ProtocolError, {}});
             return;
         }
 
@@ -401,14 +401,14 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         return;
     } while (false);
 
-    socket->setHasError(true);
+    socket->setError({Socket::ProtocolError, {}});
 }
 
 void ServerP::observe(Socket *socket, const QJsonValue &packetValue)
 {
     // TODO
     Q_UNUSED(packetValue);
-    socket->setHasError(true);
+    socket->setError({Socket::ProtocolError, {}});
 }
 
 void ServerP::introduceSocket(Socket *socket) // NOLINT(readability-make-member-function-const)
@@ -463,7 +463,7 @@ void ServerP::socketPacketReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(socket, packet.value());
             else
-                socket->setHasError(true);
+                socket->setError({Socket::ProtocolError, {}});
         }
     }
 }

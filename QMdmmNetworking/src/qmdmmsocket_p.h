@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <optional>
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 namespace QMdmmNetworking {
@@ -25,13 +26,13 @@ public:
     virtual bool disconnectFromHost() = 0;
 
     Socket *q;
-    bool hasError;
+    std::optional<Socket::Error> error;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
     virtual void sendPacket(QMdmmCore::Packet packet) = 0;
     bool packetReceived(const QByteArray &arr);
     void socketDisconnected();
-    void errorOccurred(const QString &errorString);
+    void errorOccurred(Socket::Error error);
 };
 
 class QMDMMNETWORKING_PRIVATE_EXPORT SocketP_QTcpSocket : public SocketP

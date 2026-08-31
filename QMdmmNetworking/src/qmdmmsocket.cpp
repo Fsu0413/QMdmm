@@ -62,7 +62,6 @@ Socket::Type SocketP::typeByConnectAddr(const QString &addr)
 SocketP::SocketP(Socket *q)
     : QObject(q)
     , q(q)
-    , hasError(false)
 {
     connect(q, &Socket::sendPacket, this, &SocketP::sendPacket);
 }
@@ -75,13 +74,14 @@ bool SocketP::packetReceived(const QByteArray &arr)
     QString packetError;
     if (packet.hasError(&packetError)) {
         // Don't process more package for this connection. It is not guaranteed to be the desired client
-        errorOccurred(packetError);
-        q->setHasError(true);
+        const Socket::Error error {Socket::ProtocolError, packetError};
+        errorOccurred(error);
+        q->setError(error);
         return false;
     }
 
     emit q->packetReceived(packet, Socket::QPrivateSignal());
-    return !hasError;
+    return !error.has_value();
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -91,9 +91,10 @@ void SocketP::socketDisconnected()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void SocketP::errorOccurred(const QString &errorString)
+void SocketP::errorOccurred(Socket::Error error)
 {
-    emit q->socketErrorOccurred(errorString, Socket::QPrivateSignal());
+    this->error = error;
+    emit q->socketErrorOccurred(error, Socket::QPrivateSignal());
 }
 
 SocketP_QTcpSocket::SocketP_QTcpSocket(QTcpSocket *socket, Socket *q)
@@ -165,7 +166,7 @@ void SocketP_QTcpSocket::readyRead()
 void SocketP_QTcpSocket::errorOccurredTcpSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(socket->errorString());
+        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
 }
 
 SocketP_QLocalSocket::SocketP_QLocalSocket(QLocalSocket *socket, Socket *q)
@@ -233,7 +234,7 @@ void SocketP_QLocalSocket::readyRead()
 void SocketP_QLocalSocket::errorOccurredLocalSocket(QLocalSocket::LocalSocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(socket->errorString());
+        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
 }
 
 SocketP_QWebSocket::SocketP_QWebSocket(QWebSocket *socket, Socket *q)
@@ -290,7 +291,7 @@ void SocketP_QWebSocket::sendPacket(QMdmmCore::Packet packet)
 void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(socket->errorString());
+        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
 }
 } // namespace p
 #endif
@@ -379,28 +380,54 @@ Socket::Socket(QObject *parent)
 Socket::~Socket() = default;
 
 /**
- * @brief Set the error state of the socket
- * @param hasError @c true to mark the socket as errored and disconnect it, @c false otherwise
+ * @brief The transport type of this socket.
+ * @return the underlying transport type, or @c TypeUnknown if no transport is active yet (a
+ *         client-side socket that has not connected).
  */
-void Socket::setHasError(bool hasError)
+Socket::Type Socket::type() const
+{
+    if (d != nullptr)
+        return d->type();
+
+    return TypeUnknown;
+}
+
+/**
+ * @brief Mark the socket as errored and disconnect the underlying transport.
+ * @param error the error to record
+ *
+ * Stores the error and disconnects. Unlike the transport error path, it does not emit
+ * @c socketErrorOccurred: upper layers detect protocol violations through this and learn of the
+ * drop via @c socketDisconnected (mirroring the previous @c setHasError behaviour).
+ */
+void Socket::setError(Error error)
 {
     if (d != nullptr) {
-        d->hasError = hasError;
-        if (hasError)
-            d->disconnectFromHost();
+        d->error = error;
+        d->disconnectFromHost();
     }
 }
 
 /**
+ * @brief The recorded error, if any.
+ * @return the socket's error, or @c std::nullopt if no error has occurred (including before any
+ *         transport has been created)
+ */
+std::optional<Socket::Error> Socket::error() const
+{
+    if (d != nullptr)
+        return d->error;
+
+    return std::nullopt;
+}
+
+/**
  * @brief if the socket is in error state
- * @return @c true if the socket has error
+ * @return @c true if the socket has an error
  */
 bool Socket::hasError() const
 {
-    if (d != nullptr)
-        return d->hasError;
-
-    return true;
+    return error().has_value();
 }
 
 /**
@@ -453,9 +480,9 @@ void Socket::disconnectFromHost()
  */
 
 /**
- * @fn Socket::socketErrorOccurred(const QString &errorString, QPrivateSignal)
+ * @fn Socket::socketErrorOccurred(Error error, QPrivateSignal)
  * @brief emitted when a socket error occurs
- * @param errorString the error description
+ * @param error the error, carrying a stable code and a human-readable description
  */
 
 /**

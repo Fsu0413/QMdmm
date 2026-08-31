@@ -341,7 +341,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
-                socket->setHasError(true);
+                socket->setError({Socket::ProtocolError, {}});
             return;
         }
 
@@ -353,7 +353,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
         // Anything else is an abnormal notify (a server/agent-bound notify echoed back, or an
         // invalid notify id): drop the connection and answer any in-flight request with its
         // default reply so the logic is not left waiting on a misbehaving client (D-025).
-        socket->setHasError(true);
+        socket->setError({Socket::ProtocolError, {}});
         executeDefaultReply();
         return;
     }
@@ -373,21 +373,21 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
                 if (call != nullptr)
                     (this->*call)(packet.value());
                 else
-                    socket->setHasError(true);
+                    socket->setError({Socket::ProtocolError, {}});
             }
             return;
         }
 
         // A reply that does not match the in-flight request is an ordering mismatch: drop the
         // connection and answer the in-flight request with its default reply (D-025).
-        socket->setHasError(true);
+        socket->setError({Socket::ProtocolError, {}});
         executeDefaultReply();
         return;
     }
 
     // A request or an invalid/unknown packet type from the client is abnormal: requests only
     // originate from the Logic. Drop the connection and answer any in-flight request (D-025).
-    socket->setHasError(true);
+    socket->setError({Socket::ProtocolError, {}});
     executeDefaultReply();
 }
 
@@ -579,12 +579,12 @@ void ServerConnection::sendOperateNotified(const QString &playerName, const QJso
 
 void ServerConnection::requestTimeout()
 {
-    // A silent client is gone: setHasError(true) disconnects the socket, which walks the
+    // A silent client is gone: setError() disconnects the socket, which walks the
     // disconnect path (onSocketDisconnected marks the agent offline and lets the room preserve
     // the seat or drop the agent). The default reply is issued right away so the logic is not
     // left waiting on the gone player.
     if (socket != nullptr)
-        socket->setHasError(true);
+        socket->setError({Socket::ProtocolError, {}});
     executeDefaultReply();
 }
 
