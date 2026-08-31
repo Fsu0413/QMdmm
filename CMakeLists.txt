@@ -136,7 +136,8 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     # Dev dependencies for "dev6": what is needed to build against the libs
     # (headers + CMake config; Qt6::WebSockets lives in the qtbase modules).
     set(CPACK_DEBIAN_DEV6_PACKAGE_DEPENDS "qt6-base-dev, qt6-declarative-dev")
-    set(CPACK_RPM_DEV6_PACKAGE_REQUIRES "qt6-qtbase-devel, qt6-qtdeclarative-devel")
+    set(CPACK_RPM_DEV6_PACKAGE_REQUIRES
+        "cmake, qt6-qtbase-devel, qt6-qtdeclarative-devel, qt6-qtwebsockets-devel, qt6-qttools-devel, doxygen")
     # dev-common / doc intentionally carry no Qt dependencies: dev-common is
     # version-agnostic headers only. CPack emits one harmless
     # "CPACK_DEBIAN_PACKAGE_DEPENDS not set" note for dev-common — expected.
