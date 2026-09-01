@@ -38,6 +38,8 @@ private slots:
     void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
+    void client_disconnectsOnAbnormalPacket();
+    void server_doesNotDropServerBoundNotify();
     void client_disconnectFromHostStopsAutoReconnect();
     void client_disconnectsOnProtocolVersionMismatch();
     void server_listenErrorAndClose();
@@ -482,6 +484,89 @@ void tst_QMdmmNetworking::server_disconnectsOnAbnormalPacket()
     p2Sock->flush();
 
     QTRY_VERIFY_WITH_TIMEOUT(p2Removed, 5000);
+}
+
+// The client-side mirror of server_disconnectsOnAbnormalPacket: a packet the client should never
+// receive from the server -- here a reply, which only ever originates from the client -- is an
+// abnormal case (D-025). The client must drop the connection instead of silently ignoring it. The
+// reply is written straight onto a raw TCP server's accepted socket; fromJson accepts it (the
+// type/requestId/notifyId are all well-formed), so it reaches the client dispatch layer, which has
+// no branch for a server-sent reply and marks the socket errored.
+void tst_QMdmmNetworking::client_disconnectsOnAbnormalPacket()
+{
+    QTcpServer rawServer;
+    QVERIFY(rawServer.listen(QHostAddress::Any, 16372));
+
+    bool sent = false;
+    QObject::connect(&rawServer, &QTcpServer::newConnection, &rawServer, [&rawServer, &sent]() {
+        QTcpSocket *sock = rawServer.nextPendingConnection();
+        if (!sent) {
+            sent = true;
+            // A reply is well-formed, but only the client ever sends replies (D-025: wrong direction).
+            sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestRockPaperScissors, QJsonObject()).serialize().append('\n'));
+            sock->flush();
+        }
+    });
+
+    const QString host = QStringLiteral("qmdmm://localhost:16372");
+
+    auto *p1 = new Client(ClientConfiguration(), &rawServer);
+    bool connectionLost = false;
+    connect(p1, &Client::socketConnectionLost, &rawServer, [&connectionLost](const QString &) { connectionLost = true; });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+
+    // The client drops the connection on the wrong-direction reply (D-025).
+    QTRY_VERIFY_WITH_TIMEOUT(connectionLost, 5000);
+}
+
+// A server-bound notify (ping) is legal client->server traffic: ServerConnection must hand it to
+// ServerP (which answers with a pong) and must NOT treat it as abnormal. This is the complement of
+// server_disconnectsOnAbnormalPacket -- that test proves an invalid packet drops the connection,
+// this one proves a legal server-bound notify does not. The ping is written straight onto p2's raw
+// socket (the public Client API has no "send arbitrary packet" entry point, and the real heartbeat
+// fires only every 30s).
+void tst_QMdmmNetworking::server_doesNotDropServerBoundNotify()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3); // not full with two players: a drop removes, not preserves
+    serverConf.setTcpPort(16373);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16373");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+
+    bool p2Removed = false;
+    connect(p1->agent(), &Agent::playerRemoveNotified, &server, [&p2Removed, p2](const QString &playerName) {
+        if (playerName == p2->objectName())
+            p2Removed = true;
+    });
+
+    // Send a server-bound ping straight onto p2's raw socket. The server must answer with a pong
+    // and keep the connection; it must not treat the ping as an abnormal packet and drop p2.
+    QTcpSocket *p2Sock = p2->findChild<QTcpSocket *>();
+    QVERIFY(p2Sock != nullptr);
+    p2Sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPingServer, QJsonValue(123)).serialize().append('\n'));
+    p2Sock->flush();
+
+    // Let the ping round-trip; p2 must still be connected and present in the room.
+    QTest::qWait(500);
+    QVERIFY(p2->isConnected());
+    QVERIFY(!p2Removed);
 }
 
 // A client can actively disconnect via disconnectFromHost(): the reconnect loop is stopped, no
