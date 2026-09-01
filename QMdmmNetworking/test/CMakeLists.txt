@@ -23,3 +23,4 @@ function(add_qmdmmnetworking_test TEST_SOURCE)
 endfunction()
 
 add_qmdmmnetworking_test(tst_qmdmmnetworking.cpp)
+add_qmdmmnetworking_test(tst_qmdmmserverconfiguration.cpp)

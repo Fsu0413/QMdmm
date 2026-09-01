@@ -24,6 +24,10 @@ namespace v0 {
 /**
  * @class ClientConfiguration
  * @brief Contains configurations of client
+ *
+ * The configuration is a @c QVariantMap with well-known keys. Because the class inherits
+ * @c QVariantMap, arbitrary keys can be inserted and values are not validated on access; unknown
+ * keys are ignored.
  */
 
 /**

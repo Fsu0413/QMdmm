@@ -8,6 +8,9 @@
 
 #include <QLocalSocket>
 #include <QTcpSocket>
+
+#include <cmath>
+#include <limits>
 #include <utility>
 
 /**
@@ -23,6 +26,11 @@ namespace v0 {
 /**
  * @class ServerConfiguration
  * @brief Contains configurations of server
+ *
+ * The configuration is a @c QJsonObject with well-known keys. Because the class inherits
+ * @c QJsonObject, arbitrary keys can be inserted and values are not validated on access; unknown
+ * keys are ignored. Call @c deserialize() to validate a raw JSON value (rejecting wrong types and
+ * out-of-range values) before using it.
  */
 
 /**
@@ -250,6 +258,111 @@ IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEI
 #undef CONVERTTOTYPEUINT16T
 #undef CONVERTTOTYPEBOOL
 #undef CONVERTTOTYPEINT
+
+/**
+ * @brief deserialize @c QJsonValue to @c ServerConfiguration
+ * @param value the value to be deserialized
+ * @return if the deserialize succeeded
+ * @note It is possible to convert the value to @c QJsonObject and directly assign the value, since this class inherits @c QJsonObject, but the value check in this function will be nonexistent then.
+ *
+ * The value must be an object containing every configuration key. Boolean fields must be booleans and
+ * string fields must be strings; every numeric field must be a whole number (fractions, NaN and negatives
+ * are rejected). Ports must be in [1, 65535] (port 0 is reserved); @c playerNumPerRoom must be at least 2
+ * (a game needs an opponent for rock-paper-scissors action-order resolution); @c requestTimeout is either
+ * 0 (no explicit timeout, grace only) or at least 15 seconds. Unknown keys are ignored.
+ */
+bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readability-function-cognitive-complexity)
+{
+    if (!value.isObject())
+        return false;
+
+    const QJsonObject ob = value.toObject();
+    QJsonObject result;
+
+    // A numeric field must be a whole number: JSON numbers are doubles, so reject fractions
+    // (e.g. 1.5), NaN, negatives, and values that do not fit in an int, which toInt() would
+    // otherwise silently truncate or wrap.
+    const auto parseNonNegativeInt = [](const QJsonValue &v, int *out) {
+        if (!v.isDouble())
+            return false;
+
+        const double d = v.toDouble();
+        if (d != std::floor(d) || d < 0.0 || d > static_cast<double>(std::numeric_limits<int>::max()))
+            return false;
+
+        *out = static_cast<int>(d);
+        return true;
+    };
+
+#define CONF_BOOL(member)                                                          \
+    {                                                                              \
+        if (!ob.contains(QStringLiteral(#member)))                                 \
+            return false;                                                          \
+        if (!ob.value(QStringLiteral(#member)).isBool())                           \
+            return false;                                                          \
+        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+    }
+
+#define CONF_STRING(member)                                                        \
+    {                                                                              \
+        if (!ob.contains(QStringLiteral(#member)))                                 \
+            return false;                                                          \
+        if (!ob.value(QStringLiteral(#member)).isString())                         \
+            return false;                                                          \
+        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+    }
+
+#define CONF_PORT(member)                                                     \
+    {                                                                         \
+        int parsed = 0;                                                       \
+        if (!ob.contains(QStringLiteral(#member)))                            \
+            return false;                                                     \
+        if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &parsed)) \
+            return false;                                                     \
+        if (parsed == 0 || parsed > 65535)                                    \
+            return false;                                                     \
+        result.insert(QStringLiteral(#member), parsed);                       \
+    }
+
+    CONF_BOOL(tcpEnabled);
+    CONF_PORT(tcpPort);
+    CONF_BOOL(localEnabled);
+    CONF_STRING(localSocketName);
+    CONF_BOOL(websocketEnabled);
+    CONF_STRING(websocketName);
+    CONF_PORT(websocketPort);
+
+#undef CONF_BOOL
+#undef CONF_STRING
+#undef CONF_PORT
+
+    // playerNumPerRoom: whole number >= 2 (a game needs at least two players).
+    {
+        int parsed = 0;
+        if (!ob.contains(QStringLiteral("playerNumPerRoom")))
+            return false;
+        if (!parseNonNegativeInt(ob.value(QStringLiteral("playerNumPerRoom")), &parsed))
+            return false;
+        if (parsed < 2)
+            return false;
+        result.insert(QStringLiteral("playerNumPerRoom"), parsed);
+    }
+
+    // requestTimeout: 0 (no explicit timeout, grace only) or >= 15 seconds.
+    {
+        int parsed = 0;
+        if (!ob.contains(QStringLiteral("requestTimeout")))
+            return false;
+        if (!parseNonNegativeInt(ob.value(QStringLiteral("requestTimeout")), &parsed))
+            return false;
+        if (parsed != 0 && parsed < 15)
+            return false;
+        result.insert(QStringLiteral("requestTimeout"), parsed);
+    }
+
+    *this = result;
+    return true;
+}
 
 #ifndef DOXYGEN
 } // namespace v0

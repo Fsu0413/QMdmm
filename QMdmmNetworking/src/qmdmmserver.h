@@ -71,6 +71,8 @@ public:
     void setPlayerNumPerRoom(int playerNumPerRoom);
     [[nodiscard]] int requestTimeout() const;
     void setRequestTimeout(int requestTimeout);
+
+    bool deserialize(const QJsonValue &value);
 };
 
 class QMDMMNETWORKING_EXPORT Server : public QObject
