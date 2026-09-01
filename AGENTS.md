@@ -21,6 +21,17 @@ Read these before touching code:
 Do not use `QScopedPointer` — it is deprecated in Qt. Use `std::unique_ptr`
 instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
 
+### C-style variadic functions
+
+- Do not write your own C-style variadic function (`(const char *fmt, ...)`)
+  or use the `va_list` type anywhere in the codebase. Only *calling* a
+  third-party variadic function (e.g. `qWarning("...%d", x)` or
+  `QString::vasprintf`) is allowed.
+- Variadic macros and template parameter packs are fine.
+- For printf-style formatting with a dynamic argument list, use a variadic
+  template + `QString::arg` chain instead. See `configError` in
+  `QMdmmServer/src/config.cpp` for the canonical form.
+
 ### Source files are pure ASCII
 
 - Comments and identifiers must contain no Chinese (or any other non-ASCII)
