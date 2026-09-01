@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <array>
 #include <cinttypes>
 #include <cstdint>
 #include <cstdlib>
@@ -389,16 +390,20 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     // Validate numeric values against the ranges promised by --help. Running these checks
     // after the CONFIG_ITEM pass means both command-line and config-file values are covered,
     // so a config file that stores an out-of-range value is rejected the same as a bad flag.
-    // clang-format off
-    const struct { int value; int min; const char *name; } rangeChecks[] {
-        { logicConfiguration_.initialKnifeDamage(), 1,  "slash" },
-        { logicConfiguration_.maximumKnifeDamage(), 5,  "maximum-slash" },
-        { logicConfiguration_.initialHorseDamage(), 2,  "kick" },
-        { logicConfiguration_.maximumHorseDamage(), 5,  "maximum-kick" },
-        { logicConfiguration_.initialMaxHp(),       7,  "maxhp" },
-        { logicConfiguration_.maximumMaxHp(),       10, "maximum-maxhp" },
+    struct RangeCheck
+    {
+        int value;
+        int min;
+        const char *name;
     };
-    // clang-format on
+    const std::array<RangeCheck, 6> rangeChecks {{
+        {logicConfiguration_.initialKnifeDamage(), 1, "slash"},
+        {logicConfiguration_.maximumKnifeDamage(), 5, "maximum-slash"},
+        {logicConfiguration_.initialHorseDamage(), 2, "kick"},
+        {logicConfiguration_.maximumHorseDamage(), 5, "maximum-kick"},
+        {logicConfiguration_.initialMaxHp(), 7, "maxhp"},
+        {logicConfiguration_.maximumMaxHp(), 10, "maximum-maxhp"},
+    }};
     for (const auto &check : rangeChecks) {
         if (check.value < check.min)
             configError(QStringLiteral("Config item %1 must be at least %2 (got %3)"), check.name, check.min, check.value);
