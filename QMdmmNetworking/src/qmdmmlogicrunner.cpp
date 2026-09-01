@@ -470,11 +470,11 @@ void ServerConnection::sendRockPaperScissorsNotified(const QHash<QString, QMdmmC
     emit sendPacket(packet);
 }
 
-void ServerConnection::sendActionOrderNotified(const QHash<int, QString> &result)
+void ServerConnection::sendActionOrderNotified(const QStringList &result)
 {
     QJsonArray arr;
-    for (int i = 1; i <= result.count(); ++i)
-        arr.append(result.value(i));
+    for (const QString &playerName : result)
+        arr.append(playerName);
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyActionOrder, arr);
     roundEventLog.append(packet);
     emit sendPacket(packet);
@@ -802,8 +802,15 @@ void LogicRunnerP::requestActionOrder(const QString &playerName, const QList<int
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicRunnerP::actionOrderResult(const QHash<int, QString> &result)
 {
+    // Core signals the action order as a dense 1..N map (order -> player). Collapse it to a
+    // plain QStringList for the notify chain: index i holds the player taking order i + 1.
+    QStringList order;
+    order.reserve(result.count());
+    for (int i = 1; i <= result.count(); ++i)
+        order << result.value(i);
+
     foreach (Agent *agent, agents)
-        agent->notifyActionOrder(result);
+        agent->notifyActionOrder(order);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

@@ -189,10 +189,10 @@ void QMdmmGameClient::wireClient(Client *client)
             m.insert(it.key(), static_cast<int>(it.value()));
         emit rpsResult(m);
     });
-    connect(agent, &Agent::actionOrderNotified, this, [this](const QHash<int, QString> &result) {
+    connect(agent, &Agent::actionOrderNotified, this, [this](const QStringList &result) {
         QVariantMap m;
-        for (auto it = result.constBegin(); it != result.constEnd(); ++it)
-            m.insert(QString::number(it.key()), it.value());
+        for (int i = 0; i < result.size(); ++i)
+            m.insert(QString::number(i + 1), result.at(i));
         emit actionOrderResult(m);
     });
     connect(agent, &Agent::actionNotified, this, [this](const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace) {

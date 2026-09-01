@@ -112,7 +112,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     void sendGameStartNotified();
     void sendRoundStartNotified();
     void sendRockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies);
-    void sendActionOrderNotified(const QHash<int, QString> &result);
+    void sendActionOrderNotified(const QStringList &result);
     void sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void sendRoundOverNotified();
     void sendUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);

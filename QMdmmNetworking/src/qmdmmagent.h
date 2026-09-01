@@ -55,7 +55,7 @@ public:
     void notifyGameStart();
     void notifyRoundStart();
     void notifyRockPaperScissors(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies);
-    void notifyActionOrder(const QHash<int, QString> &result);
+    void notifyActionOrder(const QStringList &result);
     void notifyAction(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     void notifyRoundOver();
     void notifyUpgrade(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
@@ -89,7 +89,7 @@ signals:
     void gameStartNotified(QPrivateSignal);
     void roundStartNotified(QPrivateSignal);
     void rockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies, QPrivateSignal);
-    void actionOrderNotified(const QHash<int, QString> &result, QPrivateSignal);
+    void actionOrderNotified(const QStringList &result, QPrivateSignal);
     void actionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace, QPrivateSignal);
     void roundOverNotified(QPrivateSignal);
     void upgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades, QPrivateSignal);

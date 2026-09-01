@@ -488,15 +488,14 @@ void ClientP::notifyActionOrder(const QJsonValue &value)
         return;
     QJsonArray arr = value.toArray();
 
-    QHash<int, QString> result;
-    int i = 0;
+    QStringList result;
     for (const QJsonValueRef &val : arr) {
         if (!val.isString())
             return;
         QString playerName = val.toString();
         if (!agents.contains(playerName))
             return;
-        result.insert(++i, playerName);
+        result << playerName;
     }
 
     ++lastRoundEventSeq;

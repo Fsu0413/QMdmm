@@ -161,7 +161,8 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifyActionOrder
  * @brief A notify from agent of action order
  *
- * Wire format: broadcast, @c [string] (an array where index @c i is the player taking order @c i).
+ * Wire format: broadcast, @c [string] (a dense array where index @c i is the player taking order
+ * @c i + 1; orders are always contiguous 1..N).
  */
 
 /**

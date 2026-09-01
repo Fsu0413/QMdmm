@@ -171,9 +171,10 @@ void Agent::notifyRockPaperScissors(const QHash<QString, QMdmmCore::Data::RockPa
 
 /**
  * @brief Notify the player of the action order of a round.
- * @param result the action order, keyed by order index
+ * @param result the action order as a dense list: index @c i (0-based) holds the player taking
+ *        order @c i + 1. Orders are always contiguous 1..N.
  */
-void Agent::notifyActionOrder(const QHash<int, QString> &result)
+void Agent::notifyActionOrder(const QStringList &result)
 {
     emit actionOrderNotified(result, QPrivateSignal());
 }
@@ -406,9 +407,10 @@ void Agent::operate(const QJsonValue &todo)
  */
 
 /**
- * @fn Agent::actionOrderNotified(const QHash<int, QString> &result, QPrivateSignal)
+ * @fn Agent::actionOrderNotified(const QStringList &result, QPrivateSignal)
  * @brief emitted when the action order is notified
- * @param result the action order, keyed by order index
+ * @param result the action order as a dense list: index @c i (0-based) holds the player taking
+ *        order @c i + 1. Orders are always contiguous 1..N.
  */
 
 /**
