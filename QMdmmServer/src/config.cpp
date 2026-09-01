@@ -11,6 +11,7 @@
 #include <QJsonObject>
 
 #include <cinttypes>
+#include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -65,6 +66,26 @@ AB DEFGHIJ NO Q TUV XYZ
 01
 #endif
 
+// Reports a fatal configuration error and exits with code 3.
+//
+// A bad command-line option or config-file value is a user error, not a program bug.
+// Unlike qFatal() (which aborts with SIGABRT and looks like a crash), we print the
+// message to stderr (the terminal is the only place the user is looking), also record
+// it through qWarning() (so it lands in the log file via the installed message handler),
+// and then exit cleanly.
+[[noreturn]] static void configError(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    const QString message = QString::vasprintf(format, args);
+    va_end(args);
+
+    std::cerr << qPrintable(message) << '\n' << std::flush;
+    qWarning().noquote() << message;
+
+    ::exit(3);
+}
+
 Config::Config()
 {
     QMdmmCore::Settings setting;
@@ -118,10 +139,10 @@ Config::Config()
     parser.process(*qApp);
 
     if (!parser.unknownOptionNames().isEmpty())
-        qFatal("Unknown option: %s", qPrintable(parser.unknownOptionNames().join(QStringLiteral(", "))));
+        configError("Unknown option: %s", qPrintable(parser.unknownOptionNames().join(QStringLiteral(", "))));
 
     if (!parser.positionalArguments().isEmpty())
-        qFatal("Unknown argument: %s", qPrintable(parser.positionalArguments().join(QStringLiteral(", "))));
+        configError("Unknown argument: %s", qPrintable(parser.positionalArguments().join(QStringLiteral(", "))));
 
     if (parser.isSet(QStringLiteral("h"))) {
         std::cout << qPrintable(helpText) << std::flush;
@@ -132,7 +153,7 @@ Config::Config()
 
     if (parser.isSet(QStringLiteral("c"))) {
         if (parser.isSet(QStringLiteral("C")))
-            qFatal("It is not supported to save both per-user configuration and global configuration at one time. Exiting.");
+            configError("It is not supported to save both per-user configuration and global configuration at one time. Exiting.");
         toSave = QMdmmCore::Settings::PerUser;
     } else if (parser.isSet(QStringLiteral("C"))) {
         toSave = QMdmmCore::Settings::Global;
@@ -252,32 +273,32 @@ inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::Puni
 // NOLINTNEXTLINE(readability-function-cognitive-complexity,readability-function-size)
 void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 {
-#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                  \
-    do {                                                                                \
-        QString s;                                                                      \
-        int f = 0;                                                                      \
-        if (parser->isSet(QStringLiteral(settingName))) {                               \
-            f = 1;                                                                      \
-            s = parser->value(QStringLiteral(settingName));                             \
-        } else if (setting->contains(QStringLiteral(settingName))) {                    \
-            f = 2;                                                                      \
-            s = setting->value(QStringLiteral(settingName)).toString();                 \
-        }                                                                               \
-        if (f != 0) {                                                                   \
-            std::optional<type> v = parserConvert(s);                                   \
-            if (v.has_value()) {                                                        \
-                (conf).set##ValueName(v.value());                                       \
-            } else {                                                                    \
-                const char *from = nullptr;                                             \
-                if (f == 1)                                                             \
-                    from = "command line";                                              \
-                else if (f == 2)                                                        \
-                    from = "config file";                                               \
-                else                                                                    \
-                    from = "unknown config";                                            \
-                qFatal("Config item %s (from %s) can't be parsed.", settingName, from); \
-            }                                                                           \
-        }                                                                               \
+#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                       \
+    do {                                                                                     \
+        QString s;                                                                           \
+        int f = 0;                                                                           \
+        if (parser->isSet(QStringLiteral(settingName))) {                                    \
+            f = 1;                                                                           \
+            s = parser->value(QStringLiteral(settingName));                                  \
+        } else if (setting->contains(QStringLiteral(settingName))) {                         \
+            f = 2;                                                                           \
+            s = setting->value(QStringLiteral(settingName)).toString();                      \
+        }                                                                                    \
+        if (f != 0) {                                                                        \
+            std::optional<type> v = parserConvert(s);                                        \
+            if (v.has_value()) {                                                             \
+                (conf).set##ValueName(v.value());                                            \
+            } else {                                                                         \
+                const char *from = nullptr;                                                  \
+                if (f == 1)                                                                  \
+                    from = "command line";                                                   \
+                else if (f == 2)                                                             \
+                    from = "config file";                                                    \
+                else                                                                         \
+                    from = "unknown config";                                                 \
+                configError("Config item %s (from %s) can't be parsed.", settingName, from); \
+            }                                                                                \
+        }                                                                                    \
     } while (false)
 
     setting->beginGroup(QStringLiteral("server"));
@@ -312,13 +333,13 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
                 if (players == 0)
                     players = (int)(i + 2);
                 else
-                    qFatal("-%d can't be specified alongwith -%d", (int)(i + 2), players);
+                    configError("-%d can't be specified alongwith -%d", (int)(i + 2), players);
             }
         }
 
         if (players != 0) {
             if (parser->isSet(QStringLiteral("players")))
-                qFatal("-%d can't be specified alongwith -n / --players", players);
+                configError("-%d can't be specified alongwith -n / --players", players);
 
             serverConfiguration_.setPlayerNumPerRoom(players);
         } else {
@@ -332,7 +353,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     // chance of a rock-paper-scissors tie during action-order resolution, so warn without rejecting.
     const int roomSize = serverConfiguration_.playerNumPerRoom();
     if (roomSize < 2)
-        qFatal("players must be at least 2 (got %d)", roomSize);
+        configError("players must be at least 2 (got %d)", roomSize);
     if (roomSize > 9)
         qWarning("players %d exceeds the soft cap of 9 (rock-paper-scissors ties become more likely)", roomSize);
 
