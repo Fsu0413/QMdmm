@@ -25,12 +25,14 @@ namespace Protocol {
 enum RequestId : uint8_t
 {
     // No requests is from server, all requests are from Logic
+    // A reply whose value is null means "give up": the client declines to answer and the server
+    // applies the default reply (every legal reply value is non-null).
     RequestInvalid = 0,
 
     RequestRockPaperScissors, // request: array { string playerName } playerNames, int strivedOrder (or 0 for action) reply: int rps
     RequestActionOrder, // request: array { int } remainedOrders, int maximumOrder, int selectionNum, reply: array { int } orders
     RequestAction, // request: int currentOrder, reply: int(Action) action, optional string toPlayer, optional int toPlace
-    RequestUpgrade, // request: int remaningTimes, reply: array { int } item
+    RequestUpgrade, // request: int remainingTimes, reply: array { int } item
 };
 
 enum NotifyId : uint16_t
@@ -38,28 +40,28 @@ enum NotifyId : uint16_t
     NotifyInvalid = 0,
 
     NotifyFromServerMask = 0x1000,
-    NotifyPongServer, // int ping-id
+    NotifyPongServer, // int64 epoch-ms timestamp (echoed from the ping)
     NotifyVersion, // string versionNumber, int protocolVersion
 
     NotifyFromAgentMask = 0x2000,
     NotifyLogicConfiguration, // broadcast, object (see QMdmmCore::LogicConfiguration in qmdmmlogic.h)
-    NotifyAgentStateChanged, // string playerName, int (AgentState) state
+    NotifyAgentStateChanged, // string playerName, int (AgentState) agentState
     NotifyPlayerAdded, // string playerName, string screenName, int(AgentState) agentState
     NotifyPlayerRemoved, // string playerName
     NotifyGameStart, // broadcast
     NotifyRoundStart, // broadcast
-    NotifyRockPaperScissors, // broadcast, object { int seq, string playerName: int rps }
-    NotifyActionOrder, // broadcast, object { int seq, array { string playerName } order }
-    NotifyAction, // broadcast, object { int seq, string playerName, int(Action) action, optional string toPlayer, optional int toPlace }
+    NotifyRockPaperScissors, // broadcast, object { string playerName: int rps }
+    NotifyActionOrder, // broadcast, array { string playerName } (dense 1..N, index i = order i+1)
+    NotifyAction, // broadcast, object { string playerName, int(Action) action, optional string toPlayer, optional int toPlace }
     NotifyRoundOver, // broadcast
-    NotifyUpgrade, // broadcast, object { int seq, string playerName: array { int } item }
-    NotifyGameOver, // broadcast, string winnerPlayerName
+    NotifyUpgrade, // broadcast, object { string playerName: array { int } item }
+    NotifyGameOver, // broadcast, array { string } winnerPlayerNames
     NotifySpoken, // broadcast, string playerName, string content
     NotifyOperated, // TODO: for ob
 
     NotifyToServerMask = 0x4000,
-    NotifyPingServer, // int ping-id
-    NotifySignIn, // string playerName, string screenName, int(AgentState) agentState
+    NotifyPingServer, // int64 epoch-ms timestamp
+    NotifySignIn, // string playerName, string screenName, int(AgentState) agentState, int lastRoundEventSeq
     NotifyObserve, // string observerName, string playerName
 
     NotifyToAgentMask = 0x8000,
