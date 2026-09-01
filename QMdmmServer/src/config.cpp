@@ -375,6 +375,32 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 
     setting->endGroup();
 
+    // Validate numeric values against the ranges promised by --help. Running these checks
+    // after the CONFIG_ITEM pass means both command-line and config-file values are covered,
+    // so a config file that stores an out-of-range value is rejected the same as a bad flag.
+    // clang-format off
+    const struct { int value; int min; const char *name; } rangeChecks[] {
+        { logicConfiguration_.initialKnifeDamage(), 1,  "slash" },
+        { logicConfiguration_.maximumKnifeDamage(), 5,  "maximum-slash" },
+        { logicConfiguration_.initialHorseDamage(), 2,  "kick" },
+        { logicConfiguration_.maximumHorseDamage(), 5,  "maximum-kick" },
+        { logicConfiguration_.initialMaxHp(),       7,  "maxhp" },
+        { logicConfiguration_.maximumMaxHp(),       10, "maximum-maxhp" },
+    };
+    // clang-format on
+    for (const auto &check : rangeChecks) {
+        if (check.value < check.min)
+            configError("Config item %s must be at least %d (got %d)", check.name, check.min, check.value);
+    }
+
+    const int timeout = serverConfiguration_.requestTimeout();
+    if (timeout != 0 && timeout < 15)
+        configError("Config item timeout must be 0 or at least 15 (got %d)", timeout);
+
+    const int punishHpModifier = logicConfiguration_.punishHpModifier();
+    if (punishHpModifier != 0 && punishHpModifier < 2)
+        configError("Config item punish-hp-modifier must be 0 or at least 2 (got %d)", punishHpModifier);
+
 #undef CONFIG_ITEM
 }
 
