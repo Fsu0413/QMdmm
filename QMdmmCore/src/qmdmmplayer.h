@@ -138,9 +138,6 @@ signals:
     void maxHpChanged(int maxHp, QPrivateSignal);
     void upgradePointChanged(int upgradePoint, QPrivateSignal);
 
-    // it is to be decided which of following 2 declarations is more easy to use so...
-    // Temporarily keep these 2.
-    void damaged(const QString &from, int damagePoint, Data::DamageReason reason, QPrivateSignal);
     void damaged(const Player *from, int damagePoint, Data::DamageReason reason, QPrivateSignal);
     void die(QPrivateSignal);
 

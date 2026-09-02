@@ -30,7 +30,6 @@ void PlayerP::applyDamage(Player *from, Player *to, int damagePoint, Data::Damag
 
     to->setHp(to->hp() - damagePoint, &kills);
     emit to->damaged(from, damagePoint, reason, Player::QPrivateSignal());
-    emit to->damaged(from->objectName(), damagePoint, reason, Player::QPrivateSignal());
 
     if (kills)
         from->setUpgradePoint(from->upgradePoint() + 1);

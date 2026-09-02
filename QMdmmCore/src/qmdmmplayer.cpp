@@ -797,19 +797,8 @@ void Player::resetUpgrades()
  */
 
 /**
- * @fn Player::damaged(const QString &from, int damagePoint, Data::DamageReason reason, QPrivateSignal)
- * @brief emitted when this player is damaged
- *
- * @note This is emitted later of the 2 overloads.
- * Since it is not determined which is the better overload, temporarily keeping these 2.
- */
-
-/**
  * @fn Player::damaged(const Player *from, int damagePoint, Data::DamageReason reason, QPrivateSignal)
  * @brief emitted when this player is damaged
- *
- * @note This is emitted earlier of the 2 overloads.
- * Since it is not determined which is the better overload, temporarily keeping these 2.
  */
 
 /**
