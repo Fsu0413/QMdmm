@@ -50,7 +50,10 @@ namespace v0 {
  * @brief A request of action order
  *
  * Wire format — request: @c {"remainedOrders": [int], "maximumOrder": int, "selectionNum": int};
- * reply: @c [int] orders.
+ * reply: @c [int] orders, one entry per selection (the reply length equals the request's
+ * @c selectionNum). Each entry is either @c 0 to yield that selection — the player accepts
+ * whatever order is left over and stops competing for it — or an order in the range
+ * @c 1..maximumOrder that the player strives for.
  */
 
 /**
