@@ -289,7 +289,7 @@ void LogicP::startUpgrade()
             }
         }
     } else {
-        // ??
+        Q_UNREACHABLE();
     }
 }
 
