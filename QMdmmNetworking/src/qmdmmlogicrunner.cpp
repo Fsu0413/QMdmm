@@ -145,14 +145,20 @@ void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, cons
 
 void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
 {
-#define DEFAULTREPLY                     \
-    do {                                 \
-        defaultReplyRockPaperScissors(); \
-        return;                          \
+    // A statically checkable invalid value (wrong JSON type, out-of-range enum, oversized array)
+    // is an abnormal case (D-025): drop the connection *and* answer the in-flight request with its
+    // default reply so the logic is not left waiting on a misbehaving client (D-030 decode-layer
+    // full defense). socket->setError records the protocol error and disconnects the transport,
+    // which walks socketDisconnected -> onSocketDisconnected -> agentDisconnected.
+#define PROTOCOLERROR                                  \
+    do {                                               \
+        socket->setError({Socket::ProtocolError, {}}); \
+        defaultReplyRockPaperScissors();               \
+        return;                                        \
     } while (0)
 
     if (!value.isDouble())
-        DEFAULTREPLY;
+        PROTOCOLERROR;
 
     QMdmmCore::Data::RockPaperScissors rps = static_cast<QMdmmCore::Data::RockPaperScissors>(value.toInt());
     switch (rps) {
@@ -161,56 +167,66 @@ void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
     case QMdmmCore::Data::Scissors:
         break;
     default:
-        DEFAULTREPLY;
+        PROTOCOLERROR;
     }
 
     agent->rockPaperScissors(rps);
 
-#undef DEFAULTREPLY
+#undef PROTOCOLERROR
 }
 
 void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
 {
-#define DEFAULTREPLY               \
-    do {                           \
-        defaultReplyActionOrder(); \
-        return;                    \
+#define PROTOCOLERROR                                  \
+    do {                                               \
+        socket->setError({Socket::ProtocolError, {}}); \
+        defaultReplyActionOrder();                     \
+        return;                                        \
     } while (0)
 
     if (!value.isArray())
-        DEFAULTREPLY;
+        PROTOCOLERROR;
 
     QJsonArray arr = value.toArray();
+
+    // The reply carries at most one entry per requested selection (0 = yield that opportunity,
+    // 1..maximumOrder = strive for an order). An oversized array is an abnormal case (D-025 /
+    // D-030: statically checkable invalid value -> drop the connection).
+    const int selectionNum = currentRequestValue.toObject().value(QStringLiteral("selectionNum")).toInt();
+    if (arr.size() > selectionNum)
+        PROTOCOLERROR;
+
     QList<int> ao;
     for (QJsonArray::const_iterator it = arr.constBegin(); it != arr.constEnd(); ++it) {
         if (!it->isDouble())
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         ao << it->toInt();
     }
 
     agent->actionOrder(ao);
 
-#undef DEFAULTREPLY
+#undef PROTOCOLERROR
 }
 
 void ServerConnection::decodeActionReply(const QJsonValue &value)
 {
-#define DEFAULTREPLY          \
-    do {                      \
-        defaultReplyAction(); \
-        return;               \
+#define PROTOCOLERROR                                  \
+    do {                                               \
+        socket->setError({Socket::ProtocolError, {}}); \
+        defaultReplyAction();                          \
+        return;                                        \
     } while (0)
 
     if (!value.isObject())
-        DEFAULTREPLY;
+        PROTOCOLERROR;
 
     QJsonObject arr = value.toObject();
 
     if (!arr.contains(QStringLiteral("action")))
-        DEFAULTREPLY;
+        PROTOCOLERROR;
     QJsonValue vaction = arr.value(QStringLiteral("action"));
     if (!vaction.isDouble())
-        DEFAULTREPLY;
+        PROTOCOLERROR;
     QMdmmCore::Data::Action act = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
     switch (act) {
     case QMdmmCore::Data::DoNothing:
@@ -222,7 +238,7 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
     case QMdmmCore::Data::LetMove:
         break;
     default:
-        DEFAULTREPLY;
+        PROTOCOLERROR;
     }
 
     QString toPlayer;
@@ -231,10 +247,10 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
     case QMdmmCore::Data::Kick:
     case QMdmmCore::Data::LetMove: {
         if (!arr.contains(QStringLiteral("toPlayer")))
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         QJsonValue vtoPlayer = arr.value(QStringLiteral("toPlayer"));
         if (!vtoPlayer.isString())
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         toPlayer = vtoPlayer.toString();
         break;
     }
@@ -247,10 +263,10 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
     case QMdmmCore::Data::Move:
     case QMdmmCore::Data::LetMove: {
         if (!arr.contains(QStringLiteral("toPlace")))
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         QJsonValue vtoPlace = arr.value(QStringLiteral("toPlace"));
         if (!vtoPlace.isDouble())
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         toPlace = vtoPlace.toInt();
         break;
     }
@@ -260,25 +276,33 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
 
     agent->action(act, toPlayer, toPlace);
 
-#undef DEFAULTREPLY
+#undef PROTOCOLERROR
 }
 
 void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
 {
-#define DEFAULTREPLY           \
-    do {                       \
-        defaultReplyUpgrade(); \
-        return;                \
+#define PROTOCOLERROR                                  \
+    do {                                               \
+        socket->setError({Socket::ProtocolError, {}}); \
+        defaultReplyUpgrade();                         \
+        return;                                        \
     } while (0)
 
     if (!value.isArray())
-        DEFAULTREPLY;
+        PROTOCOLERROR;
 
     QJsonArray arr = value.toArray();
+
+    // The reply may upgrade at most once per remaining upgrade opportunity; an oversized array is
+    // an abnormal case (D-025 / D-030: statically checkable invalid value -> drop the connection).
+    const int remainingTimes = currentRequestValue.toInt(1);
+    if (arr.size() > remainingTimes)
+        PROTOCOLERROR;
+
     QList<QMdmmCore::Data::UpgradeItem> ups;
     for (QJsonArray::const_iterator it = arr.constBegin(); it != arr.constEnd(); ++it) {
         if (!it->isDouble())
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         QMdmmCore::Data::UpgradeItem up = static_cast<QMdmmCore::Data::UpgradeItem>(it->toInt());
         switch (up) {
         case QMdmmCore::Data::UpgradeKnife:
@@ -286,14 +310,14 @@ void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
         case QMdmmCore::Data::UpgradeMaxHp:
             break;
         default:
-            DEFAULTREPLY;
+            PROTOCOLERROR;
         }
         ups << up;
     }
 
     agent->upgrade(ups);
 
-#undef DEFAULTREPLY
+#undef PROTOCOLERROR
 }
 
 void ServerConnection::defaultReplyRockPaperScissors()

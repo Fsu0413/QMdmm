@@ -38,6 +38,7 @@ private slots:
     void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
+    void server_disconnectsOnOutOfRangeReply();
     void client_disconnectsOnAbnormalPacket();
     void server_doesNotDropServerBoundNotify();
     void client_disconnectFromHostStopsAutoReconnect();
@@ -439,6 +440,57 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     p2Sock->abort();
 
     QTRY_VERIFY_WITH_TIMEOUT(stateRouted, 5000);
+}
+
+// A reply carrying a statically checkable invalid value -- here an out-of-range
+// RockPaperScissors enum (99) -- must be rejected at the decode layer (D-030: decode-layer full
+// defense): the server drops the connection instead of silently answering with the default reply.
+// In a full room the drop marks the misbehaving player offline (its seat is preserved for a
+// reconnect), so the other player observes the state change. The reply is written straight onto
+// the client's raw TCP socket (the public Client API has no "send arbitrary reply" entry point).
+void tst_QMdmmNetworking::server_disconnectsOnOutOfRangeReply()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2); // full with two players: game starts, drop preserves the seat
+    serverConf.setTcpPort(16368);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16368");
+
+    // p1 plays as a bot and replies Rock automatically, keeping the RPS phase alive. p2 replies
+    // with an out-of-range enum straight onto its raw socket once the RPS request arrives.
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() {
+        QTcpSocket *sock = p2->findChild<QTcpSocket *>();
+        if (sock != nullptr) {
+            sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestRockPaperScissors, QJsonValue(99)).serialize().append('\n'));
+            sock->flush();
+        }
+    });
+
+    // The observable proof: p2's drop marks it offline, broadcast to p1 as a state change.
+    bool p2Offline = false;
+    connect(p1->agent(), &Agent::agentStateChangeNotified, &server, [&p2Offline, p2](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p2->objectName() && !state.testFlag(Data::StateMaskOnline))
+            p2Offline = true;
+    });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+
+    QTRY_VERIFY_WITH_TIMEOUT(p2Offline, 5000);
 }
 
 // A client sending a packet the server does not expect from a client -- here an invalid packet
