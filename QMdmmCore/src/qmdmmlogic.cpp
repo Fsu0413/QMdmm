@@ -87,6 +87,21 @@ namespace v0 {
  * </tr>
  * </tbody>
  * </table>
+ *
+ * @note The Logic is a synchronous, reply-driven state machine: each
+ * @c requestXxx signal expects a matching @c xxxReply() slot call, and that
+ * reply advances the state machine (possibly emitting further requests) within
+ * the same call stack. Some requests are emitted in a loop over players — for
+ * example @c requestUpgrade() is emitted once per player with upgrade points —
+ * so a directly-connected slot replies re-entrantly while the loop is still
+ * running. This is safe by design: each phase only advances once every
+ * expected reply has been collected (the reply handlers count replies and act
+ * only when the set is complete), and the emit loops iterate over stable
+ * containers that the re-entrant advance does not mutate. A direct connection
+ * in a single-threaded setup is therefore equivalent to a queued connection;
+ * no particular connection type is required. (The reference implementation in
+ * QMdmmNetworking runs Logic on its own thread with queued connections purely
+ * for thread marshaling, not because direct connection is unsafe.)
  */
 
 /**
