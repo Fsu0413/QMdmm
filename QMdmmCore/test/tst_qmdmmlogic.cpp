@@ -625,6 +625,52 @@ private slots:
         QVERIFY(!l->upgradeReply(QStringLiteral("ghost"), {Data::UpgradeMaxHp}));
         QCOMPARE(up.length(), 0);
     }
+
+    // K. upgradeReply must reject an infeasible item list before inserting it, so
+    //    LogicP::upgrade never hits Q_ASSERT(success) on an over-allocated stat.
+    void QMdmmLogicupgradeReplyRejectsInfeasible()
+    {
+        l->roundStart();
+
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        Player *p = l->d->room->player(QStringLiteral("test1"));
+        p->setUpgradePoint(2);
+        // One knife upgrade remains before hitting the cap.
+        p->setKnifeDamage(l->d->room->logicConfiguration().maximumKnifeDamage() - 1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+
+        // Over-allocate a single stat (2 knives requested, 1 remaining).
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
+        QCOMPARE(up.length(), 0);
+
+        // Unknown item value.
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
+        QCOMPARE(up.length(), 0);
+
+        // A valid reply is still accepted afterwards.
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife}));
+        QVERIFY(up.length() > 0);
+    }
+
+    // L. upgradeReply must not process the same player twice in one upgrade phase.
+    void QMdmmLogicupgradeReplyRejectsDuplicate()
+    {
+        l->roundStart();
+
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
+        l->d->room->player(QStringLiteral("test2"))->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        // Still incomplete: test2 has not replied yet.
+        QCOMPARE(up.length(), 0);
+    }
 };
 
 namespace {

@@ -36,6 +36,7 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
     // helper functions
     [[nodiscard]] bool actionFeasible(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace) const;
     bool applyAction(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace);
+    [[nodiscard]] bool upgradeFeasible(const QString &playerName, const QList<Data::UpgradeItem> &items) const;
 
     // Functions:
     void startRpsForAction();

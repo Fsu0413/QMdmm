@@ -325,10 +325,12 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
 {
     if (d->room->player(playerName) != nullptr) {
         if (d->state == Upgrade) {
-            d->upgrades.insert(playerName, items);
-            d->upgrade();
+            if (!d->upgrades.contains(playerName) && d->upgradeFeasible(playerName, items)) {
+                d->upgrades.insert(playerName, items);
+                d->upgrade();
 
-            return true;
+                return true;
+            }
         }
     }
 

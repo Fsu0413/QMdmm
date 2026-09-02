@@ -95,6 +95,32 @@ bool LogicP::applyAction(const QString &fromPlayer, Data::Action action, const Q
     return false;
 }
 
+bool LogicP::upgradeFeasible(const QString &playerName, const QList<Data::UpgradeItem> &items) const
+{
+    const Player *p = room->player(playerName);
+
+    int knifeCount = 0;
+    int horseCount = 0;
+    int maxHpCount = 0;
+    foreach (Data::UpgradeItem item, items) {
+        switch (item) {
+        case Data::UpgradeKnife:
+            ++knifeCount;
+            break;
+        case Data::UpgradeHorse:
+            ++horseCount;
+            break;
+        case Data::UpgradeMaxHp:
+            ++maxHpCount;
+            break;
+        default:
+            return false;
+        }
+    }
+
+    return knifeCount <= p->upgradeKnifeRemainingTimes() && horseCount <= p->upgradeHorseRemainingTimes() && maxHpCount <= p->upgradeMaxHpRemainingTimes();
+}
+
 void LogicP::startRpsForAction()
 {
     rpsForActionReplies.clear();
