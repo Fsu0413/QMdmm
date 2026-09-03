@@ -2,12 +2,15 @@
 
 #include "qmdmmlogic.h"
 #include "qmdmmlogic_p.h"
+#include "qmdmmplayer.h"
 #include "qmdmmroom.h"
 
 #include <QHash>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QMultiHash>
+
+#include <algorithm>
 
 /**
  * @file qmdmmlogic.h
@@ -338,12 +341,31 @@ bool Logic::actionReply(const QString &playerName, Data::Action action, const QS
  */
 bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeItem> &items)
 {
-    if (d->room->player(playerName) != nullptr) {
+    const Player *p = d->room->player(playerName);
+    if (p != nullptr) {
         if (d->state == Upgrade) {
-            if (!d->upgrades.contains(playerName) && d->upgradeFeasible(playerName, items)) {
-                d->upgrades.insert(playerName, items);
-                d->upgrade();
+            if (!d->upgrades.contains(playerName)) {
+                if (d->upgradeFeasible(playerName, items)) {
+                    d->upgrades.insert(playerName, items);
+                } else {
+                    // The server has no access to a player's remaining upgrade counts, so it
+                    // cannot build a feasible list. Build a feasible default here: spend every
+                    // point, knife damage first.
+                    QList<Data::UpgradeItem> feasibleItems;
+                    int pointLeft = p->upgradePoint();
+                    const auto take = [&feasibleItems, &pointLeft](Data::UpgradeItem item, int remaining) {
+                        const int n = std::min(pointLeft, remaining);
+                        for (int i = 0; i < n; ++i)
+                            feasibleItems << item;
+                        pointLeft -= n;
+                    };
+                    take(Data::UpgradeKnife, p->upgradeKnifeRemainingTimes());
+                    take(Data::UpgradeHorse, p->upgradeHorseRemainingTimes());
+                    take(Data::UpgradeMaxHp, p->upgradeMaxHpRemainingTimes());
+                    d->upgrades.insert(playerName, feasibleItems);
+                }
 
+                d->upgrade();
                 return true;
             }
         }

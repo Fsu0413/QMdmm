@@ -5,6 +5,8 @@
 
 #include "qmdmmroom.h"
 
+#include <algorithm>
+
 namespace QMdmmCore {
 
 namespace p {
@@ -31,8 +33,12 @@ void PlayerP::applyDamage(Player *from, Player *to, int damagePoint, Data::Damag
     to->setHp(to->hp() - damagePoint, &kills);
     emit to->damaged(from, damagePoint, reason, Player::QPrivateSignal());
 
-    if (kills)
-        from->setUpgradePoint(from->upgradePoint() + 1);
+    if (kills) {
+        // Cap the upgrade point to the remaining upgrade times so a kill never grants
+        // more points than the killer can actually spend in the upgrade phase.
+        const int remaining = from->upgradeKnifeRemainingTimes() + from->upgradeHorseRemainingTimes() + from->upgradeMaxHpRemainingTimes();
+        from->setUpgradePoint(std::min(from->upgradePoint() + 1, remaining));
+    }
 }
 
 } // namespace p

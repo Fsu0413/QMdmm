@@ -626,9 +626,10 @@ private slots:
         QCOMPARE(up.length(), 0);
     }
 
-    // K. upgradeReply must reject an infeasible item list before inserting it, so
-    //    LogicP::upgrade never hits Q_ASSERT(success) on an over-allocated stat.
-    void QMdmmLogicupgradeReplyRejectsInfeasible()
+    // K. upgradeReply falls back to a feasible default list instead of rejecting an
+    //    infeasible reply, so a disconnected/timeout player (whose default reply cannot
+    //    know remaining upgrade counts) never stalls the upgrade phase.
+    void QMdmmLogicupgradeReplyFallsBackOnOverAllocation()
     {
         l->roundStart();
 
@@ -636,23 +637,37 @@ private slots:
         l->d->room->player(QStringLiteral("test3"))->setHp(0);
         Player *p = l->d->room->player(QStringLiteral("test1"));
         p->setUpgradePoint(2);
-        // One knife upgrade remains before hitting the cap.
+        // One knife upgrade remains before the cap; horse still has headroom.
         p->setKnifeDamage(l->d->room->logicConfiguration().maximumKnifeDamage() - 1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
 
-        // Over-allocate a single stat (2 knives requested, 1 remaining).
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
-        QCOMPARE(up.length(), 0);
+        // Over-allocate a single stat (2 knives requested, 1 remaining): accepted, and the
+        // logic builds a feasible default (knife first, then horse).
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
+        QCOMPARE(up.length(), 1);
+        QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().maximumKnifeDamage());
+        QCOMPARE(p->horseDamage(), l->d->room->logicConfiguration().initialHorseDamage() + 1);
+    }
 
-        // Unknown item value.
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
-        QCOMPARE(up.length(), 0);
+    void QMdmmLogicupgradeReplyFallsBackOnUnknownItem()
+    {
+        l->roundStart();
 
-        // A valid reply is still accepted afterwards.
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife}));
-        QVERIFY(up.length() > 0);
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        Player *p = l->d->room->player(QStringLiteral("test1"));
+        p->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+
+        // An unknown item value makes the reply infeasible; the logic still accepts it and
+        // falls back to a default that spends the point on knife.
+        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
+        QCOMPARE(up.length(), 1);
+        QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
     }
 
     // L. upgradeReply must not process the same player twice in one upgrade phase.

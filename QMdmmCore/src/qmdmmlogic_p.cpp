@@ -118,7 +118,8 @@ bool LogicP::upgradeFeasible(const QString &playerName, const QList<Data::Upgrad
         }
     }
 
-    return knifeCount <= p->upgradeKnifeRemainingTimes() && horseCount <= p->upgradeHorseRemainingTimes() && maxHpCount <= p->upgradeMaxHpRemainingTimes();
+    return knifeCount <= p->upgradeKnifeRemainingTimes() && horseCount <= p->upgradeHorseRemainingTimes() && maxHpCount <= p->upgradeMaxHpRemainingTimes()
+        && items.size() == p->upgradePoint();
 }
 
 void LogicP::startRpsForAction()

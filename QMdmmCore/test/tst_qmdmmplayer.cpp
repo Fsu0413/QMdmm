@@ -460,6 +460,26 @@ private slots:
         }
     }
 
+    void QMdmmPlayerkillCapsUpgradePoint()
+    {
+        r->prepareForRoundStart();
+
+        // Max out every stat so no upgrade remains.
+        p1->setKnifeDamage(r->logicConfiguration().maximumKnifeDamage());
+        p1->setHorseDamage(r->logicConfiguration().maximumHorseDamage());
+        p1->setMaxHp(r->logicConfiguration().maximumMaxHp());
+        p1->setHasKnife(true);
+        p1->setPlace(p2->place());
+        p2->setHp(1);
+
+        QSignalSpy s(p1, &Player::upgradePointChanged);
+
+        QVERIFY(p1->slash(p2));
+        // A kill grants nothing when the killer has no upgrades left to spend.
+        QCOMPARE(s.length(), 0);
+        QCOMPARE(p1->upgradePoint(), 0);
+    }
+
     void QMdmmPlayercanBuyKnife()
     {
         r->prepareForRoundStart();
