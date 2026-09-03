@@ -7,9 +7,12 @@
 #include <QMdmmData>
 #include <QMdmmLogicConfiguration>
 #include <QMdmmLogicRunner>
+#include <QMdmmPlayer>
 #include <QMdmmProtocol>
+#include <QMdmmRoom>
 #include <QMdmmServer>
 
+#include <QJsonArray>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTest>
@@ -39,6 +42,8 @@ private slots:
     void client_routesAgentStateChangeToSelfAgent();
     void server_disconnectsOnAbnormalPacket();
     void server_disconnectsOnOutOfRangeReply();
+    void server_disconnectsOnOversizedActionOrderReply();
+    void server_disconnectsOnOversizedUpgradeReply();
     void client_disconnectsOnAbnormalPacket();
     void server_doesNotDropServerBoundNotify();
     void client_disconnectFromHostStopsAutoReconnect();
@@ -491,6 +496,158 @@ void tst_QMdmmNetworking::server_disconnectsOnOutOfRangeReply()
     QVERIFY(p2->connectToHost(host, Data::StateOnline));
 
     QTRY_VERIFY_WITH_TIMEOUT(p2Offline, 5000);
+}
+
+// The action-order reply is oversized when it carries more entries than the selectionNum the
+// server asked for. 12f03d7 added the arr.size() > selectionNum guard in decodeActionOrderReply
+// (D-025 / D-030 decode-layer full defense): the server must drop the connection instead of
+// handing the oversized order list to the core Logic. In a full 3-player room p1 and p2 win the
+// RPS (Rock beats p3's Scissors) and each get one action-order selection; p1 answers with a
+// 2-entry array (size 2 > selectionNum 1) straight onto its raw socket, and p3 observes p1 go
+// offline (the seat is preserved in a full room, so p1 is marked offline rather than removed).
+void tst_QMdmmNetworking::server_disconnectsOnOversizedActionOrderReply()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(3);
+    serverConf.setTcpPort(16374);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16374");
+
+    // Wire the replies before connecting: the first RPS request fires as soon as the room fills
+    // (p3 joins). p1 and p2 play Rock, p3 plays Scissors, so the two Rock winners (p1, p2) enter
+    // the action-order negotiation, each with one selection to make.
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() { p2->agent()->rockPaperScissors(Data::Rock); });
+    auto *p3 = new Client(ClientConfiguration(), &server);
+    connect(p3->agent(), &Agent::rockPaperScissorsRequested, &server, [p3]() { p3->agent()->rockPaperScissors(Data::Scissors); });
+
+    // p1 answers its action-order request with an oversized 2-entry array (size 2 > selectionNum 1);
+    // p2 answers normally so the negotiation does not stall while p1's misbehavior is observed.
+    connect(p1->agent(), &Agent::actionOrderRequested, &server, [p1](const QList<int> &, int, int) {
+        QTcpSocket *sock = p1->findChild<QTcpSocket *>();
+        if (sock != nullptr) {
+            QJsonArray oversized;
+            oversized.append(1);
+            oversized.append(2);
+            sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestActionOrder, QJsonValue(oversized)).serialize().append('\n'));
+            sock->flush();
+        }
+    });
+    connect(p2->agent(), &Agent::actionOrderRequested, &server, [p2](const QList<int> &, int, int) { p2->agent()->actionOrder({1}); });
+
+    // p3 observes p1's drop (broadcast as a state change with the Online flag cleared).
+    bool p1Offline = false;
+    connect(p3->agent(), &Agent::agentStateChangeNotified, &server, [&p1Offline, p1](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p1->objectName() && !state.testFlag(Data::StateMaskOnline))
+            p1Offline = true;
+    });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p3->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p3->room() != nullptr && p3->room()->player(p1->objectName()) != nullptr, 5000);
+
+    QTRY_VERIFY_WITH_TIMEOUT(p1Offline, 5000);
+}
+
+// The upgrade reply is oversized when it carries more items than the remainingTimes the server
+// asked for. 12f03d7 added the arr.size() > remainingTimes guard in decodeUpgradeReply (D-025 /
+// D-030 decode-layer full defense): the server must drop the connection instead of handing the
+// oversized upgrade list to the core Logic. A 2-player room is driven to the upgrade phase by
+// having p1 (Rock, always winning the RPS against p2's Scissors) buy a knife, walk to p2's city
+// and slash it -- a single 1-damage slash kills the 1-HP p2 (initialMaxHp is set to 1 and punish
+// HP is disabled), earning p1 one upgrade point. p1 then answers its upgrade request with a
+// 2-item array (size 2 > remainingTimes 1) straight onto its raw socket, and p2 observes p1 go
+// offline (the seat is preserved in a full room, so p1 is marked offline rather than removed).
+void tst_QMdmmNetworking::server_disconnectsOnOversizedUpgradeReply()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setInitialMaxHp(1); // a single 1-damage slash kills the 1-HP victim
+    conf.setPunishHpModifier(0); // no city-slash self-punish, so p1 survives to earn the point
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16375);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16375");
+
+    // Wire the replies before connecting. p1 always wins the RPS (Rock beats p2's Scissors), so
+    // p1 is the sole actor each cycle and can reach p2's city and kill it without p2 ever acting.
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() { p2->agent()->rockPaperScissors(Data::Scissors); });
+
+    // p1's script: buy a knife, walk to p2's city, then slash it. Each action is preceded by a
+    // fresh RPS win, so p1 acts once per cycle until p2 dies.
+    int step = 0;
+    connect(p1->agent(), &Agent::actionRequested, &server, [p1, p2, &step](int) {
+        ++step;
+        switch (step) {
+        case 1:
+            p1->agent()->action(Data::BuyKnife, {}, 0);
+            break;
+        case 2:
+            p1->agent()->action(Data::Move, {}, Data::Country);
+            break;
+        case 3:
+            p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());
+            break;
+        case 4:
+            p1->agent()->action(Data::Slash, p2->objectName(), 0);
+            break;
+        default:
+            p1->agent()->action(Data::DoNothing, {}, 0);
+            break;
+        }
+    });
+
+    // Once p1 earns its upgrade point the server asks for p1's upgrade; p1 answers with an
+    // oversized 2-item array (size 2 > remainingTimes 1) carrying valid upgrade items, so the
+    // size guard -- not the item-range guard -- is the branch under test.
+    connect(p1->agent(), &Agent::upgradeRequested, &server, [p1](int) {
+        QTcpSocket *sock = p1->findChild<QTcpSocket *>();
+        if (sock != nullptr) {
+            QJsonArray oversized;
+            oversized.append(static_cast<int>(Data::UpgradeKnife));
+            oversized.append(static_cast<int>(Data::UpgradeHorse));
+            sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestUpgrade, QJsonValue(oversized)).serialize().append('\n'));
+            sock->flush();
+        }
+    });
+
+    // p2 observes p1's drop (broadcast as a state change with the Online flag cleared).
+    bool p1Offline = false;
+    connect(p2->agent(), &Agent::agentStateChangeNotified, &server, [&p1Offline, p1](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p1->objectName() && !state.testFlag(Data::StateMaskOnline))
+            p1Offline = true;
+    });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
+
+    QTRY_VERIFY_WITH_TIMEOUT(p1Offline, 15000);
 }
 
 // A client sending a packet the server does not expect from a client -- here an invalid packet
