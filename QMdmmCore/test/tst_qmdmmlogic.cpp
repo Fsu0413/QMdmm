@@ -310,31 +310,63 @@ private slots:
         QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test1"));
     }
 
-    // Reject invalid replies: out-of-range order, wrong length, unknown player,
-    // duplicated order, and a second reply from an already-answered player.
+    // Invalid order lists fall back to yielding every selection (return false) so
+    // the state machine still advances; unknown players and duplicates are still
+    // rejected outright.
     void QMdmmLogicactionOrderReplyValidation()
     {
-        l->roundStart();
+        // Out-of-range order (maximumOrderNum == 2) -> full yield.
+        {
+            l->roundStart();
+            l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {3}));
+            QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 1);
+            QCOMPARE(l->state(), Logic::ActionOrder); // test2 still owes a pick
+        }
 
-        // Out-of-range order (maximumOrderNum == 2).
-        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {3}));
-        // Wrong length (selections == 1).
-        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 2}));
-        // Unknown player.
-        QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {0}));
-        // None of the above advanced the state.
-        QCOMPARE(l->state(), Logic::ActionOrder);
+        // Wrong length (selections == 1) -> full yield.
+        {
+            init();
+            l->roundStart();
+            l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
 
-        // Valid pick, then a duplicated reply is rejected.
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 2}));
+            QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 1);
+            QCOMPARE(l->state(), Logic::ActionOrder);
+        }
+
+        // Unknown player -> rejected, nothing recorded.
+        {
+            init();
+            l->roundStart();
+            l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+
+            QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {0}));
+            QCOMPARE(l->state(), Logic::ActionOrder);
+        }
+
+        // A second reply from an already-answered player is rejected.
+        {
+            init();
+            l->roundStart();
+            l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+
+            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+        }
     }
 
-    // A player with two opportunities must not pick the same order twice.
+    // A player with two opportunities must not pick the same order twice; a
+    // duplicated order falls back to yielding both selections.
     void QMdmmLogicactionOrderReplyDuplicateOrder()
     {
         l->addPlayer(QStringLiteral("test4"));
@@ -347,6 +379,7 @@ private slots:
 
         // Duplicated order within a single reply (selections == 2).
         QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 1}));
+        QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 2);
         QCOMPARE(l->state(), Logic::ActionOrder);
     }
 
@@ -490,7 +523,8 @@ private slots:
         }
     }
 
-    // E. actionReply must reject an infeasible action (no knife -> cannot Slash).
+    // E. An infeasible action (no knife -> cannot Slash) falls back to DoNothing so
+    //    the state machine still advances; the reply is reported as not accepted.
     void QMdmmLogicactionReplyInfeasible()
     {
         l->roundStart();
@@ -504,9 +538,10 @@ private slots:
         QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
         QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
 
-        // test1 has no knife, so Slash is infeasible -> rejected, no actionResult.
+        // test1 has no knife, so Slash is infeasible -> the reply is not accepted,
+        // but DoNothing is applied instead and the round advances.
         QVERIFY(!l->actionReply(QStringLiteral("test1"), Data::Slash, QStringLiteral("test2"), 0));
-        QCOMPARE(res.length(), 0);
+        QCOMPARE(res.length(), 1);
     }
 
     // F. A feasible Slash is applied, can kill, and triggers roundOver.
@@ -562,8 +597,10 @@ private slots:
         QSignalSpy gameOver(l.get(), &Logic::gameOver);
         QSignalSpy up(l.get(), &Logic::upgradeResult);
 
-        // Reply with no items: nothing to apply, but the game is already over.
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {}));
+        // Reply with no items for a fully-maxed player: the empty list cannot spend
+        // the point, so it is replaced by a (still empty) feasible default and
+        // reported as not accepted; nothing to apply, but the game is already over.
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {}));
         QVERIFY(gameOver.count() > 0);
         QCOMPARE(up.length(), 0);
     }
@@ -643,9 +680,10 @@ private slots:
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
 
-        // Over-allocate a single stat (2 knives requested, 1 remaining): accepted, and the
-        // logic builds a feasible default (knife first, then horse).
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
+        // Over-allocate a single stat (2 knives requested, 1 remaining): the reply
+        // is not accepted, but the logic builds a feasible default (knife first,
+        // then horse).
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
         QCOMPARE(up.length(), 1);
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().maximumKnifeDamage());
         QCOMPARE(p->horseDamage(), l->d->room->logicConfiguration().initialHorseDamage() + 1);
@@ -663,9 +701,10 @@ private slots:
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
 
-        // An unknown item value makes the reply infeasible; the logic still accepts it and
-        // falls back to a default that spends the point on knife.
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
+        // An unknown item value makes the reply infeasible; the reply is not
+        // accepted, but the logic falls back to a default that spends the point on
+        // knife.
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
         QCOMPARE(up.length(), 1);
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
     }

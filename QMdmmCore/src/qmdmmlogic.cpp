@@ -5,6 +5,7 @@
 #include "qmdmmplayer.h"
 #include "qmdmmroom.h"
 
+#include <QDebug>
 #include <QHash>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -257,7 +258,10 @@ bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
  * @brief Receive the desired action order result
  * @param playerName the internal name of the player
  * @param desiredOrder the desired action order of the player
- * @return true if state matches and operation succeeded (or there are no action), otherwise false
+ * @return true if the reply was accepted and applied as sent; false if it was
+ *         rejected (unknown player, wrong state, or duplicate) or replaced by a
+ *         full yield because the order list is invalid (the state machine still
+ *         advances)
  *
  * Can be only called from @c Logic::ActionOrder state.
  *
@@ -265,40 +269,48 @@ bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
  * requested from the player. Each entry is either an order the player wants to
  * strive for (in range @c 1..maximumOrderNum, not already confirmed, and not
  * duplicated) or @c 0 to yield that action opportunity — the player accepts
- * whatever order is left over and stops competing for it.
+ * whatever order is left over and stops competing for it. An invalid reply is
+ * not rejected: it falls back to yielding every selection, so a buggy or
+ * malicious agent cannot stall the ActionOrder phase.
  */
 bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desiredOrder)
 {
     if (d->room->player(playerName) != nullptr) {
         if (d->state == ActionOrder) {
             const int selections = d->actionOrderRemainingSelections.value(playerName, -1);
-            if (selections >= 0 && desiredOrder.length() == selections) {
+            if (selections >= 0) {
                 const int maximumOrderNum = d->rpsForActionWinners.length();
                 QList<int> chosenOrders;
                 int yields = 0;
-                bool valid = true;
+                bool accepted = desiredOrder.length() == selections;
 
-                foreach (int order, desiredOrder) {
-                    if (order == 0) {
-                        ++yields;
-                    } else if (order >= 1 && order <= maximumOrderNum && !d->confirmedActionOrders.contains(order) && !chosenOrders.contains(order)) {
-                        chosenOrders << order;
-                    } else {
-                        valid = false;
-                        break;
+                if (accepted) {
+                    foreach (int order, desiredOrder) {
+                        if (order == 0) {
+                            ++yields;
+                        } else if (order >= 1 && order <= maximumOrderNum && !d->confirmedActionOrders.contains(order) && !chosenOrders.contains(order)) {
+                            chosenOrders << order;
+                        } else {
+                            accepted = false;
+                            break;
+                        }
                     }
                 }
 
-                if (valid) {
-                    foreach (int order, chosenOrders)
-                        d->desiredActionOrders.insert(order, playerName);
-                    if (yields > 0)
-                        d->actionOrderYields[playerName] += yields;
-                    d->actionOrderRemainingSelections.remove(playerName);
-                    d->actionOrder();
-
-                    return true;
+                if (!accepted) {
+                    qWarning() << "Logic::actionOrderReply: player" << playerName << "sent an invalid order list; yielding all" << selections << "selections";
+                    chosenOrders.clear();
+                    yields = selections;
                 }
+
+                foreach (int order, chosenOrders)
+                    d->desiredActionOrders.insert(order, playerName);
+                if (yields > 0)
+                    d->actionOrderYields[playerName] += yields;
+                d->actionOrderRemainingSelections.remove(playerName);
+                d->actionOrder();
+
+                return accepted;
             }
         }
     }
@@ -311,7 +323,9 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
  * @param action the action to do by the player
  * @param toPlayer the internal name of the target player
  * @param toPlace the target place
- * @return true if state matches and operation succeeded (or there are no action), otherwise false
+ * @return true if the reply was accepted and applied as sent; false if it was
+ *         rejected (unknown player or wrong state) or replaced by DoNothing
+ *         because the action is infeasible (the state machine still advances)
  *
  * Can be only called from @c Logic::Action state.
  */
@@ -319,12 +333,16 @@ bool Logic::actionReply(const QString &playerName, Data::Action action, const QS
 {
     if (d->room->player(playerName) != nullptr) {
         if (d->state == Action) {
-            if (d->actionFeasible(playerName, action, toPlayer, toPlace)) {
-                d->applyAction(playerName, action, toPlayer, toPlace);
-                d->startAction();
-
-                return true;
+            const bool accepted = d->actionFeasible(playerName, action, toPlayer, toPlace);
+            if (!accepted) {
+                qWarning() << "Logic::actionReply: player" << playerName << "sent infeasible action" << static_cast<int>(action) << "; falling back to DoNothing";
+                action = Data::DoNothing;
             }
+
+            d->applyAction(playerName, action, toPlayer, toPlace);
+            d->startAction();
+
+            return accepted;
         }
     }
 
@@ -335,7 +353,10 @@ bool Logic::actionReply(const QString &playerName, Data::Action action, const QS
  * @brief Receive the upgrade items of a player
  * @param playerName the internal name of the player
  * @param items the upgrade items
- * @return true if state matches and operation succeeded (or there are no action), otherwise false
+ * @return true if the reply was accepted and applied as sent; false if it was
+ *         rejected (unknown player, wrong state, or duplicate) or replaced by a
+ *         feasible default because the item list is infeasible (the state
+ *         machine still advances)
  *
  * Can be only called from @c Logic::Upgrade state.
  */
@@ -345,9 +366,11 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
     if (p != nullptr) {
         if (d->state == Upgrade) {
             if (!d->upgrades.contains(playerName)) {
-                if (d->upgradeFeasible(playerName, items)) {
+                const bool accepted = d->upgradeFeasible(playerName, items);
+                if (accepted) {
                     d->upgrades.insert(playerName, items);
                 } else {
+                    qWarning() << "Logic::upgradeReply: player" << playerName << "sent an infeasible upgrade list; falling back to a feasible default";
                     // The server has no access to a player's remaining upgrade counts, so it
                     // cannot build a feasible list. Build a feasible default here: spend every
                     // point, knife damage first.
@@ -366,7 +389,7 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
                 }
 
                 d->upgrade();
-                return true;
+                return accepted;
             }
         }
     }
