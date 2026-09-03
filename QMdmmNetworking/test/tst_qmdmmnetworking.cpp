@@ -49,6 +49,8 @@ private slots:
     void client_disconnectFromHostStopsAutoReconnect();
     void client_disconnectsOnProtocolVersionMismatch();
     void server_listenErrorAndClose();
+    void client_infeasibleUpgradeReplyDoesNotStall();
+    void client_disconnectDuringUpgradeStillAdvances();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -894,6 +896,164 @@ void tst_QMdmmNetworking::server_listenErrorAndClose()
     QVERIFY(server.listen());
     server.close();
     QVERIFY(server.listen());
+}
+
+// A reply that passes the decode layer's static checks (a valid enum, and a size within the
+// requested remainingTimes) but is logically infeasible -- here an UpgradeMaxHp when maxHp is
+// already maxed out -- must not stall the game. D-036 made Logic::upgradeReply fall back to a
+// feasible default (spend every point, knife damage first) instead of rejecting, so the upgrade
+// phase still advances. A 2-player room is driven to the upgrade phase by p1 (Rock, always
+// beating p2's Scissors) killing the 1-HP p2 with a single slash. p1 then answers its upgrade
+// request with an UpgradeMaxHp that is statically valid but infeasible (maximumMaxHp ==
+// initialMaxHp, so maxHp has no remaining upgrade), and p1 observing the upgrade result is the
+// proof the fallback advanced the game instead of stalling.
+void tst_QMdmmNetworking::client_infeasibleUpgradeReplyDoesNotStall()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setInitialMaxHp(1); // a single 1-damage slash kills the 1-HP victim
+    conf.setMaximumMaxHp(1); // maxHp is already maxed out: no UpgradeMaxHp is feasible
+    conf.setPunishHpModifier(0); // no city-slash self-punish, so p1 survives to earn the point
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16376);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16376");
+
+    // Wire the replies before connecting. p1 always wins the RPS (Rock beats p2's Scissors), so
+    // p1 is the sole actor each cycle and can reach p2's city and kill it without p2 ever acting.
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() { p2->agent()->rockPaperScissors(Data::Scissors); });
+
+    // p1's script: buy a knife, walk to p2's city, then slash it. Each action is preceded by a
+    // fresh RPS win, so p1 acts once per cycle until p2 dies.
+    int step = 0;
+    connect(p1->agent(), &Agent::actionRequested, &server, [p1, p2, &step](int) {
+        ++step;
+        switch (step) {
+        case 1:
+            p1->agent()->action(Data::BuyKnife, {}, 0);
+            break;
+        case 2:
+            p1->agent()->action(Data::Move, {}, Data::Country);
+            break;
+        case 3:
+            p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());
+            break;
+        case 4:
+            p1->agent()->action(Data::Slash, p2->objectName(), 0);
+            break;
+        default:
+            p1->agent()->action(Data::DoNothing, {}, 0);
+            break;
+        }
+    });
+
+    // Answer the upgrade request with an infeasible UpgradeMaxHp (maxHp has no remaining upgrade
+    // because maximumMaxHp == initialMaxHp). The reply is statically valid (one entry within the
+    // remainingTimes of 1, and a legal enum), so it survives the decode layer and reaches Logic,
+    // where the fallback must replace it.
+    connect(p1->agent(), &Agent::upgradeRequested, &server, [p1](int) { p1->agent()->upgrade({Data::UpgradeMaxHp}); });
+
+    // The observable proof: p1 receives the upgrade result, which only happens if the fallback
+    // replaced the infeasible reply with a feasible default and the game advanced past the phase.
+    int upgradeResults = 0;
+    connect(p1->agent(), &Agent::upgradeNotified, &server, [&upgradeResults](const QHash<QString, QList<Data::UpgradeItem>> &) { ++upgradeResults; });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
+
+    QTRY_VERIFY_WITH_TIMEOUT(upgradeResults >= 1, 15000);
+}
+
+// A player whose socket drops during the upgrade phase must still let the game advance: the
+// server's default upgrade reply used to fill every point into UpgradeMaxHp, which
+// Logic::upgradeReply rejected once maxHp was maxed out, permanently stalling the upgrade phase
+// (D-030 / Qwen 09-03 review finding 1b). 1daf4d2 made defaultReplyUpgrade spend nothing (the
+// connection cannot know each stat's remaining-upgrade count), and D-036's fallback then spends
+// the forfeited point on a feasible stat. p1 (Rock, always beating p2's Scissors) kills the 1-HP
+// p2 and earns one upgrade point, then drops its socket as the upgrade request arrives. The server
+// answers with the always-feasible default reply, the logic advances to the round-over abandonment
+// check, and p2 -- still online -- observes the game over. maximumMaxHp == initialMaxHp so the old
+// UpgradeMaxHp default would have been infeasible (the exact deadlock this guards against).
+void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setInitialMaxHp(1); // a single 1-damage slash kills the 1-HP victim
+    conf.setMaximumMaxHp(1); // maxHp is already maxed out: the old default reply would be infeasible
+    conf.setPunishHpModifier(0); // no city-slash self-punish, so p1 survives to earn the point
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16377);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = QStringLiteral("qmdmm://localhost:16377");
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [p2]() { p2->agent()->rockPaperScissors(Data::Scissors); });
+
+    int step = 0;
+    connect(p1->agent(), &Agent::actionRequested, &server, [p1, p2, &step](int) {
+        ++step;
+        switch (step) {
+        case 1:
+            p1->agent()->action(Data::BuyKnife, {}, 0);
+            break;
+        case 2:
+            p1->agent()->action(Data::Move, {}, Data::Country);
+            break;
+        case 3:
+            p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());
+            break;
+        case 4:
+            p1->agent()->action(Data::Slash, p2->objectName(), 0);
+            break;
+        default:
+            p1->agent()->action(Data::DoNothing, {}, 0);
+            break;
+        }
+    });
+
+    // Drop p1's socket as soon as the upgrade request arrives. The server auto-replies with the
+    // default upgrade reply (spend nothing), the logic advances past the upgrade phase, and the
+    // round-over abandonment check ends the game for the still-online p2.
+    connect(p1->agent(), &Agent::upgradeRequested, &server, [p1]() {
+        QTcpSocket *sock = p1->findChild<QTcpSocket *>();
+        if (sock != nullptr)
+            sock->abort();
+    });
+
+    // The observable proof: p2 (still online) receives the game over that only happens if the
+    // default upgrade reply advanced the game instead of stalling on the infeasible UpgradeMaxHp.
+    bool p2GameOver = false;
+    connect(p2->agent(), &Agent::gameOverNotified, &server, [&p2GameOver](const QStringList &) { p2GameOver = true; });
+
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p2->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+    QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
+
+    QTRY_VERIFY_WITH_TIMEOUT(p2GameOver, 15000);
 }
 
 namespace {
