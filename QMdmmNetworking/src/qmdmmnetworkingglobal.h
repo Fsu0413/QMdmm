@@ -34,4 +34,4 @@ inline namespace v1 {
 #endif
 } // namespace QMdmmNetworking
 
-#endif // QMDMMSERVER_GLOBAL_H
+#endif // QMDMMNETWORKINGGLOBAL_H
