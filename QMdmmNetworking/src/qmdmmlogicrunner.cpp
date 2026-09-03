@@ -345,12 +345,15 @@ void ServerConnection::defaultReplyAction()
 
 void ServerConnection::defaultReplyUpgrade()
 {
-    int times = currentRequestValue.toInt(1);
-    QList<QMdmmCore::Data::UpgradeItem> ups;
-    ups.reserve(times);
-    while ((times--) != 0)
-        ups << QMdmmCore::Data::UpgradeMaxHp;
-    agent->upgrade(ups);
+    // The default reply must always be feasible, or Logic::upgradeReply rejects it via
+    // upgradeFeasible and the upgrade phase deadlocks waiting for a reply that never counts.
+    // The connection cannot know each stat's remaining-upgrade count (that state lives in the
+    // Logic thread's Room, not in the wire layer), so the only guaranteed-feasible reply is to
+    // spend nothing. The old code filled every point into UpgradeMaxHp, which upgradeFeasible
+    // rejects once that stat is maxed out (reachable in later rounds). An absent player
+    // (disconnected / timed out) forfeits their upgrade points; the round-over abandonment
+    // check in upgradeResult ends the game for the still-online agents regardless.
+    agent->upgrade({});
 }
 
 void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
