@@ -329,6 +329,36 @@ namespace v0 {
  */
 
 /**
+ * @enum Socket::ErrorCode
+ * @brief The kind of error a Socket can be in. Kept as a stable, transport-agnostic code rather than
+ * a mapping of each transport's native error enums, so it does not change across Qt versions.
+ */
+
+/**
+ * @var Socket::ErrorCode Socket::NoError
+ * @brief No error occurred.
+
+ * @var Socket::ErrorCode Socket::TransportError
+ * @brief The underlying transport reported an error.
+
+ * @var Socket::ErrorCode Socket::ProtocolError
+ * @brief A malformed / invalid packet was received, or a protocol violation.
+ */
+
+/**
+ * @struct Socket::Error
+ * @brief A value type describing a socket error: a stable code plus a human-readable description.
+ */
+
+/**
+ * @var Socket::Error::code
+ * @brief The stable error code.
+
+ * @var Socket::Error::errorString
+ * @brief A human-readable description of the error.
+ */
+
+/**
  * @brief ctor for server side, wrapping an already-open TCP socket
  * @param t the TCP socket
  * @param parent QObject parent.

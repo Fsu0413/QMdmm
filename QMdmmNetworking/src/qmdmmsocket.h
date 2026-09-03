@@ -43,20 +43,13 @@ public:
         TypeQWebSocket,
     };
 
-    /**
-     * The kind of error a Socket can be in. Kept as a stable, transport-agnostic code rather than
-     * a mapping of each transport's native error enums, so it does not change across Qt versions.
-     */
     enum ErrorCode : uint8_t
     {
         NoError,
-        TransportError, // the underlying transport reported an error
-        ProtocolError, // a malformed / invalid packet was received, or a protocol violation
+        TransportError,
+        ProtocolError,
     };
 
-    /**
-     * A value type describing a socket error: a stable code plus a human-readable description.
-     */
     struct Error
     {
         ErrorCode code = NoError;
