@@ -175,11 +175,8 @@ QSettings::Status SettingsP::saveConfig(Settings::Instance instance)
 
     // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
     if (!toBeSaved->isWritable()) {
-        qWarning("Setting file is not writable. Saving the file may fail."
-#ifndef Q_OS_WIN
-                 " Please try running this program with 'sudo'."
-#endif
-        );
+        qWarning("Setting file is not writable. Saving the file may fail. "
+                 "PerUser configuration file overrides the Global one. You might use PerUser instead.");
     }
 
     // The specified config is a flat map whose keys must land at the top
