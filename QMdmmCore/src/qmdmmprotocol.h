@@ -83,6 +83,10 @@ QMDMMCORE_EXPORT extern int version() noexcept;
 } // namespace Protocol
 
 #ifndef DOXYGEN
+} // namespace v0
+
+namespace p {
+
 // Cannot pimpl following class since it inherits QSharedData
 // So put it to header file and inherit QJsonObject, in order not to affect binary compatibility when more data come in
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
@@ -91,7 +95,7 @@ QMDMMCORE_EXPORT extern int version() noexcept;
 struct QMDMMCORE_EXPORT PacketData final : public QSharedData, public QJsonObject
 {
     PacketData();
-    PacketData(Protocol::PacketType type, Protocol::RequestId requestId, Protocol::NotifyId notifyId, const QJsonValue &value);
+    PacketData(v0::Protocol::PacketType type, v0::Protocol::RequestId requestId, v0::Protocol::NotifyId notifyId, const QJsonValue &value);
 
     PacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
     PacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
@@ -99,6 +103,10 @@ struct QMDMMCORE_EXPORT PacketData final : public QSharedData, public QJsonObjec
     // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
     QString error;
 };
+
+} // namespace p
+
+namespace v0 {
 #endif
 
 class QMDMMCORE_EXPORT Packet final
@@ -124,7 +132,7 @@ public:
 
 #ifndef DOXYGEN
 private:
-    QSharedDataPointer<PacketData> d;
+    QSharedDataPointer<p::PacketData> d;
 #endif
 };
 
@@ -132,7 +140,6 @@ private:
 } // namespace v0
 inline namespace v1 {
 using v0::Packet;
-using v0::PacketData;
 namespace Protocol = v0::Protocol; // NOLINT(misc-unused-alias-decls)
 } // namespace v1
 #endif

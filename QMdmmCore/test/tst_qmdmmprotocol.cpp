@@ -21,7 +21,7 @@ private slots:
     void QMdmmPacketDataCopy()
     {
         QJsonObject ob;
-        PacketData e = ob;
+        p::PacketData e = ob;
         QJsonObject ob2;
         ob2.insert(QStringLiteral("test"), QJsonValue());
         e = ob2;

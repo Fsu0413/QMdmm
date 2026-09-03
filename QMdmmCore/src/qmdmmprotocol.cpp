@@ -297,16 +297,19 @@ int Protocol::version() noexcept
 }
 
 #ifndef DOXYGEN
+} // namespace v0
+
+namespace p {
 
 PacketData::PacketData()
 {
-    insert(QStringLiteral("type"), static_cast<int>(Protocol::TypeInvalid));
-    insert(QStringLiteral("requestId"), static_cast<int>(Protocol::RequestInvalid));
-    insert(QStringLiteral("notifyId"), static_cast<int>(Protocol::NotifyInvalid));
+    insert(QStringLiteral("type"), static_cast<int>(v0::Protocol::TypeInvalid));
+    insert(QStringLiteral("requestId"), static_cast<int>(v0::Protocol::RequestInvalid));
+    insert(QStringLiteral("notifyId"), static_cast<int>(v0::Protocol::NotifyInvalid));
     insert(QStringLiteral("value"), QJsonValue());
 }
 
-PacketData::PacketData(Protocol::PacketType type, Protocol::RequestId requestId, Protocol::NotifyId notifyId, const QJsonValue &v)
+PacketData::PacketData(v0::Protocol::PacketType type, v0::Protocol::RequestId requestId, v0::Protocol::NotifyId notifyId, const QJsonValue &v)
 {
     insert(QStringLiteral("type"), static_cast<int>(type));
     insert(QStringLiteral("requestId"), static_cast<int>(requestId));
@@ -325,6 +328,9 @@ PacketData &PacketData::operator=(const QJsonObject &ob) noexcept(noexcept(QJson
     return *this;
 }
 
+} // namespace p
+
+namespace v0 {
 #endif
 
 /**
@@ -351,7 +357,7 @@ PacketData &PacketData::operator=(const QJsonObject &ob) noexcept(noexcept(QJson
  * @brief ctor.
  */
 Packet::Packet()
-    : d(new PacketData)
+    : d(new p::PacketData)
 {
 }
 
@@ -362,7 +368,7 @@ Packet::Packet()
  * @param value the value / payload of the packet
  */
 Packet::Packet(Protocol::PacketType type, Protocol::RequestId requestId, const QJsonValue &value)
-    : d(new PacketData(type, requestId, Protocol::NotifyInvalid, value))
+    : d(new p::PacketData(type, requestId, Protocol::NotifyInvalid, value))
 {
 }
 
@@ -372,7 +378,7 @@ Packet::Packet(Protocol::PacketType type, Protocol::RequestId requestId, const Q
  * @param value the value / payload of the packet
  */
 Packet::Packet(Protocol::NotifyId notifyId, const QJsonValue &value)
-    : d(new PacketData(Protocol::TypeNotify, Protocol::RequestInvalid, notifyId, value))
+    : d(new p::PacketData(Protocol::TypeNotify, Protocol::RequestInvalid, notifyId, value))
 {
 }
 
