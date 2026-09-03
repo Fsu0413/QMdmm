@@ -150,6 +150,12 @@ void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
     // default reply so the logic is not left waiting on a misbehaving client (D-030 decode-layer
     // full defense). socket->setError records the protocol error and disconnects the transport,
     // which walks socketDisconnected -> onSocketDisconnected -> agentDisconnected.
+    //
+    // The default reply must be emitted explicitly here (defaultReplyRockPaperScissors) and not
+    // left to the disconnect path: packetReceived clears currentRequest *before* invoking this
+    // decode callback, so the executeDefaultReply() reached via setError -> onSocketDisconnected
+    // is a no-op. Do not let both fire (only reachable if the currentRequest clearing is
+    // reordered), or the request would receive two default replies.
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -177,6 +183,9 @@ void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
 
 void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
 {
+    // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
+    // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
+    // default reply must be emitted explicitly here.
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -210,6 +219,9 @@ void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
 
 void ServerConnection::decodeActionReply(const QJsonValue &value)
 {
+    // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
+    // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
+    // default reply must be emitted explicitly here.
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -281,6 +293,9 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
 
 void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
 {
+    // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
+    // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
+    // default reply must be emitted explicitly here.
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
