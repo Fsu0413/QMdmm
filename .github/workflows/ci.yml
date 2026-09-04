@@ -8,12 +8,13 @@ on:
 
 jobs:
   build:
-    name: Build & test (${{ matrix.os }})
+    name: Build & test (${{ matrix.os }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-26.04, ubuntu-26.04-arm, macos-latest, macos-26-intel]
+        build_type: [Debug, Release, MinSizeRel]
 
     steps:
       - name: Checkout
@@ -35,7 +36,7 @@ jobs:
       - name: Configure
         run: |
           cmake_args=(-B build -G "Unix Makefiles"
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
             -DBUILD_TESTING=ON
             -DQMDMM_EXPORT_PRIVATE=NO)
           if [ -n "${CMAKE_PREFIX_PATH:-}" ]; then
