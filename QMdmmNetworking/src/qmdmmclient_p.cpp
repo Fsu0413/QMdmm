@@ -943,6 +943,12 @@ void ClientP::handleSocketGone(const QString &errorString)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 bool ClientP::connectSocket()
 {
+    // The client's objectName is its playerName and is registered as the self Agent's key in
+    // initSelfAgent(). It must not change afterwards: guard the invariant so a rename during
+    // the client's lifetime is caught in debug builds, instead of silently desynchronizing the
+    // agents key from the sign-in playerName.
+    Q_ASSERT(q->objectName() == selfAgent->objectName());
+
     socket = new Socket(this);
     connect(socket, &Socket::socketDisconnected, this, &ClientP::socketDisconnected);
     connect(socket, &Socket::socketErrorOccurred, this, &ClientP::socketErrorOccurred);

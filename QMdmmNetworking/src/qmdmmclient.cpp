@@ -115,6 +115,13 @@ inline QString generateRandomString()
  * @c Room where the game state is mirrored. It converges to a pure connection: the
  * controller interface (requests / notifications / replies / speech / operation) lives
  * on its own @c Agent (see @c Client::agent()), which a UI or an automated player drives.
+ *
+ * The client's objectName is its playerName: the constructor assigns a random objectName,
+ * the self Agent is registered under that name, and the sign-in reports it to the server as
+ * the playerName. playerName is therefore not configurable by design, and the operation
+ * side must not rename the client (setObjectName()) while it is connected. Renaming
+ * desynchronizes the self Agent's objectName key from the sign-in playerName, so the server
+ * ends up tracking a different identity than the one the self Agent drives.
  */
 
 /**
@@ -226,8 +233,8 @@ const QMdmmCore::Room *Client::room() const
  * (rockPaperScissors / actionOrder / action / upgrade) and speak / operate.
  *
  * The returned pointer is the stable handle stored by initSelfAgent(), not a lookup by
- * objectName(): the operation side may rename the client (setObjectName) after construction,
- * which would detach an objectName-based lookup from the self Agent.
+ * objectName(). Renaming the client is forbidden (see the @c Client class doc); the stable
+ * handle is defense-in-depth so agent() never detaches even if that invariant is violated.
  */
 Agent *Client::agent()
 {
