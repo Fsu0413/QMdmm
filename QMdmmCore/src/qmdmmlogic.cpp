@@ -411,6 +411,10 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  * @param replies the replies of Rock-Paper-Scissors (key = internal name of player, value = Rock-Paper-Scissors)
  *
  * Can be only emitted in @c Logic::RpsForAction and @c Logic::RpsForActionOrder state.
+ *
+ * Reports the completed selection, not a completed execution: it is emitted once
+ * every requested player has replied, before the winners are computed and the
+ * round proceeds.
  */
 
 /**
@@ -430,6 +434,10 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  * @param result the result of action orders. (key = action order, value = internal name of player)
  *
  * Can be only emitted in @c Logic::ActionOrder state.
+ *
+ * Reports the completed selection, not a completed execution: it is emitted once
+ * the action order is finalized, before @c Logic::Action state enters and the
+ * actions are performed.
  */
 
 /**
@@ -459,6 +467,11 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  * @param toPlace the target place
  *
  * Can be only emitted in @c Logic::Action state.
+ *
+ * Reports the completed selection, not a completed execution: it is emitted
+ * before the action is actually applied (the effect, e.g. slash/kick/move, is
+ * applied after this signal). Emitting before applying is the intended order, so
+ * subscribers observe the choice before its effect takes place.
  */
 
 /**
@@ -483,6 +496,8 @@ bool Logic::upgradeReply(const QString &playerName, const QList<Data::UpgradeIte
  * @param upgrades the upgrades performed by each player (key: the internal name of player, value: list of upgrade items)
  *
  * Can be only emitted in @c Logic::Upgrade state.
+ *
+ * Reports the completed selection of upgrades for this round.
  */
 
 /**
