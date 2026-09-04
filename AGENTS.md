@@ -32,6 +32,14 @@ instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
   template + `QString::arg` chain instead. See `configError` in
   `QMdmmServer/src/config.cpp` for the canonical form.
 
+### Use of `auto`
+
+- Do not use `auto` when the concrete type can be written out explicitly —
+  write `Protocol::PacketType`, `Client *`, `QList<LogicRunner *>`, etc.
+- `auto` is allowed only when the type name is longer than 100 characters.
+  Canonical example: the return type of `list2Set` in `qmdmmcore.cpp` is 126
+  chars — `QSet<typename std::remove_cv_t<typename std::iterator_traits<decltype(std::cbegin((const T &)std::declval<T>()))>::value_type>>`.
+
 ### Source files are pure ASCII
 
 - Comments and identifiers must contain no Chinese (or any other non-ASCII)
