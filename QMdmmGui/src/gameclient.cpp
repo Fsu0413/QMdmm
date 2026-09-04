@@ -232,7 +232,6 @@ void QMdmmGameClient::addBot(const QString &name)
     ClientConfiguration cfg;
     cfg.setScreenName(name);
     Client *bot = new Client(cfg, this);
-    bot->setObjectName(name);
 
     // Auto-reply: mirror the server's default-reply behavior so the room fills
     // and the match progresses without a human driving the bot. The bot's own
