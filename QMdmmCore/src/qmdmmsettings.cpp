@@ -66,11 +66,15 @@ Settings::Settings() = default;
 Settings::~Settings() = default;
 
 /**
- * @brief Save current configuration
- * @param instance The instance to be saved
+ * @brief Save the specified configuration into the given instance
+ * @param instance The instance to be saved, must be @c Settings::Global or @c Settings::PerUser
  * @return the status as <tt>QSettings::Status</tt>
  *
  * This is the only method to modify global / per-user settings, which @c setValue() don't.
+ *
+ * The entire @c Settings::Specified map is flushed into @p instance verbatim. Every key the
+ * specified instance currently holds is written out (including transient keys that QMdmm does
+ * not interpret anywhere), because no filtering between recognized and stray keys is performed.
  *
  * @warning Calling this method while one or more group is active is undefined behavior.
  */
