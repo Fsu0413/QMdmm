@@ -669,6 +669,9 @@ bool Room::isGameOver(QStringList *winnerPlayerNames) const
 
 /**
  * @brief prepare every players for round start
+ *
+ * @note This is a round-lifecycle method driven by the @c Logic state machine.
+ * It is not meant to be called by arbitrary code holding a @c Room pointer.
  */
 void Room::prepareForRoundStart()
 {
@@ -679,6 +682,9 @@ void Room::prepareForRoundStart()
 
 /**
  * @brief reset upgrades of each player, for game start
+ *
+ * @note This is a round-lifecycle method driven by the @c Logic state machine.
+ * It is not meant to be called by arbitrary code holding a @c Room pointer.
  */
 void Room::resetUpgrades()
 {

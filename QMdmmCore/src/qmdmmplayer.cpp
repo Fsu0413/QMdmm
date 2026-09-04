@@ -727,6 +727,9 @@ bool Player::upgradeMaxHp()
 /**
  * @brief reset all status to initial state of a round
  * @param seat the seat number (a.k.a. initial place)
+ *
+ * @note This is a round-lifecycle method driven by the @c Logic state machine.
+ * It is not meant to be called by arbitrary code holding a @c Player pointer.
  */
 void Player::prepareForRoundStart(int seat)
 {
@@ -742,6 +745,9 @@ void Player::prepareForRoundStart(int seat)
  * @brief reset all upgrades.
  *
  * Useful when a player leaves or joins a room between rounds, which causes a game over
+ *
+ * @note This is a round-lifecycle method driven by the @c Logic state machine.
+ * It is not meant to be called by arbitrary code holding a @c Player pointer.
  */
 void Player::resetUpgrades()
 {
