@@ -185,7 +185,7 @@ void QMdmmGameClient::wireClient(Client *client)
     connect(agent, &Agent::roundOverNotified, this, [this]() { emit roundOver(); });
     connect(agent, &Agent::rockPaperScissorsNotified, this, [this](const QHash<QString, Data::RockPaperScissors> &replies) {
         QVariantMap m;
-        for (auto it = replies.constBegin(); it != replies.constEnd(); ++it)
+        for (QHash<QString, Data::RockPaperScissors>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
             m.insert(it.key(), static_cast<int>(it.value()));
         emit rpsResult(m);
     });
@@ -200,7 +200,7 @@ void QMdmmGameClient::wireClient(Client *client)
     });
     connect(agent, &Agent::upgradeNotified, this, [this](const QHash<QString, QList<Data::UpgradeItem>> &upgrades) {
         QVariantMap m;
-        for (auto it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+        for (QHash<QString, QList<Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
             QVariantList l;
             l.reserve(it.value().size());
             for (Data::UpgradeItem u : it.value())
@@ -231,7 +231,7 @@ void QMdmmGameClient::addBot(const QString &name)
 {
     ClientConfiguration cfg;
     cfg.setScreenName(name);
-    auto *bot = new Client(cfg, this);
+    Client *bot = new Client(cfg, this);
     bot->setObjectName(name);
 
     // Auto-reply: mirror the server's default-reply behavior so the room fills

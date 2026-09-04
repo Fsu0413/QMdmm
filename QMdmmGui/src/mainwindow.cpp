@@ -16,13 +16,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Register the core data enums and the Player type so the QML layer can
     // read properties and use action / upgrade constants.
-    qmlRegisterUncreatableMetaObject(QMdmmCore::Data::staticMetaObject,
-                                     "QMdmm.Core", 1, 0, "Data",
-                                     QStringLiteral("Access to enums only"));
-    qmlRegisterUncreatableType<QMdmmCore::Player>("QMdmm.Core", 1, 0, "Player",
-                                                 QStringLiteral("Player is created by the engine"));
+    qmlRegisterUncreatableMetaObject(QMdmmCore::Data::staticMetaObject, "QMdmm.Core", 1, 0, "Data", QStringLiteral("Access to enums only"));
+    qmlRegisterUncreatableType<QMdmmCore::Player>("QMdmm.Core", 1, 0, "Player", QStringLiteral("Player is created by the engine"));
 
-    auto *game = new QMdmmGameClient(this);
+    QMdmmGameClient *game = new QMdmmGameClient(this);
 
     QQuickWidget *qw = new QQuickWidget(QStringLiteral("qrc:///qt/qml/QMdmm/Gui/qml/main.qml"), this);
 

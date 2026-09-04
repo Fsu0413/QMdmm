@@ -622,9 +622,9 @@ Packet Packet::fromJson(const QByteArray &serialized)
         return ret;
     }
 
-    const auto type = static_cast<Protocol::PacketType>(typeInt);
-    const auto requestId = static_cast<Protocol::RequestId>(requestIdInt);
-    const auto notifyId = static_cast<Protocol::NotifyId>(notifyIdInt);
+    const Protocol::PacketType type = static_cast<Protocol::PacketType>(typeInt);
+    const Protocol::RequestId requestId = static_cast<Protocol::RequestId>(requestIdInt);
+    const Protocol::NotifyId notifyId = static_cast<Protocol::NotifyId>(notifyIdInt);
 
     if (type == Protocol::TypeRequest || type == Protocol::TypeReply) {
         if (requestId == Protocol::RequestInvalid) {

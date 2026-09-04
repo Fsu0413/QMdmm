@@ -468,7 +468,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         // background and are deleted later on gameOver. So scan every LogicRunner child for the
         // offline agent and reconnect it in whichever room it is found. A still-online duplicate
         // name falls through to addAgent below, which rejects it as a spurious "new player" error.
-        const auto runners = findChildren<LogicRunner *>();
+        const QList<LogicRunner *> runners = findChildren<LogicRunner *>();
         for (LogicRunner *runner : runners) {
             Agent *existing = runner->agent(playerName);
             if (existing == nullptr || existing->state().testFlag(QMdmmCore::Data::StateMaskOnline))

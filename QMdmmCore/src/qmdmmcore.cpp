@@ -315,6 +315,8 @@ QVersionNumber Global::version()
  *
  * Qt deprecates QList::toSet since Qt 5.15 and instead suggests using the QSet iterator ctor.
  * This function calls the ctor while accepting any iterable types.
+ *
+ * Return type: `QSet<typename std::remove_cv_t<typename std::iterator_traits<decltype(std::cbegin((const T &)std::declval<T>()))>::value_type>>`
  */
 
 /**

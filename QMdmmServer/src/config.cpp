@@ -404,7 +404,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         {logicConfiguration_.initialMaxHp(), 7, "maxhp"},
         {logicConfiguration_.maximumMaxHp(), 10, "maximum-maxhp"},
     }};
-    for (const auto &check : rangeChecks) {
+    for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)
             configError(QStringLiteral("Config item %1 must be at least %2 (got %3)"), check.name, check.min, check.value);
     }
