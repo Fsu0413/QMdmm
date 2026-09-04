@@ -63,7 +63,6 @@ public:
     Q_INVOKABLE LogicConfiguration(const LogicConfiguration &);
 #else
     using QJsonObject::QJsonObject;
-    using QJsonObject::operator=;
 #endif
 
     // standard configuration
@@ -93,6 +92,11 @@ public:
     void setCanBuyOnlyInInitialCity(bool canBuyOnlyInInitialCity);
 
     bool deserialize(const QJsonValue &value);
+
+#ifndef DOXYGEN
+private:
+    using QJsonObject::operator=;
+#endif
 };
 
 class QMDMMCORE_EXPORT Room final : public QObject

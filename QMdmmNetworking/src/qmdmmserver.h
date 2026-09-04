@@ -50,7 +50,6 @@ public:
     Q_INVOKABLE QMdmmServerConfiguration(const QMdmmServerConfiguration &);
 #else
     using QJsonObject::QJsonObject;
-    using QJsonObject::operator=;
 #endif
 
     [[nodiscard]] bool tcpEnabled() const;
@@ -73,6 +72,11 @@ public:
     void setRequestTimeout(int requestTimeout);
 
     bool deserialize(const QJsonValue &value);
+
+#ifndef DOXYGEN
+private:
+    using QJsonObject::operator=;
+#endif
 };
 
 class QMDMMNETWORKING_EXPORT Server : public QObject

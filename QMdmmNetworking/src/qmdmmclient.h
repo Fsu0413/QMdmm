@@ -39,11 +39,15 @@ public:
     Q_INVOKABLE QMdmmClientConfiguration(const QMdmmClientConfiguration &);
 #else
     using QVariantMap::QMap;
-    using QVariantMap::operator=;
 #endif
 
     [[nodiscard]] QString screenName() const;
     void setScreenName(const QString &screenName);
+
+#ifndef DOXYGEN
+private:
+    using QVariantMap::operator=;
+#endif
 };
 
 class QMDMMNETWORKING_EXPORT Client final : public QObject
