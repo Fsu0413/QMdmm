@@ -36,9 +36,15 @@ instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
 
 - Do not use `auto` when the concrete type can be written out explicitly —
   write `Protocol::PacketType`, `Client *`, `QList<LogicRunner *>`, etc.
-- `auto` is allowed only when the type name is longer than 100 characters.
-  Canonical example: the return type of `list2Set` in `qmdmmcore.cpp` is 126
-  chars — `QSet<typename std::remove_cv_t<typename std::iterator_traits<decltype(std::cbegin((const T &)std::declval<T>()))>::value_type>>`.
+- `auto` is allowed only in these cases:
+  1. The type name is longer than 100 characters. Canonical example: the
+     return type of `list2Set` in `qmdmmcore.cpp` is 126 chars —
+     `QSet<typename std::remove_cv_t<typename std::iterator_traits<decltype(std::cbegin((const T &)std::declval<T>()))>::value_type>>`.
+  2. The type is anonymous and cannot be named — a lambda or an anonymous
+     struct/class.
+  3. An upstream library's documentation explicitly requires `auto` — e.g.
+     `qScopeGuard`, whose return type depends on the lambda closure type and
+     cannot be spelled out.
 
 ### Source files are pure ASCII
 
