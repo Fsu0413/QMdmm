@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     if (!QDir().mkpath(logDirectory))
         qFatal("Unable to create log directory %s, exiting.", qPrintable(logDirectory));
 
-    QString logFilePath = QDir(logDirectory).absoluteFilePath(QString::number(QDateTime::currentMSecsSinceEpoch()));
+    QString logFilePath = QDir(logDirectory).absoluteFilePath(QStringLiteral("QMdmmServer-") + QString::number(QDateTime::currentMSecsSinceEpoch()));
     QFile logFile(logFilePath);
 
     if (!logFile.open(QIODevice::WriteOnly))
