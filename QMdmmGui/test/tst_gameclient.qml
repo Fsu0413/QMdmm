@@ -28,6 +28,36 @@ TestCase {
         verify(game !== null, "GameClient should instantiate");
     }
 
+    function test_botObjectNameDiffersFromScreenName() {
+        // 1 human + 1 auto-replying bot. The bot's internal objectName (the
+        // protocol-level player identity) must stay distinct from its display
+        // screenName: addBot must not call setObjectName(name) — doing so would
+        // detach the self agent's key from the sign-in playerName (A4 forbids
+        // renaming). This guards the Release builds where the Debug-only Q_ASSERT
+        // in ClientP::connectSocket is compiled out.
+        game.playerCount = 2;
+        var added = createTemporaryObject(signalSpyComponent, testCase, {
+                                              target: game,
+                                              signalName: "playerAdded"
+                                          });
+        game.startLocalGame("Tester");
+        tryCompare(game, "gameState", "playing", 15000);
+
+        var sawBot = false;
+        for (var i = 0; i < added.count; ++i) {
+            var args = added.signalArguments[i];
+            var playerName = args[0];
+            var screenName = args[1];
+            if (screenName.indexOf("Bot") === 0) {
+                sawBot = true;
+                verify(playerName !== screenName, "bot objectName must differ from its display screenName");
+            }
+        }
+        verify(sawBot, "expected to observe a bot player");
+
+        game.disconnectAll();
+    }
+
     function test_localGameFillsRoomAndStarts() {
         // 1 human + 1 auto-replying bot -> room fills and the match starts.
         game.playerCount = 2;
