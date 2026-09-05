@@ -141,17 +141,12 @@ SettingsP::SettingsP()
 {
     static InitializeQSettings initializeQSettings;
 
-    globalConfig = new QSettingsWrapperP(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    userConfig = new QSettingsWrapperP(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    specifiedConfig = new QVariantMapWrapperP;
+    globalConfig = std::make_unique<QSettingsWrapperP>(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    userConfig = std::make_unique<QSettingsWrapperP>(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    specifiedConfig = std::make_unique<QVariantMapWrapperP>();
 }
 
-SettingsP::~SettingsP()
-{
-    delete globalConfig;
-    delete userConfig;
-    delete specifiedConfig;
-}
+SettingsP::~SettingsP() = default;
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 QSettings::Status SettingsP::saveConfig(Settings::Instance instance)

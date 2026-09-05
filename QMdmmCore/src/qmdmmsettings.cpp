@@ -119,24 +119,19 @@ QVariant Settings::value(const QString &key, const QVariant &defaultValue) const
  */
 QVariant Settings::value(Instance instance, const QString &key, const QVariant &defaultValue) const
 {
-    SettingsWrapperP *c = nullptr;
     switch (instance) {
     case Global:
-        c = d->globalConfig;
-        break;
+        return d->globalConfig->value(key, defaultValue);
     case PerUser:
-        c = d->userConfig;
-        break;
+        return d->userConfig->value(key, defaultValue);
     case Specified:
-        c = d->specifiedConfig;
-        break;
+        return d->specifiedConfig->value(key, defaultValue);
     default:
         break;
     }
 
-    Q_ASSERT(c != nullptr);
-
-    return c->value(key, defaultValue);
+    Q_UNREACHABLE();
+    return {};
 }
 
 /**
@@ -182,24 +177,19 @@ bool Settings::contains(const QString &key) const
  */
 bool Settings::contains(Instance instance, const QString &key) const
 {
-    SettingsWrapperP *c = nullptr;
     switch (instance) {
     case Global:
-        c = d->globalConfig;
-        break;
+        return d->globalConfig->contains(key);
     case PerUser:
-        c = d->userConfig;
-        break;
+        return d->userConfig->contains(key);
     case Specified:
-        c = d->specifiedConfig;
-        break;
+        return d->specifiedConfig->contains(key);
     default:
         break;
     }
 
-    Q_ASSERT(c != nullptr);
-
-    return c->contains(key);
+    Q_UNREACHABLE();
+    return false;
 }
 
 #ifndef DOXYGEN

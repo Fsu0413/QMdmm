@@ -5,6 +5,8 @@
 
 #include "qmdmmsettings.h"
 
+#include <memory>
+
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
 namespace QMdmmCore {
@@ -64,9 +66,9 @@ struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
 
 struct QMDMMCORE_PRIVATE_EXPORT SettingsP
 {
-    QSettingsWrapperP *globalConfig;
-    QSettingsWrapperP *userConfig;
-    QVariantMapWrapperP *specifiedConfig;
+    std::unique_ptr<QSettingsWrapperP> globalConfig;
+    std::unique_ptr<QSettingsWrapperP> userConfig;
+    std::unique_ptr<QVariantMapWrapperP> specifiedConfig;
 
     SettingsP();
     ~SettingsP();
