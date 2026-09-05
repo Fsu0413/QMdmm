@@ -92,13 +92,13 @@ namespace p {
 // ATTENTION: neither of the inherited 2 classes have virtual dtor
 
 // documentation is not needed since it is purely internal to QMdmmCore::Packet
-struct QMDMMCORE_EXPORT PacketData final : public QSharedData, public QJsonObject
+struct QMDMMCORE_EXPORT PacketDataP final : public QSharedData, public QJsonObject
 {
-    PacketData();
-    PacketData(v0::Protocol::PacketType type, v0::Protocol::RequestId requestId, v0::Protocol::NotifyId notifyId, const QJsonValue &value);
+    PacketDataP();
+    PacketDataP(v0::Protocol::PacketType type, v0::Protocol::RequestId requestId, v0::Protocol::NotifyId notifyId, const QJsonValue &value);
 
-    PacketData(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
-    PacketData &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
+    PacketDataP(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
+    PacketDataP &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
 
     // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
     QString error;
@@ -132,7 +132,7 @@ public:
 
 #ifndef DOXYGEN
 private:
-    QSharedDataPointer<p::PacketData> d;
+    QSharedDataPointer<p::PacketDataP> d;
 #endif
 };
 

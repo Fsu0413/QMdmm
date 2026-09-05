@@ -26,19 +26,19 @@ namespace p {
 // Agent (composition, not inheritance): the Agent owns the player identity (name / screen name /
 // state), while the ServerConnection owns everything tied to the wire. This split lets a
 // socket-less local agent exist later without dragging socket machinery into the Agent type.
-class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnection : public QObject
+class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnectionP : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue &)> notifyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> replyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> defaultReplyCallback;
+    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> notifyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> replyCallback;
+    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> defaultReplyCallback;
 
     static int requestTimeoutGracePeriod;
 
 public:
-    ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent = nullptr);
-    ~ServerConnection() override;
+    ServerConnectionP(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent = nullptr);
+    ~ServerConnectionP() override;
 
     void setSocket(Socket *_socket);
 
@@ -135,7 +135,7 @@ public:
     LogicRunner *q;
 
     QHash<QString, Agent *> agents;
-    QHash<QString, ServerConnection *> connections;
+    QHash<QString, ServerConnectionP *> connections;
 
     QThread *logicThread;
     QPointer<QMdmmCore::Logic> logic;

@@ -478,7 +478,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             // so a reconnect is split across the two. Find the agent's wire plumbing, rebind the
             // socket + replay the missed round events on it, then restore the agent's state +
             // snapshot on the logic side.
-            p::ServerConnection *conn = existing->findChild<p::ServerConnection *>();
+            p::ServerConnectionP *conn = existing->findChild<p::ServerConnectionP *>();
             if (conn == nullptr) {
                 // A local agent has no wire; a sign-in over the wire cannot reconnect it.
                 socket->setError({Socket::ProtocolError, {}});
@@ -505,7 +505,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         Agent *agent = new Agent(playerName, current);
         agent->setScreenName(screenName);
         agent->setState(agentState);
-        p::ServerConnection *conn = new p::ServerConnection(agent, logicConfiguration, serverConfiguration.requestTimeout(), agent);
+        p::ServerConnectionP *conn = new p::ServerConnectionP(agent, logicConfiguration, serverConfiguration.requestTimeout(), agent);
         conn->setSocket(socket);
 
         if (current->addAgent(agent) == nullptr)

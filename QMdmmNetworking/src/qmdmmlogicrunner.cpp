@@ -17,32 +17,32 @@ namespace QMdmmNetworking {
 #ifndef DOXYGEN
 namespace p {
 
-QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnection::receiveSpeak),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnection::receiveOperate),
+QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> ServerConnectionP::notifyCallback {
+    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnectionP::receiveSpeak),
+    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnectionP::receiveOperate),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)(const QJsonValue &)> ServerConnection::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnection::decodeRockPaperScissorsReply),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::decodeActionOrderReply),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::decodeActionReply),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::decodeUpgradeReply),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> ServerConnectionP::replyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::decodeRockPaperScissorsReply),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::decodeActionOrderReply),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::decodeActionReply),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::decodeUpgradeReply),
 };
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerConnection::*)()> ServerConnection::defaultReplyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnection::defaultReplyRockPaperScissors),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnection::defaultReplyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnection::defaultReplyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnection::defaultReplyUpgrade),
+QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> ServerConnectionP::defaultReplyCallback {
+    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::defaultReplyRockPaperScissors),
+    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::defaultReplyActionOrder),
+    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::defaultReplyAction),
+    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::defaultReplyUpgrade),
 };
 
 // Extra tolerance in seconds added on top of ServerConfiguration::requestTimeout for the
 // request timer. The timer only backstops abnormal cases (D-020): a healthy client replies
 // or gives up on its own; if it does neither within requestTimeout + grace, the server
 // treats the timeout as a disconnect (see ServerConnection::requestTimeout).
-int ServerConnection::requestTimeoutGracePeriod = 60;
+int ServerConnectionP::requestTimeoutGracePeriod = 60;
 
-ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)
+ServerConnectionP::ServerConnectionP(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)
     : QObject(parent)
     , agent(agent)
     , conf(logicConfiguration)
@@ -51,53 +51,53 @@ ServerConnection::ServerConnection(Agent *agent, const QMdmmCore::LogicConfigura
 {
     requestTimer->setInterval((requestTimeout + requestTimeoutGracePeriod) * 1000);
     requestTimer->setSingleShot(true);
-    connect(requestTimer, &QTimer::timeout, this, &ServerConnection::requestTimeout);
+    connect(requestTimer, &QTimer::timeout, this, &ServerConnectionP::requestTimeout);
 
     // Wire the Agent's notification signals to this connection's encode-and-send slots. The
     // Agent forwards a notifyXxx() call as the corresponding xxxNotified signal; this connection
     // turns the strong-typed notification back into a wire packet and sends it.
-    connect(agent, &Agent::logicConfigurationNotified, this, &ServerConnection::sendLogicConfigurationNotified);
-    connect(agent, &Agent::agentStateChangeNotified, this, &ServerConnection::sendAgentStateChangeNotified);
-    connect(agent, &Agent::playerAddNotified, this, &ServerConnection::sendPlayerAddNotified);
-    connect(agent, &Agent::playerRemoveNotified, this, &ServerConnection::sendPlayerRemoveNotified);
-    connect(agent, &Agent::gameStartNotified, this, &ServerConnection::sendGameStartNotified);
-    connect(agent, &Agent::roundStartNotified, this, &ServerConnection::sendRoundStartNotified);
-    connect(agent, &Agent::rockPaperScissorsNotified, this, &ServerConnection::sendRockPaperScissorsNotified);
-    connect(agent, &Agent::actionOrderNotified, this, &ServerConnection::sendActionOrderNotified);
-    connect(agent, &Agent::actionNotified, this, &ServerConnection::sendActionNotified);
-    connect(agent, &Agent::roundOverNotified, this, &ServerConnection::sendRoundOverNotified);
-    connect(agent, &Agent::upgradeNotified, this, &ServerConnection::sendUpgradeNotified);
-    connect(agent, &Agent::gameOverNotified, this, &ServerConnection::sendGameOverNotified);
-    connect(agent, &Agent::speakNotified, this, &ServerConnection::sendSpeakNotified);
-    connect(agent, &Agent::operateNotified, this, &ServerConnection::sendOperateNotified);
+    connect(agent, &Agent::logicConfigurationNotified, this, &ServerConnectionP::sendLogicConfigurationNotified);
+    connect(agent, &Agent::agentStateChangeNotified, this, &ServerConnectionP::sendAgentStateChangeNotified);
+    connect(agent, &Agent::playerAddNotified, this, &ServerConnectionP::sendPlayerAddNotified);
+    connect(agent, &Agent::playerRemoveNotified, this, &ServerConnectionP::sendPlayerRemoveNotified);
+    connect(agent, &Agent::gameStartNotified, this, &ServerConnectionP::sendGameStartNotified);
+    connect(agent, &Agent::roundStartNotified, this, &ServerConnectionP::sendRoundStartNotified);
+    connect(agent, &Agent::rockPaperScissorsNotified, this, &ServerConnectionP::sendRockPaperScissorsNotified);
+    connect(agent, &Agent::actionOrderNotified, this, &ServerConnectionP::sendActionOrderNotified);
+    connect(agent, &Agent::actionNotified, this, &ServerConnectionP::sendActionNotified);
+    connect(agent, &Agent::roundOverNotified, this, &ServerConnectionP::sendRoundOverNotified);
+    connect(agent, &Agent::upgradeNotified, this, &ServerConnectionP::sendUpgradeNotified);
+    connect(agent, &Agent::gameOverNotified, this, &ServerConnectionP::sendGameOverNotified);
+    connect(agent, &Agent::speakNotified, this, &ServerConnectionP::sendSpeakNotified);
+    connect(agent, &Agent::operateNotified, this, &ServerConnectionP::sendOperateNotified);
 
     // Wire the Agent's request signals to this connection's encode-and-send slots. The Agent
     // forwards a requestXxx() call as the corresponding xxxRequested signal; this connection turns
     // the strong-typed request back into a wire packet and sends it.
-    connect(agent, &Agent::rockPaperScissorsRequested, this, &ServerConnection::sendRockPaperScissorsRequested);
-    connect(agent, &Agent::actionOrderRequested, this, &ServerConnection::sendActionOrderRequested);
-    connect(agent, &Agent::actionRequested, this, &ServerConnection::sendActionRequested);
-    connect(agent, &Agent::upgradeRequested, this, &ServerConnection::sendUpgradeRequested);
+    connect(agent, &Agent::rockPaperScissorsRequested, this, &ServerConnectionP::sendRockPaperScissorsRequested);
+    connect(agent, &Agent::actionOrderRequested, this, &ServerConnectionP::sendActionOrderRequested);
+    connect(agent, &Agent::actionRequested, this, &ServerConnectionP::sendActionRequested);
+    connect(agent, &Agent::upgradeRequested, this, &ServerConnectionP::sendUpgradeRequested);
 }
 
-ServerConnection::~ServerConnection() = default;
+ServerConnectionP::~ServerConnectionP() = default;
 
-void ServerConnection::setSocket(Socket *_socket)
+void ServerConnectionP::setSocket(Socket *_socket)
 {
     if (socket != nullptr)
         socket->deleteLater();
 
     socket = _socket;
     if (socket != nullptr) {
-        connect(socket, &Socket::packetReceived, this, &ServerConnection::packetReceived);
+        connect(socket, &Socket::packetReceived, this, &ServerConnectionP::packetReceived);
         // The socket drop is handled by onSocketDisconnected, which translates it into an
         // Agent event (see there). The room only ever deals with agents, never sockets.
-        connect(socket, &Socket::socketDisconnected, this, &ServerConnection::onSocketDisconnected);
-        connect(this, &ServerConnection::sendPacket, socket, &Socket::sendPacket);
+        connect(socket, &Socket::socketDisconnected, this, &ServerConnectionP::onSocketDisconnected);
+        connect(this, &ServerConnectionP::sendPacket, socket, &Socket::sendPacket);
     }
 }
 
-void ServerConnection::onSocketDisconnected()
+void ServerConnectionP::onSocketDisconnected()
 {
     // Translate the socket drop into an Agent event (D-018: the socket is digested at the
     // server/wire layer, and the room only ever sees agents). Clean up the socket, mark the
@@ -121,7 +121,7 @@ void ServerConnection::onSocketDisconnected()
     emit agentDisconnected(agent);
 }
 
-void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
+void ServerConnectionP::addRequest(QMdmmCore::Protocol::RequestId requestId, const QJsonValue &value)
 {
     currentRequest = requestId;
     currentRequestValue = value;
@@ -139,11 +139,11 @@ void ServerConnection::addRequest(QMdmmCore::Protocol::RequestId requestId, cons
         //    event loop with the reply's work.
         // 2. The reply is designed to be delivered asynchronously; a synchronous reply would
         //    reach the logic side before the request handler returns, breaking the ordering.
-        QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerConnection::executeDefaultReply);
+        QTimer::singleShot(0, Qt::CoarseTimer, this, &ServerConnectionP::executeDefaultReply);
     }
 }
 
-void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
+void ServerConnectionP::decodeRockPaperScissorsReply(const QJsonValue &value)
 {
     // A statically checkable invalid value (wrong JSON type, out-of-range enum, oversized array)
     // is an abnormal case (D-025): drop the connection *and* answer the in-flight request with its
@@ -181,7 +181,7 @@ void ServerConnection::decodeRockPaperScissorsReply(const QJsonValue &value)
 #undef PROTOCOLERROR
 }
 
-void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
+void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
 {
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
@@ -217,7 +217,7 @@ void ServerConnection::decodeActionOrderReply(const QJsonValue &value)
 #undef PROTOCOLERROR
 }
 
-void ServerConnection::decodeActionReply(const QJsonValue &value)
+void ServerConnectionP::decodeActionReply(const QJsonValue &value)
 {
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
@@ -291,7 +291,7 @@ void ServerConnection::decodeActionReply(const QJsonValue &value)
 #undef PROTOCOLERROR
 }
 
-void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
+void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
 {
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
@@ -335,12 +335,12 @@ void ServerConnection::decodeUpgradeReply(const QJsonValue &value)
 #undef PROTOCOLERROR
 }
 
-void ServerConnection::defaultReplyRockPaperScissors()
+void ServerConnectionP::defaultReplyRockPaperScissors()
 {
     agent->rockPaperScissors(static_cast<QMdmmCore::Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3));
 }
 
-void ServerConnection::defaultReplyActionOrder()
+void ServerConnectionP::defaultReplyActionOrder()
 {
     QJsonObject ob = currentRequestValue.toObject();
     QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
@@ -353,12 +353,12 @@ void ServerConnection::defaultReplyActionOrder()
     agent->actionOrder(ao);
 }
 
-void ServerConnection::defaultReplyAction()
+void ServerConnectionP::defaultReplyAction()
 {
     agent->action(QMdmmCore::Data::DoNothing, {}, 0);
 }
 
-void ServerConnection::defaultReplyUpgrade()
+void ServerConnectionP::defaultReplyUpgrade()
 {
     // The default reply must always be feasible, or Logic::upgradeReply rejects it via
     // upgradeFeasible and the upgrade phase deadlocks waiting for a reply that never counts.
@@ -371,7 +371,7 @@ void ServerConnection::defaultReplyUpgrade()
     agent->upgrade({});
 }
 
-void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
+void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
 {
     if (socket == nullptr)
         return;
@@ -379,7 +379,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
         // A notify addressed to the agent (speak / operate) is decoded and handed to the Agent.
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToAgentMask) != 0) {
-            void (ServerConnection::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ServerConnectionP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -411,7 +411,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
                 executeDefaultReply();
             } else {
                 currentRequest = QMdmmCore::Protocol::RequestInvalid;
-                void (ServerConnection::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+                void (ServerConnectionP::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
                 if (call != nullptr)
                     (this->*call)(packet.value());
                 else
@@ -433,7 +433,7 @@ void ServerConnection::packetReceived(const QMdmmCore::Packet &packet)
     executeDefaultReply();
 }
 
-void ServerConnection::sendRockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder)
+void ServerConnectionP::sendRockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
@@ -441,7 +441,7 @@ void ServerConnection::sendRockPaperScissorsRequested(const QStringList &playerN
     addRequest(QMdmmCore::Protocol::RequestRockPaperScissors, ob);
 }
 
-void ServerConnection::sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void ServerConnectionP::sendActionOrderRequested(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     QJsonObject ob;
     QJsonArray arr;
@@ -453,22 +453,22 @@ void ServerConnection::sendActionOrderRequested(const QList<int> &remainedOrders
     addRequest(QMdmmCore::Protocol::RequestActionOrder, ob);
 }
 
-void ServerConnection::sendActionRequested(int currentOrder)
+void ServerConnectionP::sendActionRequested(int currentOrder)
 {
     addRequest(QMdmmCore::Protocol::RequestAction, currentOrder);
 }
 
-void ServerConnection::sendUpgradeRequested(int remainingTimes)
+void ServerConnectionP::sendUpgradeRequested(int remainingTimes)
 {
     addRequest(QMdmmCore::Protocol::RequestUpgrade, remainingTimes);
 }
 
-void ServerConnection::sendLogicConfigurationNotified()
+void ServerConnectionP::sendLogicConfigurationNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyLogicConfiguration, conf));
 }
 
-void ServerConnection::sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnectionP::sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -476,7 +476,7 @@ void ServerConnection::sendAgentStateChangeNotified(const QString &playerName, c
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
-void ServerConnection::sendPlayerAddNotified(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
+void ServerConnectionP::sendPlayerAddNotified(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -485,24 +485,24 @@ void ServerConnection::sendPlayerAddNotified(const QString &playerName, const QS
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
-void ServerConnection::sendPlayerRemoveNotified(const QString &playerName)
+void ServerConnectionP::sendPlayerRemoveNotified(const QString &playerName)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerRemoved, ob));
 }
 
-void ServerConnection::sendGameStartNotified()
+void ServerConnectionP::sendGameStartNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameStart, {}));
 }
 
-void ServerConnection::sendRoundStartNotified()
+void ServerConnectionP::sendRoundStartNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundStart, {}));
 }
 
-void ServerConnection::sendRockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
+void ServerConnectionP::sendRockPaperScissorsNotified(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
 {
     QJsonObject ob;
     for (QHash<QString, QMdmmCore::Data::RockPaperScissors>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
@@ -512,7 +512,7 @@ void ServerConnection::sendRockPaperScissorsNotified(const QHash<QString, QMdmmC
     emit sendPacket(packet);
 }
 
-void ServerConnection::sendActionOrderNotified(const QStringList &result)
+void ServerConnectionP::sendActionOrderNotified(const QStringList &result)
 {
     QJsonArray arr;
     for (const QString &playerName : result)
@@ -522,7 +522,7 @@ void ServerConnection::sendActionOrderNotified(const QStringList &result)
     emit sendPacket(packet);
 }
 
-void ServerConnection::sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+void ServerConnectionP::sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -552,12 +552,12 @@ void ServerConnection::sendActionNotified(const QString &playerName, QMdmmCore::
     emit sendPacket(packet);
 }
 
-void ServerConnection::sendRoundOverNotified()
+void ServerConnectionP::sendRoundOverNotified()
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyRoundOver, {}));
 }
 
-void ServerConnection::sendUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+void ServerConnectionP::sendUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
     QJsonObject ob;
     for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
@@ -571,12 +571,12 @@ void ServerConnection::sendUpgradeNotified(const QHash<QString, QList<QMdmmCore:
     emit sendPacket(packet);
 }
 
-void ServerConnection::clearRoundEventLog()
+void ServerConnectionP::clearRoundEventLog()
 {
     roundEventLog.clear();
 }
 
-void ServerConnection::replayMissedRoundEvents(int lastRoundEventSeq)
+void ServerConnectionP::replayMissedRoundEvents(int lastRoundEventSeq)
 {
     // roundEventLog is ordered by send order, and its index IS the round-event sequence number
     // (see roundEventLog in qmdmmlogicrunner_p.h), which equals the client's received-event
@@ -586,7 +586,7 @@ void ServerConnection::replayMissedRoundEvents(int lastRoundEventSeq)
         emit sendPacket(roundEventLog.at(i));
 }
 
-void ServerConnection::reconnect(Socket *socket, int lastRoundEventSeq)
+void ServerConnectionP::reconnect(Socket *socket, int lastRoundEventSeq)
 {
     // Rebind the socket. setSocket is safe because onSocketDisconnected already set the old
     // socket to nullptr before this point, so nothing gets double-deleted.
@@ -599,12 +599,12 @@ void ServerConnection::reconnect(Socket *socket, int lastRoundEventSeq)
     replayMissedRoundEvents(lastRoundEventSeq);
 }
 
-void ServerConnection::sendGameOverNotified(const QStringList &playerNames)
+void ServerConnectionP::sendGameOverNotified(const QStringList &playerNames)
 {
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyGameOver, QJsonArray::fromStringList(playerNames)));
 }
 
-void ServerConnection::sendSpeakNotified(const QString &playerName, const QString &content)
+void ServerConnectionP::sendSpeakNotified(const QString &playerName, const QString &content)
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
@@ -612,14 +612,14 @@ void ServerConnection::sendSpeakNotified(const QString &playerName, const QStrin
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpoken, ob));
 }
 
-void ServerConnection::sendOperateNotified(const QString &playerName, const QJsonValue &todo)
+void ServerConnectionP::sendOperateNotified(const QString &playerName, const QJsonValue &todo)
 {
     Q_UNIMPLEMENTED();
     Q_UNUSED(playerName);
     Q_UNUSED(todo);
 }
 
-void ServerConnection::requestTimeout()
+void ServerConnectionP::requestTimeout()
 {
     // A silent client is gone: setError() disconnects the socket, which walks the
     // disconnect path (onSocketDisconnected marks the agent offline and lets the room preserve
@@ -630,24 +630,24 @@ void ServerConnection::requestTimeout()
     executeDefaultReply();
 }
 
-void ServerConnection::executeDefaultReply()
+void ServerConnectionP::executeDefaultReply()
 {
     if (currentRequest != QMdmmCore::Protocol::RequestInvalid) {
-        void (ServerConnection::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
+        void (ServerConnectionP::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         if (call != nullptr)
             (this->*call)();
     }
 }
 
-void ServerConnection::receiveSpeak(const QJsonValue &value)
+void ServerConnectionP::receiveSpeak(const QJsonValue &value)
 {
     // The value is the Base64-encoded content sent by Client::notifySpeak. The server forwards it
     // verbatim (it does not decode); the receiving client decodes it in ClientP::notifySpoken.
     agent->speak(value.toString());
 }
 
-void ServerConnection::receiveOperate(const QJsonValue &value)
+void ServerConnectionP::receiveOperate(const QJsonValue &value)
 {
     agent->operate(value);
 }
@@ -790,7 +790,7 @@ void LogicRunnerP::agentDisconnected(Agent *disconnectedAgent)
         // Agent should be deleted.
         const QString playerName = disconnectedAgent->objectName();
         Agent *takenAgent = agents.take(playerName);
-        ServerConnection *takenConn = connections.take(playerName);
+        ServerConnectionP *takenConn = connections.take(playerName);
         Q_UNUSED(takenAgent);
         Q_ASSERT(takenAgent == disconnectedAgent);
         Q_ASSERT(takenConn != nullptr);
@@ -917,7 +917,7 @@ void LogicRunnerP::upgradeResult(const QHash<QString, QList<QMdmmCore::Data::Upg
 
     // A new round begins: drop the previous round's events so the next round's log restarts empty
     // (the client resets its per-round event counter on notifyRoundStart, mirroring this).
-    foreach (ServerConnection *conn, connections)
+    foreach (ServerConnectionP *conn, connections)
         conn->clearRoundEventLog();
 
     emit roundStart();
@@ -928,7 +928,7 @@ void LogicRunnerP::roundOver()
     // The round's action phase is over: drop each connection's round-event log. A reconnect from
     // here on is in the upgrade phase or the next round, where the old round's events are no longer
     // needed.
-    foreach (ServerConnection *conn, connections)
+    foreach (ServerConnectionP *conn, connections)
         conn->clearRoundEventLog();
 
     foreach (Agent *agent, agents)
@@ -1011,8 +1011,8 @@ Agent *LogicRunner::addAgent(Agent *agent)
     // Register the agent's wire plumbing, if the operation side created one (network path). The
     // ServerConnection is a child of the agent so it travels with it; it reports the socket drop
     // as an Agent event (agentDisconnected) that the room listens to.
-    if (p::ServerConnection *conn = agent->findChild<p::ServerConnection *>(); conn != nullptr) {
-        connect(conn, &p::ServerConnection::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
+    if (p::ServerConnectionP *conn = agent->findChild<p::ServerConnectionP *>(); conn != nullptr) {
+        connect(conn, &p::ServerConnectionP::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
         d->connections.insert(playerName, conn);
     }
 
