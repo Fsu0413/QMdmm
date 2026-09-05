@@ -28,46 +28,48 @@ set(QMDMMGUI_RESOURCES
     assets/knife.png
 )
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools)
+if (Qt6_FOUND)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools)
 
-qt6_add_executable(QMdmm6 WIN32 MACOSX_BUNDLE ${QMDMMGUI_SOURCES})
+    qt6_add_executable(QMdmm6 WIN32 MACOSX_BUNDLE ${QMDMMGUI_SOURCES})
 
-set_target_properties(QMdmm6 PROPERTIES
-    AUTOMOC ON
-    AUTOUIC ON
-    AUTORCC ON
-    VERSION "${QMdmm_VERSION}"
-)
+    set_target_properties(QMdmm6 PROPERTIES
+        AUTOMOC ON
+        AUTOUIC ON
+        AUTORCC ON
+        VERSION "${QMdmm_VERSION}"
+    )
 
-target_link_libraries(QMdmm6
-    PUBLIC QMdmmNetworking6
-           QMdmmCore6
-           Qt6::QuickWidgets
-           Qt6::Quick
-           Qt6::Qml
-           Qt6::Widgets
-           Qt6::Gui
-           Qt6::Core
-)
-target_link_libraries(QMdmm6 PRIVATE Qt6::Widgets)
-qt6_add_qml_module(QMdmm6
-    URI QMdmm.Gui
-    VERSION ${QMdmm_VERSION}
-    QML_FILES ${QMDMMGUI_QML_FILES}
-    RESOURCES ${QMDMMGUI_RESOURCES}
-)
+    target_link_libraries(QMdmm6
+        PUBLIC QMdmmNetworking6
+               QMdmmCore6
+               Qt6::QuickWidgets
+               Qt6::Quick
+               Qt6::Qml
+               Qt6::Widgets
+               Qt6::Gui
+               Qt6::Core
+    )
+    target_link_libraries(QMdmm6 PRIVATE Qt6::Widgets)
+    qt6_add_qml_module(QMdmm6
+        URI QMdmm.Gui
+        VERSION ${QMdmm_VERSION}
+        QML_FILES ${QMDMMGUI_QML_FILES}
+        RESOURCES ${QMDMMGUI_RESOURCES}
+    )
 
-qt6_add_translations(QMdmm6
-    TS_FILES translations/qmdmm_zh_CN.ts
-)
+    qt6_add_translations(QMdmm6
+        TS_FILES translations/qmdmm_zh_CN.ts
+    )
 
-install(TARGETS QMdmm6
-    COMPONENT "6"
-    DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    RUNTIME
-    BUNDLE
-)
+    install(TARGETS QMdmm6
+        COMPONENT "6"
+        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        RUNTIME
+        BUNDLE
+    )
 
-if (BUILD_TESTING)
-    add_subdirectory(test)
+    if (BUILD_TESTING)
+        add_subdirectory(test)
+    endif()
 endif()

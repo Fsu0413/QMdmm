@@ -100,10 +100,9 @@ add_subdirectory(3rdparty)
 add_subdirectory(QMdmmCore)
 add_subdirectory(QMdmmNetworking)
 add_subdirectory(QMdmmServer)
+add_subdirectory(QMdmmGui)
+add_subdirectory(QMdmmBot)
 add_subdirectory(smoke) # Networked local-game playability regression test
-if (Qt6_FOUND)
-    add_subdirectory(QMdmmGui)
-endif()
 add_subdirectory(doc) # MAKE SURE this is the last one in the add_subdirectory list
 
 set(CPACK_GENERATOR 7Z TGZ TXZ TZST ZIP)
