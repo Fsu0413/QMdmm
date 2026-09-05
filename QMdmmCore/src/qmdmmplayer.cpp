@@ -332,6 +332,12 @@ int Player::upgradePoint() const noexcept
 /**
  * @brief setter of property @c upgradePoint
  * @param u @c upgradePoint
+ *
+ * @note The value should not exceed the player's total remaining upgrade times,
+ *       i.e. @c upgradeKnifeRemainingTimes() + @c upgradeHorseRemainingTimes() +
+ *       @c upgradeMaxHpRemainingTimes(). The normal path enforces this cap at
+ *       kill time (see @c PlayerP::applyDamage() in qmdmmplayer_p.cpp); a
+ *       programmatic call bypasses the check.
  */
 void Player::setUpgradePoint(int u)
 {
