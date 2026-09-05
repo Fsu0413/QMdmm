@@ -709,6 +709,29 @@ private slots:
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
     }
 
+    // An empty list is exactly what the server's default upgrade reply sends for a
+    // disconnected / timed-out player (ServerConnectionP::defaultReplyUpgrade). This pins
+    // down the decision that such a player's point is auto-spent on knife rather than
+    // forfeited (Hunyuan 09-05 review A4 / feedback #19): under a "forfeit" reading the
+    // empty reply would discard the point and leave knife damage unchanged, so this
+    // assertion distinguishes the two opposite semantics.
+    void QMdmmLogicupgradeReplyEmptyListAutoSpends()
+    {
+        l->roundStart();
+
+        l->d->room->player(QStringLiteral("test2"))->setHp(0);
+        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        Player *p = l->d->room->player(QStringLiteral("test1"));
+        p->setUpgradePoint(1);
+        l->d->state = Logic::Upgrade;
+
+        QSignalSpy up(l.get(), &Logic::upgradeResult);
+
+        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {}));
+        QCOMPARE(up.length(), 1);
+        QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
+    }
+
     // L. upgradeReply must not process the same player twice in one upgrade phase.
     void QMdmmLogicupgradeReplyRejectsDuplicate()
     {
