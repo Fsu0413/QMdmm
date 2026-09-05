@@ -980,12 +980,13 @@ void tst_QMdmmNetworking::client_infeasibleUpgradeReplyDoesNotStall()
 // A player whose socket drops during the upgrade phase must still let the game advance: the
 // server's default upgrade reply used to fill every point into UpgradeMaxHp, which
 // Logic::upgradeReply rejected once maxHp was maxed out, permanently stalling the upgrade phase
-// (D-030 / Qwen 09-03 review finding 1b). 1daf4d2 made defaultReplyUpgrade spend nothing (the
-// connection cannot know each stat's remaining-upgrade count), and D-036's fallback then spends
-// the forfeited point on a feasible stat. p1 (Rock, always beating p2's Scissors) kills the 1-HP
-// p2 and earns one upgrade point, then drops its socket as the upgrade request arrives. The server
-// answers with the always-feasible default reply, the logic advances to the round-over abandonment
-// check, and p2 -- still online -- observes the game over. maximumMaxHp == initialMaxHp so the old
+// (D-030 / Qwen 09-03 review finding 1b). 1daf4d2 made defaultReplyUpgrade send an empty list (the
+// connection cannot know each stat's remaining-upgrade count), and D-036's fallback then
+// auto-spends the absent player's point for them, knife damage first. p1 (Rock, always beating
+// p2's Scissors) kills the 1-HP p2 and earns one upgrade point, then drops its socket as the
+// upgrade request arrives. The server answers with the deliberately infeasible empty reply,
+// Logic's fallback auto-spends the point, the logic advances to the round-over abandonment check,
+// and p2 -- still online -- observes the game over. maximumMaxHp == initialMaxHp so the old
 // UpgradeMaxHp default would have been infeasible (the exact deadlock this guards against).
 void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
 {
@@ -1034,8 +1035,9 @@ void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
     });
 
     // Drop p1's socket as soon as the upgrade request arrives. The server auto-replies with the
-    // default upgrade reply (spend nothing), the logic advances past the upgrade phase, and the
-    // round-over abandonment check ends the game for the still-online p2.
+    // default upgrade reply (empty = deliberately infeasible, triggering the fallback auto-spend),
+    // the logic advances past the upgrade phase, and the round-over abandonment check ends the game
+    // for the still-online p2.
     connect(p1->agent(), &Agent::upgradeRequested, &server, [p1]() {
         QTcpSocket *sock = p1->findChild<QTcpSocket *>();
         if (sock != nullptr)
