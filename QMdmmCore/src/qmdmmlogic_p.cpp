@@ -37,10 +37,14 @@ bool LogicP::actionFeasible(const QString &fromPlayer, Data::Action action, cons
     }
     case Data::Slash: {
         const Player *to = room->player(toPlayer);
+        if (to == nullptr)
+            return false;
         return from->canSlash(to);
     }
     case Data::Kick: {
         const Player *to = room->player(toPlayer);
+        if (to == nullptr)
+            return false;
         return from->canKick(to);
     }
     case Data::Move: {
@@ -48,6 +52,8 @@ bool LogicP::actionFeasible(const QString &fromPlayer, Data::Action action, cons
     }
     case Data::LetMove: {
         const Player *to = room->player(toPlayer);
+        if (to == nullptr)
+            return false;
         return from->canLetMove(to, toPlace);
     }
     default:

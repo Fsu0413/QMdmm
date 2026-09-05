@@ -544,6 +544,41 @@ private slots:
         QCOMPARE(res.length(), 1);
     }
 
+    // A ghost target (a to-bearing action against an unknown player) must be
+    // rejected without dereferencing a null Player. Before the guard this crashed
+    // the server (remote-triggerable DoS); now the infeasible action is replaced
+    // by DoNothing and the state machine still advances.
+    void QMdmmLogicactionReplyGhostTarget()
+    {
+        const Data::Action toBearingActions[] = {Data::Slash, Data::Kick, Data::LetMove};
+
+        for (const Data::Action action : toBearingActions) {
+            init();
+
+            QSignalSpy res(l.get(), &Logic::actionResult);
+            QSignalSpy act(l.get(), &Logic::requestAction);
+
+            l->roundStart();
+
+            l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+
+            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+
+            // test1 (order 1) is requested to act.
+            QCOMPARE(act.count(), 1);
+
+            // The to-bearing action against a non-existent player must not crash
+            // and must be rejected (replaced by DoNothing); the engine advances to
+            // test2 rather than stalling.
+            QVERIFY(!l->actionReply(QStringLiteral("test1"), action, QStringLiteral("ghost"), 0));
+            QCOMPARE(res.length(), 1);
+            QCOMPARE(act.count(), 2);
+        }
+    }
+
     // F. A feasible Slash is applied, can kill, and triggers roundOver.
     void QMdmmLogicactionReplyKillsAndRoundOver()
     {
