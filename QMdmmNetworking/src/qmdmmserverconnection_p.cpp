@@ -354,14 +354,15 @@ void ServerConnectionP::defaultReplyAction()
 
 void ServerConnectionP::defaultReplyUpgrade()
 {
-    // The default reply must always be feasible, or Logic::upgradeReply rejects it via
-    // upgradeFeasible and the upgrade phase deadlocks waiting for a reply that never counts.
-    // The connection cannot know each stat's remaining-upgrade count (that state lives in the
-    // Logic thread's Room, not in the wire layer), so the only guaranteed-feasible reply is to
-    // spend nothing. The old code filled every point into UpgradeMaxHp, which upgradeFeasible
-    // rejects once that stat is maxed out (reachable in later rounds). An absent player
-    // (disconnected / timed out) forfeits their upgrade points; the round-over abandonment
-    // check in upgradeResult ends the game for the still-online agents regardless.
+    // The default reply must not leave the upgrade phase stuck: any list that fails
+    // Logic::upgradeFeasible is rejected, and a rejected reply never advances the phase. The
+    // connection cannot build a feasible list because it has no access to each stat's
+    // remaining-upgrade count (that state lives in the Logic thread's Room, not in the wire
+    // layer). It therefore deliberately sends an empty list -- an infeasible reply -- and lets
+    // Logic's fallback take over: upgradeReply auto-spends the absent (disconnected / timed
+    // out) player's upgrade point for them, knife damage first (see Logic::upgradeReply). The
+    // old code filled every point into UpgradeMaxHp, which upgradeFeasible rejects once that
+    // stat is maxed out (reachable in later rounds), permanently stalling the upgrade phase.
     agent->upgrade({});
 }
 
