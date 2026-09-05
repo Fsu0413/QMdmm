@@ -158,7 +158,7 @@ Config::Config()
 
     if (parser.isSet(QStringLiteral("h"))) {
         std::cout << qPrintable(helpText) << std::flush;
-        ::exit(0);
+        std::exit(0);
     }
 
     QMdmmCore::Settings::Instance toSave = QMdmmCore::Settings::Specified;
@@ -172,10 +172,13 @@ Config::Config()
     }
 
     read_(&setting, &parser);
-    if (toSave != QMdmmCore::Settings::Specified)
-        save_(&setting, toSave);
-    if (parser.isSet(QStringLiteral("d")))
+    bool isShowSet = parser.isSet(QStringLiteral("d"));
+    if (isShowSet)
         show_();
+    if (toSave != QMdmmCore::Settings::Specified)
+        std::exit(save_(&setting, toSave));
+    if (isShowSet)
+        std::exit(0);
 }
 
 namespace {
@@ -420,7 +423,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 #undef CONFIG_ITEM
 }
 
-void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance toSave)
+int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance toSave)
 {
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
@@ -465,7 +468,7 @@ void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance t
 
 #undef CONFIG_ITEM
 
-    std::exit(static_cast<int>(setting->saveConfig(toSave)));
+    return static_cast<int>(setting->saveConfig(toSave));
 }
 
 void Config::show_()
@@ -476,8 +479,6 @@ void Config::show_()
 
     QByteArray arr = QJsonDocument(ob).toJson(QJsonDocument::Indented);
     std::cout << arr.constData() << '\n' << std::flush;
-
-    std::exit(0);
 }
 
 const QMdmmNetworking::ServerConfiguration &Config::serverConfiguration() const
