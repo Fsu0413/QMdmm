@@ -21,7 +21,6 @@ namespace QMdmmNetworking {
 
 #ifndef DOXYGEN
 namespace p {
-
 class SocketP;
 } // namespace p
 #endif

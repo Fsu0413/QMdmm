@@ -19,6 +19,7 @@ set(QMDMMNETWORKING_PRIVATE_HEADERS
     src/qmdmmclient_p.h
     src/qmdmmlogicrunner_p.h
     src/qmdmmsocket_p.h
+    src/qmdmmserverconnection_p.h
 )
 
 set(QMDMMNETWORKING_SOURCES
@@ -31,6 +32,8 @@ set(QMDMMNETWORKING_SOURCES
 
 set(QMDMMNETWORKING_PRIVATE_SOURCES
     src/qmdmmclient_p.cpp
+    src/qmdmmlogicrunner_p.cpp
+    src/qmdmmserverconnection_p.cpp
 )
 
 set(QMDMMNETWORKING_DOC_FILES ${QMDMMNETWORKING_HEADERS} ${QMDMMNETWORKING_SOURCES} PARENT_SCOPE)
