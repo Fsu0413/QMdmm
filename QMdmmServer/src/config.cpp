@@ -85,7 +85,7 @@ namespace {
     std::cerr << qPrintable(message) << '\n' << std::flush;
     qWarning().noquote() << message;
 
-    ::exit(3);
+    std::exit(3);
 }
 
 template<typename... Args>
@@ -465,7 +465,7 @@ void Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance t
 
 #undef CONFIG_ITEM
 
-    ::exit(static_cast<int>(setting->saveConfig(toSave)));
+    std::exit(static_cast<int>(setting->saveConfig(toSave)));
 }
 
 void Config::show_()
@@ -477,7 +477,7 @@ void Config::show_()
     QByteArray arr = QJsonDocument(ob).toJson(QJsonDocument::Indented);
     std::cout << arr.constData() << '\n' << std::flush;
 
-    ::exit(0);
+    std::exit(0);
 }
 
 const QMdmmNetworking::ServerConfiguration &Config::serverConfiguration() const
