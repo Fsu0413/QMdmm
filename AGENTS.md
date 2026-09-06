@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI agents working on this repository — coding standards only.
+Guidance for AI agents working on this repository -- coding standards only.
 Project management (backlog / feedback / decisions) lives in a separate ledger
 repository and is intentionally not covered here.
 
@@ -8,18 +8,20 @@ repository and is intentionally not covered here.
 
 Read these before touching code:
 
-- [README](README.md) — game rules, build/run instructions, protocol overview.
-- [doc/architecture.md](doc/architecture.md) — how the modules
+- [README](README.md) -- game rules, build/run instructions, protocol overview.
+- [doc/architecture.md](doc/architecture.md) -- how the modules
   (`QMdmmCore` / `QMdmmNetworking` / `QMdmmGui` / `QMdmmServer`) fit together.
-- [doc/getting-started.md](doc/getting-started.md) — building, running a
+- [doc/getting-started.md](doc/getting-started.md) -- building, running a
   server, playing a game end-to-end, client API overview.
 
 ## Coding standards
 
 ### Memory management
 
-Do not use `QScopedPointer` — it is deprecated in Qt. Use `std::unique_ptr`
-instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
+- Do not use `QScopedPointer` -- it is deprecated in Qt. Use `std::unique_ptr`
+  instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
+- Do not use raw pointers for types that are not `QObject`-derived. Use
+  `std::shared_ptr` / `std::unique_ptr` etc. instead.
 
 ### C-style variadic functions
 
@@ -34,17 +36,27 @@ instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
 
 ### Use of `auto`
 
-- Do not use `auto` when the concrete type can be written out explicitly —
+- Do not use `auto` when the concrete type can be written out explicitly --
   write `Protocol::PacketType`, `Client *`, `QList<LogicRunner *>`, etc.
 - `auto` is allowed only in these cases:
   1. The type name is longer than 100 characters. Canonical example: the
-     return type of `list2Set` in `qmdmmcore.cpp` is 126 chars —
+     return type of `list2Set` in `qmdmmcore.cpp` is 126 chars --
      `QSet<typename std::remove_cv_t<typename std::iterator_traits<decltype(std::cbegin((const T &)std::declval<T>()))>::value_type>>`.
-  2. The type is anonymous and cannot be named — a lambda or an anonymous
+  2. The type is anonymous and cannot be named -- a lambda or an anonymous
      struct/class.
-  3. An upstream library's documentation explicitly requires `auto` — e.g.
+  3. An upstream library's documentation explicitly requires `auto` -- e.g.
      `qScopeGuard`, whose return type depends on the lambda closure type and
      cannot be spelled out.
+- `auto foo(auto b) { return bar(b); }` template is not allowed even after C++20. use
+  `template<typename T> typename decltype(bar(std::declval<T>())) foo(T b) { return bar(b); }`
+
+### `if` / `while` / `for` conditionals
+
+- Do not use `if (x)` when x is not a boolean value. Use `if (x != nullptr)`
+  (for pointers) or `if (x != 0)` (for integers) instead. For classes which
+  have `operator bool()`, only use `if (x)` when no other method is available.
+  (e.g. for `std::optional<int> o;`, it is forced to use `if (o.has_value())`
+  instead of `if (o)`). Same rule applies for `while` and `for` loops.
 
 ### Source files are pure ASCII
 
@@ -58,4 +70,4 @@ instead. (Already applied in existing code; see commits `dddd2a4` / `2e00107`.)
 
 - C++: run `clang-format -i` (config: `.clang-format`) on files you touched.
 - QML: run `qmlformat -i` (config: `.qmlformat.ini`); note a known indentation
-  bug — check the resulting diff afterwards.
+  bug -- check the resulting diff afterwards.
