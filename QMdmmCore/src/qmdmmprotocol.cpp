@@ -245,6 +245,13 @@ namespace v0 {
  *
  * Wire format: @c {"playerName": string, "screenName": string, "agentState": int (AgentState),
  * "lastRoundEventSeq": int}.
+ *
+ * @c agentState is a self-declaration: on a fresh sign-in the server stores it verbatim and does
+ * not filter or validate the @c StateMaskTrust / @c StateMaskBot flags. Trust ("managed") and Bot
+ * are client promises, not server-enforced privileges -- the server never asserts either flag
+ * itself, only toggling the Online flag (cleared on disconnect, restored on reconnect) and
+ * clearing Trust on disconnect. A reconnect ignores the reported @c agentState and only restores
+ * the Online flag (Trust is not re-granted, see @c StateMaskTrust).
  */
 
 /**
