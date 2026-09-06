@@ -90,7 +90,7 @@ public:
     ~Server() override;
 
 public slots: // NOLINT(readability-redundant-access-specifiers)
-    bool listen();
+    [[nodiscard]] bool listen();
     void close();
 
 signals:

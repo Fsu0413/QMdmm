@@ -33,7 +33,14 @@ int main(int argc, char *argv[])
     Config config;
 
     QMdmmNetworking::Server server(config.serverConfiguration(), config.logicConfiguration());
-    server.listen();
+
+    QObject::connect(&server, &QMdmmNetworking::Server::listenError, &a, [&](const QString &transportName, const QString &errorString) {
+        qCritical("Unable to listen on %s: %s", qPrintable(transportName), qPrintable(errorString));
+    });
+
+    bool listen = server.listen();
+    if (!listen)
+        qFatal("Unable to listen, exiting.");
 
     return QCoreApplication::exec();
 }
