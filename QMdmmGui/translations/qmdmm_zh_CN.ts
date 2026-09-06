@@ -129,8 +129,8 @@
 <context>
     <name>QMdmmGameClient</name>
     <message>
-        <source>Country</source>
-        <translation>国家</translation>
+        <source>Village</source>
+        <translation>城外</translation>
     </message>
     <message>
         <source>City %1</source>

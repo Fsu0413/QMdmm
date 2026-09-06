@@ -36,7 +36,7 @@ There are three upgradable stats: **knife damage**, **horse damage**, and
 | `LetMove` | Pull an adjacent player toward you, or push a player sharing your place away. |
 
 Both `Slash` and `Kick` are melee attacks that require the target to stand in
-the same place; `Kick` cannot be used in the `Country` place. `LetMove` is
+the same place; `Kick` cannot be used in the `Village` place. `LetMove` is
 config-gated (`enableLetMove`).
 
 ### Round flow

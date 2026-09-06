@@ -55,10 +55,10 @@ void wireBot(Client *bot)
         agent->actionOrder(ao);
     });
     // A competent auto-player:
-    //   1. Buy a knife (must be off Country).
+    //   1. Buy a knife (must be off Village).
     //   2. Slash a co-located enemy.
     //   3. Otherwise walk toward an enemy (star map: every place is adjacent
-    //      only to Country, so X -> Country -> target).
+    //      only to Village, so X -> Village -> target).
     QObject::connect(agent, &Agent::actionRequested, bot, [bot, agent]() {
         const QString self = bot->objectName();
         Room *room = bot->room();
@@ -76,8 +76,8 @@ void wireBot(Client *bot)
                 agent->action(Data::BuyKnife, {}, 0);
                 return;
             }
-            // Can't buy right now (e.g. standing in Country) -> step to any
-            // non-Country place so we can buy next turn.
+            // Can't buy right now (e.g. standing in Village) -> step to any
+            // non-Village place so we can buy next turn.
             for (int p = 1; p < room->players().count() + 1; ++p) {
                 if (me->canMove(p)) {
                     agent->action(Data::Move, {}, p);
@@ -93,10 +93,10 @@ void wireBot(Client *bot)
                 agent->action(Data::Slash, p->objectName(), -1);
                 return;
             }
-        // Otherwise step toward an enemy (star graph: via Country).
+        // Otherwise step toward an enemy (star graph: via Village).
         for (Player *p : room->players())
             if (p->alive() && p->objectName() != self) {
-                const int dest = (me->place() == Data::Country) ? p->place() : Data::Country;
+                const int dest = (me->place() == Data::Village) ? p->place() : Data::Village;
                 agent->action(Data::Move, {}, dest);
                 return;
             }

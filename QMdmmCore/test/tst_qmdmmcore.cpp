@@ -26,9 +26,9 @@ private slots:
         QTest::addColumn<bool>("result");
 
         QTest::newRow("nc-nc") << 1 << 2 << false;
-        QTest::newRow("c-c") << (int)Data::Country << (int)Data::Country << false;
-        QTest::newRow("nc-c") << 1 << (int)Data::Country << true;
-        QTest::newRow("c-nc") << (int)Data::Country << 2 << true;
+        QTest::newRow("c-c") << (int)Data::Village << (int)Data::Village << false;
+        QTest::newRow("nc-c") << 1 << (int)Data::Village << true;
+        QTest::newRow("c-nc") << (int)Data::Village << 2 << true;
     }
     void QMdmmDataisPlaceAdjacent()
     {

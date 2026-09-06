@@ -371,7 +371,7 @@ bool Player::dead() const
  */
 bool Player::canBuyKnife() const
 {
-    return alive() && !hasKnife() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Country));
+    return alive() && !hasKnife() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Village));
 }
 
 /**
@@ -382,7 +382,7 @@ bool Player::canBuyKnife() const
  */
 bool Player::canBuyHorse() const
 {
-    return alive() && !hasHorse() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Country));
+    return alive() && !hasHorse() && (room()->logicConfiguration().canBuyOnlyInInitialCity() ? (place() == initialPlace()) : (place() != Data::Village));
 }
 
 /**
@@ -431,7 +431,7 @@ bool Player::canKick(const Player *to) const
     if (this == to)
         return false;
 
-    if ((place() != to->place()) || (place() == Data::Country))
+    if ((place() != to->place()) || (place() == Data::Village))
         return false;
 
     return true;
@@ -584,7 +584,7 @@ bool Player::slash(Player *to)
 
     PlayerP::applyDamage(this, to, knifeDamage(), Data::Slashed);
 
-    if (place() != Data::Country) {
+    if (place() != Data::Village) {
         int punishHpModifier = room()->logicConfiguration().punishHpModifier();
         if (punishHpModifier > 0) {
             LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
@@ -634,7 +634,7 @@ bool Player::kick(Player *to)
     if (!to->dead()) {
         // bypass the canMove check, directly set place.
         // Since it is effect of the kick action
-        to->setPlace(Data::Country);
+        to->setPlace(Data::Village);
     }
 
     return true;

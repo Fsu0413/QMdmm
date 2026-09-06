@@ -437,7 +437,7 @@ void ClientP::notifyRoundStart(const QJsonValue &value [[maybe_unused]])
 {
     // Mirror the server: reset each player's per-round state (place, hp, items)
     // so the client's local room model stays consistent with the authority.
-    // Without this, players would stay at the default Country place and every
+    // Without this, players would stay at the default Village place and every
     // place-dependent action (BuyKnife/Move/Slash/...) would fail locally.
     room->prepareForRoundStart();
     // A new round begins: reset the round-event counter.

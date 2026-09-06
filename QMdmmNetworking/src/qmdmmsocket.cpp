@@ -120,7 +120,6 @@ Socket::Socket(QObject *parent)
 {
 }
 
-// No need to delete d.
 /**
  * @brief dtor.
  */

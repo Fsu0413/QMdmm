@@ -67,7 +67,9 @@ Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 
 enum Place : uint8_t
 {
-    Country = 0,
+    Village = 0,
+
+    Country = Village,
 };
 Q_ENUM_NS(Place)
 
@@ -128,10 +130,10 @@ Q_FLAG_NS(AgentState)
 
 [[nodiscard]] constexpr bool isPlaceAdjacent(int p1, int p2) noexcept
 {
-    // simplifies to "only one of p1 and p2 is Country"
-    // simplifies again to "p1 is Country xor p2 is Country"
+    // simplifies to "only one of p1 and p2 is Village"
+    // simplifies again to "p1 is Village xor p2 is Village"
     // (boolean xor == notequal)
-    return (p1 == Country) != (p2 == Country);
+    return (p1 == Village) != (p2 == Village);
 }
 
 [[nodiscard]] QMDMMCORE_EXPORT QStringList rockPaperScissorsWinners(const QHash<QString, Data::RockPaperScissors> &judgers);

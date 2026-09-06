@@ -264,12 +264,12 @@ private slots:
         // case 2: set place = 0 -> emit placeChanged
         {
             QSignalSpy s(p1, &Player::placeChanged);
-            p1->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
 
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), Data::Country);
-                QCOMPARE(p1->place(), Data::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Village);
+                QCOMPARE(p1->place(), Data::Village);
             }
         }
 
@@ -299,12 +299,12 @@ private slots:
         // case 2: set initialPlace = 0 -> emit initialPlaceChanged
         {
             QSignalSpy s(p1, &Player::initialPlaceChanged);
-            p1->setInitialPlace(Data::Country);
+            p1->setInitialPlace(Data::Village);
 
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), Data::Country);
-                QCOMPARE(p1->initialPlace(), Data::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Village);
+                QCOMPARE(p1->initialPlace(), Data::Village);
             }
         }
 
@@ -511,7 +511,7 @@ private slots:
 
         // case 4: in country - cannot buy knife
         {
-            p1->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
             QVERIFY(!p1->canBuyKnife());
         }
 
@@ -562,7 +562,7 @@ private slots:
 
         // case 4: in country - cannot buy knife
         {
-            p1->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
             QVERIFY(!p1->canBuyHorse());
         }
 
@@ -690,8 +690,8 @@ private slots:
         // case 6: can't kick in country
         {
             p1->setHasHorse(true);
-            p1->setPlace(Data::Country);
-            p2->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
+            p2->setPlace(Data::Village);
 
             QVERIFY(!p1->canKick(p2));
         }
@@ -703,7 +703,7 @@ private slots:
 
         // case 1: can move to country when in city
         {
-            QVERIFY(p1->canMove(Data::Country));
+            QVERIFY(p1->canMove(Data::Village));
         }
 
         r->prepareForRoundStart();
@@ -717,7 +717,7 @@ private slots:
 
         // case 3: can move to any city when in a country
         {
-            p1->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
 
             QVERIFY(p1->canMove(p1->initialPlace()));
             QVERIFY(p1->canMove(p2->place()));
@@ -728,7 +728,7 @@ private slots:
         // case 4: dead player can't move
         {
             p1->setHp(-1);
-            QVERIFY(!p1->canMove(Data::Country));
+            QVERIFY(!p1->canMove(Data::Village));
         }
 
         r->prepareForRoundStart();
@@ -745,7 +745,7 @@ private slots:
 
         // coverage for this == to
         {
-            QVERIFY(p1->canLetMove(p1, Data::Country));
+            QVERIFY(p1->canLetMove(p1, Data::Village));
         }
 
         r->prepareForRoundStart();
@@ -755,8 +755,8 @@ private slots:
             p1->setPlace(p2->place());
             p2->setHp(-1);
 
-            QVERIFY(!p1->canLetMove(p2, Data::Country));
-            QVERIFY(!p2->canLetMove(p1, Data::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Village));
+            QVERIFY(!p2->canLetMove(p1, Data::Village));
         }
 
         r->prepareForRoundStart();
@@ -765,7 +765,7 @@ private slots:
         {
             p1->setPlace(p2->place());
 
-            QVERIFY(p1->canLetMove(p2, Data::Country));
+            QVERIFY(p1->canLetMove(p2, Data::Village));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
             QVERIFY(!p1->canLetMove(p2, p1->initialPlace()));
         }
@@ -774,9 +774,9 @@ private slots:
 
         // case 3: pull stuff - if p1 and p2 place is adjacent
         {
-            p2->setPlace(Data::Country);
+            p2->setPlace(Data::Village);
             QVERIFY(p1->canLetMove(p2, p1->place()));
-            QVERIFY(!p1->canLetMove(p2, Data::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Village));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
         }
 
@@ -785,7 +785,7 @@ private slots:
         // case 4: ??? - if p1 and p2 place is not same nor adjacent
         {
             QVERIFY(!p1->canLetMove(p2, p1->place()));
-            QVERIFY(!p1->canLetMove(p2, Data::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Village));
             QVERIFY(!p1->canLetMove(p2, p2->initialPlace()));
         }
 
@@ -802,7 +802,7 @@ private slots:
         {
             p1->setPlace(p2->place());
 
-            QVERIFY(!p1->canLetMove(p2, Data::Country));
+            QVERIFY(!p1->canLetMove(p2, Data::Village));
         }
     }
 
@@ -946,7 +946,7 @@ private slots:
         // case 2
         {
             p1->setHasKnife(true);
-            p2->setPlace(Data::Country);
+            p2->setPlace(Data::Village);
             p1->setPlace(p2->place());
 
             QSignalSpy s(p2, &Player::hpChanged);
@@ -966,7 +966,7 @@ private slots:
         // case 3: slash kills
         {
             p1->setHasKnife(true);
-            p2->setPlace(Data::Country);
+            p2->setPlace(Data::Village);
             p1->setPlace(p2->place());
             p2->setHp(1);
 
@@ -1157,8 +1157,8 @@ private slots:
             }
             QCOMPARE(s2.length(), 1);
             if (s2.length() > 0) {
-                QCOMPARE(s2.first().first().toInt(), Data::Country);
-                QCOMPARE(p2->place(), Data::Country);
+                QCOMPARE(s2.first().first().toInt(), Data::Village);
+                QCOMPARE(p2->place(), Data::Village);
             }
         }
 
@@ -1207,11 +1207,11 @@ private slots:
         {
             QSignalSpy s(p1, &Player::placeChanged);
 
-            QVERIFY(p1->move(Data::Country));
+            QVERIFY(p1->move(Data::Village));
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), Data::Country);
-                QCOMPARE(p1->place(), Data::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Village);
+                QCOMPARE(p1->place(), Data::Village);
             }
         }
     }
@@ -1230,14 +1230,14 @@ private slots:
         r->prepareForRoundStart();
 
         {
-            p1->setPlace(Data::Country);
+            p1->setPlace(Data::Village);
             QSignalSpy s(p2, &Player::placeChanged);
 
-            QVERIFY(p1->letMove(p2, Data::Country));
+            QVERIFY(p1->letMove(p2, Data::Village));
             QCOMPARE(s.length(), 1);
             if (s.length() > 0) {
-                QCOMPARE(s.first().first().toInt(), Data::Country);
-                QCOMPARE(p2->place(), Data::Country);
+                QCOMPARE(s.first().first().toInt(), Data::Village);
+                QCOMPARE(p2->place(), Data::Village);
             }
         }
     }

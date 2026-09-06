@@ -439,8 +439,6 @@ void Server::close()
  * @param errorString the transport's own description of the failure
  */
 
-// No need to delete d.
-// It will always be deleted by QObject dtor
 /**
  * @brief dtor.
  */

@@ -144,8 +144,8 @@ bool QMdmmGameClient::isYou(const QString &playerName) const
 
 QString QMdmmGameClient::placeName(int place) const
 {
-    if (place == Data::Country)
-        return tr("Country");
+    if (place == Data::Village)
+        return tr("Village");
     return tr("City %1").arg(place);
 }
 
@@ -394,7 +394,7 @@ QVariantList QMdmmGameClient::actionListFor(const Player *from) const
         ret.append(make(Data::BuyHorse, tr("Buy horse"), QString(), -1));
 
     const int here = from->place();
-    // Move to any adjacent place (Country <-> one city).
+    // Move to any adjacent place (Village <-> one city).
     for (int to = 0; to <= m_playerCount; ++to) {
         if (to == here)
             continue;

@@ -584,7 +584,7 @@ private slots:
     {
         l->roundStart();
 
-        // Put attacker and victim in the same place (Country == 0) and arm the attacker.
+        // Put attacker and victim in the same place (Village == 0) and arm the attacker.
         l->d->room->player(QStringLiteral("test1"))->setHasKnife(true);
         l->d->room->player(QStringLiteral("test1"))->setPlace(0);
         l->d->room->player(QStringLiteral("test2"))->setPlace(0);

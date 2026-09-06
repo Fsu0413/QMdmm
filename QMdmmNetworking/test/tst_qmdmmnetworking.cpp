@@ -608,7 +608,7 @@ void tst_QMdmmNetworking::server_disconnectsOnOversizedUpgradeReply()
             p1->agent()->action(Data::BuyKnife, {}, 0);
             break;
         case 2:
-            p1->agent()->action(Data::Move, {}, Data::Country);
+            p1->agent()->action(Data::Move, {}, Data::Village);
             break;
         case 3:
             p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());
@@ -943,7 +943,7 @@ void tst_QMdmmNetworking::client_infeasibleUpgradeReplyDoesNotStall()
             p1->agent()->action(Data::BuyKnife, {}, 0);
             break;
         case 2:
-            p1->agent()->action(Data::Move, {}, Data::Country);
+            p1->agent()->action(Data::Move, {}, Data::Village);
             break;
         case 3:
             p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());
@@ -1020,7 +1020,7 @@ void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
             p1->agent()->action(Data::BuyKnife, {}, 0);
             break;
         case 2:
-            p1->agent()->action(Data::Move, {}, Data::Country);
+            p1->agent()->action(Data::Move, {}, Data::Village);
             break;
         case 3:
             p1->agent()->action(Data::Move, {}, p1->room()->player(p2->objectName())->place());

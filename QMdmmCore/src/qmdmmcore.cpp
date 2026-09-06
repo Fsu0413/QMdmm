@@ -49,15 +49,20 @@ namespace v0 {
  * The original @c Place enum was removed for overdesign: the number of places should
  * equal the number of players (City1, City2, ... up to the maximum supported player
  * count), and in theory the player count is unlimited since players do not differ.
- * The enum is kept with only the @c Country value for QMetaObject generation; all
+ * The enum is kept with only the @c Village value for QMetaObject generation; all
  * place-related values are plain integers.
  */
 
 /**
- * @var QMdmmCore::Data::Place Data::Country
- * @brief For use with @c QMdmmPlayer::place() , if it equals to @c Data::Country then this player is in Country.
+ * @var QMdmmCore::Data::Place Data::Village
+ * @brief For use with @c QMdmmPlayer::place() , if it equals to @c Data::Village then this player is in Village.
  *
  * This enumeration variable equals to zero. Provided for readability.
+ */
+
+/**
+ * @var QMdmmCore::Data::Place Data::Country
+ * @brief Equivalent to Village
  */
 
 /**
@@ -237,7 +242,7 @@ namespace v0 {
  * @param p2 Place 2
  * @return If the 2 places are adjacent.
  *
- * It is actually simplified to "only one of p1 and p2 is Country"
+ * It is actually simplified to "only one of p1 and p2 is Village"
  */
 
 namespace {
