@@ -124,7 +124,7 @@ void LogicRunnerP::agentDisconnected(Agent *disconnectedAgent)
 
     if (q->full()) {
         // case 1: room is full, so game has started.
-        // ServerConnection::onSocketDisconnected already marked the agent offline and
+        // ServerConnectionP::onSocketDisconnected already marked the agent offline and
         // auto-replied the active request. The seat is preserved so the player can reconnect;
         // if they do not reconnect before the round is over, the game is abandoned:
         // LogicRunnerP::upgradeResult detects the still-offline agent and ends the game (see
@@ -185,7 +185,7 @@ void LogicRunnerP::requestRpsForAction(const QStringList &playerNames)
 void LogicRunnerP::rpsResult(const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies)
 {
     // Each agent records the round event it broadcasts in its connection's roundEventLog (see
-    // ServerConnection::sendRockPaperScissorsNotified), for the per-agent reconnect catch-up.
+    // ServerConnectionP::sendRockPaperScissorsNotified), for the per-agent reconnect catch-up.
     foreach (Agent *agent, agents)
         agent->notifyRockPaperScissors(replies);
 }

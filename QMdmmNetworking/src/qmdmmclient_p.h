@@ -107,7 +107,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     // encode + send the client's own agent's replies / speech / operation to the server. These
     // slots listen to the Agent's replyXxx / spoken / operated signals (the operation side drives
     // the Agent's bare-verb methods / speak / operate, which forward as these signals), and turn
-    // them back into wire packets. This mirrors ServerConnection's send*Requested / send*Notified
+    // them back into wire packets. This mirrors ServerConnectionP's send*Requested / send*Notified
     // slots on the server side.
     void sendRockPaperScissorsReply(QMdmmCore::Data::RockPaperScissors rps);
     void sendActionOrderReply(const QList<int> &order);

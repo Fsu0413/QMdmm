@@ -204,7 +204,7 @@ void tst_QMdmmNetworking::reconnectDoesNotAutoTrust()
     QTRY_VERIFY_WITH_TIMEOUT(p1OnlineNotTrusted, 5000);
 }
 
-// addAgent with a locally-owned agent (no ServerConnection child) registers a socket-less
+// addAgent with a locally-owned agent (no ServerConnectionP child) registers a socket-less
 // "local" agent (operation side = GUI / Bot): it joins the room and is reachable through
 // agent(), without creating any wire plumbing. A local agent has no socket, so there is
 // nothing to disconnect.
@@ -237,7 +237,7 @@ void tst_QMdmmNetworking::client_exposesSelfAgent()
 
 // A local (socket-less) agent plays through the async reply contract: its operation side (here
 // the test itself) answers each xxxRequested signal asynchronously via singleShot(0), never
-// synchronously. This is the end-to-end check that a local agent -- no ServerConnection, no
+// synchronously. This is the end-to-end check that a local agent -- no ServerConnectionP, no
 // socket -- can actually participate (receive a request, reply async, observe the result), not
 // merely be registered. The request/reply round-trip only completes because the reply is
 // deferred to the event loop, which is the contract's whole point.
@@ -334,7 +334,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 // accept whatever order is assigned and stop competing. Yielding is an explicit reply carrying
 // semantics, distinct from requestTimeout()'s null give-up (which makes the server answer with
 // its default reply). The 0 sentinel must round-trip the wire (ClientP encodes it into the JSON
-// array, ServerConnection decodes it back) and reach the core Logic, which counts the yield and
+// array, ServerConnectionP decodes it back) and reach the core Logic, which counts the yield and
 // hands the leftover order to the yielder. In a 3-player room p1/p2 win the RPS (Rock beats p3's
 // Scissors) and enter the action-order negotiation; p1 yields while p2 strives for order 1. p2
 // reaching the action phase is the proof that p1's yield was applied -- if the 0 sentinel had not
@@ -731,7 +731,7 @@ void tst_QMdmmNetworking::client_disconnectsOnAbnormalPacket()
     QTRY_VERIFY_WITH_TIMEOUT(connectionLost, 5000);
 }
 
-// A server-bound notify (ping) is legal client->server traffic: ServerConnection must hand it to
+// A server-bound notify (ping) is legal client->server traffic: ServerConnectionP must hand it to
 // ServerP (which answers with a pong) and must NOT treat it as abnormal. This is the complement of
 // server_disconnectsOnAbnormalPacket -- that test proves an invalid packet drops the connection,
 // this one proves a legal server-bound notify does not. The ping is written straight onto p2's raw

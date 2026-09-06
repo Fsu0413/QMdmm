@@ -33,7 +33,7 @@ QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> ServerConne
 // Extra tolerance in seconds added on top of ServerConfiguration::requestTimeout for the
 // request timer. The timer only backstops abnormal cases (D-020): a healthy client replies
 // or gives up on its own; if it does neither within requestTimeout + grace, the server
-// treats the timeout as a disconnect (see ServerConnection::requestTimeout).
+// treats the timeout as a disconnect (see ServerConnectionP::requestTimeout).
 int ServerConnectionP::requestTimeoutGracePeriod = 60;
 
 ServerConnectionP::ServerConnectionP(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent)

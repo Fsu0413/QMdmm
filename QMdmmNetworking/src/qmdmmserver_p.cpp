@@ -139,8 +139,8 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         }
 
         // Assemble the agent on the operation side (network path): create the agent (identity +
-        // controller) and its wire plumbing (ServerConnection), bind the socket, then register the
-        // whole thing with the room via addAgent. The ServerConnection is a child of the agent so
+        // controller) and its wire plumbing (ServerConnectionP), bind the socket, then register the
+        // whole thing with the room via addAgent. The ServerConnectionP is a child of the agent so
         // it travels with it; it reports socket drops as an Agent event the room listens to.
         Agent *agent = new Agent(playerName, current);
         agent->setScreenName(screenName);

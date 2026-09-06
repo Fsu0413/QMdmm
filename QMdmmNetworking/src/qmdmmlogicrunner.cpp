@@ -53,11 +53,11 @@ LogicRunner::~LogicRunner() = default;
 
 /**
  * @brief Add a pre-wired agent to the game
- * @param agent the agent to add, already wired to its operation side (ServerConnection / GUI / Bot)
+ * @param agent the agent to add, already wired to its operation side (ServerConnectionP / GUI / Bot)
  * @return the added agent, or @c nullptr if the player name already exists or @p agent is @c nullptr
  *
  * This is the unified entry point for a player. The operation side creates the @c Agent and wires
- * it up before calling this -- for the network path, ServerP also creates a @c ServerConnection
+ * it up before calling this -- for the network path, ServerP also creates a @c ServerConnectionP
  * (a child of the agent) and binds the socket on it; for a local player, GUI / Bot simply own the
  * agent. This function only registers the agent with the logic side: it inserts the agent into the
  * room, connects the agent's logic-port signals (replies / speech / operation) to the room, and
@@ -75,7 +75,7 @@ Agent *LogicRunner::addAgent(Agent *agent)
     d->agents.insert(playerName, agent);
 
     // Register the agent's wire plumbing, if the operation side created one (network path). The
-    // ServerConnection is a child of the agent so it travels with it; it reports the socket drop
+    // ServerConnectionP is a child of the agent so it travels with it; it reports the socket drop
     // as an Agent event (agentDisconnected) that the room listens to.
     if (p::ServerConnectionP *conn = agent->findChild<p::ServerConnectionP *>(); conn != nullptr) {
         connect(conn, &p::ServerConnectionP::agentDisconnected, d, &p::LogicRunnerP::agentDisconnected);
@@ -83,7 +83,7 @@ Agent *LogicRunner::addAgent(Agent *agent)
     }
 
     // Connect the agent's logic-port signals to the room (identity change / speech / operation /
-    // replies). The operation port (ServerConnection / GUI / Bot) is wired by whoever created the
+    // replies). The operation port (ServerConnectionP / GUI / Bot) is wired by whoever created the
     // agent, not here.
     connect(agent, &Agent::stateChanged, d, &p::LogicRunnerP::agentStateChanged);
     connect(agent, &Agent::spoken, d, &p::LogicRunnerP::agentSpoken);
@@ -129,12 +129,12 @@ Agent *LogicRunner::addAgent(Agent *agent)
  * @return the reconnected agent, or @c nullptr if @p agent is @c nullptr, not in this room, or still online
  *
  * A reconnect only makes sense for a player who is already in the room (the room is full, so the
- * game has started) but whose socket was cleared by @c ServerConnection::onSocketDisconnected,
+ * game has started) but whose socket was cleared by @c ServerConnectionP::onSocketDisconnected,
  * which also marked the agent offline. This is the logic-side half of a reconnect: it restores
  * the online flag (not Trust -- the "managed" flag, see @c StateMaskTrust) and resends the state
  * snapshot so the reconnecting client can rebuild its room view. The wire-side half (rebind the
  * socket + replay the missed round events) is
- * @c ServerConnection::reconnect, called by the operation side (ServerP) that owns the socket.
+ * @c ServerConnectionP::reconnect, called by the operation side (ServerP) that owns the socket.
  * The room itself only ever deals with agents, never sockets (D-018).
  */
 Agent *LogicRunner::reconnectAgent(Agent *agent)

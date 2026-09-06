@@ -91,7 +91,7 @@ void ClientP::initSelfAgent()
     // slots below. The operation side drives the Agent's bare-verb methods (rockPaperScissors /
     // actionOrder / action / upgrade) and speak / operate, which forward as the replyXxx / spoken /
     // operated signals; this client turns them back into wire packets. Mirrors the server side,
-    // where ServerConnection wires the Agent's xxxRequested / xxxNotified signals.
+    // where ServerConnectionP wires the Agent's xxxRequested / xxxNotified signals.
     connect(self, &Agent::replyRockPaperScissors, this, &ClientP::sendRockPaperScissorsReply);
     connect(self, &Agent::replyActionOrder, this, &ClientP::sendActionOrderReply);
     connect(self, &Agent::replyAction, this, &ClientP::sendActionReply);

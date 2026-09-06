@@ -363,7 +363,7 @@ namespace v0 {
  * - @c "value": the payload. Its shape depends on the requestId (for request/reply) or notifyId
  *   (for notify); see the per-ID documentation below.
  *
- * Unknown keys are preserved and ignored: @c PacketData derives from @c QJsonObject, so
+ * Unknown keys are preserved and ignored: @c PacketDataP derives from @c QJsonObject, so
  * deserialization copies the whole object and only validates the four keys above. Extra keys
  * round-trip through @c serialize() unchanged and are not rejected.
  */

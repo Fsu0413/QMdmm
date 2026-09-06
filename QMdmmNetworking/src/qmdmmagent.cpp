@@ -21,7 +21,7 @@ namespace v0 {
  * - the logic side (@c LogicRunner on the server, @c Client on the client) drives the
  *   agent through the requestXxx / notifyXxx methods and listens to the replyXxx /
  *   spoken / operated signals;
- * - the operation side (@c ServerConnection for the wire, or GUI / Bot for a local
+ * - the operation side (@c ServerConnectionP for the wire, or GUI / Bot for a local
  *   player) listens to the xxxRequested / xxxNotified signals and answers by calling
  *   the bare-verb methods (rockPaperScissors / actionOrder / action / upgrade) and
  *   speak / operate.
