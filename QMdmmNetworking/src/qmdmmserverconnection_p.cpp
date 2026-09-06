@@ -355,7 +355,8 @@ void ServerConnectionP::defaultReplyAction()
 void ServerConnectionP::defaultReplyUpgrade()
 {
     // The default reply must not leave the upgrade phase stuck: any list that fails
-    // Logic::upgradeFeasible is rejected, and a rejected reply never advances the phase. The
+    // Logic::upgradeFeasible is replaced by a feasible fallback (D-036) that still advances
+    // the phase. The
     // connection cannot build a feasible list because it has no access to each stat's
     // remaining-upgrade count (that state lives in the Logic thread's Room, not in the wire
     // layer). It therefore deliberately sends an empty list -- an infeasible reply -- and lets

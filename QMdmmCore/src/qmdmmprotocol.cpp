@@ -53,7 +53,11 @@ namespace v0 {
  * reply: @c [int] orders, one entry per selection (the reply length equals the request's
  * @c selectionNum). Each entry is either @c 0 to yield that selection -- the player accepts
  * whatever order is left over and stops competing for it -- or an order in the range
- * @c 1..maximumOrder that the player strives for.
+ * @c 1..maximumOrder that the player strives for. A reply longer than @c selectionNum is
+ * rejected at the decode layer and disconnects the client. A well-formed reply that is not
+ * feasible (a length below @c selectionNum, an order outside @c 1..maximumOrder, or a
+ * duplicated / already confirmed order) is not rejected: it falls back to yielding every
+ * selection, so a buggy or malicious agent cannot stall the ActionOrder phase.
  */
 
 /**
@@ -61,14 +65,25 @@ namespace v0 {
  * @brief A request of action
  *
  * Wire format -- request: @c int currentOrder; reply: @c {"action": int(Action),
- * "toPlayer": string (optional), "toPlace": int (optional)}.
+ * "toPlayer": string (optional), "toPlace": int (optional)}. A reply whose action is not
+ * feasible (e.g. an unknown @c toPlayer or an unaffordable action) is not rejected: it falls
+ * back to @c DoNothing, so a buggy or malicious agent cannot stall the Action phase.
  */
 
 /**
  * @var Protocol::RequestId Protocol::RequestUpgrade
  * @brief A request of upgrade
  *
- * Wire format -- request: @c int remainingTimes; reply: @c [int] item.
+ * Wire format -- request: @c int remainingTimes; reply: @c [int] item. The request's
+ * @c remainingTimes carries the player's upgrade points for this round (the value of
+ * @c Player::upgradePoint -- the wire name is a legacy mismatch, the rename is deferred to the
+ * v0 freeze); the reply must spend exactly that many points, so its length must equal
+ * @c remainingTimes. A reply longer than @c remainingTimes is rejected at the decode layer and
+ * disconnects the client. A well-formed reply that is not feasible (a length below
+ * @c remainingTimes, or an item whose stat has no upgrade points left) is not rejected: it
+ * falls back to spending every point in the order knife -> horse -> maxHp. An empty reply is a
+ * deliberate protocol value that triggers this same fallback, so a buggy or malicious agent
+ * cannot stall the Upgrade phase.
  */
 
 /**
