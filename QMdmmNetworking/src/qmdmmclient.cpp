@@ -206,7 +206,8 @@ bool Client::isConnected() const
 
 /**
  * @brief get the local room where the game state is mirrored
- * @return the local room, or @c nullptr if not yet connected
+ * @return the local room; never @c nullptr (created on construction as an empty room, before the
+ * connection is established)
  */
 QMdmmCore::Room *Client::room()
 {
@@ -215,7 +216,8 @@ QMdmmCore::Room *Client::room()
 
 /**
  * @brief get the local room where the game state is mirrored (const version)
- * @return the local room, or @c nullptr if not yet connected
+ * @return the local room; never @c nullptr (created on construction as an empty room, before the
+ * connection is established)
  */
 const QMdmmCore::Room *Client::room() const
 {
