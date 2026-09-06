@@ -11,6 +11,7 @@
 #include <QMdmmProtocol>
 #include <QMdmmRoom>
 #include <QMdmmServer>
+#include <QMdmmSocket>
 
 #include <QJsonArray>
 #include <QTcpServer>
@@ -51,6 +52,7 @@ private slots:
     void server_listenErrorAndClose();
     void client_infeasibleUpgradeReplyDoesNotStall();
     void client_disconnectDuringUpgradeStillAdvances();
+    void socket_addressSchemeWhitelist();
 };
 
 // A room that is not full has not started a game yet: a dropped socket removes the player
@@ -1056,6 +1058,24 @@ void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
     QVERIFY(p1->room()->player(p2->objectName()) != nullptr);
 
     QTRY_VERIFY_WITH_TIMEOUT(p2GameOver, 15000);
+}
+
+// The transport is chosen by a prefix whitelist on the connect address: qmdmm:// is TCP,
+// ws(s):// is WebSocket, a plain string (no "://") is a local socket, and anything else is
+// rejected. qmdmms:// is deliberately rejected too: it would silently promise TLS over a
+// still-plaintext transport.
+void tst_QMdmmNetworking::socket_addressSchemeWhitelist()
+{
+    Socket socket;
+
+    QVERIFY(socket.connectToHost(QStringLiteral("qmdmm://localhost:16378")));
+    QVERIFY(socket.connectToHost(QStringLiteral("ws://localhost:16378")));
+    QVERIFY(socket.connectToHost(QStringLiteral("wss://localhost:16378")));
+    QVERIFY(socket.connectToHost(QStringLiteral("QMdmm"))); // plain name -> local socket
+
+    QVERIFY(!socket.connectToHost(QStringLiteral("qmdmms://localhost:16378")));
+    QVERIFY(!socket.connectToHost(QStringLiteral("http://localhost:16378")));
+    QVERIFY(!socket.connectToHost(QStringLiteral("ftp://localhost:16378")));
 }
 
 namespace {

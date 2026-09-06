@@ -38,13 +38,15 @@ SocketP *create(Socket::Type type, Socket *p)
 
 Socket::Type SocketP::typeByConnectAddr(const QString &addr)
 {
-    QUrl u(addr);
-    if (!u.isValid())
-        return Socket::TypeQLocalSocket;
-    if (u.scheme() == QStringLiteral("qmdmm") || u.scheme() == QStringLiteral("qmdmms"))
+    // Prefix whitelist decides the transport. Note that qmdmms:// is deliberately NOT
+    // accepted: it would silently promise TLS over a still-plaintext transport, the
+    // worst combination. Re-add it once TLS is actually implemented.
+    if (addr.startsWith(QStringLiteral("qmdmm://")))
         return Socket::TypeQTcpSocket;
-    if (u.scheme() == QStringLiteral("ws") || u.scheme() == QStringLiteral("wss"))
+    if (addr.startsWith(QStringLiteral("ws://")) || addr.startsWith(QStringLiteral("wss://")))
         return Socket::TypeQWebSocket;
+    if (!addr.contains(QStringLiteral("://")))
+        return Socket::TypeQLocalSocket;
 
     return Socket::TypeUnknown;
 }
