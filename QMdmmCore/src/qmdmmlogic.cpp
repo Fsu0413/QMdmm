@@ -95,8 +95,8 @@ namespace v0 {
  * @note The Logic is a synchronous, reply-driven state machine: each
  * @c requestXxx signal expects a matching @c xxxReply() slot call, and that
  * reply advances the state machine (possibly emitting further requests) within
- * the same call stack. Some requests are emitted in a loop over players — for
- * example @c requestUpgrade() is emitted once per player with upgrade points —
+ * the same call stack. Some requests are emitted in a loop over players -- for
+ * example @c requestUpgrade() is emitted once per player with upgrade points --
  * so a directly-connected slot replies re-entrantly while the loop is still
  * running. This is safe by design: each phase only advances once every
  * expected reply has been collected (the reply handlers count replies and act
@@ -268,7 +268,7 @@ bool Logic::rpsReply(const QString &playerName, Data::RockPaperScissors rps)
  * The reply must contain exactly as many entries as the selections that were
  * requested from the player. Each entry is either an order the player wants to
  * strive for (in range @c 1..maximumOrderNum, not already confirmed, and not
- * duplicated) or @c 0 to yield that action opportunity — the player accepts
+ * duplicated) or @c 0 to yield that action opportunity -- the player accepts
  * whatever order is left over and stops competing for it. An invalid reply is
  * not rejected: it falls back to yielding every selection, so a buggy or
  * malicious agent cannot stall the ActionOrder phase.

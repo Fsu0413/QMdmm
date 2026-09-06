@@ -31,7 +31,7 @@ TestCase {
     function test_botObjectNameDiffersFromScreenName() {
         // 1 human + 1 auto-replying bot. The bot's internal objectName (the
         // protocol-level player identity) must stay distinct from its display
-        // screenName: addBot must not call setObjectName(name) — doing so would
+        // screenName: addBot must not call setObjectName(name) -- doing so would
         // detach the self agent's key from the sign-in playerName (A4 forbids
         // renaming). This guards the Release builds where the Debug-only Q_ASSERT
         // in ClientP::connectSocket is compiled out.
@@ -92,7 +92,7 @@ TestCase {
         // The auto-replying bot answers its own RPS request, so the human's reply
         // below completes the round and produces an rpsResult broadcast. Require the
         // human's reply to yield *at least one more* result rather than an exact
-        // count — an exact count depends on how the match advances, which is
+        // count -- an exact count depends on how the match advances, which is
         // fragile: under the old 80 ms request-timeout default the auto-advancing
         // match kept settling and the count reached 194.
         //

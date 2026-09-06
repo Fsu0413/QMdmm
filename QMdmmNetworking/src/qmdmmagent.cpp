@@ -104,7 +104,7 @@ void Agent::setState(const QMdmmCore::Data::AgentState &state)
     }
 }
 
-// Controller interface — notifications (logic side → operation side).
+// Controller interface -- notifications (logic side -> operation side).
 
 /**
  * @brief Notify the player of the logic configuration.
@@ -237,7 +237,7 @@ void Agent::notifyOperate(const QString &playerName, const QJsonValue &todo)
     emit operateNotified(playerName, todo, QPrivateSignal());
 }
 
-// Controller interface — requests (logic side → operation side).
+// Controller interface -- requests (logic side -> operation side).
 
 /**
  * @brief Request a Rock-Paper-Scissors choice.
@@ -278,7 +278,7 @@ void Agent::requestUpgrade(int remainingTimes)
     emit upgradeRequested(remainingTimes, QPrivateSignal());
 }
 
-// Controller interface — replies and player actions (operation side → logic side).
+// Controller interface -- replies and player actions (operation side -> logic side).
 
 /**
  * @brief Reply with a Rock-Paper-Scissors choice.

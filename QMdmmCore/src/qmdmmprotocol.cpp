@@ -41,7 +41,7 @@ namespace v0 {
  * @var Protocol::RequestId Protocol::RequestRockPaperScissors
  * @brief A request of Rock-Paper-Scissors
  *
- * Wire format — request: @c {"playerNames": [string], "strivedOrder": int} (a @c strivedOrder of
+ * Wire format -- request: @c {"playerNames": [string], "strivedOrder": int} (a @c strivedOrder of
  * @c 0 selects an action instead of a strived order); reply: @c int rps.
  */
 
@@ -49,10 +49,10 @@ namespace v0 {
  * @var Protocol::RequestId Protocol::RequestActionOrder
  * @brief A request of action order
  *
- * Wire format — request: @c {"remainedOrders": [int], "maximumOrder": int, "selectionNum": int};
+ * Wire format -- request: @c {"remainedOrders": [int], "maximumOrder": int, "selectionNum": int};
  * reply: @c [int] orders, one entry per selection (the reply length equals the request's
- * @c selectionNum). Each entry is either @c 0 to yield that selection — the player accepts
- * whatever order is left over and stops competing for it — or an order in the range
+ * @c selectionNum). Each entry is either @c 0 to yield that selection -- the player accepts
+ * whatever order is left over and stops competing for it -- or an order in the range
  * @c 1..maximumOrder that the player strives for.
  */
 
@@ -60,7 +60,7 @@ namespace v0 {
  * @var Protocol::RequestId Protocol::RequestAction
  * @brief A request of action
  *
- * Wire format — request: @c int currentOrder; reply: @c {"action": int(Action),
+ * Wire format -- request: @c int currentOrder; reply: @c {"action": int(Action),
  * "toPlayer": string (optional), "toPlace": int (optional)}.
  */
 
@@ -68,7 +68,7 @@ namespace v0 {
  * @var Protocol::RequestId Protocol::RequestUpgrade
  * @brief A request of upgrade
  *
- * Wire format — request: @c int remainingTimes; reply: @c [int] item.
+ * Wire format -- request: @c int remainingTimes; reply: @c [int] item.
  */
 
 /**
@@ -102,7 +102,7 @@ namespace v0 {
  * When @c protocolVersion differs from @c Protocol::version() the client disconnects: the wire
  * protocol is incompatible, so it drops the connection via @c disconnectFromHost() rather than
  * entering the auto-reconnect loop (which would re-hit the same mismatch). A @c versionNumber
- * mismatch is tolerated — the wire protocol is still compatible — and is currently a no-op.
+ * mismatch is tolerated -- the wire protocol is still compatible -- and is currently a no-op.
  */
 
 /**

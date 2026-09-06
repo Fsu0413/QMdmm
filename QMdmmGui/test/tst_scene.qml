@@ -5,7 +5,7 @@ import QtTest 1.2
 
 // Interaction smoke test for the QML scenes: loads the real StartScene from the
 // source tree (exercising its `import "."` Button import and `../assets/`
-// resolution, which the app relies on) and verifies the scene's button wiring —
+// resolution, which the app relies on) and verifies the scene's button wiring --
 // triggering the "Start game" button must emit the scene's startGameClicked
 // signal that RootItem connects to the connect scene.
 TestCase {

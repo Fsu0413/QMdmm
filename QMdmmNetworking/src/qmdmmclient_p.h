@@ -42,7 +42,7 @@ public:
     QMdmmCore::Room *room;
     // Mirror agents for every player the client knows about (the client's own agent is keyed by
     // the client's objectName, the others by their player name). `selfAgent` is a stable handle
-    // to the client's own agent — stable even if the operation side renames the client (which
+    // to the client's own agent -- stable even if the operation side renames the client (which
     // would otherwise desynchronize the objectName key), and the target every incoming notify is
     // routed to.
     QHash<QString, Agent *> agents;
