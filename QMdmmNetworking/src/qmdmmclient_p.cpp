@@ -102,6 +102,7 @@ void ClientP::initSelfAgent()
 }
 
 // Qt documentation only mentioned "auto" here
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define ONERRPRINTJSON(value)                                                     \
     auto onRet_ [[maybe_unused]] = qScopeGuard([this, value, func = __func__]() { \
         if (socket != nullptr)                                                    \

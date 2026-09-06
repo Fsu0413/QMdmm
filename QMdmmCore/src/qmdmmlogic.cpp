@@ -279,7 +279,7 @@ bool Logic::actionOrderReply(const QString &playerName, const QList<int> &desire
         if (d->state == ActionOrder) {
             const int selections = d->actionOrderRemainingSelections.value(playerName, -1);
             if (selections >= 0) {
-                const int maximumOrderNum = d->rpsForActionWinners.length();
+                const int maximumOrderNum = static_cast<int>(d->rpsForActionWinners.length());
                 QList<int> chosenOrders;
                 int yields = 0;
                 bool accepted = desiredOrder.length() == selections;

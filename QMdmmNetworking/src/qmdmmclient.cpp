@@ -62,7 +62,8 @@ const ClientConfiguration &ClientConfiguration::defaults()
     return defaultInstance;
 }
 
-#define CONVERTTOTYPEQSTRING(v) v.toString()
+#define CONVERTTOTYPEQSTRING(v) v.toString() // NOLINT(cppcoreguidelines-macro-usage)
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
     type ClientConfiguration::valueName() const                                                    \
     {                                                                                              \
@@ -70,9 +71,9 @@ const ClientConfiguration &ClientConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                               \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
     }                                                                                              \
-    void ClientConfiguration::set##ValueName(type value)                                           \
+    void ClientConfiguration::set##ValueName(type valueName)                                           \
     {                                                                                              \
-        insert(QStringLiteral(#valueName), convertToQVariant(value));                              \
+        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                              \
     }
 
 #define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
@@ -82,9 +83,9 @@ const ClientConfiguration &ClientConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void ClientConfiguration::set##ValueName(const type &value)                                     \
+    void ClientConfiguration::set##ValueName(const type &valueName)                                     \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToQVariant(value));                               \
+        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                               \
     }
 
 IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTRING, )
@@ -92,6 +93,7 @@ IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTR
 #undef IMPLEMENTATION_CONFIGURATION2
 #undef IMPLEMENTATION_CONFIGURATION
 #undef CONVERTTOTYPEQSTRING
+// NOLINTEND(bugprone-macro-parentheses)
 
 namespace {
 inline QString generateRandomString()

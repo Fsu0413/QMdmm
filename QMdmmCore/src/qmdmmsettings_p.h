@@ -73,7 +73,7 @@ struct QMDMMCORE_PRIVATE_EXPORT SettingsP
     SettingsP();
     ~SettingsP();
 
-    QSettings::Status saveConfig(Settings::Instance toBeSaved);
+    QSettings::Status saveConfig(Settings::Instance instance);
 };
 
 } // namespace p

@@ -327,7 +327,7 @@ const LogicConfiguration &LogicConfiguration::v1()
     return defaultInstance;
 }
 
-// NOLINTBEGIN(bugprone-macro-parentheses)
+// NOLINTBEGIN(bugprone-macro-parentheses,cppcoreguidelines-macro-usage)
 
 #define CONVERTTOTYPEBOOL(v) v.toBool()
 #define CONVERTTOTYPEINT(v) v.toInt()
@@ -339,12 +339,12 @@ const LogicConfiguration &LogicConfiguration::v1()
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void LogicConfiguration::set##ValueName(type value)                                             \
+    void LogicConfiguration::set##ValueName(type valueName)                                             \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToJsonValue(value));                              \
+        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                              \
     }
 
-// NOLINTEND(bugprone-macro-parentheses)
+// NOLINTEND(bugprone-macro-parentheses,cppcoreguidelines-macro-usage)
 
 IMPLEMENTATION_CONFIGURATION(int, initialKnifeDamage, InitialKnifeDamage, CONVERTTOTYPEINT, )
 IMPLEMENTATION_CONFIGURATION(int, maximumKnifeDamage, MaximumKnifeDamage, CONVERTTOTYPEINT, )

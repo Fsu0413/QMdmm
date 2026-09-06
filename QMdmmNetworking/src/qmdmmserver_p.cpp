@@ -57,6 +57,7 @@ void ServerP::pingServer(Socket *socket, const QJsonValue &packetValue)
 
 void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 {
+    // NOLINTBEGIN(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
     do {
         if (!packetValue.isObject())
             break;
@@ -155,6 +156,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
     } while (false);
 
     socket->setError({Socket::ProtocolError, {}});
+    // NOLINTEND(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
 }
 
 void ServerP::observe(Socket *socket, const QJsonValue &packetValue)

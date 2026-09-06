@@ -9,3 +9,4 @@ CMakeLists.txt.user*
 .FsEnv.cmake
 
 /build
+/build-tidy

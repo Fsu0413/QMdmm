@@ -20,7 +20,7 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
     connect(logicThread, &QThread::finished, logic, &QMdmmCore::Logic::deleteLater);
     logicThread->start();
 
-#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &LogicRunnerP::signalName, logic, &QMdmmCore::Logic::signalName, Qt::QueuedConnection)
+#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &LogicRunnerP::signalName, logic, &QMdmmCore::Logic::signalName, Qt::QueuedConnection) // NOLINT(cppcoreguidelines-macro-usage)
 
     CONNECTRUNNERTOLOGIC(addPlayer);
     CONNECTRUNNERTOLOGIC(removePlayer);
@@ -32,7 +32,7 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
 
 #undef CONNECTRUNNERTOLOGIC
 
-#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection)
+#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection) // NOLINT(cppcoreguidelines-macro-usage)
 
     CONNECTLOGICTORUNNER(requestRpsForAction);
     CONNECTLOGICTORUNNER(rpsResult);

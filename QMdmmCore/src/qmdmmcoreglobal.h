@@ -39,7 +39,7 @@
 
 #define QMDMM_EXPORT_NAME(QMdmmCoreGlobal)
 
-#include "qmdmmdebug.h"
+#include "qmdmmdebug.h" // NOLINT(misc-header-include-cycle) deliberate mutual include (guarded by include guards)
 
 namespace QMdmmCore {
 

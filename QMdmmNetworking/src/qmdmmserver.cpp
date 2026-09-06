@@ -214,10 +214,11 @@ const ServerConfiguration &ServerConfiguration::defaults()
     return defaultInstance;
 }
 
-#define CONVERTTOTYPEBOOL(v) ((v).toBool())
-#define CONVERTTOTYPEUINT16T(v) ((uint16_t)((v).toInt()))
-#define CONVERTTOTYPEQSTRING(v) ((v).toString())
-#define CONVERTTOTYPEINT(v) ((v).toInt())
+#define CONVERTTOTYPEBOOL(v) ((v).toBool())    // NOLINT(cppcoreguidelines-macro-usage)
+#define CONVERTTOTYPEUINT16T(v) ((uint16_t)((v).toInt())) // NOLINT(cppcoreguidelines-macro-usage)
+#define CONVERTTOTYPEQSTRING(v) ((v).toString()) // NOLINT(cppcoreguidelines-macro-usage)
+#define CONVERTTOTYPEINT(v) ((v).toInt())       // NOLINT(cppcoreguidelines-macro-usage)
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type ServerConfiguration::valueName() const                                                     \
     {                                                                                               \
@@ -225,9 +226,9 @@ const ServerConfiguration &ServerConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void ServerConfiguration::set##ValueName(type value)                                            \
+    void ServerConfiguration::set##ValueName(type valueName)                                            \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToJsonValue(value));                              \
+        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                              \
     }
 
 #define IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(type, valueName, ValueName, convertToType, convertToJsonValue) \
@@ -237,9 +238,9 @@ const ServerConfiguration &ServerConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                                                       \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                                                \
     }                                                                                                                      \
-    void ServerConfiguration::set##ValueName(const type &value)                                                            \
+    void ServerConfiguration::set##ValueName(const type &valueName)                                                            \
     {                                                                                                                      \
-        insert(QStringLiteral(#valueName), convertToJsonValue(value));                                                     \
+        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                                                     \
     }
 
 IMPLEMENTATION_CONFIGURATION(bool, tcpEnabled, TcpEnabled, CONVERTTOTYPEBOOL, )
@@ -258,6 +259,7 @@ IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEI
 #undef CONVERTTOTYPEUINT16T
 #undef CONVERTTOTYPEBOOL
 #undef CONVERTTOTYPEINT
+// NOLINTEND(bugprone-macro-parentheses)
 
 /**
  * @brief deserialize @c QJsonValue to @c ServerConfiguration

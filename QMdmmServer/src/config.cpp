@@ -288,6 +288,7 @@ inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::Puni
 // NOLINTNEXTLINE(readability-function-cognitive-complexity,readability-function-size)
 void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 {
+    // NOLINTBEGIN(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
 #define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                                       \
     do {                                                                                                     \
         QString s;                                                                                           \
@@ -469,6 +470,7 @@ int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance to
 #undef CONFIG_ITEM
 
     return static_cast<int>(setting->saveConfig(toSave));
+    // NOLINTEND(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
 }
 
 void Config::show_()

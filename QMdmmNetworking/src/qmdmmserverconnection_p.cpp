@@ -150,6 +150,7 @@ void ServerConnectionP::decodeRockPaperScissorsReply(const QJsonValue &value)
     // decode callback, so the executeDefaultReply() reached via setError -> onSocketDisconnected
     // is a no-op. Do not let both fire (only reachable if the currentRequest clearing is
     // reordered), or the request would receive two default replies.
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -173,6 +174,7 @@ void ServerConnectionP::decodeRockPaperScissorsReply(const QJsonValue &value)
     agent->rockPaperScissors(rps);
 
 #undef PROTOCOLERROR
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
@@ -180,6 +182,7 @@ void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
     // default reply must be emitted explicitly here.
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -209,6 +212,7 @@ void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
     agent->actionOrder(ao);
 
 #undef PROTOCOLERROR
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeActionReply(const QJsonValue &value)
@@ -216,6 +220,7 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
     // default reply must be emitted explicitly here.
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -283,6 +288,7 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
     agent->action(act, toPlayer, toPlace);
 
 #undef PROTOCOLERROR
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
@@ -290,6 +296,7 @@ void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
     // Same implicit contract as decodeRockPaperScissorsReply: the disconnect path triggered by
     // setError runs executeDefaultReply as a no-op (currentRequest is already cleared), so the
     // default reply must be emitted explicitly here.
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 #define PROTOCOLERROR                                  \
     do {                                               \
         socket->setError({Socket::ProtocolError, {}}); \
@@ -327,6 +334,7 @@ void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
     agent->upgrade(ups);
 
 #undef PROTOCOLERROR
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::defaultReplyRockPaperScissors()
