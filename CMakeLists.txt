@@ -55,9 +55,8 @@ if (BUILD_TESTING)
     list(APPEND QT6_EXTRA_COMPONENTS_NEEDED Test QuickTest)
 endif()
 
-# Note: Qt suggest users use versionless targets and functions, but if Qt 6 and Qt 5 are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
-# There are definitions to disable the versionless targets and functions, but!! But!! BUT!!!!! They DIDN'T WORK in Qt 6.2 / 5.15 combination!!!
-# Currently we are requiring Qt 6.5 and things work
+# Note: Qt suggest users use versionless targets and functions, but if multiple Qt versions are mixed in one CMakeLists.txt, it won't be an option and versioned ones should be used.
+# Previously this project is mixed with Qt 5.15 and 6.5, so we need to disable the versionless targets and functions.
 set(QT_NO_CREATE_VERSIONLESS_FUNCTIONS 1)
 set(QT_NO_CREATE_VERSIONLESS_TARGETS 1)
 

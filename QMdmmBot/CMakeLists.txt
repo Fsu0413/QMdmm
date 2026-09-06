@@ -2,6 +2,8 @@
 
 set(QMDMMBOT_SOURCES
     src/main.cpp
+    src/config.cpp
+    src/config.h
 )
 
 if (Qt6_FOUND)

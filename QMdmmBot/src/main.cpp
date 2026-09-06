@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#include "config.h"
+
 #include <QMdmmGlobal>
 #include <QMdmmServer>
 
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
+#include <QFile>
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +29,8 @@ int main(int argc, char *argv[])
         qFatal("Unable to create log file %s, exiting.", qPrintable(logFilePath));
 
     QMdmmCore::qMdmmDebugSetDevice(&logFile);
+
+    Config config;
 
     // TODO: implement
 
