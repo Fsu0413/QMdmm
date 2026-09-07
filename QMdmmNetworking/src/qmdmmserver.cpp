@@ -362,7 +362,7 @@ bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabi
         result.insert(QStringLiteral("requestTimeout"), parsed);
     }
 
-    *this = result;
+    *this = std::move(result);
     return true;
 }
 

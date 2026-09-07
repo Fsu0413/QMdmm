@@ -339,9 +339,9 @@ const LogicConfiguration &LogicConfiguration::v1()
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void LogicConfiguration::set##ValueName(type valueName)                                             \
+    void LogicConfiguration::set##ValueName(type valueName)                                         \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                              \
+        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                          \
     }
 
 // NOLINTEND(bugprone-macro-parentheses,cppcoreguidelines-macro-usage)
@@ -451,7 +451,7 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
     if (initialMaxHp > maximumMaxHp)
         return false;
 
-    *this = result;
+    *this = std::move(result);
     return true;
 }
 
