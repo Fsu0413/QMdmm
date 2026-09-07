@@ -68,7 +68,7 @@ public:
     [[nodiscard]] QMdmmCore::Room *room();
     [[nodiscard]] const QMdmmCore::Room *room() const;
 
-    Agent *agent();
+    [[nodiscard]] Agent *agent();
     [[nodiscard]] const Agent *agent() const;
 
 signals:

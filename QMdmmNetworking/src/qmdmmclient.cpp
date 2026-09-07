@@ -71,9 +71,9 @@ const ClientConfiguration &ClientConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                               \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
     }                                                                                              \
-    void ClientConfiguration::set##ValueName(type valueName)                                           \
+    void ClientConfiguration::set##ValueName(type valueName)                                       \
     {                                                                                              \
-        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                              \
+        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                          \
     }
 
 #define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
@@ -83,9 +83,9 @@ const ClientConfiguration &ClientConfiguration::defaults()
             return convertToType(value(QStringLiteral(#valueName)));                                \
         return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
     }                                                                                               \
-    void ClientConfiguration::set##ValueName(const type &valueName)                                     \
+    void ClientConfiguration::set##ValueName(const type &valueName)                                 \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                               \
+        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                           \
     }
 
 IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTRING, )
