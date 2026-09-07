@@ -166,9 +166,6 @@ Config::Config()
 
     parser.process(*qApp);
 
-    if (!parser.unknownOptionNames().isEmpty())
-        configError(QStringLiteral("Unknown option: %1"), parser.unknownOptionNames().join(QStringLiteral(", ")));
-
     if (!parser.positionalArguments().isEmpty())
         configError(QStringLiteral("Unknown argument: %1"), parser.positionalArguments().join(QStringLiteral(", ")));
 
