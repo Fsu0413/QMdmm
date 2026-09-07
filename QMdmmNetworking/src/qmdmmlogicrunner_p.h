@@ -27,6 +27,8 @@ class QMDMMNETWORKING_PRIVATE_EXPORT LogicRunnerP : public QObject
     Q_OBJECT
 
 public:
+    Q_DISABLE_COPY_MOVE(LogicRunnerP)
+
     LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int playerNumPerRoom, LogicRunner *q);
     ~LogicRunnerP() override;
 

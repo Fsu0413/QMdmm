@@ -146,7 +146,7 @@ Socket::Type Socket::type() const
  * @c socketErrorOccurred: upper layers detect protocol violations through this and learn of the
  * drop via @c socketDisconnected (mirroring the previous @c setHasError behaviour).
  */
-void Socket::setError(Error error)
+void Socket::setError(const Error &error)
 {
     if (d != nullptr) {
         d->error = error;

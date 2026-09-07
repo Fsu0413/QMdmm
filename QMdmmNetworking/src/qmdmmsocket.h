@@ -66,7 +66,7 @@ public:
 
     [[nodiscard]] Type type() const;
 
-    void setError(Error error);
+    void setError(const Error &error);
     [[nodiscard]] std::optional<Error> error() const;
     [[nodiscard]] bool hasError() const;
 

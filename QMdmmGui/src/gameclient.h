@@ -27,6 +27,8 @@ class QMdmmGameClient : public QObject
     Q_PROPERTY(int playerCount READ playerCount WRITE setPlayerCount NOTIFY playerCountChanged)
 
 public:
+    Q_DISABLE_COPY_MOVE(QMdmmGameClient)
+
     enum class GameState : uint8_t
     {
         Start,

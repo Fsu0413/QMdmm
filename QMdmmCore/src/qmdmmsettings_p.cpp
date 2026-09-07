@@ -130,6 +130,7 @@ struct InitializeQSettings
         QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
     }
+    ~InitializeQSettings() = default;
     Q_DISABLE_COPY_MOVE(InitializeQSettings);
 };
 } // namespace

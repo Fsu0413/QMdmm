@@ -32,7 +32,7 @@ public slots: // NOLINT(readability-redundant-access-specifiers)
     virtual void sendPacket(QMdmmCore::Packet packet) = 0;
     bool packetReceived(const QByteArray &arr);
     void socketDisconnected();
-    void errorOccurred(Socket::Error error);
+    void errorOccurred(const Socket::Error &error);
 };
 
 class QMDMMNETWORKING_PRIVATE_EXPORT SocketP_QTcpSocket : public SocketP

@@ -66,6 +66,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
 
 struct QMDMMCORE_PRIVATE_EXPORT SettingsP
 {
+    Q_DISABLE_COPY_MOVE(SettingsP)
+
     std::unique_ptr<QSettingsWrapperP> globalConfig;
     std::unique_ptr<QSettingsWrapperP> userConfig;
     std::unique_ptr<QVariantMapWrapperP> specifiedConfig;

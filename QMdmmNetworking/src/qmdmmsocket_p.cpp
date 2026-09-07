@@ -83,7 +83,7 @@ void SocketP::socketDisconnected()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void SocketP::errorOccurred(Socket::Error error)
+void SocketP::errorOccurred(const Socket::Error &error)
 {
     this->error = error;
     emit q->socketErrorOccurred(error, Socket::QPrivateSignal());

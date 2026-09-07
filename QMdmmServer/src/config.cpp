@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <optional>
+#include <utility>
 
 static const QString helpText = QStringLiteral(R"help(
 
@@ -88,11 +89,26 @@ namespace {
     std::exit(3);
 }
 
+// Applies each argument to the QString::arg() chain in order. Recursive (rather than a fold or an
+// initializer_list expansion) so every forwarding-reference argument is truly std::forwarded once,
+// which is what cppcoreguidelines-missing-std-forward asks for.
+inline void configErrorArgs(QString &message)
+{
+    Q_UNUSED(message);
+}
+
+template<typename T, typename... Rest>
+void configErrorArgs(QString &message, T &&arg, Rest &&...rest)
+{
+    message = message.arg(std::forward<T>(arg));
+    configErrorArgs(message, std::forward<Rest>(rest)...);
+}
+
 template<typename... Args>
 [[noreturn]] void configError(const QString &format, Args &&...args)
 {
     QString message = format;
-    (void)std::initializer_list<int> {(message = message.arg(args), 0)...};
+    configErrorArgs(message, std::forward<Args>(args)...);
     configErrorImpl(message);
 }
 
@@ -332,7 +348,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         int players = 0;
 
         // clang-format off
-        static const std::initializer_list<QString> shortForms {
+        static const std::array<QString, 8> shortForms {
             QStringLiteral("2"),
             QStringLiteral("3"),
             QStringLiteral("4"),
@@ -345,7 +361,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         // clang-format on
 
         for (size_t i = 0; i < shortForms.size(); ++i) {
-            if (parser->isSet(std::data(shortForms)[i])) {
+            if (parser->isSet(shortForms.at(i))) {
                 if (players == 0)
                     players = static_cast<int>(i + 2);
                 else

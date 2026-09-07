@@ -30,6 +30,8 @@ class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnectionP : public QObject
     static int requestTimeoutGracePeriod;
 
 public:
+    Q_DISABLE_COPY_MOVE(ServerConnectionP)
+
     ServerConnectionP(Agent *agent, const QMdmmCore::LogicConfiguration &logicConfiguration, int requestTimeout, QObject *parent = nullptr);
     ~ServerConnectionP() override;
 
