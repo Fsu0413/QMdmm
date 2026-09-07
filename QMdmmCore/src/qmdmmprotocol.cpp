@@ -563,6 +563,16 @@ bool toIntegral(const QJsonValue &value, int *out)
  *
  * This does the opposite of @c Packet::serialize() function.
  * The error, if any, is only observable through @c Packet::hasError().
+ *
+ * Deserialization enforces the same invariants as @c serialize(): a request or
+ * reply packet must carry a concrete @c Protocol::RequestId (not
+ * @c Protocol::RequestInvalid) and @c Protocol::NotifyInvalid; a notify packet
+ * must carry a concrete @c Protocol::NotifyId (not @c Protocol::NotifyInvalid)
+ * and @c Protocol::RequestInvalid; an invalid packet must carry both
+ * @c Protocol::RequestInvalid and @c Protocol::NotifyInvalid. The three enum
+ * fields (@c type, @c requestId, @c notifyId) must be integral JSON numbers:
+ * fractional values (e.g. 1.5) and out-of-range values are rejected, not
+ * silently truncated.
  */
 Packet Packet::fromJson(const QByteArray &serialized)
 {
