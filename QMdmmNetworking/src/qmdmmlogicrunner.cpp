@@ -37,7 +37,13 @@ namespace v0 {
 /**
  * @brief ctor.
  * @param logicConfiguration The configuration of the logic
- * @param playerNumPerRoom The player number per room
+ * @param playerNumPerRoom The player number per room: the maximum number of agents this room
+ * accepts before it becomes full. This is the running-time mirror of
+ * @c ServerConfiguration::playerNumPerRoom, which the @c Server reads and passes in here (the
+ * configuration is the serializable source of truth, this int is the per-game capacity). A
+ * LogicRunner takes a plain @c int rather than the whole @c ServerConfiguration on purpose: it
+ * only needs the room capacity and must not depend on the network-level settings (ports, socket
+ * names, timeouts).
  * @param parent QObject parent.
  */
 LogicRunner::LogicRunner(const QMdmmCore::LogicConfiguration &logicConfiguration, int playerNumPerRoom, QObject *parent)
