@@ -127,7 +127,7 @@ public:
     [[nodiscard]] QStringList alivePlayerNames() const;
     [[nodiscard]] int alivePlayersCount() const noexcept
     {
-        return (int)(alivePlayers().size());
+        return static_cast<int>(alivePlayers().size());
     }
     [[nodiscard]] bool isRoundOver() const noexcept
     {

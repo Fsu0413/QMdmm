@@ -41,12 +41,12 @@ public:
     explicit QMdmmGameClient(QObject *parent = nullptr);
     ~QMdmmGameClient() override;
 
-    QVariantList players() const;
-    QString gameState() const;
-    QString localName() const;
-    QVariantList chatLog() const;
-    QString statusMessage() const;
-    int playerCount() const;
+    [[nodiscard]] QVariantList players() const;
+    [[nodiscard]] QString gameState() const;
+    [[nodiscard]] QString localName() const;
+    [[nodiscard]] QVariantList chatLog() const;
+    [[nodiscard]] QString statusMessage() const;
+    [[nodiscard]] int playerCount() const;
     void setPlayerCount(int n);
 
     Q_INVOKABLE void startLocalGame(const QString &playerName);
@@ -62,13 +62,13 @@ public:
     Q_INVOKABLE void speak(const QString &text);
 
     // Helpers for the action / upgrade UI
-    Q_INVOKABLE QVariantList getActionOptions() const;
-    Q_INVOKABLE QVariantList getUpgradeOptions() const;
+    [[nodiscard]] Q_INVOKABLE QVariantList getActionOptions() const;
+    [[nodiscard]] Q_INVOKABLE QVariantList getUpgradeOptions() const;
 
     // Display-name lookups (the Room model only stores the internal player name)
-    Q_INVOKABLE QString screenName(const QString &playerName) const;
-    Q_INVOKABLE bool isYou(const QString &playerName) const;
-    Q_INVOKABLE QString placeName(int place) const;
+    [[nodiscard]] Q_INVOKABLE QString screenName(const QString &playerName) const;
+    [[nodiscard]] Q_INVOKABLE bool isYou(const QString &playerName) const;
+    [[nodiscard]] Q_INVOKABLE QString placeName(int place) const;
 
 signals:
     void playersChanged();
@@ -102,7 +102,7 @@ private:
     void reset();
     void setGameState(GameState s);
     void setStatusMessage(const QString &msg);
-    QMdmmCore::Player *localPlayer() const;
+    [[nodiscard]] QMdmmCore::Player *localPlayer() const;
     QVariantList actionListFor(const QMdmmCore::Player *from) const;
 
     QMdmmNetworking::Client *m_human = nullptr;

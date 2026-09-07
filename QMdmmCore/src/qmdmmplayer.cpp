@@ -118,7 +118,7 @@ Player::~Player() = default;
  */
 Room *Player::room()
 {
-    // We don't need extra cost for qobject_cast / dynamic_cast here, since every Player is created with Room as parent.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast): Player always has Room as parent; skip dynamic_cast cost
     return static_cast<Room *>(parent());
 }
 
@@ -128,7 +128,7 @@ Room *Player::room()
  */
 const Room *Player::room() const
 {
-    // same as above
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast): same as above
     return static_cast<const Room *>(parent());
 }
 

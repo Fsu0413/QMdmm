@@ -14,7 +14,7 @@ namespace p {
 
 struct QMDMMCORE_PRIVATE_EXPORT PlayerP final
 {
-    PlayerP(Room *room);
+    explicit PlayerP(Room *room);
 
     bool knife;
     bool horse;

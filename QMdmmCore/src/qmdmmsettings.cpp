@@ -19,7 +19,7 @@ namespace v0 {
 // This can't be simply put into the private source file, since the instance is static so...
 
 namespace {
-// NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+// NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks, cppcoreguidelines-avoid-non-const-global-variables): Q_GLOBAL_STATIC idiom
 Q_GLOBAL_STATIC(SettingsP, d)
 } // namespace
 

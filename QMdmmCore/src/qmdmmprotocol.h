@@ -97,6 +97,7 @@ struct QMDMMCORE_EXPORT PacketDataP final : public QSharedData, public QJsonObje
     PacketDataP();
     PacketDataP(v0::Protocol::PacketType type, v0::Protocol::RequestId requestId, v0::Protocol::NotifyId notifyId, const QJsonValue &value);
 
+    // NOLINTNEXTLINE(cppcoreguidelines-explicit-constructor): copy-init from QJsonObject exercised by QMdmmPacketDataCopy test
     PacketDataP(const QJsonObject &ob) noexcept(noexcept(QJsonObject(ob)));
     PacketDataP &operator=(const QJsonObject &ob) noexcept(noexcept(QJsonObject::operator=(ob)));
 
@@ -122,7 +123,7 @@ public:
     [[nodiscard]] QJsonValue value() const;
 
     [[nodiscard]] QByteArray serialize() const;
-    [[nodiscard]] operator QByteArray() const
+    [[nodiscard]] operator QByteArray() const // NOLINT(cppcoreguidelines-explicit-constructor): implicit conversion relied on by QByteArray-sink call sites
     {
         return serialize();
     }
