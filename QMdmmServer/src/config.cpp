@@ -296,7 +296,10 @@ inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::Puni
         std::make_pair(QMdmmCore::LogicConfiguration::PlusOne, QStringLiteral("PlusOne")),
     };
 
-    return strategyHash.value(value, QString());
+    // Fall back to the default strategy for unknown values so that a write-back never emits an
+    // empty string (which the next startup would reject and exit on). The deserialize() path
+    // already rejects out-of-range values; this keeps the serialize side equally total.
+    return strategyHash.value(value, QStringLiteral("RoundToNearest45"));
 }
 
 } // namespace
