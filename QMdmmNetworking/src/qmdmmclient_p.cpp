@@ -98,7 +98,7 @@ void ClientP::initSelfAgent()
     connect(self, &Agent::replyUpgrade, this, &ClientP::sendUpgradeReply);
     connect(self, &Agent::spoken, this, &ClientP::sendSpeak);
     connect(self, &Agent::operated, this, &ClientP::sendOperate);
-    connect(self, &Agent::requestTimedOut, this, &ClientP::sendRequestTimeout);
+    connect(self, &Agent::requestGivenUp, this, &ClientP::sendRequestGivenUp);
 }
 
 // Qt documentation only mentioned "auto" here
@@ -850,7 +850,7 @@ void ClientP::sendOperate(const QJsonValue &todo)
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void ClientP::sendRequestTimeout()
+void ClientP::sendRequestGivenUp()
 {
     // Give up on the current request: send a null-valued reply carrying the *current* request
     // id, then stop tracking the request locally. Null is the protocol's "give up" marker --

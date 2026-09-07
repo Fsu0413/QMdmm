@@ -282,7 +282,7 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
     QVERIFY(rpsRequests >= 2);
 }
 
-// A client whose operation side gives up on a request (Agent::requestTimeout) sends a null reply
+// A client whose operation side gives up on a request (Agent::giveUpRequest) sends a null reply
 // carrying the *correct* request id, and the server recognizes the null value as the give-up
 // marker and applies its default reply -- so the logic keeps advancing instead of stalling or
 // erroring out. Driven end-to-end over a real TCP connection: p1 (a bot) answers RPS normally,
@@ -314,7 +314,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
     int p2GiveUps = 0;
     connect(p2->agent(), &Agent::rockPaperScissorsRequested, &server, [&p2GiveUps, p2]() {
         ++p2GiveUps;
-        p2->agent()->requestTimeout();
+        p2->agent()->giveUpRequest();
     });
 
     // The observable proof: p1 receives the RPS result -- which only happens if the server
@@ -334,7 +334,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
 
 // A client yields the action-order contest by replying with a 0 sentinel -- the "yield" marker:
 // accept whatever order is assigned and stop competing. Yielding is an explicit reply carrying
-// semantics, distinct from requestTimeout()'s null give-up (which makes the server answer with
+// semantics, distinct from giveUpRequest()'s null give-up (which makes the server answer with
 // its default reply). The 0 sentinel must round-trip the wire (ClientP encodes it into the JSON
 // array, ServerConnectionP decodes it back) and reach the core Logic, which counts the yield and
 // hands the leftover order to the yielder. In a 3-player room p1/p2 win the RPS (Rock beats p3's

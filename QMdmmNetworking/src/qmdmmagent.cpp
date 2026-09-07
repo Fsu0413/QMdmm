@@ -293,7 +293,7 @@ void Agent::rockPaperScissors(QMdmmCore::Data::RockPaperScissors rps)
  * @param order the desired action order, one entry per requested selection: an order number
  * in range @c 1..maximumOrder to strive for it, or @c 0 to yield that selection (the player
  * accepts whatever order is left over and stops competing for it). Yielding is an explicit
- * reply, distinct from requestTimeout(), which gives up and lets the server answer with its
+ * reply, distinct from giveUpRequest(), which gives up and lets the server answer with its
  * default reply.
  */
 void Agent::actionOrder(const QList<int> &order)
@@ -325,12 +325,12 @@ void Agent::upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items)
  * @brief Give up on the current request (trigger the server's default reply).
  *
  * The operation side calls this instead of replying when it cannot answer the current request.
- * It forwards as the @c requestTimedOut signal, which the logic side (the client's connection)
+ * It forwards as the @c requestGivenUp signal, which the logic side (the client's connection)
  * turns into a "give up" wire reply.
  */
-void Agent::requestTimeout()
+void Agent::giveUpRequest()
 {
-    emit requestTimedOut(QPrivateSignal());
+    emit requestGivenUp(QPrivateSignal());
 }
 
 /**
@@ -507,7 +507,7 @@ void Agent::operate(const QJsonValue &todo)
  */
 
 /**
- * @fn Agent::requestTimedOut(QPrivateSignal)
+ * @fn Agent::requestGivenUp(QPrivateSignal)
  * @brief emitted when the operation side gives up on the current request
  */
 

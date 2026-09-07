@@ -73,7 +73,7 @@ public:
     void action(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace);
     void upgrade(const QList<QMdmmCore::Data::UpgradeItem> &items);
 
-    void requestTimeout();
+    void giveUpRequest();
 
     void speak(const QString &content);
     void operate(const QJsonValue &todo);
@@ -107,7 +107,7 @@ signals:
     void replyAction(QMdmmCore::Data::Action act, const QString &toPlayer, int toPlace, QPrivateSignal);
     void replyUpgrade(const QList<QMdmmCore::Data::UpgradeItem> &items, QPrivateSignal);
 
-    void requestTimedOut(QPrivateSignal);
+    void requestGivenUp(QPrivateSignal);
 
     void spoken(const QString &content, QPrivateSignal);
     void operated(const QJsonValue &todo, QPrivateSignal);
