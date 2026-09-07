@@ -4,6 +4,11 @@ set(QMDMMBOT_SOURCES
     src/main.cpp
     src/config.cpp
     src/config.h
+    src/bot.h
+    src/bot.cpp
+    src/knifePreferredBot.cpp
+    src/horsePreferredBot.cpp
+    src/rlBot.cpp
 )
 
 if (Qt6_FOUND)

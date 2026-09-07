@@ -3,7 +3,6 @@
 #include "config.h"
 
 #include <QMdmmGlobal>
-#include <QMdmmServer>
 
 #include <QCoreApplication>
 #include <QDateTime>

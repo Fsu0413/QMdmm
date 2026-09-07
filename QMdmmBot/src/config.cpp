@@ -32,11 +32,23 @@ namespace {
     std::exit(3);
 }
 
+inline void configErrorArgs(QString &message)
+{
+    Q_UNUSED(message);
+}
+
+template<typename T, typename... Rest>
+void configErrorArgs(QString &message, T &&arg, Rest &&...rest)
+{
+    message = message.arg(std::forward<T>(arg));
+    configErrorArgs(message, std::forward<Rest>(rest)...);
+}
+
 template<typename... Args>
 [[noreturn]] void configError(const QString &format, Args &&...args)
 {
     QString message = format;
-    (void)std::initializer_list<int> {(message = message.arg(args), 0)...};
+    configErrorArgs(message, std::forward<Args>(args)...);
     configErrorImpl(message);
 }
 
@@ -57,9 +69,6 @@ Config::Config()
 
     parser.process(*qApp);
 
-    if (!parser.unknownOptionNames().isEmpty())
-        configError(QStringLiteral("Unknown option: %1"), parser.unknownOptionNames().join(QStringLiteral(", ")));
-
     if (!parser.positionalArguments().isEmpty())
         configError(QStringLiteral("Unknown argument: %1"), parser.positionalArguments().join(QStringLiteral(", ")));
 
@@ -74,7 +83,7 @@ Config::Config()
 void Config::read_(QCommandLineParser *parser)
 {
     if (!parser->isSet(QStringLiteral("host")))
-        configError(QStringLiteral("..."));
+        configError(QStringLiteral("Host is required."));
     host_ = parser->value(QStringLiteral("host"));
 
     if (parser->isSet(QStringLiteral("name")))
