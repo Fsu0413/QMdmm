@@ -347,9 +347,9 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         for (size_t i = 0; i < shortForms.size(); ++i) {
             if (parser->isSet(std::data(shortForms)[i])) {
                 if (players == 0)
-                    players = (int)(i + 2);
+                    players = static_cast<int>(i + 2);
                 else
-                    configError(QStringLiteral("-%1 can't be specified alongwith -%2"), (int)(i + 2), players);
+                    configError(QStringLiteral("-%1 can't be specified alongwith -%2"), static_cast<int>(i + 2), players);
             }
         }
 

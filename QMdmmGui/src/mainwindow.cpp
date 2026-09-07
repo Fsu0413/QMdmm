@@ -24,8 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
     QQuickWidget *qw = new QQuickWidget(QStringLiteral("qrc:///qt/qml/QMdmm/Gui/qml/main.qml"), this);
 
     qw->setResizeMode(QQuickWidget::SizeViewToRootObject);
-    qw->rootContext()->setContextProperty(QStringLiteral("game"), (QObject *)game);
-    qw->rootContext()->setContextProperty(QStringLiteral("MainWindowInstance"), (QObject *)this);
+    qw->rootContext()->setContextProperty(QStringLiteral("game"), static_cast<QObject *>(game));
+    qw->rootContext()->setContextProperty(QStringLiteral("MainWindowInstance"), static_cast<QObject *>(this));
 
     setCentralWidget(qw);
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 // qmdmmglobal.h includes this header file
-#include "qmdmmcoreglobal.h" // NOLINT(misc-header-include-cycle) deliberate mutual include, see qmdmmcoreglobal.h
+#include "qmdmmcoreglobal.h" // NOLINT(misc-header-include-cycle): deliberate mutual include, see qmdmmcoreglobal.h
 
 #ifndef QMDMMDEBUG_H
 #define QMDMMDEBUG_H

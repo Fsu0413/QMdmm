@@ -174,7 +174,7 @@ void ServerConnectionP::decodeRockPaperScissorsReply(const QJsonValue &value)
     agent->rockPaperScissors(rps);
 
 #undef PROTOCOLERROR
-// NOLINTEND(cppcoreguidelines-avoid-do-while)
+    // NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
@@ -212,7 +212,7 @@ void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
     agent->actionOrder(ao);
 
 #undef PROTOCOLERROR
-// NOLINTEND(cppcoreguidelines-avoid-do-while)
+    // NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeActionReply(const QJsonValue &value)
@@ -288,7 +288,7 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
     agent->action(act, toPlayer, toPlace);
 
 #undef PROTOCOLERROR
-// NOLINTEND(cppcoreguidelines-avoid-do-while)
+    // NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
 void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
@@ -334,14 +334,16 @@ void ServerConnectionP::decodeUpgradeReply(const QJsonValue &value)
     agent->upgrade(ups);
 
 #undef PROTOCOLERROR
-// NOLINTEND(cppcoreguidelines-avoid-do-while)
+    // NOLINTEND(cppcoreguidelines-avoid-do-while)
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::defaultReplyRockPaperScissors()
 {
     agent->rockPaperScissors(static_cast<QMdmmCore::Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3));
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::defaultReplyActionOrder()
 {
     QJsonObject ob = currentRequestValue.toObject();
@@ -355,11 +357,13 @@ void ServerConnectionP::defaultReplyActionOrder()
     agent->actionOrder(ao);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::defaultReplyAction()
 {
     agent->action(QMdmmCore::Data::DoNothing, {}, 0);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::defaultReplyUpgrade()
 {
     // The default reply must not leave the upgrade phase stuck: any list that fails
@@ -476,7 +480,7 @@ void ServerConnectionP::sendAgentStateChangeNotified(const QString &playerName, 
 {
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("agentState"), static_cast<int>(QMdmmCore::Data::AgentState::Int(agentState)));
+    ob.insert(QStringLiteral("agentState"), static_cast<int>(agentState.toInt()));
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
@@ -485,7 +489,7 @@ void ServerConnectionP::sendPlayerAddNotified(const QString &playerName, const Q
     QJsonObject ob;
     ob.insert(QStringLiteral("playerName"), playerName);
     ob.insert(QStringLiteral("screenName"), screenName);
-    ob.insert(QStringLiteral("agentState"), static_cast<int>(QMdmmCore::Data::AgentState::Int(agentState)));
+    ob.insert(QStringLiteral("agentState"), static_cast<int>(agentState.toInt()));
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
@@ -644,6 +648,7 @@ void ServerConnectionP::executeDefaultReply()
     }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::receiveSpeak(const QJsonValue &value)
 {
     // The value is the Base64-encoded content sent by Client::notifySpeak. The server forwards it
@@ -651,6 +656,7 @@ void ServerConnectionP::receiveSpeak(const QJsonValue &value)
     agent->speak(value.toString());
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void ServerConnectionP::receiveOperate(const QJsonValue &value)
 {
     agent->operate(value);

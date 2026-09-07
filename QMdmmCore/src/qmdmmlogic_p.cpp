@@ -212,7 +212,7 @@ void LogicP::startActionOrder()
             actionOrderRemainingSelections.insert(it.key(), it.value());
         state = Logic::ActionOrder;
         for (QHash<QString, int>::const_iterator it = strivingActionCount.constBegin(); it != strivingActionCount.constEnd(); ++it)
-            emit q->requestActionOrder(it.key(), remainingActionOrders, (int)(rpsForActionWinners.length()), it.value(), Logic::QPrivateSignal());
+            emit q->requestActionOrder(it.key(), remainingActionOrders, static_cast<int>(rpsForActionWinners.length()), it.value(), Logic::QPrivateSignal());
     }
 }
 

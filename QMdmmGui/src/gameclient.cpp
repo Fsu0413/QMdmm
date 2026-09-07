@@ -323,13 +323,13 @@ void QMdmmGameClient::disconnectAll()
 
 void QMdmmGameClient::replyRps(int rps)
 {
-    if (m_human)
+    if (m_human != nullptr)
         m_human->agent()->rockPaperScissors(static_cast<Data::RockPaperScissors>(rps));
 }
 
 void QMdmmGameClient::replyActionOrder(const QVariantList &orders)
 {
-    if (!m_human)
+    if (m_human == nullptr)
         return;
     QList<int> ao;
     ao.reserve(orders.size());
@@ -344,19 +344,19 @@ void QMdmmGameClient::yieldActionOrder(int selectionNum)
     // selection requested, telling the server to auto-assign whatever orders are
     // left. The reply must carry exactly `selectionNum` entries (one per selection),
     // and a 0 means "accept the leftover order and stop competing for it".
-    if (m_human && selectionNum > 0)
+    if (m_human != nullptr && selectionNum > 0)
         m_human->agent()->actionOrder(QList<int>(selectionNum, 0));
 }
 
 void QMdmmGameClient::replyAction(int action, const QString &toPlayer, int toPlace)
 {
-    if (m_human)
+    if (m_human != nullptr)
         m_human->agent()->action(static_cast<Data::Action>(action), toPlayer, toPlace);
 }
 
 void QMdmmGameClient::replyUpgrade(const QVariantList &items)
 {
-    if (!m_human)
+    if (m_human == nullptr)
         return;
     QList<Data::UpgradeItem> ups;
     ups.reserve(items.size());
@@ -367,7 +367,7 @@ void QMdmmGameClient::replyUpgrade(const QVariantList &items)
 
 void QMdmmGameClient::speak(const QString &text)
 {
-    if (m_human && !text.isEmpty())
+    if (m_human != nullptr && !text.isEmpty())
         m_human->agent()->speak(text);
 }
 
