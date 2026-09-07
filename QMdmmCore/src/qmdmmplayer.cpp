@@ -589,7 +589,7 @@ bool Player::slash(Player *to)
         if (punishHpModifier > 0) {
             LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
 
-            int punishedHp;
+            int punishedHp = 0;
             switch (punishHpRoundStrategy) {
             default:
                 [[fallthrough]];
@@ -597,13 +597,13 @@ bool Player::slash(Player *to)
                 punishedHp = maxHp() / punishHpModifier;
                 break;
             case LogicConfiguration::RoundToNearest45:
-                punishedHp = ((maxHp() * 2) / punishHpModifier + 1) / 2;
+                punishedHp = (((maxHp() * 2) / punishHpModifier) + 1) / 2;
                 break;
             case LogicConfiguration::RoundUp:
                 punishedHp = (maxHp() + punishHpModifier - 1) / punishHpModifier;
                 break;
             case LogicConfiguration::PlusOne:
-                punishedHp = maxHp() / punishHpModifier + 1;
+                punishedHp = (maxHp() / punishHpModifier) + 1;
                 break;
             }
 

@@ -444,11 +444,10 @@ int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance to
 {
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
-#define CONFIG_ITEM(type, conf, settingName, settingConvert, valueName) \
-    do {                                                                \
-        type v = conf.valueName();                                      \
-        QString s = settingConvert(v);                                  \
-        setting->setValue(QStringLiteral(settingName), s);              \
+#define CONFIG_ITEM(type, conf, settingName, settingConvert, valueName)    \
+    do {                                                                   \
+        type v = conf.valueName();                                         \
+        setting->setValue(QStringLiteral(settingName), settingConvert(v)); \
     } while (false)
 
     // NOLINTEND(bugprone-macro-parentheses)

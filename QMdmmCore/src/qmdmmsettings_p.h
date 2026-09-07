@@ -15,6 +15,8 @@ namespace p {
 
 struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
 {
+    Q_DISABLE_COPY_MOVE(SettingsWrapperP)
+    SettingsWrapperP() = default;
     virtual ~SettingsWrapperP();
 
     virtual void setValue(const QString &key, const QVariant &value) = 0;
@@ -29,6 +31,7 @@ struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
 
 struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
 {
+    Q_DISABLE_COPY_MOVE(QSettingsWrapperP)
     QSettings settings;
 
     explicit QSettingsWrapperP(const QString &organization, const QString &application = {});
@@ -49,6 +52,8 @@ struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
 
 struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
 {
+    Q_DISABLE_COPY_MOVE(QVariantMapWrapperP)
+    QVariantMapWrapperP() = default;
     QVariantMap map;
     QStringList currentGroup;
 

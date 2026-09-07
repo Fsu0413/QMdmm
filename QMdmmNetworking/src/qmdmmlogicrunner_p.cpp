@@ -11,16 +11,17 @@ namespace p {
 LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int playerNumPerRoom, LogicRunner *q)
     : QObject(q)
     , q(q)
+    , logicThread(new QThread(this))
     , conf(std::move(logicConfiguration))
     , playerNumPerRoom(playerNumPerRoom)
 {
-    logicThread = new QThread(this);
     logic = new QMdmmCore::Logic(conf);
     logic->moveToThread(logicThread);
     connect(logicThread, &QThread::finished, logic, &QMdmmCore::Logic::deleteLater);
     logicThread->start();
 
-#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &LogicRunnerP::signalName, logic, &QMdmmCore::Logic::signalName, Qt::QueuedConnection) // NOLINT(cppcoreguidelines-macro-usage)
+    // NOLINTBEGIN(cppcoreguidelines-macro-usage)
+#define CONNECTRUNNERTOLOGIC(signalName) connect(this, &LogicRunnerP::signalName, logic, &QMdmmCore::Logic::signalName, Qt::QueuedConnection)
 
     CONNECTRUNNERTOLOGIC(addPlayer);
     CONNECTRUNNERTOLOGIC(removePlayer);
@@ -32,7 +33,7 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
 
 #undef CONNECTRUNNERTOLOGIC
 
-#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection) // NOLINT(cppcoreguidelines-macro-usage)
+#define CONNECTLOGICTORUNNER(signalName) connect(logic, &QMdmmCore::Logic::signalName, this, &LogicRunnerP::signalName, Qt::QueuedConnection)
 
     CONNECTLOGICTORUNNER(requestRpsForAction);
     CONNECTLOGICTORUNNER(rpsResult);
@@ -47,6 +48,7 @@ LogicRunnerP::LogicRunnerP(QMdmmCore::LogicConfiguration logicConfiguration, int
     CONNECTLOGICTORUNNER(gameOver);
 
 #undef CONNECTLOGICTORUNNER
+    // NOLINTEND(cppcoreguidelines-macro-usage)
 }
 
 void LogicRunnerP::agentStateChanged(const QMdmmCore::Data::AgentState &state)
