@@ -15,6 +15,21 @@ class Config
 public:
     Config();
 
+    [[nodiscard]] QString host() const
+    {
+        return host_;
+    }
+
+    [[nodiscard]] QString name() const
+    {
+        return name_;
+    }
+
+    [[nodiscard]] QString playingStyle() const
+    {
+        return playingStyle_;
+    }
+
 private:
     void read_(QCommandLineParser *parser);
 

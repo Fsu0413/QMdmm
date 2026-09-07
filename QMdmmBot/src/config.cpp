@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "config.h"
+#include "bot.h"
 
 #include <QMdmmSettings>
 
@@ -89,6 +90,10 @@ void Config::read_(QCommandLineParser *parser)
     if (parser->isSet(QStringLiteral("name")))
         name_ = parser->value(QStringLiteral("name"));
 
-    if (parser->isSet(QStringLiteral("playing-style")))
+    playingStyle_ = QStringLiteral("knifePreferred");
+    if (parser->isSet(QStringLiteral("playing-style"))) {
         playingStyle_ = parser->value(QStringLiteral("playing-style"));
+        if (!Bot::styleExist(playingStyle_))
+            configError(QStringLiteral("Specified playing style does not exist."));
+    }
 }

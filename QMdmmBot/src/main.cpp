@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#include "bot.h"
 #include "config.h"
 
+#include <QMdmmClient>
 #include <QMdmmGlobal>
 
 #include <QCoreApplication>
@@ -31,7 +33,18 @@ int main(int argc, char *argv[])
 
     Config config;
 
+    QMdmmNetworking::ClientConfiguration conf;
+    conf.setScreenName(config.name());
+
+    QMdmmNetworking::Client client(conf);
+
+    Bot *bot = Bot::createBot(config.playingStyle(), &client);
+
+    Q_UNUSED(bot);
+
     // TODO: implement
+
+    client.connectToHost(config.host(), QMdmmCore::Data::StateOnlineBot);
 
     return QCoreApplication::exec();
 }

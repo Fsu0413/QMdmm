@@ -20,7 +20,7 @@ public:
 
     Q_DISABLE_COPY_MOVE(Bot);
 
-    [[nodiscard]] static Bot *createBot(const QString &style);
+    [[nodiscard]] static Bot *createBot(const QString &style, QMdmmNetworking::Client *parent);
     [[nodiscard]] static bool styleExist(const QString &style);
 };
 

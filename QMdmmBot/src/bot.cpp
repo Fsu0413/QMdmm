@@ -28,10 +28,11 @@ const QMdmmNetworking::Client *Bot::client() const
     return static_cast<const QMdmmNetworking::Client *>(parent());
 }
 
-Bot *Bot::createBot(const QString &style)
+Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     // TODO: derived class
     Q_UNUSED(style);
+    Q_UNUSED(parent);
     return nullptr;
 }
 
