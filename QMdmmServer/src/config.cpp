@@ -54,8 +54,8 @@ Logic configurations:
 -i --can-buy-only-in-initial-city=<true/false> can buy only in initial city
 
 Configuration saves / examining (Only one of following can be specified):
--c --save-configuration Save configuration specified in command line and exits
--C --save-global-configuration Save configuration specified in command line to system global and exits
+-c --save-configuration Save the full resolved configuration (all items, defaults included) to the per-user scope and exit
+-C --save-global-configuration Save the full resolved configuration (all items, defaults included) to the system-global scope and exit
 -d --show-current-configuration Show current configuration as JSON
 
 )help");
