@@ -52,10 +52,10 @@ protected slots:
 // (or, for rlBot, deliberately absent) in its own translation unit. They are
 // only instantiated through Bot::createBot().
 
-class knifePreferredBot final : public Bot
+class KnifePreferredBot final : public Bot
 {
 public:
-    explicit knifePreferredBot(QMdmmNetworking::Client *parent);
+    explicit KnifePreferredBot(QMdmmNetworking::Client *parent);
 
 protected:
     void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;
@@ -64,10 +64,10 @@ protected:
     void handleUpgradeRequest(int remainingTimes) override;
 };
 
-class horsePreferredBot final : public Bot
+class HorsePreferredBot final : public Bot
 {
 public:
-    explicit horsePreferredBot(QMdmmNetworking::Client *parent);
+    explicit HorsePreferredBot(QMdmmNetworking::Client *parent);
 
 protected:
     void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;
@@ -76,10 +76,10 @@ protected:
     void handleUpgradeRequest(int remainingTimes) override;
 };
 
-class rlBot final : public Bot
+class RlBot final : public Bot
 {
 public:
-    explicit rlBot(QMdmmNetworking::Client *parent);
+    explicit RlBot(QMdmmNetworking::Client *parent);
 
 protected:
     void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;

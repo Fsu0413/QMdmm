@@ -78,11 +78,11 @@ const QMdmmNetworking::Client *Bot::client() const
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     if (style == QStringLiteral("knifePreferred"))
-        return new knifePreferredBot(parent);
+        return new KnifePreferredBot(parent);
     if (style == QStringLiteral("horsePreferred"))
-        return new horsePreferredBot(parent);
+        return new HorsePreferredBot(parent);
     if (style == QStringLiteral("rl"))
-        return new rlBot(parent);
+        return new RlBot(parent);
     return nullptr;
 }
 

@@ -2,32 +2,32 @@
 
 #include "bot.h"
 
-horsePreferredBot::horsePreferredBot(QMdmmNetworking::Client *parent)
+HorsePreferredBot::HorsePreferredBot(QMdmmNetworking::Client *parent)
     : Bot(parent)
 {
 }
 
 // The strategy is not implemented yet; these are placeholders that keep the
 // subclass concrete until the horse-preferred strategy lands.
-void horsePreferredBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
+void HorsePreferredBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
 {
     Q_UNUSED(playerNames);
     Q_UNUSED(strivedOrder);
 }
 
-void horsePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void HorsePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     Q_UNUSED(remainedOrders);
     Q_UNUSED(maximumOrder);
     Q_UNUSED(selectionNum);
 }
 
-void horsePreferredBot::handleActionRequest(int currentOrder)
+void HorsePreferredBot::handleActionRequest(int currentOrder)
 {
     Q_UNUSED(currentOrder);
 }
 
-void horsePreferredBot::handleUpgradeRequest(int remainingTimes)
+void HorsePreferredBot::handleUpgradeRequest(int remainingTimes)
 {
     Q_UNUSED(remainingTimes);
 }

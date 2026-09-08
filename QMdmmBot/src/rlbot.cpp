@@ -4,26 +4,26 @@
 
 #include <exception>
 
-rlBot::rlBot(QMdmmNetworking::Client *parent)
+RlBot::RlBot(QMdmmNetworking::Client *parent)
     : Bot(parent)
 {
     // The rl style is recognized by the configuration but not implemented yet.
     // Constructing one is a hard failure instead of silently joining a game
     // with no strategy.
-    qCritical().noquote() << QStringLiteral("The rl playing style is not implemented yet; terminating.");
+    qCritical().noquote() << QStringLiteral("The Reinforcement Learning playing style is not implemented yet. Terminating.");
     std::terminate();
 }
 
 // Unreachable at runtime (the constructor terminates), but the handlers must
-// still be defined so that rlBot stays a concrete class.
-void rlBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
+// still be defined so that RlBot stays a concrete class.
+void RlBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
 {
     Q_UNUSED(playerNames);
     Q_UNUSED(strivedOrder);
     Q_UNREACHABLE();
 }
 
-void rlBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
+void RlBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
 {
     Q_UNUSED(remainedOrders);
     Q_UNUSED(maximumOrder);
@@ -31,13 +31,13 @@ void rlBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maxim
     Q_UNREACHABLE();
 }
 
-void rlBot::handleActionRequest(int currentOrder)
+void RlBot::handleActionRequest(int currentOrder)
 {
     Q_UNUSED(currentOrder);
     Q_UNREACHABLE();
 }
 
-void rlBot::handleUpgradeRequest(int remainingTimes)
+void RlBot::handleUpgradeRequest(int remainingTimes)
 {
     Q_UNUSED(remainingTimes);
     Q_UNREACHABLE();
