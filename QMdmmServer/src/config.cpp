@@ -49,7 +49,7 @@ Logic:
   -K, --maximum-kick, --maximum-horse <5~>
                                      Maximum horse (kick) damage (default: 10).
   -m, --maxhp <7~>                   Initial max HP (default: 10).
-  -M, --maximum-maxhp <10~>          Maximum max HP (default: 20).
+  -M, --maximum-maxhp <7~>           Maximum max HP (default: 20).
   -r, --punish-hp-modifier <0,2~>    HP punish modifier; 0 disables the punishment (default: 2).
   -R, --punish-hp-round-strategy <strategy>
                                      How punished HP is rounded (default: RoundToNearest45).
@@ -71,7 +71,7 @@ Logic:
                                        kick                            3
                                        maximum-kick                    5
                                        maxhp                           7
-                                       maximum-maxhp                   10
+                                       maximum-maxhp                   7
                                        punish-hp-modifier              0
                                        punish-hp-round-strategy        RoundToNearest45
                                        zero-hp-as-dead                 false
@@ -181,7 +181,7 @@ Config::Config()
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("k"), QStringLiteral("kick"), QStringLiteral("horse")}, {}, QStringLiteral("2~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("K"), QStringLiteral("maximum-kick"), QStringLiteral("maximum-horse")}, {}, QStringLiteral("5~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("m"), QStringLiteral("maxhp")}, {}, QStringLiteral("7~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("M"), QStringLiteral("maximum-maxhp")}, {}, QStringLiteral("10~")));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("M"), QStringLiteral("maximum-maxhp")}, {}, QStringLiteral("7~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("r"), QStringLiteral("punish-hp-modifier")}, {}, QStringLiteral("0,2~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("R"), QStringLiteral("punish-hp-round-strategy")}, {}, QStringLiteral("strategy")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("z"), QStringLiteral("zero-hp-as-dead")}, {}, QStringLiteral("true/false")));
@@ -457,7 +457,7 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         {logicConfiguration_.initialHorseDamage(), 2, "kick"},
         {logicConfiguration_.maximumHorseDamage(), 5, "maximum-kick"},
         {logicConfiguration_.initialMaxHp(), 7, "maxhp"},
-        {logicConfiguration_.maximumMaxHp(), 10, "maximum-maxhp"},
+        {logicConfiguration_.maximumMaxHp(), 7, "maximum-maxhp"},
     });
     for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)
