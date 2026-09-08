@@ -58,23 +58,25 @@ Logic:
                                        PlusOne             round down, then add 1 (1.5 -> 2)
                                        RoundUp             round up (1.1 -> 2)
                                        RoundToNearest45    round to nearest (1.4 -> 1, 1.5 -> 2)
-  -z, --zero-hp-as-dead <true/false> Treat zero HP as dead (default: true).
-  -f, --enable-let-move <true/false> Enable "let move" (default: true).
+  -z, --zero-hp-as-dead <true/false>
+                                     Treat zero HP as dead (default: true).
+  -f, --enable-let-move <true/false>
+                                     Enable "let move" (default: true).
   -i, --can-buy-only-in-initial-city <true/false>
                                      Only allow buying in the initial city (default: false).
-  -1, --use-v1-presets               Use following preset instead of default for overriding
-                                     above config items:
-                                       slash = 1
-                                       maximum-slash = 3
-                                       kick = 3
-                                       maximum-kick = 5
-                                       maxhp = 7
-                                       maximum-maxhp = 10
-                                       punish-hp-modifier = 0
-                                       punish-hp-round-strategy = RoundToNearest45
-                                       zero-hp-as-dead = false
-                                       enable-let-move = false
-                                       can-buy-only-in-initial-city = false
+  -1, --use-v1-presets               Use the v1 presets instead of the defaults
+                                     (explicit options still override):
+                                       slash                           1
+                                       maximum-slash                   3
+                                       kick                            3
+                                       maximum-kick                    5
+                                       maxhp                           7
+                                       maximum-maxhp                   10
+                                       punish-hp-modifier              0
+                                       punish-hp-round-strategy        RoundToNearest45
+                                       zero-hp-as-dead                 false
+                                       enable-let-move                 false
+                                       can-buy-only-in-initial-city    false
 
 Configuration save / inspect:
   -c, --save-configuration           Save the full resolved configuration (all items, defaults
