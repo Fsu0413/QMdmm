@@ -18,46 +18,59 @@
 #include <optional>
 #include <utility>
 
-static const QString helpText = QStringLiteral(R"help(
+static const QString helpText = QStringLiteral(R"help(Usage: QMdmmServer [options]
 
--h --help
--v --version
+Options:
+  -h, --help                         Show this help text and exit.
+  -v, --version                      Show version information and exit.
 
-TCP options:
--t --tcp=<on/off> Enable TCP
--p --tcp-port=<port> TCP listen port
+Network transports (each can be enabled or disabled independently):
+  -t, --tcp <on/off>                 Enable the TCP server (default: on).
+  -p, --tcp-port <port>              TCP listen port (default: 6366).
+  -l, --local <on/off>               Enable the local socket server (default: on).
+  -L, --local-name <name>            Local socket name (default: "QMdmm").
+  -w, --websocket <on/off>           Enable the WebSocket server (default: on).
+  -W, --websocket-name <name>        WebSocket name (default: "QMdmm").
+  -P, --websocket-port <port>        WebSocket listen port (default: 6367).
 
-LocalSocket options:
--l --local=<on/off> Enable local socket
--L --local-name=<name> local socket name
+Room and connection:
+  -n, --players <2~>                 Player number per room (default: 3). Nine is the soft cap:
+                                     above it rock-paper-scissors ties become more likely.
+  -2, -3, -4, -5, -6, -7, -8, -9     Shorthand for --players=<N> (for example -4 is equivalent
+                                     to --players=4).
+  -o, --timeout <0,15~>              Operation timeout in seconds; 0 disables the timeout
+                                     (default: 20).
 
-WebSocket options:
--w --websocket=<on/off> Enable WebSocket
--W --websocket-name=<name> WebSocket name
--P --websocket-port=<port> WebSocket listen port
+Logic:
+  -s, --slash, --knife <1~>          Initial knife (slash) damage (default: 1).
+  -S, --maximum-slash, --maximum-knife <5~>
+                                     Maximum knife (slash) damage (default: 10).
+  -k, --kick, --horse <2~>           Initial horse (kick) damage (default: 2).
+  -K, --maximum-kick, --maximum-horse <5~>
+                                     Maximum horse (kick) damage (default: 10).
+  -m, --maxhp <7~>                   Initial max HP (default: 10).
+  -M, --maximum-maxhp <10~>          Maximum max HP (default: 20).
+  -r, --punish-hp-modifier <0,2~>    HP punish modifier; 0 disables the punishment (default: 2).
+  -R, --punish-hp-round-strategy <strategy>
+                                     How punished HP is rounded (default: RoundToNearest45).
+                                     One of:
+                                       RoundDown           round down (1.5 -> 1)
+                                       PlusOne             round down, then add 1 (1.5 -> 2)
+                                       RoundUp             round up (1.1 -> 2)
+                                       RoundToNearest45    round to nearest (1.4 -> 1, 1.5 -> 2)
+  -z, --zero-hp-as-dead <true/false> Treat zero HP as dead (default: true).
+  -f, --enable-let-move <true/false> Enable "let move" (default: true).
+  -i, --can-buy-only-in-initial-city <true/false>
+                                     Only allow buying in the initial city (default: false).
 
-LogicRunner configurations:
--n --players=<2~> player number per Room
--o --timeout=<0,15~> operation timeout
+Configuration save / inspect:
+  -c, --save-configuration           Save the full resolved configuration (all items, defaults
+                                     included) to the per-user scope and exit.
+  -C, --save-global-configuration    Save the full resolved configuration (all items, defaults
+                                     included) to the system-global scope and exit.
+  -d, --show-current-configuration   Print the current configuration as JSON.
 
-Logic configurations:
--s --slash=, --knife=<1~> initial knife (slash) damage
--S --maximum-slash=, --maximum-knife=<5~> maximum knife (slash) damage
--k --kick=, --horse=<2~> initial horse (kick) damage
--K --maximum-kick=, --maximum-horse=<5~> maximum horse (kick) damage
--m --maxhp=<7~> initial max hp
--M --maximum-maxhp=<10~> maximum max hp
--r --punish-hp-modifier=<0,2~> punish hp modifier
--R --punish-hp-round-strategy=<strategy> punish hp round strategy (see below)
--z --zero-hp-as-dead=<true/false> treat zero hp as dead
--f --enable-let-move=<true/false> enable "let move"
--i --can-buy-only-in-initial-city=<true/false> can buy only in initial city
-
-Configuration saves / examining (Only one of following can be specified):
--c --save-configuration Save the full resolved configuration (all items, defaults included) to the per-user scope and exit
--C --save-global-configuration Save the full resolved configuration (all items, defaults included) to the system-global scope and exit
--d --show-current-configuration Show current configuration as JSON
-
+Value ranges: <min~> means "at least min"; <0,min~> means "0, or at least min".
 )help");
 
 // NOLINTNEXTLINE(readability-avoid-unconditional-preprocessor-if)
