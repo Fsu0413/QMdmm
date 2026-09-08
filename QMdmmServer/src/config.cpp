@@ -189,6 +189,8 @@ Config::Config()
     if (isShowSet)
         show_();
     if (toSave != QMdmmCore::Settings::Specified)
+        // save_() returns saveConfig()'s QSettings::Status cast to int, and that value is used
+        // directly as the process exit code: NoError exits 0, any error status exits non-zero.
         std::exit(save_(&setting, toSave));
     if (isShowSet)
         std::exit(0);
@@ -365,13 +367,13 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
                 if (players == 0)
                     players = static_cast<int>(i + 2);
                 else
-                    configError(QStringLiteral("-%1 can't be specified alongwith -%2"), static_cast<int>(i + 2), players);
+                    configError(QStringLiteral("-%1 can't be specified along with -%2"), static_cast<int>(i + 2), players);
             }
         }
 
         if (players != 0) {
             if (parser->isSet(QStringLiteral("players")))
-                configError(QStringLiteral("-%1 can't be specified alongwith -n / --players"), players);
+                configError(QStringLiteral("-%1 can't be specified along with -n / --players"), players);
 
             serverConfiguration_.setPlayerNumPerRoom(players);
         } else {

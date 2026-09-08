@@ -6,7 +6,7 @@ set(QMDMMSERVER_SOURCES
     src/config.h
 )
 
-if (Qt6_FOUND)    
+if (Qt6_FOUND)
     if (ANDROID)
         # TODO: investigate the *CORRECT* method not using qt6_add_executable in Android platform
         # This was meant to be built as an executable run by QProcess
