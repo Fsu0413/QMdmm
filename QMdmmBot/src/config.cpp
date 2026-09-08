@@ -9,18 +9,22 @@
 
 #include <iostream>
 
-static const QString helpText = QStringLiteral(R"help(
+static const QString helpText = QStringLiteral(R"help(Usage: QMdmmBot [options]
 
--h --help
--v --version
+Options:
+  -h, --help                         Show this help text and exit.
+  -v, --version                      Show version information and exit.
 
-Connection options:
--l --host=<host url / connection string>
--n --name=<screen name>
+Connection:
+  -l, --host <host url>              Server address to connect to (required).
+  -n, --name <screen name>           Screen name shown to other players (default: empty).
 
-Bot options:
--s --playing-style=<styles>
-
+Bot:
+  -s, --playing-style <style>        Playing style of this bot (default: knifePreferred).
+                                     One of:
+                                       knifePreferred      prefer the knife
+                                       horsePreferred      prefer the horse
+                                       rl                  reinforcement learning (not implemented)
 )help");
 
 namespace {
