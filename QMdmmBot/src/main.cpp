@@ -20,16 +20,20 @@ int main(int argc, char *argv[])
 
     QString logDirectory = QStringLiteral(QMDMM_RUNTIME_DATA_PREFIX "/log");
 
-    if (!QDir().mkpath(logDirectory))
-        qFatal("Unable to create log directory %s, exiting.", qPrintable(logDirectory));
+    if (QDir().mkpath(logDirectory)) {
+        QString logFilePath = QDir(logDirectory).absoluteFilePath(QStringLiteral("QMdmmBot-") + QString::number(QDateTime::currentMSecsSinceEpoch()));
+        QFile *logFile = new QFile(logFilePath);
 
-    QString logFilePath = QDir(logDirectory).absoluteFilePath(QStringLiteral("QMdmmBot-") + QString::number(QDateTime::currentMSecsSinceEpoch()));
-    QFile logFile(logFilePath);
-
-    if (!logFile.open(QIODevice::WriteOnly))
-        qFatal("Unable to create log file %s, exiting.", qPrintable(logFilePath));
-
-    QMdmmCore::qMdmmDebugSetDevice(&logFile);
+        if (logFile->open(QIODevice::WriteOnly)) {
+            logFile->setParent(&a);
+            QMdmmCore::qMdmmDebugSetDevice(logFile);
+        } else {
+            delete logFile;
+            qCritical("Unable to create log file %s .", qPrintable(logFilePath));
+        }
+    } else {
+        qCritical("Unable to create log directory %s .", qPrintable(logDirectory));
+    }
 
     Config config;
 
