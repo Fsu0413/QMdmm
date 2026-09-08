@@ -4,7 +4,7 @@ A networked, turn-based battle game built with Qt 6 / C++20. It recreates a
 schoolyard game that was popular during recess — a light strategy brawler where
 you buy gear, pick fights, and level up to win.
 
-> Eight years in the making: the engine is largely done, the frontend steering
+> Nine years in the making: the engine is largely done, the frontend steering
 > wheel is still on the drawing board.
 
 ## The game
@@ -77,11 +77,18 @@ Requirements:
 - A C++20 compiler
 
 ```sh
-qt-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-ninja -C build
+cd ../
+mkdir build-QMdmm-Release
+cd build-QMdmm-Release
+cmake \
+   -DCMAKE_PREFIX_PATH=/path/to/Qt \
+   -GNinja \
+   -DCMAKE_BUILD_TYPE=Release \
+   ../QMdmm
+cmake --build . --parallel --
 ```
 
-Add `-DBUILD_TESTING=ON` to enable tests. Binaries land in `build/build/bin/`.
+Add `-DBUILD_TESTING=ON` to enable tests. Binaries land in `../build-QMdmm-Release/build/bin/`.
 
 ## Running
 
@@ -89,7 +96,7 @@ Start the server first (TCP on port 6366 and WebSocket on port 6367 by
 default):
 
 ```sh
-./build/build/bin/QMdmmServer6
+../build-QMdmm-Release/build/bin/QMdmmServer6
 ```
 
 The server accepts a full set of command-line options (room size, damage
@@ -97,7 +104,7 @@ values, timeouts, transport toggles, ...). Run `--help` to see the table. Then
 start a client:
 
 ```sh
-./build/build/bin/QMdmm6
+../build-QMdmm-Release/build/bin/QMdmm6
 ```
 
 ## Testing
@@ -105,7 +112,8 @@ start a client:
 Enable `BUILD_TESTING` at configure time, then:
 
 ```sh
-ctest --test-dir build --output-on-failure
+cd ../build-QMdmm-Release
+ctest --test-dir . --output-on-failure
 ```
 
 ## Network protocol
