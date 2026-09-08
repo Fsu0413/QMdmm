@@ -43,7 +43,7 @@ Room and connection:
 
 Logic:
   -s, --slash, --knife <1~>          Initial knife (slash) damage (default: 1).
-  -S, --maximum-slash, --maximum-knife <5~>
+  -S, --maximum-slash, --maximum-knife <3~>
                                      Maximum knife (slash) damage (default: 10).
   -k, --kick, --horse <2~>           Initial horse (kick) damage (default: 2).
   -K, --maximum-kick, --maximum-horse <5~>
@@ -62,6 +62,19 @@ Logic:
   -f, --enable-let-move <true/false> Enable "let move" (default: true).
   -i, --can-buy-only-in-initial-city <true/false>
                                      Only allow buying in the initial city (default: false).
+  -1, --use-v1-presets               Use following preset instead of default for overriding
+                                     above config items:
+                                       slash = 1
+                                       maximum-slash = 3
+                                       kick = 3
+                                       maximum-kick = 5
+                                       maxhp = 7
+                                       maximum-maxhp = 10
+                                       punish-hp-modifier = 0
+                                       punish-hp-round-strategy = RoundToNearest45
+                                       zero-hp-as-dead = false
+                                       enable-let-move = false
+                                       can-buy-only-in-initial-city = false
 
 Configuration save / inspect:
   -c, --save-configuration           Save the full resolved configuration (all items, defaults
@@ -77,7 +90,7 @@ Value ranges: <min~> means "at least min"; <0,min~> means "0, or at least min".
 #if 0
 ab  e g  j    q  u  xy
 AB DEFGHIJ NO Q TUV XYZ
-01
+0
 #endif
 
 // Reports a fatal configuration error and exits with code 3.
@@ -162,7 +175,7 @@ Config::Config()
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("o"), QStringLiteral("timeout")}, {}, QStringLiteral("0,15~")));
 
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("s"), QStringLiteral("slash"), QStringLiteral("knife")}, {}, QStringLiteral("1~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("S"), QStringLiteral("maximum-slash"), QStringLiteral("maximum-knife")}, {}, QStringLiteral("5~")));
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("S"), QStringLiteral("maximum-slash"), QStringLiteral("maximum-knife")}, {}, QStringLiteral("3~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("k"), QStringLiteral("kick"), QStringLiteral("horse")}, {}, QStringLiteral("2~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("K"), QStringLiteral("maximum-kick"), QStringLiteral("maximum-horse")}, {}, QStringLiteral("5~")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("m"), QStringLiteral("maxhp")}, {}, QStringLiteral("7~")));
@@ -172,6 +185,8 @@ Config::Config()
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("z"), QStringLiteral("zero-hp-as-dead")}, {}, QStringLiteral("true/false")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("f"), QStringLiteral("enable-let-move")}, {}, QStringLiteral("true/false")));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("i"), QStringLiteral("can-buy-only-in-initial-city")}, {}, QStringLiteral("true/false")));
+
+    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("1"), QStringLiteral("use-v1-presets")}));
 
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("c"), QStringLiteral("save-configuration")}));
     parser.addOption(QCommandLineOption(QStringList {QStringLiteral("C"), QStringLiteral("save-global-configuration")}));
@@ -408,6 +423,9 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 
     setting->beginGroup(QStringLiteral("logic"));
 
+    if (parser->isSet(QStringLiteral("1")))
+        logicConfiguration_ = QMdmmCore::LogicConfiguration::v1();
+
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", stringToInt, MaximumKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "kick", stringToInt, InitialHorseDamage);
@@ -431,14 +449,14 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         int min;
         const char *name;
     };
-    const std::array<RangeCheck, 6> rangeChecks {{
+    const std::array rangeChecks = std::to_array<RangeCheck>({
         {logicConfiguration_.initialKnifeDamage(), 1, "slash"},
-        {logicConfiguration_.maximumKnifeDamage(), 5, "maximum-slash"},
+        {logicConfiguration_.maximumKnifeDamage(), 3, "maximum-slash"},
         {logicConfiguration_.initialHorseDamage(), 2, "kick"},
         {logicConfiguration_.maximumHorseDamage(), 5, "maximum-kick"},
         {logicConfiguration_.initialMaxHp(), 7, "maxhp"},
         {logicConfiguration_.maximumMaxHp(), 10, "maximum-maxhp"},
-    }};
+    });
     for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)
             configError(QStringLiteral("Config item %1 must be at least %2 (got %3)"), check.name, check.min, check.value);
