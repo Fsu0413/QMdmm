@@ -10,6 +10,7 @@ rlBot::rlBot(QMdmmNetworking::Client *parent)
     // The rl style is recognized by the configuration but not implemented yet.
     // Constructing one is a hard failure instead of silently joining a game
     // with no strategy.
+    qCritical().noquote() << QStringLiteral("The rl playing style is not implemented yet; terminating.");
     std::terminate();
 }
 
@@ -19,6 +20,7 @@ void rlBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int s
 {
     Q_UNUSED(playerNames);
     Q_UNUSED(strivedOrder);
+    Q_UNREACHABLE();
 }
 
 void rlBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
@@ -26,14 +28,17 @@ void rlBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maxim
     Q_UNUSED(remainedOrders);
     Q_UNUSED(maximumOrder);
     Q_UNUSED(selectionNum);
+    Q_UNREACHABLE();
 }
 
 void rlBot::handleActionRequest(int currentOrder)
 {
     Q_UNUSED(currentOrder);
+    Q_UNREACHABLE();
 }
 
 void rlBot::handleUpgradeRequest(int remainingTimes)
 {
     Q_UNUSED(remainingTimes);
+    Q_UNREACHABLE();
 }
