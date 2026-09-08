@@ -30,14 +30,13 @@ public:
 
 protected slots:
     // Request handlers: invoked when the server asks this bot to make a choice.
-    // Virtual so each style subclass can override them with its own strategy.
-    // The base implementation does nothing, so a bot without a strategy simply
-    // does not answer (the match cannot progress, which is acceptable because
-    // the base class is abstract and never used directly).
-    virtual void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder);
-    virtual void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum);
-    virtual void handleActionRequest(int currentOrder);
-    virtual void handleUpgradeRequest(int remainingTimes);
+    // Pure virtual so each style subclass is forced to answer with its own
+    // strategy; a bot that never answers would otherwise stall the match until
+    // the server times it out and disconnects it.
+    virtual void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) = 0;
+    virtual void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) = 0;
+    virtual void handleActionRequest(int currentOrder) = 0;
+    virtual void handleUpgradeRequest(int remainingTimes) = 0;
 
     // Notification handlers: invoked when the server broadcasts game progress.
     // Virtual for the same reason -- style subclasses track the match here.
@@ -47,6 +46,46 @@ protected slots:
     virtual void handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
     virtual void handleRoundOverNotified();
     virtual void handleGameOverNotified(const QStringList &playerNames);
+};
+
+// The three playing styles. Each is a concrete Bot whose strategy is implemented
+// (or, for rlBot, deliberately absent) in its own translation unit. They are
+// only instantiated through Bot::createBot().
+
+class knifePreferredBot final : public Bot
+{
+public:
+    explicit knifePreferredBot(QMdmmNetworking::Client *parent);
+
+protected:
+    void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;
+    void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override;
+    void handleActionRequest(int currentOrder) override;
+    void handleUpgradeRequest(int remainingTimes) override;
+};
+
+class horsePreferredBot final : public Bot
+{
+public:
+    explicit horsePreferredBot(QMdmmNetworking::Client *parent);
+
+protected:
+    void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;
+    void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override;
+    void handleActionRequest(int currentOrder) override;
+    void handleUpgradeRequest(int remainingTimes) override;
+};
+
+class rlBot final : public Bot
+{
+public:
+    explicit rlBot(QMdmmNetworking::Client *parent);
+
+protected:
+    void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override;
+    void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override;
+    void handleActionRequest(int currentOrder) override;
+    void handleUpgradeRequest(int remainingTimes) override;
 };
 
 #endif

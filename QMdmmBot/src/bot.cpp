@@ -25,36 +25,10 @@ Bot::Bot(QMdmmNetworking::Client *parent)
     connect(agent, &QMdmmNetworking::Agent::gameOverNotified, this, &Bot::handleGameOverNotified);
 }
 
-// There are no other suitable pure virtual functions so...
-// let's make the dtor pure virtual so that it must be inherited
+// Bot is abstract because the four request handlers are pure virtual (a style
+// subclass must override all of them to become concrete). The destructor is
+// also pure virtual and gets a defaulted definition here.
 Bot::~Bot() = default;
-
-// Request handlers: the base implementations do nothing. Style subclasses
-// override them to reply through the agent's bare-verb methods with their
-// strategy.
-
-void Bot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
-{
-    Q_UNUSED(playerNames);
-    Q_UNUSED(strivedOrder);
-}
-
-void Bot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)
-{
-    Q_UNUSED(remainedOrders);
-    Q_UNUSED(maximumOrder);
-    Q_UNUSED(selectionNum);
-}
-
-void Bot::handleActionRequest(int currentOrder)
-{
-    Q_UNUSED(currentOrder);
-}
-
-void Bot::handleUpgradeRequest(int remainingTimes)
-{
-    Q_UNUSED(remainingTimes);
-}
 
 // Notification handlers: the base implementations do nothing. Style subclasses
 // override them to maintain their own view of the match.
@@ -103,15 +77,16 @@ const QMdmmNetworking::Client *Bot::client() const
 
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
-    // TODO: derived class
-    Q_UNUSED(style);
-    Q_UNUSED(parent);
+    if (style == QStringLiteral("knifePreferred"))
+        return new knifePreferredBot(parent);
+    if (style == QStringLiteral("horsePreferred"))
+        return new horsePreferredBot(parent);
+    if (style == QStringLiteral("rl"))
+        return new rlBot(parent);
     return nullptr;
 }
 
 bool Bot::styleExist(const QString &style)
 {
-    // TODO: derived class
-    Q_UNUSED(style);
-    return false;
+    return style == QStringLiteral("knifePreferred") || style == QStringLiteral("horsePreferred") || style == QStringLiteral("rl");
 }

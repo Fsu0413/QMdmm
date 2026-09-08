@@ -91,9 +91,11 @@ void Config::read_(QCommandLineParser *parser)
         name_ = parser->value(QStringLiteral("name"));
 
     playingStyle_ = QStringLiteral("knifePreferred");
-    if (parser->isSet(QStringLiteral("playing-style"))) {
+    if (parser->isSet(QStringLiteral("playing-style")))
         playingStyle_ = parser->value(QStringLiteral("playing-style"));
-        if (!Bot::styleExist(playingStyle_))
-            configError(QStringLiteral("Specified playing style does not exist."));
-    }
+
+    // Validate the resolved style uniformly (default included), so the
+    // whitelist in Bot::styleExist is the single source of truth.
+    if (!Bot::styleExist(playingStyle_))
+        configError(QStringLiteral("Specified playing style does not exist."));
 }
