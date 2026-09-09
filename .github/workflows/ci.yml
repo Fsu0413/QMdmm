@@ -7,6 +7,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Source is pure ASCII
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check non-ASCII characters
+        run: |
+          if LC_ALL=C grep -rn $'[^\t -~]' \
+              --include='*.cpp' --include='*.h' --include='*.qml' .; then
+            echo "::error:: non-ASCII characters found in source files (see above)"
+            exit 1
+          fi
+
   build:
     name: Build & test (${{ matrix.os }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.os }}
