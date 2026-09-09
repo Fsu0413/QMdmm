@@ -176,7 +176,7 @@ CheckOptions:
   cppcoreguidelines-no-malloc.Deallocations: '::free'
   cppcoreguidelines-no-malloc.Reallocations: '::realloc'
   cppcoreguidelines-no-suspend-with-lock.LockGuards: '::std::unique_lock;::std::scoped_lock;::std::shared_lock;::std::lock_guard'
-  cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses: '::std::map;::std::unordered_map;::std::flat_map'
+  cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses: '::std::map;::std::unordered_map;::std::flat_map;::QMap;::QHash'
   cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.FixFunction: 'gsl::at'
   cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.FixFunctionEmptyArgs: 'gsl::at'
   cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.FixMode: none
