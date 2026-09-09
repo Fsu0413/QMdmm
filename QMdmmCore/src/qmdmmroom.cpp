@@ -369,10 +369,11 @@ IMPLEMENTATION_CONFIGURATION(bool, canBuyOnlyInInitialCity, CanBuyOnlyInInitialC
  * @return if the deserialize succeeded.
  * @note It is possible to convert the value to @c QJsonObject and directly assign the value, since this class inherits @c QJsonObject, but the value check in this function will be nonexistent then.
  *
- * The value must be an object containing every configuration key. Each numeric field must be a non-negative
- * whole number (fractions, NaN and negative values are rejected); @c punishHpRoundStrategy must be a valid
- * @c PunishHpRoundStrategy; and each "initial" value must not exceed its "maximum" counterpart
- * (e.g. @c initialKnifeDamage <= @c maximumKnifeDamage).
+ * The value must be an object. Any absent key falls back to its default value (as returned by
+ * @c defaults()), so a partial or empty object is accepted; a present key must still be valid. Each
+ * numeric field must be a non-negative whole number (fractions, NaN and negative values are rejected);
+ * @c punishHpRoundStrategy must be a valid @c PunishHpRoundStrategy; and each "initial" value must not
+ * exceed its "maximum" counterpart (e.g. @c initialKnifeDamage <= @c maximumKnifeDamage).
  */
 bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readability-function-cognitive-complexity)
 {

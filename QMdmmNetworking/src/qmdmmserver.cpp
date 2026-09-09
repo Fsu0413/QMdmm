@@ -267,11 +267,13 @@ IMPLEMENTATION_CONFIGURATION(int, requestTimeout, RequestTimeout, CONVERTTOTYPEI
  * @return if the deserialize succeeded
  * @note It is possible to convert the value to @c QJsonObject and directly assign the value, since this class inherits @c QJsonObject, but the value check in this function will be nonexistent then.
  *
- * The value must be an object containing every configuration key. Boolean fields must be booleans and
- * string fields must be strings; every numeric field must be a whole number (fractions, NaN and negatives
- * are rejected). Ports must be in [1, 65535] (port 0 is reserved); @c playerNumPerRoom must be at least 2
- * (a game needs an opponent for rock-paper-scissors action-order resolution); @c requestTimeout is either
- * 0 (no explicit timeout, grace only) or at least 15 seconds. Unknown keys are ignored.
+ * The value must be an object. Any absent key falls back to its default value (as returned by
+ * @c defaults()), so a partial or empty object is accepted; a present key must still be valid. Boolean
+ * fields must be booleans and string fields must be strings; every numeric field must be a whole number
+ * (fractions, NaN and negatives are rejected). Ports must be in [1, 65535] (port 0 is reserved);
+ * @c playerNumPerRoom must be at least 2 (a game needs an opponent for rock-paper-scissors action-order
+ * resolution); @c requestTimeout is either 0 (no explicit timeout, grace only) or at least 15 seconds.
+ * Unknown keys are ignored.
  */
 bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readability-function-cognitive-complexity)
 {
