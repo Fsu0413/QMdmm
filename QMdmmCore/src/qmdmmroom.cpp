@@ -382,14 +382,14 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
     const QJsonObject ob = value.toObject();
     QJsonObject result;
 
-    int initialKnifeDamage = 0;
-    int maximumKnifeDamage = 0;
-    int initialHorseDamage = 0;
-    int maximumHorseDamage = 0;
-    int initialMaxHp = 0;
-    int maximumMaxHp = 0;
-    int punishHpModifier = 0;
-    int punishHpRoundStrategy = 0;
+    int initialKnifeDamage = defaults().initialKnifeDamage();
+    int maximumKnifeDamage = defaults().maximumKnifeDamage();
+    int initialHorseDamage = defaults().initialHorseDamage();
+    int maximumHorseDamage = defaults().maximumHorseDamage();
+    int initialMaxHp = defaults().initialMaxHp();
+    int maximumMaxHp = defaults().maximumMaxHp();
+    int punishHpModifier = defaults().punishHpModifier();
+    int punishHpRoundStrategy = static_cast<int>(defaults().punishHpRoundStrategy());
 
     // A numeric field must be a non-negative whole number: JSON numbers are doubles, so reject fractions
     // (e.g. 1.5), NaN, negatives, and values that do not fit in an int, which toInt() would otherwise
@@ -406,33 +406,33 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
         return true;
     };
 
-#define CONF_INT(member, out)                                                      \
-    {                                                                              \
-        if (!ob.contains(QStringLiteral(#member)))                                 \
-            return false;                                                          \
-        if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &(out)))       \
-            return false;                                                          \
-        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+#define CONF_INT(member)                                                               \
+    {                                                                                  \
+        if (ob.contains(QStringLiteral(#member))) {                                    \
+            if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &(member)))    \
+                return false;                                                          \
+            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+        }                                                                              \
     }
 
-    CONF_INT(initialKnifeDamage, initialKnifeDamage);
-    CONF_INT(maximumKnifeDamage, maximumKnifeDamage);
-    CONF_INT(initialHorseDamage, initialHorseDamage);
-    CONF_INT(maximumHorseDamage, maximumHorseDamage);
-    CONF_INT(initialMaxHp, initialMaxHp);
-    CONF_INT(maximumMaxHp, maximumMaxHp);
-    CONF_INT(punishHpModifier, punishHpModifier);
-    CONF_INT(punishHpRoundStrategy, punishHpRoundStrategy);
+    CONF_INT(initialKnifeDamage);
+    CONF_INT(maximumKnifeDamage);
+    CONF_INT(initialHorseDamage);
+    CONF_INT(maximumHorseDamage);
+    CONF_INT(initialMaxHp);
+    CONF_INT(maximumMaxHp);
+    CONF_INT(punishHpModifier);
+    CONF_INT(punishHpRoundStrategy);
 
 #undef CONF_INT
 
-#define CONF_BOOL(member)                                                          \
-    {                                                                              \
-        if (!ob.contains(QStringLiteral(#member)))                                 \
-            return false;                                                          \
-        if (!ob.value(QStringLiteral(#member)).isBool())                           \
-            return false;                                                          \
-        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+#define CONF_BOOL(member)                                                              \
+    {                                                                                  \
+        if (ob.contains(QStringLiteral(#member))) {                                    \
+            if (!ob.value(QStringLiteral(#member)).isBool())                           \
+                return false;                                                          \
+            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+        }                                                                              \
     }
 
     CONF_BOOL(zeroHpAsDead);

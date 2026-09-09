@@ -75,12 +75,6 @@ private slots:
         QTest::newRow("valid") << QJsonValue(validOb) << true;
         QTest::newRow("notObject") << QJsonValue(QJsonValue::Null) << false;
 
-        // Missing key (a typo leaves a required key absent) must be rejected.
-        {
-            QJsonObject ob = validOb;
-            ob.remove(QStringLiteral("tcpPort"));
-            QTest::newRow("missingKey") << QJsonValue(ob) << false;
-        }
         // Wrong type: boolean field holding a string.
         {
             QJsonObject ob = validOb;

@@ -84,7 +84,6 @@ private slots:
         QJsonObject ob;
 
         foreach (const ConfigurationTestTriplet &t, testTriplets) {
-            QTest::newRow((t.key + QStringLiteral("-nonexist")).toUtf8().constData()) << QJsonValue(ob) << false;
             ob.insert(t.key, t.invalidValue);
             QTest::newRow((t.key + QStringLiteral("-invalid")).toUtf8().constData()) << QJsonValue(ob) << false;
             ob.insert(t.key, t.validValue);

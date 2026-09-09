@@ -296,34 +296,34 @@ bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabi
         return true;
     };
 
-#define CONF_BOOL(member)                                                          \
-    {                                                                              \
-        if (!ob.contains(QStringLiteral(#member)))                                 \
-            return false;                                                          \
-        if (!ob.value(QStringLiteral(#member)).isBool())                           \
-            return false;                                                          \
-        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+#define CONF_BOOL(member)                                                              \
+    {                                                                                  \
+        if (ob.contains(QStringLiteral(#member))) {                                    \
+            if (!ob.value(QStringLiteral(#member)).isBool())                           \
+                return false;                                                          \
+            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+        }                                                                              \
     }
 
-#define CONF_STRING(member)                                                        \
-    {                                                                              \
-        if (!ob.contains(QStringLiteral(#member)))                                 \
-            return false;                                                          \
-        if (!ob.value(QStringLiteral(#member)).isString())                         \
-            return false;                                                          \
-        result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+#define CONF_STRING(member)                                                            \
+    {                                                                                  \
+        if (ob.contains(QStringLiteral(#member))) {                                    \
+            if (!ob.value(QStringLiteral(#member)).isString())                         \
+                return false;                                                          \
+            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
+        }                                                                              \
     }
 
-#define CONF_PORT(member)                                                     \
-    {                                                                         \
-        int parsed = 0;                                                       \
-        if (!ob.contains(QStringLiteral(#member)))                            \
-            return false;                                                     \
-        if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &parsed)) \
-            return false;                                                     \
-        if (parsed == 0 || parsed > 65535)                                    \
-            return false;                                                     \
-        result.insert(QStringLiteral(#member), parsed);                       \
+#define CONF_PORT(member)                                                         \
+    {                                                                             \
+        int parsed = static_cast<int>(defaults().member());                       \
+        if (ob.contains(QStringLiteral(#member))) {                               \
+            if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &parsed)) \
+                return false;                                                     \
+            if (parsed == 0 || parsed > 65535)                                    \
+                return false;                                                     \
+            result.insert(QStringLiteral(#member), parsed);                       \
+        }                                                                         \
     }
 
     CONF_BOOL(tcpEnabled);
@@ -336,30 +336,29 @@ bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabi
 
 #undef CONF_BOOL
 #undef CONF_STRING
-#undef CONF_PORT
 
     // playerNumPerRoom: whole number >= 2 (a game needs at least two players).
     {
         int parsed = 0;
-        if (!ob.contains(QStringLiteral("playerNumPerRoom")))
-            return false;
-        if (!parseNonNegativeInt(ob.value(QStringLiteral("playerNumPerRoom")), &parsed))
-            return false;
-        if (parsed < 2)
-            return false;
-        result.insert(QStringLiteral("playerNumPerRoom"), parsed);
+        if (ob.contains(QStringLiteral("playerNumPerRoom"))) {
+            if (!parseNonNegativeInt(ob.value(QStringLiteral("playerNumPerRoom")), &parsed))
+                return false;
+            if (parsed < 2)
+                return false;
+            result.insert(QStringLiteral("playerNumPerRoom"), parsed);
+        }
     }
 
     // requestTimeout: 0 (no explicit timeout, grace only) or >= 15 seconds.
     {
         int parsed = 0;
-        if (!ob.contains(QStringLiteral("requestTimeout")))
-            return false;
-        if (!parseNonNegativeInt(ob.value(QStringLiteral("requestTimeout")), &parsed))
-            return false;
-        if (parsed != 0 && parsed < 15)
-            return false;
-        result.insert(QStringLiteral("requestTimeout"), parsed);
+        if (ob.contains(QStringLiteral("requestTimeout"))) {
+            if (!parseNonNegativeInt(ob.value(QStringLiteral("requestTimeout")), &parsed))
+                return false;
+            if (parsed != 0 && parsed < 15)
+                return false;
+            result.insert(QStringLiteral("requestTimeout"), parsed);
+        }
     }
 
     *this = std::move(result);
