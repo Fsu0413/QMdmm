@@ -5,7 +5,7 @@ A high-level overview of how QMdmm is put together. Assumes you have read the
 
 ## Two layers
 
-QMdmm splits cleanly into two libraries plus a couple of thin executables:
+QMdmm splits cleanly into two libraries plus a few thin executables:
 
 - **`QMdmmCore`** — the game rules engine. Pure logic, no network, no I/O. It
   knows how a game of QMdmm is played, but not how players connect.
@@ -21,7 +21,7 @@ and replies between them.
 QMdmmServer ──► Server ──► LogicRunner ──► QMdmmCore::Logic
   (CLI)         (listens)    │  (one game)      (state machine)
                              │
-                   Agent + ServerConnection ◄── Socket ──► Client ──► QMdmmGui / bot
+                   Agent + ServerConnection ◄── Socket ──► Client ──► QMdmmGui / QMdmmBot
                    (one pair per player)      (TCP/local/WS)  (mirrors state)
 ```
 
@@ -111,6 +111,10 @@ socket, and replays the round events the client missed so its mirror converges
   `listen()`.
 - **`QMdmmGui`** — the QML client. Currently the start menu only; wiring it up
   to play a full game is still in progress.
+- **`QMdmmBot`** — a scripted client. It reuses `Client` and `Agent` like
+  `QMdmmGui`, but drives them with a bot strategy (chosen with `-s`:
+  `knifePreferred` / `horsePreferred` / `rl`) instead of a human. Currently the
+  skeleton is in place; the strategies are not implemented yet.
 - **`smoke`** — a headless end-to-end test: an in-process `Server` plus N
   auto-driven `Client`s (one human + bots) play a full game over loopback TCP,
   including a mid-game disconnect/reconnect.

@@ -54,6 +54,7 @@ config-gated (`enableLetMove`).
 | `QMdmmNetworking` | Network layer (server / client / signaling) | Main flow + reconnect work; spectate / lobby missing |
 | `QMdmmServer` | Standalone server program | Runs; full CLI configuration |
 | `QMdmmGui` | Graphical client (QML) | Start menu only; cannot play a full game yet |
+| `QMdmmBot` | Scripted client that plays automatically via a bot strategy | Skeleton only; strategies not implemented |
 
 In other words: the headless smoke test plays a full game end-to-end (including
 a mid-game reconnect), but the GUI cannot play one yet. The core library is
@@ -143,6 +144,7 @@ QMdmmCore/       Game rules engine
 QMdmmNetworking/ Network layer (server / client / protocol transport)
 QMdmmServer/     Standalone server program
 QMdmmGui/        Graphical client (QML)
+QMdmmBot/        Scripted client that plays automatically (bot strategies)
 smoke/           Headless networked-gameplay regression test
 doc/             Documentation: Doxygen config + guides (architecture, getting started)
 3rdparty/        Third-party dependencies

@@ -10,7 +10,7 @@ Read these before touching code:
 
 - [README](README.md) -- game rules, build/run instructions, protocol overview.
 - [doc/architecture.md](doc/architecture.md) -- how the modules
-  (`QMdmmCore` / `QMdmmNetworking` / `QMdmmGui` / `QMdmmServer`) fit together.
+  (`QMdmmCore` / `QMdmmNetworking` / `QMdmmBot` / `QMdmmGui` / `QMdmmServer`) fit together.
 - [doc/getting-started.md](doc/getting-started.md) -- building, running a
   server, playing a game end-to-end, client API overview.
 
