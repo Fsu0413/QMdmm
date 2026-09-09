@@ -2,7 +2,7 @@
 
 #include "qmdmmcoreglobal.h"
 
-#include <QMap>
+#include <map>
 
 /**
  * @file qmdmmcoreglobal.h
@@ -262,18 +262,18 @@ constexpr bool rpsGreater(Data::RockPaperScissors op1, Data::RockPaperScissors o
  */
 QStringList Data::rockPaperScissorsWinners(const QHash<QString, Data::RockPaperScissors> &judgers)
 {
-    QMap<Data::RockPaperScissors, QStringList> judgersMap;
+    std::map<Data::RockPaperScissors, QStringList> judgersMap;
 
-    for (QHash<QString, Data::RockPaperScissors>::const_iterator it = judgers.constBegin(); it != judgers.constEnd(); ++it)
+    for (QHash<QString, Data::RockPaperScissors>::const_iterator it = judgers.cbegin(); it != judgers.cend(); ++it)
         judgersMap[it.value()] << it.key();
 
-    if (judgersMap.count() == 2) {
-        QMap<Data::RockPaperScissors, QStringList>::const_iterator it1 = judgersMap.constBegin();
-        QMap<Data::RockPaperScissors, QStringList>::const_iterator it2 = judgersMap.constBegin();
+    if (judgersMap.size() == 2) {
+        std::map<Data::RockPaperScissors, QStringList>::const_iterator it1 = judgersMap.cbegin();
+        std::map<Data::RockPaperScissors, QStringList>::const_iterator it2 = judgersMap.cbegin();
         ++it2;
 
-        Data::RockPaperScissors type1 = it1.key();
-        Data::RockPaperScissors type2 = it2.key();
+        Data::RockPaperScissors type1 = it1->first;
+        Data::RockPaperScissors type2 = it2->first;
 
         if (!rpsGreater(type1, type2))
             std::swap(it1, it2);
@@ -281,8 +281,8 @@ QStringList Data::rockPaperScissorsWinners(const QHash<QString, Data::RockPaperS
         // now it1.value is winner, it2.value is loser
         // we'd make every winners repeat N times (N is loser.count), for the real judgment use
         QStringList d;
-        for (int i = 0; i < it2.value().length(); ++i)
-            d.append(it1.value());
+        for (int i = 0; i < it2->second.length(); ++i)
+            d.append(it1->second);
 
         return d;
     }

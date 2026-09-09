@@ -509,7 +509,7 @@ Player *Room::addPlayer(const QString &playerName)
         return nullptr;
 
     Player *ret = new Player(playerName, this);
-    d->players.insert(playerName, ret);
+    d->players.insert({playerName, ret});
 
     emit playerAdded(playerName, QPrivateSignal());
 
@@ -523,10 +523,10 @@ Player *Room::addPlayer(const QString &playerName)
  */
 bool Room::removePlayer(const QString &playerName)
 {
-    if (QMap<QString, Player *>::iterator it = d->players.find(playerName); it != d->players.end()) {
+    if (std::map<QString, Player *>::iterator it = d->players.find(playerName); it != d->players.end()) {
         emit playerRemoved(playerName, QPrivateSignal());
 
-        delete it.value();
+        delete it->second;
         d->players.erase(it);
         return true;
     }
@@ -541,7 +541,10 @@ bool Room::removePlayer(const QString &playerName)
  */
 Player *Room::player(const QString &playerName)
 {
-    return d->players.value(playerName, nullptr);
+    if (std::map<QString, Player *>::iterator it = d->players.find(playerName); it != d->players.end())
+        return it->second;
+
+    return nullptr;
 }
 
 /**
@@ -551,7 +554,10 @@ Player *Room::player(const QString &playerName)
  */
 const Player *Room::player(const QString &playerName) const
 {
-    return d->players.value(playerName, nullptr);
+    if (std::map<QString, Player *>::const_iterator it = d->players.find(playerName); it != d->players.cend())
+        return it->second;
+
+    return nullptr;
 }
 
 /**
@@ -560,7 +566,12 @@ const Player *Room::player(const QString &playerName) const
  */
 QList<Player *> Room::players()
 {
-    return d->players.values();
+    QList<Player *> ret;
+
+    for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it)
+        ret << it->second;
+
+    return ret;
 }
 
 /**
@@ -569,11 +580,12 @@ QList<Player *> Room::players()
  */
 QList<const Player *> Room::players() const
 {
-    QList<const Player *> res;
-    foreach (const Player *player, d->players)
-        res << player;
+    QList<const Player *> ret;
 
-    return res;
+    for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it)
+        ret << it->second;
+
+    return ret;
 }
 
 /**
@@ -582,7 +594,11 @@ QList<const Player *> Room::players() const
  */
 QStringList Room::playerNames() const
 {
-    return d->players.keys();
+    QStringList ret;
+    for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it)
+        ret << it->first;
+
+    return ret;
 }
 
 /**
@@ -592,7 +608,9 @@ QStringList Room::playerNames() const
 QList<Player *> Room::alivePlayers()
 {
     QList<Player *> res;
-    foreach (Player *player, d->players) {
+
+    for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
+        Player *player = it->second;
         if (player->alive())
             res << player;
     }
@@ -607,7 +625,9 @@ QList<Player *> Room::alivePlayers()
 QList<const Player *> Room::alivePlayers() const
 {
     QList<const Player *> res;
-    foreach (const Player *player, d->players) {
+
+    for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
+        const Player *player = it->second;
         if (player->alive())
             res << player;
     }
@@ -622,9 +642,9 @@ QList<const Player *> Room::alivePlayers() const
 QStringList Room::alivePlayerNames() const
 {
     QStringList res;
-    for (QMap<QString, Player *>::const_iterator it = d->players.constBegin(); it != d->players.constEnd(); ++it) {
-        if (it.value()->alive())
-            res.push_back(it.key());
+    for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
+        if (it->second->alive())
+            res.push_back(it->first);
     }
 
     return res;
@@ -657,7 +677,8 @@ bool Room::isGameOver(QStringList *winnerPlayerNames) const
     if (winnerPlayerNames != nullptr)
         winnerPlayerNames->clear();
 
-    foreach (const Player *player, d->players) {
+    for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
+        const Player *player = it->second;
         if (!player->canUpgradeHorse() && !player->canUpgradeKnife() && !player->canUpgradeMaxHp()) {
             ret = true;
             if (winnerPlayerNames != nullptr)
@@ -677,8 +698,11 @@ bool Room::isGameOver(QStringList *winnerPlayerNames) const
 void Room::prepareForRoundStart()
 {
     int i = 0;
-    foreach (Player *player, d->players)
+
+    for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
+        Player *player = it->second;
         player->prepareForRoundStart(++i);
+    }
 }
 
 /**
@@ -689,8 +713,10 @@ void Room::prepareForRoundStart()
  */
 void Room::resetUpgrades()
 {
-    foreach (Player *player, d->players)
+    for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
+        Player *player = it->second;
         player->resetUpgrades();
+    }
 }
 
 /**

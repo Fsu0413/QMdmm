@@ -7,6 +7,7 @@
 
 #include <QMdmmRoom>
 
+#include <QMap>
 #include <QObject>
 
 QMDMM_EXPORT_NAME(QMdmmClientConfiguration)

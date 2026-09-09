@@ -6,7 +6,7 @@
 #include "qmdmmplayer.h"
 #include "qmdmmroom.h"
 
-#include <QMap>
+#include <map>
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes): This is private header
 
@@ -16,7 +16,7 @@ namespace p {
 
 struct QMDMMCORE_PRIVATE_EXPORT RoomP final
 {
-    QMap<QString, Player *> players;
+    std::map<QString, Player *> players;
     LogicConfiguration logicConfiguration;
 };
 
