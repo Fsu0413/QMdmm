@@ -9,6 +9,7 @@
 
 #include <QMdmmClient>
 #include <QMdmmData>
+#include <QMdmmPlayer>
 
 #include <QObject>
 
@@ -27,6 +28,15 @@ public:
 
     [[nodiscard]] static Bot *createBot(const QString &style, QMdmmNetworking::Client *parent);
     [[nodiscard]] static bool styleExist(const QString &style);
+
+protected:
+    // Returns this bot's own player in the local room mirror, or nullptr before
+    // sign-in completes. The client's objectName is its playerName (see the
+    // Client class doc), so the self player is looked up by that name.
+    [[nodiscard]] QMdmmCore::Player *selfPlayer();
+
+    // Returns every alive player except this bot, in room order.
+    [[nodiscard]] QList<QMdmmCore::Player *> opponents();
 
 protected slots:
     // Request handlers: invoked when the server asks this bot to make a choice.

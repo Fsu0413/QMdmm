@@ -75,6 +75,23 @@ const QMdmmNetworking::Client *Bot::client() const
     return static_cast<const QMdmmNetworking::Client *>(parent());
 }
 
+QMdmmCore::Player *Bot::selfPlayer()
+{
+    return client()->room()->player(client()->objectName());
+}
+
+QList<QMdmmCore::Player *> Bot::opponents()
+{
+    QList<QMdmmCore::Player *> result;
+    const QString selfName = client()->objectName();
+    const QList<QMdmmCore::Player *> alive = client()->room()->alivePlayers();
+    for (QMdmmCore::Player *player : alive) {
+        if (player->objectName() != selfName)
+            result << player;
+    }
+    return result;
+}
+
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     if (style == QStringLiteral("knifePreferred"))
