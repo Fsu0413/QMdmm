@@ -122,7 +122,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             p::ServerConnectionP *conn = existing->findChild<p::ServerConnectionP *>();
             if (conn == nullptr) {
                 // A local agent has no wire; a sign-in over the wire cannot reconnect it.
-                socket->setError({Socket::ProtocolError, {}});
+                socket->setError({.code = Socket::ProtocolError, .errorString = {}});
                 return;
             }
 
@@ -130,7 +130,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
             if (runner->reconnectAgent(existing) != nullptr)
                 return;
 
-            socket->setError({Socket::ProtocolError, {}});
+            socket->setError({.code = Socket::ProtocolError, .errorString = {}});
             return;
         }
 
@@ -155,7 +155,7 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         return;
     } while (false);
 
-    socket->setError({Socket::ProtocolError, {}});
+    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
     // NOLINTEND(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
 }
 
@@ -163,7 +163,7 @@ void ServerP::observe(Socket *socket, const QJsonValue &packetValue)
 {
     // TODO
     Q_UNUSED(packetValue);
-    socket->setError({Socket::ProtocolError, {}});
+    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
 }
 
 void ServerP::introduceSocket(Socket *socket) // NOLINT(readability-make-member-function-const)
@@ -218,7 +218,7 @@ void ServerP::socketPacketReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(socket, packet.value());
             else
-                socket->setError({Socket::ProtocolError, {}});
+                socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         }
     }
 }

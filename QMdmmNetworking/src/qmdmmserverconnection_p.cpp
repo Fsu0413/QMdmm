@@ -391,7 +391,7 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
-                socket->setError({Socket::ProtocolError, {}});
+                socket->setError({.code = Socket::ProtocolError, .errorString = {}});
             return;
         }
 
@@ -403,7 +403,7 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
         // Anything else is an abnormal notify (a server/agent-bound notify echoed back, or an
         // invalid notify id): drop the connection and answer any in-flight request with its
         // default reply so the logic is not left waiting on a misbehaving client (D-025).
-        socket->setError({Socket::ProtocolError, {}});
+        socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         executeDefaultReply();
         return;
     }
@@ -423,21 +423,21 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
                 if (call != nullptr)
                     (this->*call)(packet.value());
                 else
-                    socket->setError({Socket::ProtocolError, {}});
+                    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
             }
             return;
         }
 
         // A reply that does not match the in-flight request is an ordering mismatch: drop the
         // connection and answer the in-flight request with its default reply (D-025).
-        socket->setError({Socket::ProtocolError, {}});
+        socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         executeDefaultReply();
         return;
     }
 
     // A request or an invalid/unknown packet type from the client is abnormal: requests only
     // originate from the Logic. Drop the connection and answer any in-flight request (D-025).
-    socket->setError({Socket::ProtocolError, {}});
+    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
     executeDefaultReply();
 }
 
@@ -634,7 +634,7 @@ void ServerConnectionP::requestTimeout()
     // the seat or drop the agent). The default reply is issued right away so the logic is not
     // left waiting on the gone player.
     if (socket != nullptr)
-        socket->setError({Socket::ProtocolError, {}});
+        socket->setError({.code = Socket::ProtocolError, .errorString = {}});
     executeDefaultReply();
 }
 

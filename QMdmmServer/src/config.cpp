@@ -452,12 +452,12 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
         const char *name;
     };
     const std::array rangeChecks = std::to_array<RangeCheck>({
-        {logicConfiguration_.initialKnifeDamage(), 1, "slash"},
-        {logicConfiguration_.maximumKnifeDamage(), 3, "maximum-slash"},
-        {logicConfiguration_.initialHorseDamage(), 2, "kick"},
-        {logicConfiguration_.maximumHorseDamage(), 5, "maximum-kick"},
-        {logicConfiguration_.initialMaxHp(), 7, "maxhp"},
-        {logicConfiguration_.maximumMaxHp(), 7, "maximum-maxhp"},
+        {.value = logicConfiguration_.initialKnifeDamage(), .min = 1, .name = "slash"},
+        {.value = logicConfiguration_.maximumKnifeDamage(), .min = 3, .name = "maximum-slash"},
+        {.value = logicConfiguration_.initialHorseDamage(), .min = 2, .name = "kick"},
+        {.value = logicConfiguration_.maximumHorseDamage(), .min = 5, .name = "maximum-kick"},
+        {.value = logicConfiguration_.initialMaxHp(), .min = 7, .name = "maxhp"},
+        {.value = logicConfiguration_.maximumMaxHp(), .min = 7, .name = "maximum-maxhp"},
     });
     for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)

@@ -218,7 +218,7 @@ void ClientP::notifyPongServer(const QJsonValue &value)
     bool ok = false;
     int64_t pongTime = value.toVariant().toLongLong(&ok);
     if (!ok) {
-        socket->setError({Socket::ProtocolError, {}});
+        socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         return;
     }
 
@@ -877,7 +877,7 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
         if (call != nullptr)
             (this->*call)(packet.value());
         else
-            socket->setError({Socket::ProtocolError, {}});
+            socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         return;
     }
 
@@ -889,20 +889,20 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
-                socket->setError({Socket::ProtocolError, {}});
+                socket->setError({.code = Socket::ProtocolError, .errorString = {}});
             return;
         }
 
         // A client-bound notify echoed back (or an invalid notify id) is abnormal: drop the
         // connection (D-025). The client is the replying side, so it has no "default reply" of its
         // own -- a drop is all there is to do; the existing reconnect path takes over from here.
-        socket->setError({Socket::ProtocolError, {}});
+        socket->setError({.code = Socket::ProtocolError, .errorString = {}});
         return;
     }
 
     // A reply or an invalid/unknown packet type from the server is abnormal: replies only
     // originate from the client (D-025).
-    socket->setError({Socket::ProtocolError, {}});
+    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

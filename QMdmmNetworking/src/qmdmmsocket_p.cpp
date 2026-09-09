@@ -66,7 +66,7 @@ bool SocketP::packetReceived(const QByteArray &arr)
     QString packetError;
     if (packet.hasError(&packetError)) {
         // Don't process more package for this connection. It is not guaranteed to be the desired client
-        const Socket::Error error {Socket::ProtocolError, packetError};
+        const Socket::Error error {.code = Socket::ProtocolError, .errorString = packetError};
         errorOccurred(error);
         q->setError(error);
         return false;
@@ -158,7 +158,7 @@ void SocketP_QTcpSocket::readyRead()
 void SocketP_QTcpSocket::errorOccurredTcpSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
+        errorOccurred(Socket::Error {.code = Socket::TransportError, .errorString = socket->errorString()});
 }
 
 SocketP_QLocalSocket::SocketP_QLocalSocket(QLocalSocket *socket, Socket *q)
@@ -226,7 +226,7 @@ void SocketP_QLocalSocket::readyRead()
 void SocketP_QLocalSocket::errorOccurredLocalSocket(QLocalSocket::LocalSocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
+        errorOccurred(Socket::Error {.code = Socket::TransportError, .errorString = socket->errorString()});
 }
 
 SocketP_QWebSocket::SocketP_QWebSocket(QWebSocket *socket, Socket *q)
@@ -283,7 +283,7 @@ void SocketP_QWebSocket::sendPacket(QMdmmCore::Packet packet)
 void SocketP_QWebSocket::errorOccurredWebSocket(QAbstractSocket::SocketError /*e*/)
 {
     if (socket != nullptr)
-        errorOccurred(Socket::Error {Socket::TransportError, socket->errorString()});
+        errorOccurred(Socket::Error {.code = Socket::TransportError, .errorString = socket->errorString()});
 }
 } // namespace p
 } // namespace QMdmmNetworking
