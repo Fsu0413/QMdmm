@@ -425,8 +425,14 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 
     setting->beginGroup(QStringLiteral("logic"));
 
+    // Always start from a full preset so that the configuration object is never empty: an empty
+    // object fails LogicConfiguration::deserialize() on the client side (which rejects a missing
+    // key), disconnecting every client on a default startup. The CONFIG_ITEM calls below then
+    // override individual fields from the command line or the config file.
     if (parser->isSet(QStringLiteral("1")))
         logicConfiguration_ = QMdmmCore::LogicConfiguration::v1();
+    else
+        logicConfiguration_ = QMdmmCore::LogicConfiguration::defaults();
 
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", stringToInt, MaximumKnifeDamage);
