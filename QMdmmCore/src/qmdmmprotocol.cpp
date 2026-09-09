@@ -454,7 +454,6 @@ QJsonValue Packet::value() const
  */
 QByteArray Packet::serialize() const
 {
-    // TODO: abnormal case
     QJsonDocument doc(*d);
     return doc.toJson(QJsonDocument::Compact);
 }
