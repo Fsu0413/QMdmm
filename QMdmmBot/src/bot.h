@@ -19,7 +19,7 @@ class Bot : public QObject
 
 public:
     explicit Bot(QMdmmNetworking::Client *parent);
-    virtual ~Bot() override = 0;
+    ~Bot() override = 0;
 
     [[nodiscard]] QMdmmNetworking::Client *client();
     [[nodiscard]] const QMdmmNetworking::Client *client() const;
@@ -38,7 +38,7 @@ protected:
     // Returns every alive player except this bot, in room order.
     [[nodiscard]] QList<QMdmmCore::Player *> opponents();
 
-protected slots:
+protected slots: // NOLINT(readability-redundant-access-specifiers)
     // Request handlers: invoked when the server asks this bot to make a choice.
     // Pure virtual so each style subclass is forced to answer with its own
     // strategy; a bot that never answers would otherwise stall the match until
