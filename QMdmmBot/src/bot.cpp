@@ -30,8 +30,10 @@ Bot::Bot(QMdmmNetworking::Client *parent)
 // also pure virtual and gets a defaulted definition here.
 Bot::~Bot() = default;
 
-// Notification handlers: the base implementations do nothing. Style subclasses
-// override them to maintain their own view of the match.
+// Notification handlers: apart from the revenge memory (see Bot::revengeScore()),
+// which handleActionNotified() and handleRoundOverNotified() maintain, the base
+// implementations do nothing. Style subclasses override them to maintain their
+// own view of the match.
 
 void Bot::handleLogicConfigurationNotified()
 {
@@ -43,10 +45,16 @@ void Bot::handleRoundStartNotified()
 
 void Bot::handleActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    Q_UNUSED(playerName);
-    Q_UNUSED(action);
-    Q_UNUSED(toPlayer);
     Q_UNUSED(toPlace);
+
+    // Revenge memory: only Slash and Kick are hostile. LetMove moves a player
+    // against their will but deals no damage, so it never earns a grudge.
+    if (action != QMdmmCore::Data::Slash && action != QMdmmCore::Data::Kick)
+        return;
+    if (toPlayer != client()->objectName())
+        return;
+
+    revenge_[playerName] += revengePerAttack;
 }
 
 void Bot::handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
@@ -56,6 +64,17 @@ void Bot::handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::Upgr
 
 void Bot::handleRoundOverNotified()
 {
+    // Revenge memory: a round has passed, so every grudge fades a little. An
+    // entry is only dropped once it has become negligible, which is what lets a
+    // grudge outlive the round it was earned in.
+    const QStringList attackers = revenge_.keys();
+    for (const QString &attacker : attackers) {
+        const double decayed = revenge_.value(attacker) * revengeDecayPerRound;
+        if (decayed <= revengeEpsilon)
+            revenge_.remove(attacker);
+        else
+            revenge_.insert(attacker, decayed);
+    }
 }
 
 void Bot::handleGameOverNotified(const QStringList &playerNames)
@@ -90,6 +109,13 @@ QList<QMdmmCore::Player *> Bot::opponents()
             result << player;
     }
     return result;
+}
+
+double Bot::revengeScore(const QString &playerName) const
+{
+    // A peer that never attacked us is missing from the table, and QHash::value
+    // hands back a default-constructed double for it -- exactly the 0 wanted.
+    return revenge_.value(playerName);
 }
 
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)

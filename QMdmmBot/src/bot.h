@@ -50,12 +50,34 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
 
     // Notification handlers: invoked when the server broadcasts game progress.
     // Virtual for the same reason -- style subclasses track the match here.
+    // The base implementations of handleActionNotified() and
+    // handleRoundOverNotified() also maintain the revenge memory, so a subclass
+    // that overrides either of them must call the base implementation.
     virtual void handleLogicConfigurationNotified();
     virtual void handleRoundStartNotified();
     virtual void handleActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
     virtual void handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
     virtual void handleRoundOverNotified();
     virtual void handleGameOverNotified(const QStringList &playerNames);
+
+    // Revenge memory: how much of a grudge this bot holds against one peer, 0
+    // for a peer that never attacked it. Only a hostile action aimed at this bot
+    // (Slash or Kick) earns a grudge -- LetMove deals no damage, so it never
+    // counts. Grudges fade every finished round but survive across rounds, and a
+    // peer that leaves is forgotten by that decay alone. Style strategies read
+    // this when they pick a target.
+    [[nodiscard]] double revengeScore(const QString &playerName) const;
+
+private:
+    // A hostile action is worth this many grudges; every finished round
+    // multiplies all of them by the decay factor, and an entry that has decayed
+    // to the epsilon or below is dropped so the table stays bounded over a long
+    // match.
+    static constexpr double revengePerAttack = 1.0;
+    static constexpr double revengeDecayPerRound = 0.8;
+    static constexpr double revengeEpsilon = 0.01;
+
+    QHash<QString, double> revenge_;
 };
 
 // The three playing styles. Each is a concrete Bot whose strategy is implemented
