@@ -142,9 +142,11 @@ Socket::Type Socket::type() const
  * @brief Mark the socket as errored and disconnect the underlying transport.
  * @param error the error to record
  *
- * Stores the error and disconnects. Unlike the transport error path, it does not emit
- * @c socketErrorOccurred: upper layers detect protocol violations through this and learn of the
- * drop via @c socketDisconnected (mirroring the previous @c setHasError behaviour).
+ * Stores the error and disconnects the underlying transport, which walks the full disconnect
+ * path on its own and emits @c socketDisconnected, so upper layers detect protocol violations
+ * through this and run their disconnect handling. Callers must not disconnect again or emit
+ * @c socketDisconnected manually. Unlike the transport error path, it does not emit
+ * @c socketErrorOccurred (mirroring the previous @c setHasError behaviour).
  */
 void Socket::setError(const Error &error)
 {
