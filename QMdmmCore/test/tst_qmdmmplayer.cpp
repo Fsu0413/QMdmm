@@ -1328,6 +1328,42 @@ private slots:
             QCOMPARE(s.length(), 0);
         }
     }
+
+    void QMdmmPlayerupgradeBudgetOverflow()
+    {
+        // A player whose upgrade budget exceeds a single stat's remaining capacity must not
+        // over-allocate that stat. `6189f0d` fixed the e2e smoke bot, which looped
+        // `canUpgradeKnife()` on an unchanged mirror player and appended the same (now-maxed)
+        // item past its maximum; the Core primitive it relies on -- `upgradeXxx()` returning
+        // false once the stat is maxed -- has no unit test guarding this budget-overflow flow.
+        r->resetUpgrades();
+
+        // Max out knife via repeated upgradeKnife() calls (initial 1, maximum 10 -> 9 left).
+        const int knifeLeft = p1->upgradeKnifeRemainingTimes();
+        QCOMPARE(knifeLeft, 9);
+        for (int i = 0; i < knifeLeft; ++i) {
+            QVERIFY(p1->upgradeKnife());
+        }
+        QCOMPARE(p1->knifeDamage(), p1->room()->logicConfiguration().maximumKnifeDamage());
+
+        // Budget still remains, but knife is maxed: a further knife upgrade is refused rather
+        // than silently over-allocated past the maximum.
+        QVERIFY(!p1->canUpgradeKnife());
+        QVERIFY(!p1->upgradeKnife());
+        QCOMPARE(p1->knifeDamage(), p1->room()->logicConfiguration().maximumKnifeDamage());
+
+        // The remaining budget flows to horse, which must also cap at its own maximum.
+        const int horseLeft = p1->upgradeHorseRemainingTimes();
+        QCOMPARE(horseLeft, 8);
+        for (int i = 0; i < horseLeft; ++i) {
+            QVERIFY(p1->upgradeHorse());
+        }
+        QCOMPARE(p1->horseDamage(), p1->room()->logicConfiguration().maximumHorseDamage());
+
+        QVERIFY(!p1->canUpgradeHorse());
+        QVERIFY(!p1->upgradeHorse());
+        QCOMPARE(p1->horseDamage(), p1->room()->logicConfiguration().maximumHorseDamage());
+    }
 };
 
 namespace {
