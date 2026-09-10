@@ -65,13 +65,13 @@ void Bot::handleGameOverNotified(const QStringList &playerNames)
 
 QMdmmNetworking::Client *Bot::client()
 {
-    // TODO: nolintnextline comment
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast): Bot always has Client as parent; skip dynamic_cast cost
     return static_cast<QMdmmNetworking::Client *>(parent());
 }
 
 const QMdmmNetworking::Client *Bot::client() const
 {
-    // TODO: nolintnextline comment
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast): same as above
     return static_cast<const QMdmmNetworking::Client *>(parent());
 }
 
