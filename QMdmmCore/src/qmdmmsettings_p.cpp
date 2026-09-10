@@ -21,99 +21,99 @@ namespace p {
 
 SettingsWrapperP::~SettingsWrapperP() = default;
 
-QSettingsWrapperP::QSettingsWrapperP(const QString &organization, const QString &application)
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings(const QString &organization, const QString &application)
     : settings(organization, application)
 {
 }
 
-QSettingsWrapperP::QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application)
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings(QSettings::Scope scope, const QString &organization, const QString &application)
     : settings(scope, organization, application)
 {
 }
 
-QSettingsWrapperP::QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application)
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application)
     : settings(format, scope, organization, application)
 {
 }
 
-QSettingsWrapperP::QSettingsWrapperP(const QString &fileName, QSettings::Format format)
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings(const QString &fileName, QSettings::Format format)
     : settings(fileName, format)
 {
 }
 
-QSettingsWrapperP::QSettingsWrapperP() = default;
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings() = default;
 
-QSettingsWrapperP::QSettingsWrapperP(QSettings::Scope scope)
+SettingsWrapperP_QSettings::SettingsWrapperP_QSettings(QSettings::Scope scope)
     : settings(scope)
 {
 }
 
-QSettingsWrapperP::~QSettingsWrapperP() = default;
+SettingsWrapperP_QSettings::~SettingsWrapperP_QSettings() = default;
 
-void QSettingsWrapperP::setValue(const QString &key, const QVariant &value)
+void SettingsWrapperP_QSettings::setValue(const QString &key, const QVariant &value)
 {
     settings.setValue(key, value);
 }
 
-QVariant QSettingsWrapperP::value(const QString &key, const QVariant &defaultValue) const
+QVariant SettingsWrapperP_QSettings::value(const QString &key, const QVariant &defaultValue) const
 {
     return settings.value(key, defaultValue);
 }
 
-void QSettingsWrapperP::beginGroup(const QString &prefix)
+void SettingsWrapperP_QSettings::beginGroup(const QString &prefix)
 {
     settings.beginGroup(prefix);
 }
 
-void QSettingsWrapperP::endGroup()
+void SettingsWrapperP_QSettings::endGroup()
 {
     settings.endGroup();
 }
 
-QString QSettingsWrapperP::group() const
+QString SettingsWrapperP_QSettings::group() const
 {
     return settings.group();
 }
 
-bool QSettingsWrapperP::contains(const QString &key) const
+bool SettingsWrapperP_QSettings::contains(const QString &key) const
 {
     return settings.contains(key);
 }
 
-QVariantMapWrapperP::~QVariantMapWrapperP() = default;
+SettingsWrapperP_QVariantMap::~SettingsWrapperP_QVariantMap() = default;
 
-void QVariantMapWrapperP::setValue(const QString &key, const QVariant &value)
+void SettingsWrapperP_QVariantMap::setValue(const QString &key, const QVariant &value)
 {
     map.insert(keyWithGroup(key), value);
 }
 
-QVariant QVariantMapWrapperP::value(const QString &key, const QVariant &defaultValue) const
+QVariant SettingsWrapperP_QVariantMap::value(const QString &key, const QVariant &defaultValue) const
 {
     return map.value(keyWithGroup(key), defaultValue);
 }
 
-void QVariantMapWrapperP::beginGroup(const QString &prefix)
+void SettingsWrapperP_QVariantMap::beginGroup(const QString &prefix)
 {
     currentGroup.append(prefix);
 }
 
-void QVariantMapWrapperP::endGroup()
+void SettingsWrapperP_QVariantMap::endGroup()
 {
     Q_ASSERT(!currentGroup.isEmpty());
     currentGroup.removeLast();
 }
 
-QString QVariantMapWrapperP::group() const
+QString SettingsWrapperP_QVariantMap::group() const
 {
     return currentGroup.join(QStringLiteral("/"));
 }
 
-bool QVariantMapWrapperP::contains(const QString &key) const
+bool SettingsWrapperP_QVariantMap::contains(const QString &key) const
 {
     return map.contains(keyWithGroup(key));
 }
 
-QString QVariantMapWrapperP::keyWithGroup(const QString &key) const
+QString SettingsWrapperP_QVariantMap::keyWithGroup(const QString &key) const
 {
     QStringList groupPlusKey = currentGroup;
     groupPlusKey.append(key);
@@ -142,9 +142,9 @@ SettingsP::SettingsP()
 {
     static InitializeQSettings initializeQSettings;
 
-    globalConfig = std::make_unique<QSettingsWrapperP>(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    userConfig = std::make_unique<QSettingsWrapperP>(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    specifiedConfig = std::make_unique<QVariantMapWrapperP>();
+    globalConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    userConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    specifiedConfig = std::make_unique<SettingsWrapperP_QVariantMap>();
 }
 
 SettingsP::~SettingsP() = default;

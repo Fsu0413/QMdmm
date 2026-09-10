@@ -15,7 +15,8 @@ namespace p {
 
 struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
 {
-    Q_DISABLE_COPY_MOVE(SettingsWrapperP)
+    Q_DISABLE_COPY_MOVE(SettingsWrapperP);
+
     SettingsWrapperP() = default;
     virtual ~SettingsWrapperP();
 
@@ -29,18 +30,19 @@ struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP
     [[nodiscard]] virtual bool contains(const QString &key) const = 0;
 };
 
-struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
+struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP_QSettings : public SettingsWrapperP
 {
-    Q_DISABLE_COPY_MOVE(QSettingsWrapperP)
+    Q_DISABLE_COPY_MOVE(SettingsWrapperP_QSettings);
+
     QSettings settings;
 
-    explicit QSettingsWrapperP(const QString &organization, const QString &application = {});
-    QSettingsWrapperP(QSettings::Scope scope, const QString &organization, const QString &application = {});
-    QSettingsWrapperP(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = {});
-    QSettingsWrapperP(const QString &fileName, QSettings::Format format);
-    QSettingsWrapperP();
-    explicit QSettingsWrapperP(QSettings::Scope scope);
-    ~QSettingsWrapperP() override;
+    explicit SettingsWrapperP_QSettings(const QString &organization, const QString &application = {});
+    SettingsWrapperP_QSettings(QSettings::Scope scope, const QString &organization, const QString &application = {});
+    SettingsWrapperP_QSettings(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = {});
+    SettingsWrapperP_QSettings(const QString &fileName, QSettings::Format format);
+    SettingsWrapperP_QSettings();
+    explicit SettingsWrapperP_QSettings(QSettings::Scope scope);
+    ~SettingsWrapperP_QSettings() override;
 
     void setValue(const QString &key, const QVariant &value) override;
     [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue) const override;
@@ -50,14 +52,15 @@ struct QMDMMCORE_PRIVATE_EXPORT QSettingsWrapperP : public SettingsWrapperP
     [[nodiscard]] bool contains(const QString &key) const override;
 };
 
-struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
+struct QMDMMCORE_PRIVATE_EXPORT SettingsWrapperP_QVariantMap : public SettingsWrapperP
 {
-    Q_DISABLE_COPY_MOVE(QVariantMapWrapperP)
-    QVariantMapWrapperP() = default;
+    Q_DISABLE_COPY_MOVE(SettingsWrapperP_QVariantMap);
+
     QVariantMap map;
     QStringList currentGroup;
 
-    ~QVariantMapWrapperP() override;
+    SettingsWrapperP_QVariantMap() = default;
+    ~SettingsWrapperP_QVariantMap() override;
 
     void setValue(const QString &key, const QVariant &value) override;
     [[nodiscard]] QVariant value(const QString &key, const QVariant &defaultValue) const override;
@@ -71,11 +74,11 @@ struct QMDMMCORE_PRIVATE_EXPORT QVariantMapWrapperP : public SettingsWrapperP
 
 struct QMDMMCORE_PRIVATE_EXPORT SettingsP
 {
-    Q_DISABLE_COPY_MOVE(SettingsP)
+    Q_DISABLE_COPY_MOVE(SettingsP);
 
-    std::unique_ptr<QSettingsWrapperP> globalConfig;
-    std::unique_ptr<QSettingsWrapperP> userConfig;
-    std::unique_ptr<QVariantMapWrapperP> specifiedConfig;
+    std::unique_ptr<SettingsWrapperP_QSettings> globalConfig;
+    std::unique_ptr<SettingsWrapperP_QSettings> userConfig;
+    std::unique_ptr<SettingsWrapperP_QVariantMap> specifiedConfig;
 
     SettingsP();
     ~SettingsP();
