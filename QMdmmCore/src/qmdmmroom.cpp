@@ -568,6 +568,7 @@ QList<Player *> Room::players()
 {
     QList<Player *> ret;
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it)
         ret << it->second;
 
@@ -582,6 +583,7 @@ QList<const Player *> Room::players() const
 {
     QList<const Player *> ret;
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it)
         ret << it->second;
 
@@ -595,6 +597,7 @@ QList<const Player *> Room::players() const
 QStringList Room::playerNames() const
 {
     QStringList ret;
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it)
         ret << it->first;
 
@@ -609,6 +612,7 @@ QList<Player *> Room::alivePlayers()
 {
     QList<Player *> res;
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
         Player *player = it->second;
         if (player->alive())
@@ -626,6 +630,7 @@ QList<const Player *> Room::alivePlayers() const
 {
     QList<const Player *> res;
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
         const Player *player = it->second;
         if (player->alive())
@@ -642,6 +647,7 @@ QList<const Player *> Room::alivePlayers() const
 QStringList Room::alivePlayerNames() const
 {
     QStringList res;
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
         if (it->second->alive())
             res.push_back(it->first);
@@ -677,6 +683,7 @@ bool Room::isGameOver(QStringList *winnerPlayerNames) const
     if (winnerPlayerNames != nullptr)
         winnerPlayerNames->clear();
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::const_iterator it = d->players.cbegin(); it != d->players.cend(); ++it) {
         const Player *player = it->second;
         if (!player->canUpgradeHorse() && !player->canUpgradeKnife() && !player->canUpgradeMaxHp()) {
@@ -699,6 +706,7 @@ void Room::prepareForRoundStart()
 {
     int i = 0;
 
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
         Player *player = it->second;
         player->prepareForRoundStart(++i);
@@ -713,6 +721,7 @@ void Room::prepareForRoundStart()
  */
 void Room::resetUpgrades()
 {
+    // NOLINTNEXTLINE(modernize-loop-convert): std::map iteration is deliberately iterator-based (no range-based for over pairs)
     for (std::map<QString, Player *>::iterator it = d->players.begin(); it != d->players.end(); ++it) {
         Player *player = it->second;
         player->resetUpgrades();
