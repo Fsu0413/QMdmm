@@ -33,8 +33,8 @@ void qMdmmDebugSetDevice(QIODevice *f)
     }
 
     debugLogInstance()->f = f;
-    if (DebugLog::qtMessageHandler == nullptr)
-        DebugLog::qtMessageHandler = qInstallMessageHandler(&messageOutput);
+    if (DebugLogP::qtMessageHandler == nullptr)
+        DebugLogP::qtMessageHandler = qInstallMessageHandler(&messageOutput);
 }
 
 #ifndef DOXYGEN

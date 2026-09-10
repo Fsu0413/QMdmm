@@ -9,11 +9,11 @@ namespace QMdmmCore {
 
 namespace p {
 
-QtMessageHandler DebugLog::qtMessageHandler = nullptr;
+QtMessageHandler DebugLogP::qtMessageHandler = nullptr;
 
-DebugLog *debugLogInstance()
+DebugLogP *debugLogInstance()
 {
-    static DebugLog i;
+    static DebugLogP i;
     return &i;
 }
 
@@ -28,8 +28,8 @@ void messageOutput(QtMsgType type, const QMessageLogContext &context, const QStr
             if (f != nullptr)
                 f->flush();
         }
-    } else if (DebugLog::qtMessageHandler != nullptr && DebugLog::qtMessageHandler != &messageOutput) {
-        (*DebugLog::qtMessageHandler)(type, context, msg);
+    } else if (DebugLogP::qtMessageHandler != nullptr && DebugLogP::qtMessageHandler != &messageOutput) {
+        (*DebugLogP::qtMessageHandler)(type, context, msg);
     } else {
         // Is this public API?
         // But anyway it is declared as Q_CORE_EXPORT let's use it directly since we have no other good fallback

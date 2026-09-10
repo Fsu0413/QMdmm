@@ -12,7 +12,7 @@ namespace QMdmmCore {
 
 namespace p {
 
-struct QMDMMCORE_PRIVATE_EXPORT DebugLog
+struct QMDMMCORE_PRIVATE_EXPORT DebugLogP
 {
     QMutex m;
     QPointer<QIODevice> f;
@@ -20,7 +20,7 @@ struct QMDMMCORE_PRIVATE_EXPORT DebugLog
     static QtMessageHandler qtMessageHandler;
 };
 
-QMDMMCORE_PRIVATE_EXPORT DebugLog *debugLogInstance();
+QMDMMCORE_PRIVATE_EXPORT DebugLogP *debugLogInstance();
 QMDMMCORE_PRIVATE_EXPORT void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 
 } // namespace p
