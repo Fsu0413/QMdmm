@@ -189,12 +189,12 @@ private slots:
     void QMdmmPacketfromJsonhasError2()
     {
         {
-            // coverage for the no-errorString overload of hasError()
-            (void)Packet::fromJson(QByteArray("some_invalid")).hasError();
+            // the no-errorString overload of hasError() reports a parse error
+            QVERIFY(Packet::fromJson(QByteArray("some_invalid")).hasError());
         }
         {
             QString actualErrorString;
-            (void)Packet::fromJson(QByteArray("some_invalid")).hasError(&actualErrorString);
+            QVERIFY(Packet::fromJson(QByteArray("some_invalid")).hasError(&actualErrorString));
 
             bool r = actualErrorString.startsWith(QStringLiteral("Json error: "));
             QVERIFY(r);
@@ -208,6 +208,8 @@ private slots:
 
             QCOMPARE(p.hasError(&actualErrorString), false);
             QVERIFY(actualErrorString.isEmpty());
+            // the no-errorString overload agrees with the errorString overload
+            QCOMPARE(p.hasError(), false);
 
             if (actualErrorString.isEmpty()) {
                 QCOMPARE(p.type(), Protocol::TypeNotify);
