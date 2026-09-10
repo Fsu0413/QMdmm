@@ -196,7 +196,7 @@ void LogicP::startActionOrder()
         foreach (const QString &player, remainingPlayers) {
             const int count = remainingActionCount.value(player);
             for (int k = 0; k < count; ++k)
-                confirmedActionOrders[remainingActionOrders[orderIndex++]] = player;
+                confirmedActionOrders[remainingActionOrders.at(orderIndex++)] = player;
         }
 
         emit q->actionOrderResult(confirmedActionOrders, Logic::QPrivateSignal());
