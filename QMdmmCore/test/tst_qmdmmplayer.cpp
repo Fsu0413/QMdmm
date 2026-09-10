@@ -1370,3 +1370,5 @@ namespace {
 RegisterTestObject<tst_QMdmmPlayer> _;
 }
 #include "tst_qmdmmplayer.moc"
+
+// NOLINTEND

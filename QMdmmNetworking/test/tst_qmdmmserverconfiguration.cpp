@@ -182,3 +182,5 @@ namespace {
 RegisterTestObject<tst_QMdmmServerConfiguration> _a;
 } // namespace
 #include "tst_qmdmmserverconfiguration.moc"
+
+// NOLINTEND

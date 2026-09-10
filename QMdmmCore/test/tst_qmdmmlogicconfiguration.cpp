@@ -162,3 +162,5 @@ namespace {
 RegisterTestObject<tst_QMdmmLogicConfiguration> _a;
 } // namespace
 #include "tst_qmdmmlogicconfiguration.moc"
+
+// NOLINTEND

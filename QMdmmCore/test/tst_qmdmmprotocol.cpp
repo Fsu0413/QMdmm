@@ -236,3 +236,5 @@ namespace {
 RegisterTestObject<tst_QMdmmProtocol> _;
 }
 #include "tst_qmdmmprotocol.moc"
+
+// NOLINTEND

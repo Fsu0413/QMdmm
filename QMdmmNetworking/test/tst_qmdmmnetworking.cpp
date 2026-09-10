@@ -1082,3 +1082,5 @@ namespace {
 RegisterTestObject<tst_QMdmmNetworking> _;
 }
 #include "tst_qmdmmnetworking.moc"
+
+// NOLINTEND

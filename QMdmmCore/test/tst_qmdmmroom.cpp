@@ -260,3 +260,5 @@ namespace {
 RegisterTestObject<tst_QMdmmRoom> _b;
 } // namespace
 #include "tst_qmdmmroom.moc"
+
+// NOLINTEND

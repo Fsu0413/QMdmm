@@ -135,9 +135,9 @@ private slots:
     }
 };
 
-// NOLINTEND
-
 namespace {
 RegisterTestObject<tst_QMdmmDebug> _a;
 } // namespace
 #include "tst_qmdmmdebug.moc"
+
+// NOLINTEND

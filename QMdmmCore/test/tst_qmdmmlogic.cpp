@@ -789,3 +789,5 @@ namespace {
 RegisterTestObject<tst_QMdmmLogic> _;
 }
 #include "tst_qmdmmlogic.moc"
+
+// NOLINTEND

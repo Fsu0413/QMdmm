@@ -9,6 +9,8 @@
 
 #include "gameclient.h"
 
+// NOLINTBEGIN
+
 // Registers the GUI bridge type and the core data types with the QML engine so
 // the QML test cases can instantiate QMdmmGameClient and inspect the Player
 // objects / enum values it exposes. Mirrors the registration done by MainWindow
@@ -30,3 +32,5 @@ public:
 QUICK_TEST_MAIN_WITH_SETUP(qmdmmgui, QMdmmGuiTestSetup)
 
 #include "tst_qmdmmgui.moc"
+
+// NOLINTEND

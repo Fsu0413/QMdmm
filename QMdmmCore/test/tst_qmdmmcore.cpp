@@ -185,3 +185,5 @@ namespace {
 RegisterTestObject<tst_QMdmmCore> _;
 }
 #include "tst_qmdmmcore.moc"
+
+// NOLINTEND

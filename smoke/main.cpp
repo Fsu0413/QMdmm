@@ -26,6 +26,8 @@
 #include <QMdmmRoom>
 #include <QMdmmServer>
 
+// NOLINTBEGIN
+
 using namespace QMdmmCore;
 using namespace QMdmmNetworking;
 
@@ -268,3 +270,5 @@ int main(int argc, char **argv)
     qDebug() << "smoke: PASS - reconnect verified (game completed:" << (gameOvers > 0) << ")";
     return rc;
 }
+
+// NOLINTEND
