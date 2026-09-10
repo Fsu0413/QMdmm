@@ -58,6 +58,17 @@ Read these before touching code:
   (e.g. for `std::optional<int> o;`, it is forced to use `if (o.has_value())`
   instead of `if (o)`). Same rule applies for `while` and `for` loops.
 
+### Range-based `for` over `std::map` / `std::unordered_map`
+
+- Do not rewrite a `std::map` / `std::unordered_map` walk as a range-based
+  `for`. Keep the explicit iterator: `it->first` / `it->second` name the key
+  and the value at the point of use, while a range-based `for` hands out a
+  pair and reads worse.
+- `clang-tidy`'s `modernize-loop-convert` will keep asking for the conversion,
+  so annotate the loop instead of converting it:
+  `// NOLINTNEXTLINE(modernize-loop-convert): <reason>`. Canonical example: the
+  nine loops in `QMdmmCore/src/qmdmmroom.cpp`.
+
 ### Source files are pure ASCII
 
 - Comments and identifiers must contain no Chinese (or any other non-ASCII)
