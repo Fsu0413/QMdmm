@@ -54,7 +54,7 @@ void KnifePreferredBot::handleActionRequest(int currentOrder)
             return;
         }
         // Cannot buy where we stand (e.g. Village) -> step to any city seat.
-        const int seatCount = client()->room()->players().count();
+        const int seatCount = static_cast<int>(client()->room()->players().count());
         for (int place = 1; place <= seatCount; ++place) {
             if (self->canMove(place)) {
                 client()->agent()->action(QMdmmCore::Data::Move, QString(), place);
