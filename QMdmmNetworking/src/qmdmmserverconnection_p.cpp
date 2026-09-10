@@ -11,24 +11,36 @@
 namespace QMdmmNetworking {
 namespace p {
 
-QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> ServerConnectionP::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnectionP::receiveSpeak),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnectionP::receiveOperate),
-};
+const QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> &ServerConnectionP::notifyCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> callbacks {
+        std::make_pair(QMdmmCore::Protocol::NotifySpeak, &ServerConnectionP::receiveSpeak),
+        std::make_pair(QMdmmCore::Protocol::NotifyOperate, &ServerConnectionP::receiveOperate),
+    };
+    return callbacks;
+}
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> ServerConnectionP::replyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::decodeRockPaperScissorsReply),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::decodeActionOrderReply),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::decodeActionReply),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::decodeUpgradeReply),
-};
+const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> &ServerConnectionP::replyCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> callbacks {
+        std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::decodeRockPaperScissorsReply),
+        std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::decodeActionOrderReply),
+        std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::decodeActionReply),
+        std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::decodeUpgradeReply),
+    };
+    return callbacks;
+}
 
-QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> ServerConnectionP::defaultReplyCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::defaultReplyRockPaperScissors),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::defaultReplyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::defaultReplyAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::defaultReplyUpgrade),
-};
+const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> &ServerConnectionP::defaultReplyCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> callbacks {
+        std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ServerConnectionP::defaultReplyRockPaperScissors),
+        std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ServerConnectionP::defaultReplyActionOrder),
+        std::make_pair(QMdmmCore::Protocol::RequestAction, &ServerConnectionP::defaultReplyAction),
+        std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ServerConnectionP::defaultReplyUpgrade),
+    };
+    return callbacks;
+}
 
 // Extra tolerance in seconds added on top of ServerConfiguration::requestTimeout for the
 // request timer. The timer only backstops abnormal cases (D-020): a healthy client replies
@@ -387,7 +399,7 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
         // A notify addressed to the agent (speak / operate) is decoded and handed to the Agent.
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToAgentMask) != 0) {
-            void (ServerConnectionP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ServerConnectionP::*call)(const QJsonValue &) = notifyCallbacks().value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
@@ -419,7 +431,7 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
                 executeDefaultReply();
             } else {
                 currentRequest = QMdmmCore::Protocol::RequestInvalid;
-                void (ServerConnectionP::*call)(const QJsonValue &) = replyCallback.value(packet.requestId(), nullptr);
+                void (ServerConnectionP::*call)(const QJsonValue &) = replyCallbacks().value(packet.requestId(), nullptr);
                 if (call != nullptr)
                     (this->*call)(packet.value());
                 else
@@ -641,7 +653,7 @@ void ServerConnectionP::requestTimeout()
 void ServerConnectionP::executeDefaultReply()
 {
     if (currentRequest != QMdmmCore::Protocol::RequestInvalid) {
-        void (ServerConnectionP::*call)() = defaultReplyCallback.value(currentRequest, nullptr);
+        void (ServerConnectionP::*call)() = defaultReplyCallbacks().value(currentRequest, nullptr);
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         if (call != nullptr)
             (this->*call)();

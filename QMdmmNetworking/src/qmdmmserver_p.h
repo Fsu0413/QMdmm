@@ -27,7 +27,10 @@ class QMDMMNETWORKING_PRIVATE_EXPORT ServerP final : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> notifyCallback;
+    // The protocol dispatch table is returned from an accessor rather than declared as a static
+    // data member: building it allocates, and a failure must reach the caller instead of
+    // terminating the process during static initialization (cert-err58-cpp).
+    static const QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> &notifyCallbacks();
 
 public:
     ServerP(ServerConfiguration serverConfiguration, QMdmmCore::LogicConfiguration logicConfiguration, Server *q);

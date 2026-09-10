@@ -11,11 +11,15 @@
 namespace QMdmmNetworking {
 namespace p {
 
-QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> ServerP::notifyCallback {
-    std::make_pair(QMdmmCore::Protocol::NotifyPingServer, &ServerP::pingServer),
-    std::make_pair(QMdmmCore::Protocol::NotifySignIn, &ServerP::signIn),
-    std::make_pair(QMdmmCore::Protocol::NotifyObserve, &ServerP::observe),
-};
+const QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> &ServerP::notifyCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> callbacks {
+        std::make_pair(QMdmmCore::Protocol::NotifyPingServer, &ServerP::pingServer),
+        std::make_pair(QMdmmCore::Protocol::NotifySignIn, &ServerP::signIn),
+        std::make_pair(QMdmmCore::Protocol::NotifyObserve, &ServerP::observe),
+    };
+    return callbacks;
+}
 
 ServerP::ServerP(ServerConfiguration serverConfiguration_, QMdmmCore::LogicConfiguration logicConfiguration, Server *q)
     : QObject(q)
@@ -214,7 +218,7 @@ void ServerP::socketPacketReceived(const QMdmmCore::Packet &packet)
     if (packet.type() == QMdmmCore::Protocol::TypeNotify) {
         if ((packet.notifyId() & QMdmmCore::Protocol::NotifyToServerMask) != 0) {
             // These packages should be processed in Server
-            void (ServerP::*call)(Socket *, const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ServerP::*call)(Socket *, const QJsonValue &) = notifyCallbacks().value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(socket, packet.value());
             else

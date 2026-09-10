@@ -23,9 +23,12 @@ class QMDMMNETWORKING_PRIVATE_EXPORT ServerConnectionP : public QObject
 {
     Q_OBJECT
 
-    static QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> notifyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> replyCallback;
-    static QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> defaultReplyCallback;
+    // The protocol dispatch tables are returned from accessors rather than declared as static
+    // data members: building them allocates, and a failure must reach the caller instead of
+    // terminating the process during static initialization (cert-err58-cpp).
+    static const QHash<QMdmmCore::Protocol::NotifyId, void (ServerConnectionP::*)(const QJsonValue &)> &notifyCallbacks();
+    static const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)(const QJsonValue &)> &replyCallbacks();
+    static const QHash<QMdmmCore::Protocol::RequestId, void (ServerConnectionP::*)()> &defaultReplyCallbacks();
 
     static int requestTimeoutGracePeriod;
 

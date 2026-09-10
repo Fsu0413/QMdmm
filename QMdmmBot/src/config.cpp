@@ -9,7 +9,12 @@
 
 #include <iostream>
 
-static const QString helpText = QStringLiteral(R"help(Usage: QMdmmBot [options]
+namespace {
+// The giant help literal lives in a function-local static so that a failed allocation surfaces
+// at the call site instead of terminating the process during static initialization (cert-err58-cpp).
+const QString &helpText()
+{
+    static const QString text = QStringLiteral(R"help(Usage: QMdmmBot [options]
 
 Options:
   -h, --help                         Show this help text and exit.
@@ -26,6 +31,9 @@ Bot:
                                        horsePreferred      prefer the horse
                                        rl                  reinforcement learning (not implemented)
 )help");
+    return text;
+}
+} // namespace
 
 namespace {
 
@@ -78,7 +86,7 @@ Config::Config()
         configError(QStringLiteral("Unknown argument: %1"), parser.positionalArguments().join(QStringLiteral(", ")));
 
     if (parser.isSet(QStringLiteral("h"))) {
-        std::cout << qPrintable(helpText) << std::flush;
+        std::cout << qPrintable(helpText()) << std::flush;
         std::exit(0);
     }
 

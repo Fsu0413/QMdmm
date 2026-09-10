@@ -24,34 +24,42 @@ constexpr int ReconnectMaxIntervalMs = 8000;
 constexpr int MaxReconnectAttempts = 5;
 } // namespace
 
-QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> ClientP::requestCallback {
-    std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ClientP::requestRockPaperScissors),
-    std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ClientP::requestActionOrder),
-    std::make_pair(QMdmmCore::Protocol::RequestAction, &ClientP::requestAction),
-    std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ClientP::requestUpgrade),
-};
+const QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> &ClientP::requestCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::RequestId, void (ClientP::*)(const QJsonValue &)> callbacks {
+        std::make_pair(QMdmmCore::Protocol::RequestRockPaperScissors, &ClientP::requestRockPaperScissors),
+        std::make_pair(QMdmmCore::Protocol::RequestActionOrder, &ClientP::requestActionOrder),
+        std::make_pair(QMdmmCore::Protocol::RequestAction, &ClientP::requestAction),
+        std::make_pair(QMdmmCore::Protocol::RequestUpgrade, &ClientP::requestUpgrade),
+    };
+    return callbacks;
+}
 
-QHash<QMdmmCore::Protocol::NotifyId, void (ClientP::*)(const QJsonValue &)> ClientP::notifyCallback {
-    // from Server
-    std::make_pair(QMdmmCore::Protocol::NotifyPongServer, &ClientP::notifyPongServer),
-    std::make_pair(QMdmmCore::Protocol::NotifyVersion, &ClientP::notifyVersion),
+const QHash<QMdmmCore::Protocol::NotifyId, void (ClientP::*)(const QJsonValue &)> &ClientP::notifyCallbacks()
+{
+    static const QHash<QMdmmCore::Protocol::NotifyId, void (ClientP::*)(const QJsonValue &)> callbacks {
+        // from Server
+        std::make_pair(QMdmmCore::Protocol::NotifyPongServer, &ClientP::notifyPongServer),
+        std::make_pair(QMdmmCore::Protocol::NotifyVersion, &ClientP::notifyVersion),
 
-    // from Agent
-    std::make_pair(QMdmmCore::Protocol::NotifyLogicConfiguration, &ClientP::notifyLogicConfiguration),
-    std::make_pair(QMdmmCore::Protocol::NotifyAgentStateChanged, &ClientP::notifyAgentStateChanged),
-    std::make_pair(QMdmmCore::Protocol::NotifyPlayerAdded, &ClientP::notifyPlayerAdded),
-    std::make_pair(QMdmmCore::Protocol::NotifyPlayerRemoved, &ClientP::notifyPlayerRemoved),
-    std::make_pair(QMdmmCore::Protocol::NotifyGameStart, &ClientP::notifyGameStart),
-    std::make_pair(QMdmmCore::Protocol::NotifyRoundStart, &ClientP::notifyRoundStart),
-    std::make_pair(QMdmmCore::Protocol::NotifyRockPaperScissors, &ClientP::notifyRockPaperScissors),
-    std::make_pair(QMdmmCore::Protocol::NotifyActionOrder, &ClientP::notifyActionOrder),
-    std::make_pair(QMdmmCore::Protocol::NotifyAction, &ClientP::notifyAction),
-    std::make_pair(QMdmmCore::Protocol::NotifyRoundOver, &ClientP::notifyRoundOver),
-    std::make_pair(QMdmmCore::Protocol::NotifyUpgrade, &ClientP::notifyUpgrade),
-    std::make_pair(QMdmmCore::Protocol::NotifyGameOver, &ClientP::notifyGameOver),
-    std::make_pair(QMdmmCore::Protocol::NotifySpoken, &ClientP::notifySpoken),
-    std::make_pair(QMdmmCore::Protocol::NotifyOperated, &ClientP::notifyOperated),
-};
+        // from Agent
+        std::make_pair(QMdmmCore::Protocol::NotifyLogicConfiguration, &ClientP::notifyLogicConfiguration),
+        std::make_pair(QMdmmCore::Protocol::NotifyAgentStateChanged, &ClientP::notifyAgentStateChanged),
+        std::make_pair(QMdmmCore::Protocol::NotifyPlayerAdded, &ClientP::notifyPlayerAdded),
+        std::make_pair(QMdmmCore::Protocol::NotifyPlayerRemoved, &ClientP::notifyPlayerRemoved),
+        std::make_pair(QMdmmCore::Protocol::NotifyGameStart, &ClientP::notifyGameStart),
+        std::make_pair(QMdmmCore::Protocol::NotifyRoundStart, &ClientP::notifyRoundStart),
+        std::make_pair(QMdmmCore::Protocol::NotifyRockPaperScissors, &ClientP::notifyRockPaperScissors),
+        std::make_pair(QMdmmCore::Protocol::NotifyActionOrder, &ClientP::notifyActionOrder),
+        std::make_pair(QMdmmCore::Protocol::NotifyAction, &ClientP::notifyAction),
+        std::make_pair(QMdmmCore::Protocol::NotifyRoundOver, &ClientP::notifyRoundOver),
+        std::make_pair(QMdmmCore::Protocol::NotifyUpgrade, &ClientP::notifyUpgrade),
+        std::make_pair(QMdmmCore::Protocol::NotifyGameOver, &ClientP::notifyGameOver),
+        std::make_pair(QMdmmCore::Protocol::NotifySpoken, &ClientP::notifySpoken),
+        std::make_pair(QMdmmCore::Protocol::NotifyOperated, &ClientP::notifyOperated),
+    };
+    return callbacks;
+}
 
 ClientP::ClientP(ClientConfiguration clientConfiguration, Client *q)
     : QObject(q)
@@ -873,7 +881,7 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
 
     if (packet.type() == QMdmmCore::Protocol::TypeRequest) {
         currentRequest = packet.requestId();
-        void (ClientP::*call)(const QJsonValue &) = requestCallback.value(packet.requestId(), nullptr);
+        void (ClientP::*call)(const QJsonValue &) = requestCallbacks().value(packet.requestId(), nullptr);
         if (call != nullptr)
             (this->*call)(packet.value());
         else
@@ -885,7 +893,7 @@ void ClientP::socketPacketReceived(const QMdmmCore::Packet &packet)
         // A notify from the server (pong / version) or from an agent (broadcast) is decoded and
         // handed to the Agent.
         if (((packet.notifyId() & QMdmmCore::Protocol::NotifyFromServerMask) != 0) || ((packet.notifyId() & QMdmmCore::Protocol::NotifyFromAgentMask) != 0)) {
-            void (ClientP::*call)(const QJsonValue &) = notifyCallback.value(packet.notifyId(), nullptr);
+            void (ClientP::*call)(const QJsonValue &) = notifyCallbacks().value(packet.notifyId(), nullptr);
             if (call != nullptr)
                 (this->*call)(packet.value());
             else
