@@ -162,6 +162,28 @@ private slots:
         }
     }
 
+    void QMdmmServerConfigurationdeserializeAbsentKeysFallBackToDefaults()
+    {
+        // An empty object is a valid configuration: every absent key falls back to its default value
+        // (this is what a server configuration with no explicit item looks like), and the
+        // deserialization does not materialize the absent keys.
+        const QJsonObject emptyOb;
+        ServerConfiguration conf;
+        QVERIFY(conf.deserialize(QJsonValue(emptyOb)));
+        QCOMPARE(QJsonValue(QJsonObject(conf)), QJsonValue(emptyOb));
+
+        const ServerConfiguration &defaults = ServerConfiguration::defaults();
+        QCOMPARE(conf.tcpEnabled(), defaults.tcpEnabled());
+        QCOMPARE(conf.tcpPort(), defaults.tcpPort());
+        QCOMPARE(conf.localEnabled(), defaults.localEnabled());
+        QCOMPARE(conf.localSocketName(), defaults.localSocketName());
+        QCOMPARE(conf.websocketEnabled(), defaults.websocketEnabled());
+        QCOMPARE(conf.websocketName(), defaults.websocketName());
+        QCOMPARE(conf.websocketPort(), defaults.websocketPort());
+        QCOMPARE(conf.playerNumPerRoom(), defaults.playerNumPerRoom());
+        QCOMPARE(conf.requestTimeout(), defaults.requestTimeout());
+    }
+
     void QMdmmServerConfigurationdeserializeIgnoresUnknownKeys()
     {
         const QJsonObject ob {

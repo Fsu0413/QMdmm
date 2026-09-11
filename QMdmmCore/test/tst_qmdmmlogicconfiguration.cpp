@@ -156,6 +156,57 @@ private slots:
             QCOMPARE(QJsonValue(QJsonObject(conf)), value);
         }
     }
+
+    void QMdmmLogicConfigurationdeserializeAbsentKeysFallBackToDefaults()
+    {
+        // An empty object is a valid configuration: every absent key falls back to its default value
+        // (a server without any explicit logic configuration item broadcasts exactly this), and the
+        // deserialization does not materialize the absent keys.
+        const QJsonObject emptyOb;
+        LogicConfiguration conf;
+        QVERIFY(conf.deserialize(QJsonValue(emptyOb)));
+        QCOMPARE(QJsonValue(QJsonObject(conf)), QJsonValue(emptyOb));
+
+        const LogicConfiguration &defaults = LogicConfiguration::defaults();
+        QCOMPARE(conf.initialKnifeDamage(), defaults.initialKnifeDamage());
+        QCOMPARE(conf.maximumKnifeDamage(), defaults.maximumKnifeDamage());
+        QCOMPARE(conf.initialHorseDamage(), defaults.initialHorseDamage());
+        QCOMPARE(conf.maximumHorseDamage(), defaults.maximumHorseDamage());
+        QCOMPARE(conf.initialMaxHp(), defaults.initialMaxHp());
+        QCOMPARE(conf.maximumMaxHp(), defaults.maximumMaxHp());
+        QCOMPARE(conf.punishHpModifier(), defaults.punishHpModifier());
+        QCOMPARE(conf.punishHpRoundStrategy(), defaults.punishHpRoundStrategy());
+        QCOMPARE(conf.zeroHpAsDead(), defaults.zeroHpAsDead());
+        QCOMPARE(conf.enableLetMove(), defaults.enableLetMove());
+        QCOMPARE(conf.canBuyOnlyInInitialCity(), defaults.canBuyOnlyInInitialCity());
+    }
+
+    void QMdmmLogicConfigurationdeserializePresentKeysWinOverDefaults()
+    {
+        // Present keys take effect, absent ones still fall back to their default value.
+        const QJsonObject partialOb {
+            {QStringLiteral("maximumMaxHp"), 15},
+            {QStringLiteral("enableLetMove"), false},
+        };
+
+        LogicConfiguration conf;
+        QVERIFY(conf.deserialize(QJsonValue(partialOb)));
+        QCOMPARE(QJsonValue(QJsonObject(conf)), QJsonValue(partialOb));
+
+        QCOMPARE(conf.maximumMaxHp(), 15);
+        QCOMPARE(conf.enableLetMove(), false);
+
+        const LogicConfiguration &defaults = LogicConfiguration::defaults();
+        QCOMPARE(conf.initialKnifeDamage(), defaults.initialKnifeDamage());
+        QCOMPARE(conf.maximumKnifeDamage(), defaults.maximumKnifeDamage());
+        QCOMPARE(conf.initialHorseDamage(), defaults.initialHorseDamage());
+        QCOMPARE(conf.maximumHorseDamage(), defaults.maximumHorseDamage());
+        QCOMPARE(conf.initialMaxHp(), defaults.initialMaxHp());
+        QCOMPARE(conf.punishHpModifier(), defaults.punishHpModifier());
+        QCOMPARE(conf.punishHpRoundStrategy(), defaults.punishHpRoundStrategy());
+        QCOMPARE(conf.zeroHpAsDead(), defaults.zeroHpAsDead());
+        QCOMPARE(conf.canBuyOnlyInInitialCity(), defaults.canBuyOnlyInInitialCity());
+    }
 };
 
 namespace {
