@@ -9,9 +9,6 @@
 #include <QMdmmAgent>
 #include <QMdmmLogicConfiguration>
 
-using namespace QMdmmCore;
-using namespace QMdmmNetworking;
-
 using namespace Qt::StringLiterals;
 
 // Bridge between the QML GUI and the networking / core engine: owns the human
@@ -60,9 +57,9 @@ QVariantList QMdmmGameClient::players() const
     QVariantList ret;
     if (m_room == nullptr)
         return ret;
-    const QList<Player *> ps = m_room->players();
+    const QList<QMdmmCore::Player *> ps = m_room->players();
     ret.reserve(ps.size());
-    for (Player *p : ps)
+    for (QMdmmCore::Player *p : ps)
         ret.append(QVariant::fromValue(static_cast<QObject *>(p)));
     return ret;
 }
@@ -146,76 +143,76 @@ bool QMdmmGameClient::isYou(const QString &playerName) const
 
 QString QMdmmGameClient::placeName(int place) const
 {
-    if (place == Data::Village)
+    if (place == QMdmmCore::Data::Village)
         return tr("Village");
     return tr("City %1").arg(place);
 }
 
-void QMdmmGameClient::wireClient(Client *client)
+void QMdmmGameClient::wireClient(QMdmmNetworking::Client *client)
 {
     // The client's own agent is the controller the operation side drives: incoming requests
     // arrive on it as xxxRequested signals, notifications as xxxNotified signals, and replies /
     // speech are sent back through the same agent.
-    Agent *agent = client->agent();
+    QMdmmNetworking::Agent *agent = client->agent();
 
     // request signals -> re-emit for QML
-    connect(agent, &Agent::rockPaperScissorsRequested, this,
+    connect(agent, &QMdmmNetworking::Agent::rockPaperScissorsRequested, this,
             [this](const QStringList &playerNames, int strivedOrder) { emit requestRockPaperScissors(playerNames, strivedOrder); });
-    connect(agent, &Agent::actionOrderRequested, this,
+    connect(agent, &QMdmmNetworking::Agent::actionOrderRequested, this,
             [this](const QList<int> &remainedOrders, int maximumOrder, int selectionNum) { emit requestActionOrder(remainedOrders, maximumOrder, selectionNum); });
-    connect(agent, &Agent::actionRequested, this, [this](int currentOrder) { emit requestAction(currentOrder); });
-    connect(agent, &Agent::upgradeRequested, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
+    connect(agent, &QMdmmNetworking::Agent::actionRequested, this, [this](int currentOrder) { emit requestAction(currentOrder); });
+    connect(agent, &QMdmmNetworking::Agent::upgradeRequested, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
 
     // notify signals -> re-emit (and keep the local view in sync)
-    connect(agent, &Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const Data::AgentState &agentState) {
+    connect(agent, &QMdmmNetworking::Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState) {
         m_screenNames.insert(playerName, screenName);
         m_agentStates.insert(playerName, agentState);
         emit playerAdded(playerName, screenName, static_cast<int>(agentState));
         emit playersChanged();
     });
-    connect(agent, &Agent::playerRemoveNotified, this, [this](const QString &playerName) {
+    connect(agent, &QMdmmNetworking::Agent::playerRemoveNotified, this, [this](const QString &playerName) {
         m_screenNames.remove(playerName);
         m_agentStates.remove(playerName);
         emit playerRemoved(playerName);
         emit playersChanged();
     });
-    connect(agent, &Agent::gameStartNotified, this, [this]() {
+    connect(agent, &QMdmmNetworking::Agent::gameStartNotified, this, [this]() {
         setGameState(GameState::Playing);
         emit gameStart();
     });
-    connect(agent, &Agent::roundStartNotified, this, [this]() { emit roundStart(); });
-    connect(agent, &Agent::roundOverNotified, this, [this]() { emit roundOver(); });
-    connect(agent, &Agent::rockPaperScissorsNotified, this, [this](const QHash<QString, Data::RockPaperScissors> &replies) {
+    connect(agent, &QMdmmNetworking::Agent::roundStartNotified, this, [this]() { emit roundStart(); });
+    connect(agent, &QMdmmNetworking::Agent::roundOverNotified, this, [this]() { emit roundOver(); });
+    connect(agent, &QMdmmNetworking::Agent::rockPaperScissorsNotified, this, [this](const QHash<QString, QMdmmCore::Data::RockPaperScissors> &replies) {
         QVariantMap m;
-        for (QHash<QString, Data::RockPaperScissors>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
+        for (QHash<QString, QMdmmCore::Data::RockPaperScissors>::const_iterator it = replies.constBegin(); it != replies.constEnd(); ++it)
             m.insert(it.key(), static_cast<int>(it.value()));
         emit rpsResult(m);
     });
-    connect(agent, &Agent::actionOrderNotified, this, [this](const QStringList &result) {
+    connect(agent, &QMdmmNetworking::Agent::actionOrderNotified, this, [this](const QStringList &result) {
         QVariantMap m;
         for (int i = 0; i < result.size(); ++i)
             m.insert(QString::number(i + 1), result.at(i));
         emit actionOrderResult(m);
     });
-    connect(agent, &Agent::actionNotified, this, [this](const QString &playerName, Data::Action action, const QString &toPlayer, int toPlace) {
+    connect(agent, &QMdmmNetworking::Agent::actionNotified, this, [this](const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace) {
         emit actionResult(playerName, static_cast<int>(action), toPlayer, toPlace);
     });
-    connect(agent, &Agent::upgradeNotified, this, [this](const QHash<QString, QList<Data::UpgradeItem>> &upgrades) {
+    connect(agent, &QMdmmNetworking::Agent::upgradeNotified, this, [this](const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades) {
         QVariantMap m;
-        for (QHash<QString, QList<Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
+        for (QHash<QString, QList<QMdmmCore::Data::UpgradeItem>>::const_iterator it = upgrades.constBegin(); it != upgrades.constEnd(); ++it) {
             QVariantList l;
             l.reserve(it.value().size());
-            for (Data::UpgradeItem u : it.value())
+            for (QMdmmCore::Data::UpgradeItem u : it.value())
                 l.append(static_cast<int>(u));
             m.insert(it.key(), l);
         }
         emit upgradeResult(m);
     });
-    connect(agent, &Agent::gameOverNotified, this, [this](const QStringList &winners) {
+    connect(agent, &QMdmmNetworking::Agent::gameOverNotified, this, [this](const QStringList &winners) {
         setGameState(GameState::GameOver);
         emit gameOver(winners);
     });
-    connect(agent, &Agent::speakNotified, this, [this](const QString &playerName, const QString &content) {
+    connect(agent, &QMdmmNetworking::Agent::speakNotified, this, [this](const QString &playerName, const QString &content) {
         QVariantMap entry;
         entry.insert(u"name"_s, playerName);
         entry.insert(u"screen"_s, screenName(playerName));
@@ -223,7 +220,7 @@ void QMdmmGameClient::wireClient(Client *client)
         m_chat.append(entry);
         emit chatLogChanged();
     });
-    connect(client, &Client::socketErrorDisconnected, this, [this](const QString &errorString) {
+    connect(client, &QMdmmNetworking::Client::socketErrorDisconnected, this, [this](const QString &errorString) {
         setStatusMessage(errorString);
         emit errorOccurred(errorString);
     });
@@ -231,34 +228,34 @@ void QMdmmGameClient::wireClient(Client *client)
 
 void QMdmmGameClient::addBot(const QString &name)
 {
-    ClientConfiguration cfg;
+    QMdmmNetworking::ClientConfiguration cfg;
     cfg.setScreenName(name);
-    Client *bot = new Client(cfg, this);
+    QMdmmNetworking::Client *bot = new QMdmmNetworking::Client(cfg, this);
 
     // Auto-reply: mirror the server's default-reply behavior so the room fills
     // and the match progresses without a human driving the bot. The bot's own
     // agent is the controller: requests arrive on its xxxRequested signals, and
     // replies are sent back through its bare-verb methods.
-    Agent *botAgent = bot->agent();
-    connect(botAgent, &Agent::rockPaperScissorsRequested, bot,
-            [botAgent]() { botAgent->rockPaperScissors(static_cast<Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3)); });
-    connect(botAgent, &Agent::actionOrderRequested, bot, [botAgent](const QList<int> &remainedOrders, int, int selectionNum) {
+    QMdmmNetworking::Agent *botAgent = bot->agent();
+    connect(botAgent, &QMdmmNetworking::Agent::rockPaperScissorsRequested, bot,
+            [botAgent]() { botAgent->rockPaperScissors(static_cast<QMdmmCore::Data::RockPaperScissors>(QRandomGenerator::global()->generate() % 3)); });
+    connect(botAgent, &QMdmmNetworking::Agent::actionOrderRequested, bot, [botAgent](const QList<int> &remainedOrders, int, int selectionNum) {
         QList<int> ao;
         ao.reserve(selectionNum);
         for (int i = 0; i < selectionNum && i < remainedOrders.size(); ++i)
             ao.append(remainedOrders.at(i));
         botAgent->actionOrder(ao);
     });
-    connect(botAgent, &Agent::actionRequested, bot, [botAgent]() { botAgent->action(Data::DoNothing, {}, 0); });
-    connect(botAgent, &Agent::upgradeRequested, bot, [botAgent](int remainingTimes) {
-        QList<Data::UpgradeItem> ups;
+    connect(botAgent, &QMdmmNetworking::Agent::actionRequested, bot, [botAgent]() { botAgent->action(QMdmmCore::Data::DoNothing, {}, 0); });
+    connect(botAgent, &QMdmmNetworking::Agent::upgradeRequested, bot, [botAgent](int remainingTimes) {
+        QList<QMdmmCore::Data::UpgradeItem> ups;
         ups.reserve(remainingTimes);
         for (int i = 0; i < remainingTimes; ++i)
-            ups.append(Data::UpgradeMaxHp);
+            ups.append(QMdmmCore::Data::UpgradeMaxHp);
         botAgent->upgrade(ups);
     });
 
-    bot->connectToHost(QString::fromLatin1(LOCAL_HOST), Data::StateOnlineBot);
+    bot->connectToHost(QString::fromLatin1(LOCAL_HOST), QMdmmCore::Data::StateOnlineBot);
     m_bots.append(bot);
 }
 
@@ -267,9 +264,9 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
     reset();
 
     // In-process server so a single user can actually play a full match.
-    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    QMdmmNetworking::ServerConfiguration serverConf = QMdmmNetworking::ServerConfiguration::defaults();
     serverConf.setPlayerNumPerRoom(m_playerCount);
-    m_server = new Server(serverConf, LogicConfiguration::defaults(), this);
+    m_server = new QMdmmNetworking::Server(serverConf, QMdmmCore::LogicConfiguration::defaults(), this);
     if (!m_server->listen()) {
         setStatusMessage(tr("Failed to start local server"));
         delete m_server;
@@ -277,14 +274,14 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
         return;
     }
 
-    ClientConfiguration hc;
+    QMdmmNetworking::ClientConfiguration hc;
     hc.setScreenName(playerName.isEmpty() ? u"You"_s : playerName);
-    m_human = new Client(hc, this);
+    m_human = new QMdmmNetworking::Client(hc, this);
     m_localName = m_human->objectName();
     m_localScreen = hc.screenName();
     m_room = m_human->room();
     wireClient(m_human);
-    m_human->connectToHost(QString::fromLatin1(LOCAL_HOST), Data::StateOnline);
+    m_human->connectToHost(QString::fromLatin1(LOCAL_HOST), QMdmmCore::Data::StateOnline);
 
     for (int i = 1; i < m_playerCount; ++i)
         addBot(u"Bot %1"_s.arg(i));
@@ -298,9 +295,9 @@ void QMdmmGameClient::connectOnline(const QString &host, const QString &playerNa
 {
     reset();
 
-    ClientConfiguration hc;
+    QMdmmNetworking::ClientConfiguration hc;
     hc.setScreenName(playerName.isEmpty() ? u"You"_s : playerName);
-    m_human = new Client(hc, this);
+    m_human = new QMdmmNetworking::Client(hc, this);
     m_localName = m_human->objectName();
     m_localScreen = hc.screenName();
     m_room = m_human->room();
@@ -309,7 +306,7 @@ void QMdmmGameClient::connectOnline(const QString &host, const QString &playerNa
     QString addr = host.trimmed();
     if (!addr.contains(QLatin1String("://")))
         addr = u"qmdmm://"_s + addr;
-    m_human->connectToHost(addr, Data::StateOnline);
+    m_human->connectToHost(addr, QMdmmCore::Data::StateOnline);
 
     emit localNameChanged();
     setGameState(GameState::Lobby);
@@ -326,7 +323,7 @@ void QMdmmGameClient::disconnectAll()
 void QMdmmGameClient::replyRps(int rps)
 {
     if (m_human != nullptr)
-        m_human->agent()->rockPaperScissors(static_cast<Data::RockPaperScissors>(rps));
+        m_human->agent()->rockPaperScissors(static_cast<QMdmmCore::Data::RockPaperScissors>(rps));
 }
 
 void QMdmmGameClient::replyActionOrder(const QVariantList &orders)
@@ -353,17 +350,17 @@ void QMdmmGameClient::yieldActionOrder(int selectionNum)
 void QMdmmGameClient::replyAction(int action, const QString &toPlayer, int toPlace)
 {
     if (m_human != nullptr)
-        m_human->agent()->action(static_cast<Data::Action>(action), toPlayer, toPlace);
+        m_human->agent()->action(static_cast<QMdmmCore::Data::Action>(action), toPlayer, toPlace);
 }
 
 void QMdmmGameClient::replyUpgrade(const QVariantList &items)
 {
     if (m_human == nullptr)
         return;
-    QList<Data::UpgradeItem> ups;
+    QList<QMdmmCore::Data::UpgradeItem> ups;
     ups.reserve(items.size());
     for (const QVariant &v : items)
-        ups.append(static_cast<Data::UpgradeItem>(v.toInt()));
+        ups.append(static_cast<QMdmmCore::Data::UpgradeItem>(v.toInt()));
     m_human->agent()->upgrade(ups);
 }
 
@@ -373,13 +370,13 @@ void QMdmmGameClient::speak(const QString &text)
         m_human->agent()->speak(text);
 }
 
-QVariantList QMdmmGameClient::actionListFor(const Player *from) const
+QVariantList QMdmmGameClient::actionListFor(const QMdmmCore::Player *from) const
 {
     QVariantList ret;
     if (from == nullptr || m_room == nullptr)
         return ret;
 
-    const auto make = [](Data::Action a, const QString &label, const QString &target, int place) {
+    const auto make = [](QMdmmCore::Data::Action a, const QString &label, const QString &target, int place) {
         QVariantMap m;
         m.insert(u"action"_s, static_cast<int>(a));
         m.insert(u"label"_s, label);
@@ -389,34 +386,34 @@ QVariantList QMdmmGameClient::actionListFor(const Player *from) const
     };
 
     if (from->alive())
-        ret.append(make(Data::DoNothing, tr("Do nothing / rest"), QString(), -1));
+        ret.append(make(QMdmmCore::Data::DoNothing, tr("Do nothing / rest"), QString(), -1));
     if (from->canBuyKnife())
-        ret.append(make(Data::BuyKnife, tr("Buy knife"), QString(), -1));
+        ret.append(make(QMdmmCore::Data::BuyKnife, tr("Buy knife"), QString(), -1));
     if (from->canBuyHorse())
-        ret.append(make(Data::BuyHorse, tr("Buy horse"), QString(), -1));
+        ret.append(make(QMdmmCore::Data::BuyHorse, tr("Buy horse"), QString(), -1));
 
     const int here = from->place();
     // Move to any adjacent place (Village <-> one city).
     for (int to = 0; to <= m_playerCount; ++to) {
         if (to == here)
             continue;
-        if (Data::isPlaceAdjacent(here, to) && from->canMove(to))
-            ret.append(make(Data::Move, tr("Move to %1").arg(placeName(to)), QString(), to));
+        if (QMdmmCore::Data::isPlaceAdjacent(here, to) && from->canMove(to))
+            ret.append(make(QMdmmCore::Data::Move, tr("Move to %1").arg(placeName(to)), QString(), to));
     }
 
-    for (const Player *other : m_room->players()) {
+    for (const QMdmmCore::Player *other : m_room->players()) {
         if (other == from || !other->alive())
             continue;
         const QString screen = screenName(other->objectName());
         if (from->canSlash(other))
-            ret.append(make(Data::Slash, tr("Slash %1").arg(screen), other->objectName(), -1));
+            ret.append(make(QMdmmCore::Data::Slash, tr("Slash %1").arg(screen), other->objectName(), -1));
         if (from->canKick(other))
-            ret.append(make(Data::Kick, tr("Kick %1").arg(screen), other->objectName(), -1));
+            ret.append(make(QMdmmCore::Data::Kick, tr("Kick %1").arg(screen), other->objectName(), -1));
         for (int to = 0; to <= m_playerCount; ++to) {
             if (to == other->place())
                 continue;
-            if (Data::isPlaceAdjacent(other->place(), to) && from->canLetMove(other, to))
-                ret.append(make(Data::LetMove, tr("Move %1 to %2").arg(screen, placeName(to)), other->objectName(), to));
+            if (QMdmmCore::Data::isPlaceAdjacent(other->place(), to) && from->canLetMove(other, to))
+                ret.append(make(QMdmmCore::Data::LetMove, tr("Move %1 to %2").arg(screen, placeName(to)), other->objectName(), to));
         }
     }
     return ret;
@@ -430,21 +427,21 @@ QVariantList QMdmmGameClient::getActionOptions() const
 QVariantList QMdmmGameClient::getUpgradeOptions() const
 {
     QVariantList ret;
-    const Player *p = localPlayer();
+    const QMdmmCore::Player *p = localPlayer();
     if (p == nullptr)
         return ret;
 
-    auto add = [&](Data::UpgradeItem item, const QString &label) {
+    auto add = [&](QMdmmCore::Data::UpgradeItem item, const QString &label) {
         QVariantMap m;
         m.insert(u"item"_s, static_cast<int>(item));
         m.insert(u"label"_s, label);
         ret.append(m);
     };
     if (p->canUpgradeKnife())
-        add(Data::UpgradeKnife, tr("Upgrade knife damage"));
+        add(QMdmmCore::Data::UpgradeKnife, tr("Upgrade knife damage"));
     if (p->canUpgradeHorse())
-        add(Data::UpgradeHorse, tr("Upgrade horse damage"));
+        add(QMdmmCore::Data::UpgradeHorse, tr("Upgrade horse damage"));
     if (p->canUpgradeMaxHp())
-        add(Data::UpgradeMaxHp, tr("Upgrade max HP"));
+        add(QMdmmCore::Data::UpgradeMaxHp, tr("Upgrade max HP"));
     return ret;
 }
