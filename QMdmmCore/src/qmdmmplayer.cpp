@@ -6,8 +6,6 @@
 #include "qmdmmlogic.h"
 #include "qmdmmroom.h"
 
-using namespace QMdmmCore::p;
-
 /**
  * @file qmdmmplayer.h
  * @brief This is the file where MDMM player is defined.
@@ -100,7 +98,7 @@ namespace v0 {
  */
 Player::Player(const QString &name, Room *room)
     : QObject(room)
-    , d(std::make_unique<PlayerP>(room))
+    , d(std::make_unique<p::PlayerP>(room))
 {
     setObjectName(name);
 }
@@ -582,7 +580,7 @@ bool Player::slash(Player *to)
     if (!canSlash(to))
         return false;
 
-    PlayerP::applyDamage(this, to, knifeDamage(), Data::Slashed);
+    p::PlayerP::applyDamage(this, to, knifeDamage(), Data::Slashed);
 
     if (place() != Data::Village) {
         int punishHpModifier = room()->logicConfiguration().punishHpModifier();
@@ -608,7 +606,7 @@ bool Player::slash(Player *to)
             }
 
             if (punishedHp > 0)
-                PlayerP::applyDamage(to, this, punishedHp, Data::HpPunished);
+                p::PlayerP::applyDamage(to, this, punishedHp, Data::HpPunished);
         }
     }
 
@@ -629,7 +627,7 @@ bool Player::kick(Player *to)
     if (!canKick(to))
         return false;
 
-    PlayerP::applyDamage(this, to, horseDamage(), Data::Kicked);
+    p::PlayerP::applyDamage(this, to, horseDamage(), Data::Kicked);
 
     if (!to->dead()) {
         // bypass the canMove check, directly set place.

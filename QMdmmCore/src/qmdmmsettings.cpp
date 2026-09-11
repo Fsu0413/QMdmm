@@ -6,8 +6,6 @@
 #include <QGlobalStatic>
 #include <QSettings>
 
-using namespace QMdmmCore::p;
-
 namespace QMdmmCore {
 
 #ifndef DOXYGEN
@@ -20,7 +18,7 @@ namespace v0 {
 
 namespace {
 // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks, cppcoreguidelines-avoid-non-const-global-variables): Q_GLOBAL_STATIC idiom
-Q_GLOBAL_STATIC(SettingsP, d)
+Q_GLOBAL_STATIC(p::SettingsP, d)
 } // namespace
 
 #endif

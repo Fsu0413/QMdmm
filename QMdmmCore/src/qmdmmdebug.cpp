@@ -11,8 +11,6 @@
  * @brief QMdmm Debug stuff
  */
 
-using namespace QMdmmCore::p;
-
 namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
@@ -32,9 +30,9 @@ void qMdmmDebugSetDevice(QIODevice *f)
             f->open(QIODevice::WriteOnly);
     }
 
-    debugLogInstance()->f = f;
-    if (DebugLogP::qtMessageHandler == nullptr)
-        DebugLogP::qtMessageHandler = qInstallMessageHandler(&messageOutput);
+    p::debugLogInstance()->f = f;
+    if (p::DebugLogP::qtMessageHandler == nullptr)
+        p::DebugLogP::qtMessageHandler = qInstallMessageHandler(&p::messageOutput);
 }
 
 #ifndef DOXYGEN
