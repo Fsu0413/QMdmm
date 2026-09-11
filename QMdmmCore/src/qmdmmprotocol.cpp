@@ -129,7 +129,12 @@ namespace v0 {
  * @var Protocol::NotifyId Protocol::NotifyLogicConfiguration
  * @brief A notify from agent of logic configuration
  *
- * Wire format: broadcast, @c object (see QMdmmCore::LogicConfiguration in qmdmmlogic.h).
+ * Wire format: broadcast, @c object (see QMdmmCore::LogicConfiguration in qmdmmroom.h).
+ *
+ * Keys absent from the object fall back to the receiver's own @c LogicConfiguration::defaults(), so a
+ * partial object -- or an empty one, meaning "all defaults" -- is accepted; a present key must still be
+ * valid, otherwise the receiver ignores the notify and keeps its previous configuration. An empty object
+ * is what a server started without any explicit logic configuration broadcasts, i.e. the default case.
  */
 
 /**

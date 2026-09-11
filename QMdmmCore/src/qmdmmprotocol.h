@@ -44,7 +44,7 @@ enum NotifyId : uint16_t
     NotifyVersion, // string versionNumber, int protocolVersion
 
     NotifyFromAgentMask = 0x2000,
-    NotifyLogicConfiguration, // broadcast, object (see QMdmmCore::LogicConfiguration in qmdmmlogic.h)
+    NotifyLogicConfiguration, // broadcast, object (see QMdmmCore::LogicConfiguration in qmdmmroom.h)
     NotifyAgentStateChanged, // string playerName, int (AgentState) agentState
     NotifyPlayerAdded, // string playerName, string screenName, int(AgentState) agentState
     NotifyPlayerRemoved, // string playerName
