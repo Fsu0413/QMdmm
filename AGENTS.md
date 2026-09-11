@@ -82,3 +82,31 @@ Read these before touching code:
 - C++: run `clang-format -i` (config: `.clang-format`) on files you touched.
 - QML: run `qmlformat -i` (config: `.qmlformat.ini`); note a known indentation
   bug -- check the resulting diff afterwards.
+
+### `using namespace`
+
+- In production code (i.e. `src/`)
+  - Only namespaces whose name matches `[Ll]iterals` are allowed for UDL usage
+    in `.cpp` file scope.
+  - Other `using namespace` can only appear inside a code block.
+- In test code (i.e. `test/` / `smoke/`)
+  - Use whatever convenient for testing.
+
+### `QStringLiteral`
+
+- `QStringLiteral` macro was previously heavily used, but got replaced by UDL
+  during a modernize process.
+- Use `using namespace Qt::StringLiterals;` and the UDL `u"..."_s` instead of
+  `QStringLiteral("...")`
+  - For macro usage, see following example
+  ```
+#define SOME_MACRO(x) \
+  if (x)              \
+      v << QStringLiteral(x);
+  ```
+  Above example code should be modified to:
+  ```
+#define SOME_MACRO(x) \
+  if (x)
+      v << u"" x ""_s;
+  ```
