@@ -68,8 +68,6 @@ Q_NAMESPACE_EXPORT(QMDMMCORE_EXPORT)
 enum Place : uint8_t
 {
     Village = 0,
-
-    Country = Village,
 };
 Q_ENUM_NS(Place)
 
@@ -84,12 +82,12 @@ Q_ENUM_NS(DamageReason)
 
 enum RockPaperScissors : uint8_t
 {
+    // The explicit values are the historical wire encoding carried over
+    // from the former StoneScissorsCloth enum. Do not renumber: RPS
+    // replies are serialized by value.
     Rock = 0,
     Paper = 2,
     Scissors = 1,
-
-    Stone = Rock,
-    Cloth = Paper,
 };
 Q_ENUM_NS(RockPaperScissors)
 

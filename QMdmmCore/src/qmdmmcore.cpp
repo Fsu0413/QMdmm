@@ -61,11 +61,6 @@ namespace v0 {
  */
 
 /**
- * @var QMdmmCore::Data::Place Data::Country
- * @brief Equivalent to Village
- */
-
-/**
  * @enum Data::DamageReason
  * @brief The reason for a damage.
  */
@@ -113,18 +108,6 @@ namespace v0 {
 /**
  * @var QMdmmCore::Data::RockPaperScissors Data::Scissors
  * @brief Scissors
- */
-
-/**
- * @var QMdmmCore::Data::RockPaperScissors Data::Stone
- * @brief Equivalent to Rock
- */
-
-/**
- * @var QMdmmCore::Data::RockPaperScissors Data::Cloth
- * @brief Equivalent to Paper
- *
- * @note Paper is called Cloth in Chinese.
  */
 
 /**
