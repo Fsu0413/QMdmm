@@ -39,8 +39,6 @@
 
 #define QMDMM_EXPORT_NAME(QMdmmCoreGlobal)
 
-#include "qmdmmdebug.h" // NOLINT(misc-header-include-cycle): deliberate mutual include (guarded by include guards)
-
 namespace QMdmmCore {
 
 #ifndef DOXYGEN
@@ -54,7 +52,11 @@ namespace v0 {
 inline namespace v1 {
 }
 #endif
+} // namespace QMdmmCore
 
+#include "qmdmmdebug.h" // NOLINT(misc-header-include-cycle): deliberate mutual include (guarded by include guards)
+
+namespace QMdmmCore {
 #ifndef DOXYGEN
 namespace v0 {
 #endif
@@ -179,6 +181,7 @@ template<typename T>
 [[nodiscard]] QMDMMCORE_EXPORT QList<int> variantList2IntList(const QVariantList &list);
 [[nodiscard]] QMDMMCORE_EXPORT QVariantList stringList2VariantList(const QList<QString> &list);
 [[nodiscard]] QMDMMCORE_EXPORT QStringList variantList2StringList(const QVariantList &list);
+
 } // namespace Utilities
 
 #ifndef DOXYGEN
