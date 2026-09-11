@@ -1065,7 +1065,9 @@ void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
 // The transport is chosen by a prefix whitelist on the connect address: qmdmm:// is TCP,
 // ws(s):// is WebSocket, a plain string (no "://") is a local socket, and anything else is
 // rejected. qmdmms:// is deliberately rejected too: it would silently promise TLS over a
-// still-plaintext transport.
+// still-plaintext transport. URI schemes are case-insensitive (RFC 3986), so the prefix is
+// matched case-insensitively -- in both directions: a whitelisted scheme stays accepted in
+// upper case, and an unknown one stays rejected.
 void tst_QMdmmNetworking::socket_addressSchemeWhitelist()
 {
     Socket socket;
@@ -1075,7 +1077,13 @@ void tst_QMdmmNetworking::socket_addressSchemeWhitelist()
     QVERIFY(socket.connectToHost(u"wss://localhost:16378"_s));
     QVERIFY(socket.connectToHost(u"QMdmm"_s)); // plain name -> local socket
 
+    // The scheme is case-insensitive (RFC 3986)
+    QVERIFY(socket.connectToHost(u"QMDMM://localhost:16378"_s));
+    QVERIFY(socket.connectToHost(u"WS://localhost:16378"_s));
+    QVERIFY(socket.connectToHost(u"WSS://localhost:16378"_s));
+
     QVERIFY(!socket.connectToHost(u"qmdmms://localhost:16378"_s));
+    QVERIFY(!socket.connectToHost(u"QMDMMS://localhost:16378"_s));
     QVERIFY(!socket.connectToHost(u"http://localhost:16378"_s));
     QVERIFY(!socket.connectToHost(u"ftp://localhost:16378"_s));
 }

@@ -40,12 +40,14 @@ SocketP *create(Socket::Type type, Socket *p)
 
 Socket::Type SocketP::typeByConnectAddr(const QString &addr)
 {
-    // Prefix whitelist decides the transport. Note that qmdmms:// is deliberately NOT
+    // Prefix whitelist decides the transport. The prefixes are matched case-insensitively:
+    // URI schemes are case-insensitive (RFC 3986), so "QMDMM://host" names the same
+    // transport as "qmdmm://host". Note that qmdmms:// is deliberately NOT
     // accepted: it would silently promise TLS over a still-plaintext transport, the
     // worst combination. Re-add it once TLS is actually implemented.
-    if (addr.startsWith(u"qmdmm://"_s))
+    if (addr.startsWith(u"qmdmm://"_s, Qt::CaseInsensitive))
         return Socket::TypeQTcpSocket;
-    if (addr.startsWith(u"ws://"_s) || addr.startsWith(u"wss://"_s))
+    if (addr.startsWith(u"ws://"_s, Qt::CaseInsensitive) || addr.startsWith(u"wss://"_s, Qt::CaseInsensitive))
         return Socket::TypeQWebSocket;
     if (!addr.contains(u"://"_s))
         return Socket::TypeQLocalSocket;

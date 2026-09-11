@@ -182,7 +182,7 @@ bool Socket::hasError() const
  * @brief Connect to a host
  * @param host the address to connect to. The scheme decides the transport: @c qmdmm
  *             for TCP, @c ws / @c wss for WebSocket, and a plain (non-URL) string
- *             for local socket.
+ *             for local socket. The scheme is matched case-insensitively (RFC 3986).
  * @return @c true if the connection is initiated successfully, @c false if the address
  *         cannot be parsed to a known transport
  */
