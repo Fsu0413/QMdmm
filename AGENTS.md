@@ -86,8 +86,8 @@ Read these before touching code:
 ### `using namespace`
 
 - In production code (i.e. `src/`)
-  - Only namespaces whose name matches `[Ll]iterals` are allowed for UDL usage
-    in `.cpp` file scope.
+  - Only namespaces whose name ends with `[Ll]iterals` -- e.g.
+    `Qt::StringLiterals` -- are allowed for UDL usage in `.cpp` file scope.
   - Other `using namespace` can only appear inside a code block.
 - In test code (i.e. `test/` / `smoke/`)
   - Use whatever convenient for testing.
