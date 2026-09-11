@@ -9,6 +9,8 @@
 
 #include <limits>
 
+using namespace Qt::StringLiterals;
+
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
@@ -68,24 +70,24 @@ private slots:
         };
 
         static const QList<ConfigurationTestTriplet> testTriplets {
-            {QStringLiteral("initialKnifeDamage"), 2, true},
-            {QStringLiteral("maximumKnifeDamage"), 2, true},
-            {QStringLiteral("initialHorseDamage"), 2, true},
-            {QStringLiteral("maximumHorseDamage"), 2, true},
-            {QStringLiteral("initialMaxHp"), 2, true},
-            {QStringLiteral("maximumMaxHp"), 2, true},
-            {QStringLiteral("punishHpModifier"), 2, true},
-            {QStringLiteral("punishHpRoundStrategy"), 2, true},
-            {QStringLiteral("zeroHpAsDead"), false, QStringLiteral("what?")},
-            {QStringLiteral("enableLetMove"), false, QStringLiteral("what?")},
-            {QStringLiteral("canBuyOnlyInInitialCity"), false, QStringLiteral("what?")},
+            {u"initialKnifeDamage"_s, 2, true},
+            {u"maximumKnifeDamage"_s, 2, true},
+            {u"initialHorseDamage"_s, 2, true},
+            {u"maximumHorseDamage"_s, 2, true},
+            {u"initialMaxHp"_s, 2, true},
+            {u"maximumMaxHp"_s, 2, true},
+            {u"punishHpModifier"_s, 2, true},
+            {u"punishHpRoundStrategy"_s, 2, true},
+            {u"zeroHpAsDead"_s, false, u"what?"_s},
+            {u"enableLetMove"_s, false, u"what?"_s},
+            {u"canBuyOnlyInInitialCity"_s, false, u"what?"_s},
         };
 
         QJsonObject ob;
 
         foreach (const ConfigurationTestTriplet &t, testTriplets) {
             ob.insert(t.key, t.invalidValue);
-            QTest::newRow((t.key + QStringLiteral("-invalid")).toUtf8().constData()) << QJsonValue(ob) << false;
+            QTest::newRow((t.key + u"-invalid"_s).toUtf8().constData()) << QJsonValue(ob) << false;
             ob.insert(t.key, t.validValue);
         }
 
@@ -95,52 +97,52 @@ private slots:
         // Value-level validation (defensive programming): negative / fraction / NaN /
         // enum-out-of-range / initial-exceeds-maximum must all be rejected.
         QJsonObject validOb {
-            {QStringLiteral("initialKnifeDamage"), 1},
-            {QStringLiteral("maximumKnifeDamage"), 10},
-            {QStringLiteral("initialHorseDamage"), 2},
-            {QStringLiteral("maximumHorseDamage"), 10},
-            {QStringLiteral("initialMaxHp"), 10},
-            {QStringLiteral("maximumMaxHp"), 20},
-            {QStringLiteral("punishHpModifier"), 2},
-            {QStringLiteral("punishHpRoundStrategy"), static_cast<int>(LogicConfiguration::RoundToNearest45)},
-            {QStringLiteral("zeroHpAsDead"), true},
-            {QStringLiteral("enableLetMove"), true},
-            {QStringLiteral("canBuyOnlyInInitialCity"), false},
+            {u"initialKnifeDamage"_s, 1},
+            {u"maximumKnifeDamage"_s, 10},
+            {u"initialHorseDamage"_s, 2},
+            {u"maximumHorseDamage"_s, 10},
+            {u"initialMaxHp"_s, 10},
+            {u"maximumMaxHp"_s, 20},
+            {u"punishHpModifier"_s, 2},
+            {u"punishHpRoundStrategy"_s, static_cast<int>(LogicConfiguration::RoundToNearest45)},
+            {u"zeroHpAsDead"_s, true},
+            {u"enableLetMove"_s, true},
+            {u"canBuyOnlyInInitialCity"_s, false},
         };
 
         {
             QJsonObject negativeOb = validOb;
-            negativeOb.insert(QStringLiteral("initialKnifeDamage"), -1);
+            negativeOb.insert(u"initialKnifeDamage"_s, -1);
             QTest::newRow("negative") << QJsonValue(negativeOb) << false;
         }
         {
             QJsonObject fractionOb = validOb;
-            fractionOb.insert(QStringLiteral("initialKnifeDamage"), 1.5);
+            fractionOb.insert(u"initialKnifeDamage"_s, 1.5);
             QTest::newRow("fraction") << QJsonValue(fractionOb) << false;
         }
         {
             QJsonObject nanOb = validOb;
-            nanOb.insert(QStringLiteral("initialKnifeDamage"), std::numeric_limits<double>::quiet_NaN());
+            nanOb.insert(u"initialKnifeDamage"_s, std::numeric_limits<double>::quiet_NaN());
             QTest::newRow("nan") << QJsonValue(nanOb) << false;
         }
         {
             QJsonObject enumOb = validOb;
-            enumOb.insert(QStringLiteral("punishHpRoundStrategy"), 4);
+            enumOb.insert(u"punishHpRoundStrategy"_s, 4);
             QTest::newRow("enumOutOfRange") << QJsonValue(enumOb) << false;
         }
         {
             QJsonObject knifeOb = validOb;
-            knifeOb.insert(QStringLiteral("initialKnifeDamage"), 11);
+            knifeOb.insert(u"initialKnifeDamage"_s, 11);
             QTest::newRow("initialKnifeGreaterThanMaximum") << QJsonValue(knifeOb) << false;
         }
         {
             QJsonObject horseOb = validOb;
-            horseOb.insert(QStringLiteral("initialHorseDamage"), 11);
+            horseOb.insert(u"initialHorseDamage"_s, 11);
             QTest::newRow("initialHorseGreaterThanMaximum") << QJsonValue(horseOb) << false;
         }
         {
             QJsonObject maxHpOb = validOb;
-            maxHpOb.insert(QStringLiteral("initialMaxHp"), 21);
+            maxHpOb.insert(u"initialMaxHp"_s, 21);
             QTest::newRow("initialMaxHpGreaterThanMaximum") << QJsonValue(maxHpOb) << false;
         }
     }
@@ -185,8 +187,8 @@ private slots:
     {
         // Present keys take effect, absent ones still fall back to their default value.
         const QJsonObject partialOb {
-            {QStringLiteral("maximumMaxHp"), 15},
-            {QStringLiteral("enableLetMove"), false},
+            {u"maximumMaxHp"_s, 15},
+            {u"enableLetMove"_s, false},
         };
 
         LogicConfiguration conf;

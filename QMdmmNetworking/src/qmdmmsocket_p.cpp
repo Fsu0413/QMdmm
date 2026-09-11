@@ -2,6 +2,8 @@
 
 #include "qmdmmsocket_p.h"
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -41,11 +43,11 @@ Socket::Type SocketP::typeByConnectAddr(const QString &addr)
     // Prefix whitelist decides the transport. Note that qmdmms:// is deliberately NOT
     // accepted: it would silently promise TLS over a still-plaintext transport, the
     // worst combination. Re-add it once TLS is actually implemented.
-    if (addr.startsWith(QStringLiteral("qmdmm://")))
+    if (addr.startsWith(u"qmdmm://"_s))
         return Socket::TypeQTcpSocket;
-    if (addr.startsWith(QStringLiteral("ws://")) || addr.startsWith(QStringLiteral("wss://")))
+    if (addr.startsWith(u"ws://"_s) || addr.startsWith(u"wss://"_s))
         return Socket::TypeQWebSocket;
-    if (!addr.contains(QStringLiteral("://")))
+    if (!addr.contains(u"://"_s))
         return Socket::TypeQLocalSocket;
 
     return Socket::TypeUnknown;
@@ -247,7 +249,7 @@ bool SocketP_QWebSocket::connectToHost(const QString &addr)
     if (socket != nullptr)
         socket->deleteLater();
 
-    socket = new QWebSocket(QStringLiteral("qmdmm.com"), QWebSocketProtocol::VersionLatest, this);
+    socket = new QWebSocket(u"qmdmm.com"_s, QWebSocketProtocol::VersionLatest, this);
     setupSocket();
     QUrl url(addr);
     socket->open(url);

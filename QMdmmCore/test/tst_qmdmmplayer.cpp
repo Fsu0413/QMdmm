@@ -7,6 +7,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+using namespace Qt::StringLiterals;
+
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
@@ -28,8 +30,8 @@ private slots:
     void init()
     {
         r.reset(new Room(LogicConfiguration::defaults(), this));
-        p1 = r->addPlayer(QStringLiteral("test1"));
-        p2 = r->addPlayer(QStringLiteral("test2"));
+        p1 = r->addPlayer(u"test1"_s);
+        p2 = r->addPlayer(u"test2"_s);
     }
 
     void QMdmmPlayerroom()
@@ -196,7 +198,7 @@ private slots:
 
         r.reset(new Room(conf, this));
 
-        p1 = r->addPlayer(QStringLiteral("test1"));
+        p1 = r->addPlayer(u"test1"_s);
         r->prepareForRoundStart();
 
         // case 5: zeroHpAsDead = false
@@ -520,8 +522,8 @@ private slots:
 
         r.reset(new Room(conf, this));
 
-        p1 = r->addPlayer(QStringLiteral("test1"));
-        p2 = r->addPlayer(QStringLiteral("test2"));
+        p1 = r->addPlayer(u"test1"_s);
+        p2 = r->addPlayer(u"test2"_s);
         r->prepareForRoundStart();
 
         // case 5: canBuyOnlyInInitialCity = true
@@ -571,8 +573,8 @@ private slots:
 
         r.reset(new Room(conf, this));
 
-        p1 = r->addPlayer(QStringLiteral("test1"));
-        p2 = r->addPlayer(QStringLiteral("test2"));
+        p1 = r->addPlayer(u"test1"_s);
+        p2 = r->addPlayer(u"test2"_s);
         r->prepareForRoundStart();
 
         // case 5: canBuyOnlyInInitialCity = true
@@ -794,8 +796,8 @@ private slots:
 
         r.reset(new Room(conf, this));
 
-        p1 = r->addPlayer(QStringLiteral("test1"));
-        p2 = r->addPlayer(QStringLiteral("test2"));
+        p1 = r->addPlayer(u"test1"_s);
+        p2 = r->addPlayer(u"test2"_s);
         r->prepareForRoundStart();
 
         // case 5: disabled let move
@@ -1095,9 +1097,9 @@ private slots:
 
         r.reset(new Room(conf, this));
 
-        p1 = r->addPlayer(QStringLiteral("test1"));
+        p1 = r->addPlayer(u"test1"_s);
         p1->setMaxHp(maxHp);
-        p2 = r->addPlayer(QStringLiteral("test2"));
+        p2 = r->addPlayer(u"test2"_s);
 
         r->prepareForRoundStart();
 

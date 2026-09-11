@@ -24,6 +24,8 @@
 using namespace QMdmmCore;
 using namespace QMdmmNetworking;
 
+using namespace Qt::StringLiterals;
+
 class tst_QMdmmNetworking : public QObject
 {
     Q_OBJECT
@@ -75,7 +77,7 @@ void tst_QMdmmNetworking::signIn_disconnectInNotFullRoom_removesPlayer()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16367");
+    const QString host = u"qmdmm://localhost:16367"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -123,7 +125,7 @@ void tst_QMdmmNetworking::signIn_reconnectsPlayerInNonCurrentRoom()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16366");
+    const QString host = u"qmdmm://localhost:16366"_s;
 
     // Sign in one at a time so room assignment is deterministic (p1 -> room 1, p2 fills
     // room 1, p3 -> fresh room 2).
@@ -175,7 +177,7 @@ void tst_QMdmmNetworking::reconnectDoesNotAutoTrust()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16363");
+    const QString host = u"qmdmm://localhost:16363"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -216,12 +218,12 @@ void tst_QMdmmNetworking::addAgent_registersLocalAgent()
 
     LogicRunner runner(conf, 3);
 
-    Agent *local = new Agent(QStringLiteral("p1"), &runner);
-    local->setScreenName(QStringLiteral("screen1"));
+    Agent *local = new Agent(u"p1"_s, &runner);
+    local->setScreenName(u"screen1"_s);
     local->setState(Data::StateOnline);
 
     QCOMPARE(runner.addAgent(local), local);
-    QCOMPARE(runner.agent(QStringLiteral("p1")), local);
+    QCOMPARE(runner.agent(u"p1"_s), local);
     QVERIFY(local->state().testFlag(Data::StateMaskOnline));
     QVERIFY(!runner.full()); // playerNumPerRoom = 3, only one agent added
 }
@@ -249,9 +251,9 @@ void tst_QMdmmNetworking::localAgent_asyncReplyContract()
 
     LogicRunner runner(conf, 2);
 
-    Agent *p1 = new Agent(QStringLiteral("p1"), &runner);
+    Agent *p1 = new Agent(u"p1"_s, &runner);
     p1->setState(Data::StateOnline);
-    Agent *p2 = new Agent(QStringLiteral("p2"), &runner);
+    Agent *p2 = new Agent(u"p2"_s, &runner);
     p2->setState(Data::StateOnlineBot);
 
     int rpsRequests = 0;
@@ -303,7 +305,7 @@ void tst_QMdmmNetworking::client_giveUpTriggersServerDefaultReply()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16365");
+    const QString host = u"qmdmm://localhost:16365"_s;
 
     // Wire both agents BEFORE connecting: the first RPS request fires as soon as the room fills
     // (p2 joins), and a signal connected after connectToHost would miss it.
@@ -355,7 +357,7 @@ void tst_QMdmmNetworking::client_actionOrderYieldAcceptsAssignment()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16361");
+    const QString host = u"qmdmm://localhost:16361"_s;
 
     // Wire the replies before connecting: the first RPS request fires as soon as the room fills
     // (p3 joins), and a signal connected after connectToHost would miss it. p1 and p2 play Rock,
@@ -423,7 +425,7 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16364");
+    const QString host = u"qmdmm://localhost:16364"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -471,7 +473,7 @@ void tst_QMdmmNetworking::server_disconnectsOnOutOfRangeReply()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16368");
+    const QString host = u"qmdmm://localhost:16368"_s;
 
     // p1 plays as a bot and replies Rock automatically, keeping the RPS phase alive. p2 replies
     // with an out-of-range enum straight onto its raw socket once the RPS request arrives.
@@ -523,7 +525,7 @@ void tst_QMdmmNetworking::server_disconnectsOnOversizedActionOrderReply()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16374");
+    const QString host = u"qmdmm://localhost:16374"_s;
 
     // Wire the replies before connecting: the first RPS request fires as soon as the room fills
     // (p3 joins). p1 and p2 play Rock, p3 plays Scissors, so the two Rock winners (p1, p2) enter
@@ -591,7 +593,7 @@ void tst_QMdmmNetworking::server_disconnectsOnOversizedUpgradeReply()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16375");
+    const QString host = u"qmdmm://localhost:16375"_s;
 
     // Wire the replies before connecting. p1 always wins the RPS (Rock beats p2's Scissors), so
     // p1 is the sole actor each cycle and can reach p2's city and kill it without p2 ever acting.
@@ -673,7 +675,7 @@ void tst_QMdmmNetworking::server_disconnectsOnAbnormalPacket()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16362");
+    const QString host = u"qmdmm://localhost:16362"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -721,7 +723,7 @@ void tst_QMdmmNetworking::client_disconnectsOnAbnormalPacket()
         }
     });
 
-    const QString host = QStringLiteral("qmdmm://localhost:16372");
+    const QString host = u"qmdmm://localhost:16372"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &rawServer);
     bool connectionLost = false;
@@ -753,7 +755,7 @@ void tst_QMdmmNetworking::server_doesNotDropServerBoundNotify()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16373");
+    const QString host = u"qmdmm://localhost:16373"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -801,7 +803,7 @@ void tst_QMdmmNetworking::client_disconnectFromHostStopsAutoReconnect()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16360");
+    const QString host = u"qmdmm://localhost:16360"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     QVERIFY(!p1->isConnected());
@@ -843,13 +845,13 @@ void tst_QMdmmNetworking::client_disconnectsOnProtocolVersionMismatch()
     QObject::connect(&rawServer, &QTcpServer::newConnection, &rawServer, [&rawServer]() {
         QTcpSocket *sock = rawServer.nextPendingConnection();
         QJsonObject ob;
-        ob.insert(QStringLiteral("versionNumber"), QStringLiteral("9.9.9"));
-        ob.insert(QStringLiteral("protocolVersion"), QMdmmCore::Protocol::version() + 1); // mismatched
+        ob.insert(u"versionNumber"_s, u"9.9.9"_s);
+        ob.insert(u"protocolVersion"_s, QMdmmCore::Protocol::version() + 1); // mismatched
         sock->write(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyVersion, ob).serialize().append('\n'));
         sock->flush();
     });
 
-    const QString host = QStringLiteral("qmdmm://localhost:16371");
+    const QString host = u"qmdmm://localhost:16371"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &rawServer);
     QVERIFY(p1->connectToHost(host, Data::StateOnline));
@@ -889,7 +891,7 @@ void tst_QMdmmNetworking::server_listenErrorAndClose()
 
     // The port is taken, so listen() fails and reports which transport broke.
     QVERIFY(!server.listen());
-    QCOMPARE(errorTransport, QStringLiteral("tcp"));
+    QCOMPARE(errorTransport, u"tcp"_s);
     QVERIFY(!errorString.isEmpty());
 
     // Free the port; the server can now bind it, close() releases it, and a second listen()
@@ -926,7 +928,7 @@ void tst_QMdmmNetworking::client_infeasibleUpgradeReplyDoesNotStall()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16376");
+    const QString host = u"qmdmm://localhost:16376"_s;
 
     // Wire the replies before connecting. p1 always wins the RPS (Rock beats p2's Scissors), so
     // p1 is the sole actor each cycle and can reach p2's city and kill it without p2 ever acting.
@@ -1007,7 +1009,7 @@ void tst_QMdmmNetworking::client_disconnectDuringUpgradeStillAdvances()
     Server server(serverConf, conf);
     QVERIFY(server.listen());
 
-    const QString host = QStringLiteral("qmdmm://localhost:16377");
+    const QString host = u"qmdmm://localhost:16377"_s;
 
     auto *p1 = new Client(ClientConfiguration(), &server);
     connect(p1->agent(), &Agent::rockPaperScissorsRequested, &server, [p1]() { p1->agent()->rockPaperScissors(Data::Rock); });
@@ -1068,14 +1070,14 @@ void tst_QMdmmNetworking::socket_addressSchemeWhitelist()
 {
     Socket socket;
 
-    QVERIFY(socket.connectToHost(QStringLiteral("qmdmm://localhost:16378")));
-    QVERIFY(socket.connectToHost(QStringLiteral("ws://localhost:16378")));
-    QVERIFY(socket.connectToHost(QStringLiteral("wss://localhost:16378")));
-    QVERIFY(socket.connectToHost(QStringLiteral("QMdmm"))); // plain name -> local socket
+    QVERIFY(socket.connectToHost(u"qmdmm://localhost:16378"_s));
+    QVERIFY(socket.connectToHost(u"ws://localhost:16378"_s));
+    QVERIFY(socket.connectToHost(u"wss://localhost:16378"_s));
+    QVERIFY(socket.connectToHost(u"QMdmm"_s)); // plain name -> local socket
 
-    QVERIFY(!socket.connectToHost(QStringLiteral("qmdmms://localhost:16378")));
-    QVERIFY(!socket.connectToHost(QStringLiteral("http://localhost:16378")));
-    QVERIFY(!socket.connectToHost(QStringLiteral("ftp://localhost:16378")));
+    QVERIFY(!socket.connectToHost(u"qmdmms://localhost:16378"_s));
+    QVERIFY(!socket.connectToHost(u"http://localhost:16378"_s));
+    QVERIFY(!socket.connectToHost(u"ftp://localhost:16378"_s));
 }
 
 namespace {

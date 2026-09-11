@@ -10,6 +10,8 @@
 
 #include <random>
 
+using namespace Qt::StringLiterals;
+
 /**
  * @file qmdmmclient.h
  * @brief This is the file where the networking Client is defined.
@@ -55,7 +57,7 @@ const ClientConfiguration &ClientConfiguration::defaults()
 {
     // clang-format off
     static const ClientConfiguration defaultInstance {
-        std::make_pair(QStringLiteral("screenName"), QStringLiteral("QMdmm-Fans")),
+        std::make_pair(u"screenName"_s, u"QMdmm-Fans"_s),
     };
     // clang-format on
 
@@ -67,25 +69,25 @@ const ClientConfiguration &ClientConfiguration::defaults()
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToQVariant) \
     type ClientConfiguration::valueName() const                                                    \
     {                                                                                              \
-        if (contains(QStringLiteral(#valueName)))                                                  \
-            return convertToType(value(QStringLiteral(#valueName)));                               \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                        \
+        if (contains(u"" #valueName ""_s))                                                         \
+            return convertToType(value(u"" #valueName ""_s));                                      \
+        return convertToType(defaults().value(u"" #valueName ""_s));                               \
     }                                                                                              \
     void ClientConfiguration::set##ValueName(type valueName)                                       \
     {                                                                                              \
-        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                          \
+        insert(u"" #valueName ""_s, convertToQVariant(valueName));                                 \
     }
 
 #define IMPLEMENTATION_CONFIGURATION2(type, valueName, ValueName, convertToType, convertToQVariant) \
     type ClientConfiguration::valueName() const                                                     \
     {                                                                                               \
-        if (contains(QStringLiteral(#valueName)))                                                   \
-            return convertToType(value(QStringLiteral(#valueName)));                                \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
+        if (contains(u"" #valueName ""_s))                                                          \
+            return convertToType(value(u"" #valueName ""_s));                                       \
+        return convertToType(defaults().value(u"" #valueName ""_s));                                \
     }                                                                                               \
     void ClientConfiguration::set##ValueName(const type &valueName)                                 \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToQVariant(valueName));                           \
+        insert(u"" #valueName ""_s, convertToQVariant(valueName));                                  \
     }
 
 IMPLEMENTATION_CONFIGURATION2(QString, screenName, ScreenName, CONVERTTOTYPEQSTRING, )

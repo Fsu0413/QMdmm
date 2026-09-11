@@ -9,6 +9,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+using namespace Qt::StringLiterals;
+
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
@@ -29,9 +31,9 @@ private slots:
     void init()
     {
         l.reset(new Logic(LogicConfiguration::defaults(), this));
-        l->addPlayer(QStringLiteral("test1"));
-        l->addPlayer(QStringLiteral("test2"));
-        l->addPlayer(QStringLiteral("test3"));
+        l->addPlayer(u"test1"_s);
+        l->addPlayer(u"test2"_s);
+        l->addPlayer(u"test3"_s);
     }
 
     void QMdmmLogicstate()
@@ -43,21 +45,21 @@ private slots:
     {
         // case 1
         {
-            bool r = l->addPlayer(QStringLiteral("test11"));
+            bool r = l->addPlayer(u"test11"_s);
             QVERIFY(r);
         }
 
         // case 2
         {
             l->d->state = Logic::RpsForAction;
-            bool r = l->addPlayer(QStringLiteral("test12"));
+            bool r = l->addPlayer(u"test12"_s);
             QVERIFY(!r);
         }
 
         // case 3
         {
             l->d->state = Logic::BeforeRoundStart;
-            bool r = l->addPlayer(QStringLiteral("test11"));
+            bool r = l->addPlayer(u"test11"_s);
             QVERIFY(!r);
         }
     }
@@ -66,21 +68,21 @@ private slots:
     {
         // case 1
         {
-            bool r = l->removePlayer(QStringLiteral("test1"));
+            bool r = l->removePlayer(u"test1"_s);
             QVERIFY(r);
         }
 
         // case 2
         {
             l->d->state = Logic::RpsForAction;
-            bool r = l->removePlayer(QStringLiteral("test2"));
+            bool r = l->removePlayer(u"test2"_s);
             QVERIFY(!r);
         }
 
         // case 3
         {
             l->d->state = Logic::BeforeRoundStart;
-            bool r = l->removePlayer(QStringLiteral("test1"));
+            bool r = l->removePlayer(u"test1"_s);
             QVERIFY(!r);
         }
     }
@@ -100,9 +102,9 @@ private slots:
         }
 
         init();
-        l->removePlayer(QStringLiteral("test1"));
-        l->removePlayer(QStringLiteral("test2"));
-        l->removePlayer(QStringLiteral("test3"));
+        l->removePlayer(u"test1"_s);
+        l->removePlayer(u"test2"_s);
+        l->removePlayer(u"test3"_s);
 
         // case 3
         {
@@ -122,7 +124,7 @@ private slots:
         {
             QSignalSpy s(l.get(), &Logic::rpsResult);
 
-            bool r = l->rpsReply(QStringLiteral("test00"), Data::Rock);
+            bool r = l->rpsReply(u"test00"_s, Data::Rock);
             QVERIFY(!r);
 
             QCOMPARE(s.length(), 0);
@@ -137,10 +139,10 @@ private slots:
         {
             QSignalSpy s(l.get(), &Logic::rpsResult);
 
-            bool r = l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            bool r = l->rpsReply(u"test1"_s, Data::Rock);
             QVERIFY(r);
 
-            r = l->rpsReply(QStringLiteral("test1"), Data::Scissors);
+            r = l->rpsReply(u"test1"_s, Data::Scissors);
             QVERIFY(!r);
 
             QCOMPARE(s.length(), 0);
@@ -156,11 +158,11 @@ private slots:
             QSignalSpy s(l.get(), &Logic::rpsResult);
             QSignalSpy q(l.get(), &Logic::requestRpsForAction);
 
-            bool r1 = l->rpsReply(QStringLiteral("test1"), Data::Rock);
+            bool r1 = l->rpsReply(u"test1"_s, Data::Rock);
             QVERIFY(r1);
-            bool r2 = l->rpsReply(QStringLiteral("test2"), Data::Rock);
+            bool r2 = l->rpsReply(u"test2"_s, Data::Rock);
             QVERIFY(r2);
-            bool r3 = l->rpsReply(QStringLiteral("test3"), Data::Rock);
+            bool r3 = l->rpsReply(u"test3"_s, Data::Rock);
             QVERIFY(r3);
 
             QCOMPARE(s.length(), 1);
@@ -183,16 +185,16 @@ private slots:
         QSignalSpy req(l.get(), &Logic::requestActionOrder);
         QSignalSpy act(l.get(), &Logic::requestAction);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
         // requestActionOrder is emitted synchronously inside the 3rd rpsReply().
         QVERIFY(req.count() > 0);
 
-        bool r = l->actionOrderReply(QStringLiteral("test1"), {1});
+        bool r = l->actionOrderReply(u"test1"_s, {1});
         QVERIFY(r);
-        r = l->actionOrderReply(QStringLiteral("test2"), {2});
+        r = l->actionOrderReply(u"test2"_s, {2});
         QVERIFY(r);
 
         // After both winners pick an order the engine enters the Action phase and
@@ -209,17 +211,17 @@ private slots:
         QSignalSpy ord(l.get(), &Logic::actionOrderResult);
         QSignalSpy act(l.get(), &Logic::requestAction);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {0}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {0}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {0}));
 
         QVERIFY(ord.count() > 0);
         QVERIFY(act.count() > 0);
-        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test1"));
-        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test2"));
+        QCOMPARE(l->d->confirmedActionOrders.value(1), u"test1"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(2), u"test2"_s);
     }
 
     // Partial yield: one winner yields, the other picks. The picker keeps its
@@ -230,42 +232,42 @@ private slots:
 
         QSignalSpy ord(l.get(), &Logic::actionOrderResult);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {1}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {0}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {1}));
 
         QVERIFY(ord.count() > 0);
-        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test2"));
-        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(1), u"test2"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(2), u"test1"_s);
     }
 
     // Yield by times: a player with two action opportunities can yield one and
     // pick the other (D-024 "yield per opportunity").
     void QMdmmLogicactionOrderYieldByTimes()
     {
-        l->addPlayer(QStringLiteral("test4"));
+        l->addPlayer(u"test4"_s);
         l->roundStart();
 
         QSignalSpy ord(l.get(), &Logic::actionOrderResult);
 
         // test1/test2 win twice each (two losers), orders 1..4.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
-        l->rpsReply(QStringLiteral("test4"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
+        l->rpsReply(u"test4"_s, Data::Scissors);
 
         // test1 yields once and picks order 1; test2 picks orders 2 and 3.
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0, 1}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2, 3}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {0, 1}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {2, 3}));
 
         QVERIFY(ord.count() > 0);
-        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test1"));
-        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test2"));
-        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test2"));
-        QCOMPARE(l->d->confirmedActionOrders.value(4), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(1), u"test1"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(2), u"test2"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(3), u"test2"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(4), u"test1"_s);
     }
 
     // Yield plus conflict: a yielder sits out while two others fight over the
@@ -273,7 +275,7 @@ private slots:
     // then does the yielder get the leftover order.
     void QMdmmLogicactionOrderYieldWithConflict()
     {
-        l->addPlayer(QStringLiteral("test4"));
+        l->addPlayer(u"test4"_s);
         l->roundStart();
 
         QSignalSpy tie(l.get(), &Logic::requestRpsForActionOrder);
@@ -281,33 +283,33 @@ private slots:
         QSignalSpy act(l.get(), &Logic::requestAction);
 
         // Three winners (test1/test2/test3), one loser -> orders 1..3.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Rock);
-        l->rpsReply(QStringLiteral("test4"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Rock);
+        l->rpsReply(u"test4"_s, Data::Scissors);
 
         // First request round: one request per winner.
         QCOMPARE(req.count(), 3);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {0}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {1}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test3"), {1}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {0}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {1}));
+        QVERIFY(l->actionOrderReply(u"test3"_s, {1}));
 
         QVERIFY(tie.count() > 0);
 
         // test2 wins the tie-break RPS (Paper beats Rock).
-        l->rpsReply(QStringLiteral("test2"), Data::Paper);
-        l->rpsReply(QStringLiteral("test3"), Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Paper);
+        l->rpsReply(u"test3"_s, Data::Rock);
 
         // The conflict loser (test3) is asked again to re-pick, rather than being
         // defaulted to a leftover order.
         QCOMPARE(req.count(), 4);
-        QVERIFY(l->actionOrderReply(QStringLiteral("test3"), {2}));
+        QVERIFY(l->actionOrderReply(u"test3"_s, {2}));
 
         QVERIFY(act.count() > 0);
-        QCOMPARE(l->d->confirmedActionOrders.value(1), QStringLiteral("test2"));
-        QCOMPARE(l->d->confirmedActionOrders.value(2), QStringLiteral("test3"));
-        QCOMPARE(l->d->confirmedActionOrders.value(3), QStringLiteral("test1"));
+        QCOMPARE(l->d->confirmedActionOrders.value(1), u"test2"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(2), u"test3"_s);
+        QCOMPARE(l->d->confirmedActionOrders.value(3), u"test1"_s);
     }
 
     // Invalid order lists fall back to yielding every selection (return false) so
@@ -318,12 +320,12 @@ private slots:
         // Out-of-range order (maximumOrderNum == 2) -> full yield.
         {
             l->roundStart();
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {3}));
-            QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 1);
+            QVERIFY(!l->actionOrderReply(u"test1"_s, {3}));
+            QCOMPARE(l->d->actionOrderYields.value(u"test1"_s), 1);
             QCOMPARE(l->state(), Logic::ActionOrder); // test2 still owes a pick
         }
 
@@ -331,12 +333,12 @@ private slots:
         {
             init();
             l->roundStart();
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 2}));
-            QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 1);
+            QVERIFY(!l->actionOrderReply(u"test1"_s, {1, 2}));
+            QCOMPARE(l->d->actionOrderYields.value(u"test1"_s), 1);
             QCOMPARE(l->state(), Logic::ActionOrder);
         }
 
@@ -344,11 +346,11 @@ private slots:
         {
             init();
             l->roundStart();
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {0}));
+            QVERIFY(!l->actionOrderReply(u"ghost"_s, {0}));
             QCOMPARE(l->state(), Logic::ActionOrder);
         }
 
@@ -356,12 +358,12 @@ private slots:
         {
             init();
             l->roundStart();
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+            QVERIFY(!l->actionOrderReply(u"test1"_s, {1}));
         }
     }
 
@@ -369,17 +371,17 @@ private slots:
     // duplicated order falls back to yielding both selections.
     void QMdmmLogicactionOrderReplyDuplicateOrder()
     {
-        l->addPlayer(QStringLiteral("test4"));
+        l->addPlayer(u"test4"_s);
         l->roundStart();
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
-        l->rpsReply(QStringLiteral("test4"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
+        l->rpsReply(u"test4"_s, Data::Scissors);
 
         // Duplicated order within a single reply (selections == 2).
-        QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1, 1}));
-        QCOMPARE(l->d->actionOrderYields.value(QStringLiteral("test1")), 2);
+        QVERIFY(!l->actionOrderReply(u"test1"_s, {1, 1}));
+        QCOMPARE(l->d->actionOrderYields.value(u"test1"_s), 2);
         QCOMPARE(l->state(), Logic::ActionOrder);
     }
 
@@ -389,17 +391,17 @@ private slots:
 
         QSignalSpy act(l.get(), &Logic::requestAction);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {2}));
 
         QVERIFY(act.count() > 0);
 
         // The order-1 player (test1) is the one requested to act.
-        bool r = l->actionReply(QStringLiteral("test1"), Data::DoNothing, {}, 0);
+        bool r = l->actionReply(u"test1"_s, Data::DoNothing, {}, 0);
         QVERIFY(r);
     }
 
@@ -408,18 +410,18 @@ private slots:
         l->roundStart();
 
         // Negative contract: outside the Upgrade state the reply is rejected.
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
 
         // Positive contract: upgrades happen at round end, when <= 1 player is
         // alive. Simulate that (kill the other two) and give test1 an upgrade
         // point, then verify the reply is accepted and upgradeResult emitted.
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        l->d->room->player(u"test1"_s)->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
         QVERIFY(up.count() > 0);
     }
 
@@ -434,9 +436,9 @@ private slots:
         l->roundStart();
 
         // All three pick Rock -> a tie, no winner.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Rock);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Rock);
 
         // requestRpsForAction fired once at roundStart and once more on the restart.
         QCOMPARE(req.length(), 2);
@@ -446,9 +448,9 @@ private slots:
 
         // The restarted round is still playable: a winning combo now advances.
         QSignalSpy ord(l.get(), &Logic::requestActionOrder);
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
         QVERIFY(ord.count() > 0);
     }
 
@@ -461,9 +463,9 @@ private slots:
         QSignalSpy act(l.get(), &Logic::requestAction);
 
         // test1=Rock beats test2=test3=Scissors; the two Scissors tie among themselves.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Scissors);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Scissors);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
         // Single winner -> no action-order negotiation, straight to Action.
         QCOMPARE(ord.length(), 0);
@@ -479,24 +481,24 @@ private slots:
         QSignalSpy reqTie(l.get(), &Logic::requestRpsForActionOrder);
         QSignalSpy act(l.get(), &Logic::requestAction);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
         QVERIFY(reqOrder.count() > 0);
 
         // Both winners demand order 1 -> engine asks them to break the tie with RPS.
-        l->actionOrderReply(QStringLiteral("test1"), {1});
-        l->actionOrderReply(QStringLiteral("test2"), {1});
+        l->actionOrderReply(u"test1"_s, {1});
+        l->actionOrderReply(u"test2"_s, {1});
 
         QVERIFY(reqTie.count() > 0);
 
         // Non-tie RPS resolves the struggle (Paper beats Rock here). The loser
         // then re-picks the remaining order; only then does Action follow.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Paper);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Paper);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {2}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {2}));
 
         QVERIFY(act.count() > 0);
     }
@@ -508,18 +510,18 @@ private slots:
 
         // unknown player, even once we are in the right state
         {
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(!l->actionOrderReply(QStringLiteral("ghost"), {1}));
+            QVERIFY(!l->actionOrderReply(u"ghost"_s, {1}));
         }
 
         // wrong state: actionOrderReply before any RPS negotiation
         {
             init();
             l->roundStart();
-            QVERIFY(!l->actionOrderReply(QStringLiteral("test1"), {1}));
+            QVERIFY(!l->actionOrderReply(u"test1"_s, {1}));
         }
     }
 
@@ -531,16 +533,16 @@ private slots:
 
         QSignalSpy res(l.get(), &Logic::actionResult);
 
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {2}));
 
         // test1 has no knife, so Slash is infeasible -> the reply is not accepted,
         // but DoNothing is applied instead and the round advances.
-        QVERIFY(!l->actionReply(QStringLiteral("test1"), Data::Slash, QStringLiteral("test2"), 0));
+        QVERIFY(!l->actionReply(u"test1"_s, Data::Slash, u"test2"_s, 0));
         QCOMPARE(res.length(), 1);
     }
 
@@ -560,12 +562,12 @@ private slots:
 
             l->roundStart();
 
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
 
-            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-            QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+            QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+            QVERIFY(l->actionOrderReply(u"test2"_s, {2}));
 
             // test1 (order 1) is requested to act.
             QCOMPARE(act.count(), 1);
@@ -573,7 +575,7 @@ private slots:
             // The to-bearing action against a non-existent player must not crash
             // and must be rejected (replaced by DoNothing); the engine advances to
             // test2 rather than stalling.
-            QVERIFY(!l->actionReply(QStringLiteral("test1"), action, QStringLiteral("ghost"), 0));
+            QVERIFY(!l->actionReply(u"test1"_s, action, u"ghost"_s, 0));
             QCOMPARE(res.length(), 1);
             QCOMPARE(act.count(), 2);
         }
@@ -585,31 +587,31 @@ private slots:
         l->roundStart();
 
         // Put attacker and victim in the same place (Village == 0) and arm the attacker.
-        l->d->room->player(QStringLiteral("test1"))->setHasKnife(true);
-        l->d->room->player(QStringLiteral("test1"))->setPlace(0);
-        l->d->room->player(QStringLiteral("test2"))->setPlace(0);
+        l->d->room->player(u"test1"_s)->setHasKnife(true);
+        l->d->room->player(u"test1"_s)->setPlace(0);
+        l->d->room->player(u"test2"_s)->setPlace(0);
         // Victim one hit from death.
-        l->d->room->player(QStringLiteral("test2"))->setHp(1);
+        l->d->room->player(u"test2"_s)->setHp(1);
 
         QSignalSpy res(l.get(), &Logic::actionResult);
         QSignalSpy over(l.get(), &Logic::roundOver);
 
         // All three alive during rps -> two winners (Rocks) -> action-order phase.
-        l->rpsReply(QStringLiteral("test1"), Data::Rock);
-        l->rpsReply(QStringLiteral("test2"), Data::Rock);
-        l->rpsReply(QStringLiteral("test3"), Data::Scissors);
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
 
-        QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-        QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+        QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+        QVERIFY(l->actionOrderReply(u"test2"_s, {2}));
 
         // Kill the third player now, so the round ends the moment the victim dies.
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
 
-        QVERIFY(l->actionReply(QStringLiteral("test1"), Data::Slash, QStringLiteral("test2"), 0));
+        QVERIFY(l->actionReply(u"test1"_s, Data::Slash, u"test2"_s, 0));
 
         QVERIFY(res.count() > 0);
         QVERIFY(over.count() > 0);
-        QVERIFY(l->d->room->player(QStringLiteral("test2"))->dead());
+        QVERIFY(l->d->room->player(u"test2"_s)->dead());
     }
 
     // G. When a fully-maxed player exists and the round is over, upgrade ends the game.
@@ -618,11 +620,11 @@ private slots:
         l->roundStart();
 
         // End the round: only test1 survives.
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
 
         // test1 is fully upgraded (max HP / knife / horse) but still earns a point.
-        Player *p = l->d->room->player(QStringLiteral("test1"));
+        Player *p = l->d->room->player(u"test1"_s);
         p->setMaxHp(20);
         p->setKnifeDamage(10);
         p->setHorseDamage(10);
@@ -635,7 +637,7 @@ private slots:
         // Reply with no items for a fully-maxed player: the empty list cannot spend
         // the point, so it is replaced by a (still empty) feasible default and
         // reported as not accepted; nothing to apply, but the game is already over.
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {}));
         QVERIFY(gameOver.count() > 0);
         QCOMPARE(up.length(), 0);
     }
@@ -645,15 +647,15 @@ private slots:
     {
         l->roundStart();
 
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        Player *p = l->d->room->player(QStringLiteral("test1"));
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        Player *p = l->d->room->player(u"test1"_s);
         const int beforeMaxHp = p->maxHp();
         p->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
         QVERIFY(up.count() > 0);
         QCOMPARE(p->maxHp(), beforeMaxHp + 1);
     }
@@ -667,20 +669,20 @@ private slots:
         // Wrong state: still negotiating RPS/action-order, not yet in Action.
         {
             QSignalSpy res(l.get(), &Logic::actionResult);
-            QVERIFY(!l->actionReply(QStringLiteral("test1"), Data::DoNothing, {}, 0));
+            QVERIFY(!l->actionReply(u"test1"_s, Data::DoNothing, {}, 0));
             QCOMPARE(res.length(), 0);
         }
 
         // Unknown player while in the Action state.
         {
-            l->rpsReply(QStringLiteral("test1"), Data::Rock);
-            l->rpsReply(QStringLiteral("test2"), Data::Rock);
-            l->rpsReply(QStringLiteral("test3"), Data::Scissors);
-            QVERIFY(l->actionOrderReply(QStringLiteral("test1"), {1}));
-            QVERIFY(l->actionOrderReply(QStringLiteral("test2"), {2}));
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Scissors);
+            QVERIFY(l->actionOrderReply(u"test1"_s, {1}));
+            QVERIFY(l->actionOrderReply(u"test2"_s, {2}));
 
             QSignalSpy res(l.get(), &Logic::actionResult);
-            QVERIFY(!l->actionReply(QStringLiteral("ghost"), Data::DoNothing, {}, 0));
+            QVERIFY(!l->actionReply(u"ghost"_s, Data::DoNothing, {}, 0));
             QCOMPARE(res.length(), 0);
         }
     }
@@ -688,13 +690,13 @@ private slots:
     // J. upgradeReply must reject an unknown player even in the Upgrade state.
     void QMdmmLogicupgradeReplyNegative()
     {
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        l->d->room->player(u"test1"_s)->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
-        QVERIFY(!l->upgradeReply(QStringLiteral("ghost"), {Data::UpgradeMaxHp}));
+        QVERIFY(!l->upgradeReply(u"ghost"_s, {Data::UpgradeMaxHp}));
         QCOMPARE(up.length(), 0);
     }
 
@@ -705,9 +707,9 @@ private slots:
     {
         l->roundStart();
 
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        Player *p = l->d->room->player(QStringLiteral("test1"));
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        Player *p = l->d->room->player(u"test1"_s);
         p->setUpgradePoint(2);
         // One knife upgrade remains before the cap; horse still has headroom.
         p->setKnifeDamage(l->d->room->logicConfiguration().maximumKnifeDamage() - 1);
@@ -718,7 +720,7 @@ private slots:
         // Over-allocate a single stat (2 knives requested, 1 remaining): the reply
         // is not accepted, but the logic builds a feasible default (knife first,
         // then horse).
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeKnife, Data::UpgradeKnife}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {Data::UpgradeKnife, Data::UpgradeKnife}));
         QCOMPARE(up.length(), 1);
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().maximumKnifeDamage());
         QCOMPARE(p->horseDamage(), l->d->room->logicConfiguration().initialHorseDamage() + 1);
@@ -728,9 +730,9 @@ private slots:
     {
         l->roundStart();
 
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        Player *p = l->d->room->player(QStringLiteral("test1"));
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        Player *p = l->d->room->player(u"test1"_s);
         p->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
@@ -739,7 +741,7 @@ private slots:
         // An unknown item value makes the reply infeasible; the reply is not
         // accepted, but the logic falls back to a default that spends the point on
         // knife.
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {static_cast<Data::UpgradeItem>(0xff)}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {static_cast<Data::UpgradeItem>(0xff)}));
         QCOMPARE(up.length(), 1);
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
     }
@@ -754,15 +756,15 @@ private slots:
     {
         l->roundStart();
 
-        l->d->room->player(QStringLiteral("test2"))->setHp(0);
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        Player *p = l->d->room->player(QStringLiteral("test1"));
+        l->d->room->player(u"test2"_s)->setHp(0);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        Player *p = l->d->room->player(u"test1"_s);
         p->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
 
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {}));
         QCOMPARE(up.length(), 1);
         QCOMPARE(p->knifeDamage(), l->d->room->logicConfiguration().initialKnifeDamage() + 1);
     }
@@ -772,14 +774,14 @@ private slots:
     {
         l->roundStart();
 
-        l->d->room->player(QStringLiteral("test3"))->setHp(0);
-        l->d->room->player(QStringLiteral("test1"))->setUpgradePoint(1);
-        l->d->room->player(QStringLiteral("test2"))->setUpgradePoint(1);
+        l->d->room->player(u"test3"_s)->setHp(0);
+        l->d->room->player(u"test1"_s)->setUpgradePoint(1);
+        l->d->room->player(u"test2"_s)->setUpgradePoint(1);
         l->d->state = Logic::Upgrade;
 
         QSignalSpy up(l.get(), &Logic::upgradeResult);
-        QVERIFY(l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
-        QVERIFY(!l->upgradeReply(QStringLiteral("test1"), {Data::UpgradeMaxHp}));
+        QVERIFY(l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
+        QVERIFY(!l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
         // Still incomplete: test2 has not replied yet.
         QCOMPARE(up.length(), 0);
     }

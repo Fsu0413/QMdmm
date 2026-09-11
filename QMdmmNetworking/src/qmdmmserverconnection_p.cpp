@@ -8,6 +8,8 @@
 #include <QRandomGenerator>
 #include <QTimer>
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -210,7 +212,7 @@ void ServerConnectionP::decodeActionOrderReply(const QJsonValue &value)
     // The reply carries at most one entry per requested selection (0 = yield that opportunity,
     // 1..maximumOrder = strive for an order). An oversized array is an abnormal case (D-025 /
     // D-030: statically checkable invalid value -> drop the connection).
-    const int selectionNum = currentRequestValue.toObject().value(QStringLiteral("selectionNum")).toInt();
+    const int selectionNum = currentRequestValue.toObject().value(u"selectionNum"_s).toInt();
     if (arr.size() > selectionNum)
         PROTOCOLERROR;
 
@@ -245,9 +247,9 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
 
     QJsonObject arr = value.toObject();
 
-    if (!arr.contains(QStringLiteral("action")))
+    if (!arr.contains(u"action"_s))
         PROTOCOLERROR;
-    QJsonValue vaction = arr.value(QStringLiteral("action"));
+    QJsonValue vaction = arr.value(u"action"_s);
     if (!vaction.isDouble())
         PROTOCOLERROR;
     QMdmmCore::Data::Action act = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
@@ -269,9 +271,9 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
     case QMdmmCore::Data::Slash:
     case QMdmmCore::Data::Kick:
     case QMdmmCore::Data::LetMove: {
-        if (!arr.contains(QStringLiteral("toPlayer")))
+        if (!arr.contains(u"toPlayer"_s))
             PROTOCOLERROR;
-        QJsonValue vtoPlayer = arr.value(QStringLiteral("toPlayer"));
+        QJsonValue vtoPlayer = arr.value(u"toPlayer"_s);
         if (!vtoPlayer.isString())
             PROTOCOLERROR;
         toPlayer = vtoPlayer.toString();
@@ -285,9 +287,9 @@ void ServerConnectionP::decodeActionReply(const QJsonValue &value)
     switch (act) {
     case QMdmmCore::Data::Move:
     case QMdmmCore::Data::LetMove: {
-        if (!arr.contains(QStringLiteral("toPlace")))
+        if (!arr.contains(u"toPlace"_s))
             PROTOCOLERROR;
-        QJsonValue vtoPlace = arr.value(QStringLiteral("toPlace"));
+        QJsonValue vtoPlace = arr.value(u"toPlace"_s);
         if (!vtoPlace.isDouble())
             PROTOCOLERROR;
         toPlace = vtoPlace.toInt();
@@ -359,8 +361,8 @@ void ServerConnectionP::defaultReplyRockPaperScissors()
 void ServerConnectionP::defaultReplyActionOrder()
 {
     QJsonObject ob = currentRequestValue.toObject();
-    QJsonArray arr = ob.value(QStringLiteral("remainedOrders")).toArray();
-    int num = ob.value(QStringLiteral("selectionNum")).toInt();
+    QJsonArray arr = ob.value(u"remainedOrders"_s).toArray();
+    int num = ob.value(u"selectionNum"_s).toInt();
     QList<int> ao;
     ao.reserve(num);
     while ((num--) != 0)
@@ -456,8 +458,8 @@ void ServerConnectionP::packetReceived(const QMdmmCore::Packet &packet)
 void ServerConnectionP::sendRockPaperScissorsRequested(const QStringList &playerNames, int strivedOrder)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerNames"), QJsonArray::fromStringList(playerNames));
-    ob.insert(QStringLiteral("strivedOrder"), strivedOrder);
+    ob.insert(u"playerNames"_s, QJsonArray::fromStringList(playerNames));
+    ob.insert(u"strivedOrder"_s, strivedOrder);
     addRequest(QMdmmCore::Protocol::RequestRockPaperScissors, ob);
 }
 
@@ -467,9 +469,9 @@ void ServerConnectionP::sendActionOrderRequested(const QList<int> &remainedOrder
     QJsonArray arr;
     foreach (int remainedOrder, remainedOrders)
         arr.append(remainedOrder);
-    ob.insert(QStringLiteral("remainedOrders"), arr);
-    ob.insert(QStringLiteral("maximumOrder"), maximumOrder);
-    ob.insert(QStringLiteral("selectionNum"), selectionNum);
+    ob.insert(u"remainedOrders"_s, arr);
+    ob.insert(u"maximumOrder"_s, maximumOrder);
+    ob.insert(u"selectionNum"_s, selectionNum);
     addRequest(QMdmmCore::Protocol::RequestActionOrder, ob);
 }
 
@@ -491,24 +493,24 @@ void ServerConnectionP::sendLogicConfigurationNotified()
 void ServerConnectionP::sendAgentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("agentState"), static_cast<int>(agentState.toInt()));
+    ob.insert(u"playerName"_s, playerName);
+    ob.insert(u"agentState"_s, static_cast<int>(agentState.toInt()));
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyAgentStateChanged, ob));
 }
 
 void ServerConnectionP::sendPlayerAddNotified(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("screenName"), screenName);
-    ob.insert(QStringLiteral("agentState"), static_cast<int>(agentState.toInt()));
+    ob.insert(u"playerName"_s, playerName);
+    ob.insert(u"screenName"_s, screenName);
+    ob.insert(u"agentState"_s, static_cast<int>(agentState.toInt()));
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerAdded, ob));
 }
 
 void ServerConnectionP::sendPlayerRemoveNotified(const QString &playerName)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerName"), playerName);
+    ob.insert(u"playerName"_s, playerName);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyPlayerRemoved, ob));
 }
 
@@ -545,14 +547,14 @@ void ServerConnectionP::sendActionOrderNotified(const QStringList &result)
 void ServerConnectionP::sendActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("action"), static_cast<int>(action));
+    ob.insert(u"playerName"_s, playerName);
+    ob.insert(u"action"_s, static_cast<int>(action));
 
     switch (action) {
     case QMdmmCore::Data::Slash:
     case QMdmmCore::Data::Kick:
     case QMdmmCore::Data::LetMove:
-        ob.insert(QStringLiteral("toPlayer"), toPlayer);
+        ob.insert(u"toPlayer"_s, toPlayer);
         break;
     default:
         break;
@@ -561,7 +563,7 @@ void ServerConnectionP::sendActionNotified(const QString &playerName, QMdmmCore:
     switch (action) {
     case QMdmmCore::Data::Move:
     case QMdmmCore::Data::LetMove:
-        ob.insert(QStringLiteral("toPlace"), toPlace);
+        ob.insert(u"toPlace"_s, toPlace);
         break;
     default:
         break;
@@ -627,8 +629,8 @@ void ServerConnectionP::sendGameOverNotified(const QStringList &playerNames)
 void ServerConnectionP::sendSpeakNotified(const QString &playerName, const QString &content)
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("playerName"), playerName);
-    ob.insert(QStringLiteral("content"), content);
+    ob.insert(u"playerName"_s, playerName);
+    ob.insert(u"content"_s, content);
     emit sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySpoken, ob));
 }
 

@@ -2,7 +2,11 @@
 
 #include "bot.h"
 
+#include <QMdmmCoreGlobal>
+
 #include <exception>
+
+using namespace Qt::StringLiterals;
 
 RlBot::RlBot(QMdmmNetworking::Client *parent)
     : Bot(parent)
@@ -10,7 +14,7 @@ RlBot::RlBot(QMdmmNetworking::Client *parent)
     // The rl style is recognized by the configuration but not implemented yet.
     // Constructing one is a hard failure instead of silently joining a game
     // with no strategy.
-    qCritical().noquote() << QStringLiteral("The Reinforcement Learning playing style is not implemented yet. Terminating.");
+    qCritical().noquote() << u"The Reinforcement Learning playing style is not implemented yet. Terminating."_s;
     std::terminate();
 }
 

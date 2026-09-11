@@ -18,12 +18,14 @@
 #include <optional>
 #include <utility>
 
+using namespace Qt::StringLiterals;
+
 namespace {
 // The giant help literal lives in a function-local static so that a failed allocation surfaces
 // at the call site instead of terminating the process during static initialization (cert-err58-cpp).
 const QString &helpText()
 {
-    static const QString text = QStringLiteral(R"help(Usage: QMdmmServer [options]
+    static const QString text = uR"help(Usage: QMdmmServer [options]
 
 Options:
   -h, --help                         Show this help text and exit.
@@ -91,7 +93,7 @@ Configuration save / inspect:
   -d, --show-current-configuration   Print the current configuration as JSON.
 
 Value ranges: <min~> means "at least min"; <0,min~> means "0, or at least min".
-)help");
+)help"_s;
     return text;
 }
 } // namespace
@@ -158,72 +160,72 @@ Config::Config()
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsCompactedShortOptions);
 
     // parser_.addHelpOption(); // do not fit my need
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("h"), QStringLiteral("help")}));
+    parser.addOption(QCommandLineOption(QStringList {u"h"_s, u"help"_s}));
     parser.addVersionOption();
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("t"), QStringLiteral("tcp")}, {}, QStringLiteral("on/off")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("p"), QStringLiteral("tcp-port")}, {}, QStringLiteral("port")));
+    parser.addOption(QCommandLineOption(QStringList {u"t"_s, u"tcp"_s}, {}, u"on/off"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"p"_s, u"tcp-port"_s}, {}, u"port"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("l"), QStringLiteral("local")}, {}, QStringLiteral("on/off")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("L"), QStringLiteral("local-name")}, {}, QStringLiteral("name")));
+    parser.addOption(QCommandLineOption(QStringList {u"l"_s, u"local"_s}, {}, u"on/off"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"L"_s, u"local-name"_s}, {}, u"name"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("w"), QStringLiteral("websocket")}, {}, QStringLiteral("on/off")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("W"), QStringLiteral("websocket-name")}, {}, QStringLiteral("name")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("P"), QStringLiteral("websocket-port")}, {}, QStringLiteral("port")));
+    parser.addOption(QCommandLineOption(QStringList {u"w"_s, u"websocket"_s}, {}, u"on/off"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"W"_s, u"websocket-name"_s}, {}, u"name"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"P"_s, u"websocket-port"_s}, {}, u"port"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("n"), QStringLiteral("players")}, {}, QStringLiteral("2~")));
+    parser.addOption(QCommandLineOption(QStringList {u"n"_s, u"players"_s}, {}, u"2~"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("2")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("3")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("4")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("5")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("6")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("7")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("8")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("9")}));
+    parser.addOption(QCommandLineOption(QStringList {u"2"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"3"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"4"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"5"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"6"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"7"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"8"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"9"_s}));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("o"), QStringLiteral("timeout")}, {}, QStringLiteral("0,15~")));
+    parser.addOption(QCommandLineOption(QStringList {u"o"_s, u"timeout"_s}, {}, u"0,15~"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("s"), QStringLiteral("slash"), QStringLiteral("knife")}, {}, QStringLiteral("1~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("S"), QStringLiteral("maximum-slash"), QStringLiteral("maximum-knife")}, {}, QStringLiteral("3~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("k"), QStringLiteral("kick"), QStringLiteral("horse")}, {}, QStringLiteral("2~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("K"), QStringLiteral("maximum-kick"), QStringLiteral("maximum-horse")}, {}, QStringLiteral("5~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("m"), QStringLiteral("maxhp")}, {}, QStringLiteral("7~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("M"), QStringLiteral("maximum-maxhp")}, {}, QStringLiteral("7~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("r"), QStringLiteral("punish-hp-modifier")}, {}, QStringLiteral("0,2~")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("R"), QStringLiteral("punish-hp-round-strategy")}, {}, QStringLiteral("strategy")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("z"), QStringLiteral("zero-hp-as-dead")}, {}, QStringLiteral("true/false")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("f"), QStringLiteral("enable-let-move")}, {}, QStringLiteral("true/false")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("i"), QStringLiteral("can-buy-only-in-initial-city")}, {}, QStringLiteral("true/false")));
+    parser.addOption(QCommandLineOption(QStringList {u"s"_s, u"slash"_s, u"knife"_s}, {}, u"1~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"S"_s, u"maximum-slash"_s, u"maximum-knife"_s}, {}, u"3~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"k"_s, u"kick"_s, u"horse"_s}, {}, u"2~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"K"_s, u"maximum-kick"_s, u"maximum-horse"_s}, {}, u"5~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"m"_s, u"maxhp"_s}, {}, u"7~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"M"_s, u"maximum-maxhp"_s}, {}, u"7~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"r"_s, u"punish-hp-modifier"_s}, {}, u"0,2~"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"R"_s, u"punish-hp-round-strategy"_s}, {}, u"strategy"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"z"_s, u"zero-hp-as-dead"_s}, {}, u"true/false"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"f"_s, u"enable-let-move"_s}, {}, u"true/false"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"i"_s, u"can-buy-only-in-initial-city"_s}, {}, u"true/false"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("1"), QStringLiteral("use-v1-presets")}));
+    parser.addOption(QCommandLineOption(QStringList {u"1"_s, u"use-v1-presets"_s}));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("c"), QStringLiteral("save-configuration")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("C"), QStringLiteral("save-global-configuration")}));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("d"), QStringLiteral("show-current-configuration")}));
+    parser.addOption(QCommandLineOption(QStringList {u"c"_s, u"save-configuration"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"C"_s, u"save-global-configuration"_s}));
+    parser.addOption(QCommandLineOption(QStringList {u"d"_s, u"show-current-configuration"_s}));
 
     parser.process(*qApp);
 
     if (!parser.positionalArguments().isEmpty())
-        configError(QStringLiteral("Unknown argument: %1"), parser.positionalArguments().join(QStringLiteral(", ")));
+        configError(u"Unknown argument: %1"_s, parser.positionalArguments().join(u", "_s));
 
-    if (parser.isSet(QStringLiteral("h"))) {
+    if (parser.isSet(u"h"_s)) {
         std::cout << qPrintable(helpText()) << std::flush;
         std::exit(0);
     }
 
     QMdmmCore::Settings::Instance toSave = QMdmmCore::Settings::Specified;
 
-    if (parser.isSet(QStringLiteral("c"))) {
-        if (parser.isSet(QStringLiteral("C")))
-            configError(QStringLiteral("It is not supported to save both per-user configuration and global configuration at one time. Exiting."));
+    if (parser.isSet(u"c"_s)) {
+        if (parser.isSet(u"C"_s))
+            configError(u"It is not supported to save both per-user configuration and global configuration at one time. Exiting."_s);
         toSave = QMdmmCore::Settings::PerUser;
-    } else if (parser.isSet(QStringLiteral("C"))) {
+    } else if (parser.isSet(u"C"_s)) {
         toSave = QMdmmCore::Settings::Global;
     }
 
     read_(&setting, &parser);
-    bool isShowSet = parser.isSet(QStringLiteral("d"));
+    bool isShowSet = parser.isSet(u"d"_s);
     if (isShowSet)
         show_();
     if (toSave != QMdmmCore::Settings::Specified)
@@ -240,22 +242,22 @@ inline std::optional<bool> stringToBool(const QString &value)
 {
     // clang-format off
     static const QStringList falseValues {
-        QStringLiteral("0"),
-        QStringLiteral("false"),
-        QStringLiteral("no"),
-        QStringLiteral("n"),
-        QStringLiteral("off"),
-        QStringLiteral("disable"),
-        QStringLiteral("disabled"),
+        u"0"_s,
+        u"false"_s,
+        u"no"_s,
+        u"n"_s,
+        u"off"_s,
+        u"disable"_s,
+        u"disabled"_s,
     };
     static const QStringList trueValues {
-        QStringLiteral("1"),
-        QStringLiteral("true"),
-        QStringLiteral("yes"),
-        QStringLiteral("y"),
-        QStringLiteral("on"),
-        QStringLiteral("enable"),
-        QStringLiteral("enabled"),
+        u"1"_s,
+        u"true"_s,
+        u"yes"_s,
+        u"y"_s,
+        u"on"_s,
+        u"enable"_s,
+        u"enabled"_s,
     };
     // clang-format on
 
@@ -295,10 +297,10 @@ inline std::optional<uint16_t> stringToUint16(const QString &value)
 inline std::optional<QMdmmCore::LogicConfiguration::PunishHpRoundStrategy> stringToPunishHpRoundStrategy(const QString &value)
 {
     static const QHash<QString, QMdmmCore::LogicConfiguration::PunishHpRoundStrategy> strategyHash {
-        std::make_pair(QStringLiteral("RoundDown"), QMdmmCore::LogicConfiguration::RoundDown),
-        std::make_pair(QStringLiteral("RoundToNearest45"), QMdmmCore::LogicConfiguration::RoundToNearest45),
-        std::make_pair(QStringLiteral("RoundUp"), QMdmmCore::LogicConfiguration::RoundUp),
-        std::make_pair(QStringLiteral("PlusOne"), QMdmmCore::LogicConfiguration::PlusOne),
+        std::make_pair(u"RoundDown"_s, QMdmmCore::LogicConfiguration::RoundDown),
+        std::make_pair(u"RoundToNearest45"_s, QMdmmCore::LogicConfiguration::RoundToNearest45),
+        std::make_pair(u"RoundUp"_s, QMdmmCore::LogicConfiguration::RoundUp),
+        std::make_pair(u"PlusOne"_s, QMdmmCore::LogicConfiguration::PlusOne),
     };
 
     for (QHash<QString, QMdmmCore::LogicConfiguration::PunishHpRoundStrategy>::const_iterator it = strategyHash.constBegin(); it != strategyHash.constEnd(); ++it) {
@@ -311,7 +313,7 @@ inline std::optional<QMdmmCore::LogicConfiguration::PunishHpRoundStrategy> strin
 
 inline QString boolToString(bool value)
 {
-    return value ? QStringLiteral("on") : QStringLiteral("off");
+    return value ? u"on"_s : u"off"_s;
 }
 
 inline QString intToString(int value)
@@ -327,16 +329,16 @@ inline QString uint16ToString(uint16_t value)
 inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::PunishHpRoundStrategy value)
 {
     static const QHash<QMdmmCore::LogicConfiguration::PunishHpRoundStrategy, QString> strategyHash {
-        std::make_pair(QMdmmCore::LogicConfiguration::RoundDown, QStringLiteral("RoundDown")),
-        std::make_pair(QMdmmCore::LogicConfiguration::RoundToNearest45, QStringLiteral("RoundToNearest45")),
-        std::make_pair(QMdmmCore::LogicConfiguration::RoundUp, QStringLiteral("RoundUp")),
-        std::make_pair(QMdmmCore::LogicConfiguration::PlusOne, QStringLiteral("PlusOne")),
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundDown, u"RoundDown"_s),
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundToNearest45, u"RoundToNearest45"_s),
+        std::make_pair(QMdmmCore::LogicConfiguration::RoundUp, u"RoundUp"_s),
+        std::make_pair(QMdmmCore::LogicConfiguration::PlusOne, u"PlusOne"_s),
     };
 
     // Fall back to the default strategy for unknown values so that a write-back never emits an
     // empty string (which the next startup would reject and exit on). The deserialize() path
     // already rejects out-of-range values; this keeps the serialize side equally total.
-    return strategyHash.value(value, QStringLiteral("RoundToNearest45"));
+    return strategyHash.value(value, u"RoundToNearest45"_s);
 }
 
 } // namespace
@@ -345,35 +347,35 @@ inline QString punishHpRoundStrategyToString(QMdmmCore::LogicConfiguration::Puni
 void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 {
     // NOLINTBEGIN(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
-#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                                       \
-    do {                                                                                                     \
-        QString s;                                                                                           \
-        int f = 0;                                                                                           \
-        if (parser->isSet(QStringLiteral(settingName))) {                                                    \
-            f = 1;                                                                                           \
-            s = parser->value(QStringLiteral(settingName));                                                  \
-        } else if (setting->contains(QStringLiteral(settingName))) {                                         \
-            f = 2;                                                                                           \
-            s = setting->value(QStringLiteral(settingName)).toString();                                      \
-        }                                                                                                    \
-        if (f != 0) {                                                                                        \
-            std::optional<type> v = parserConvert(s);                                                        \
-            if (v.has_value()) {                                                                             \
-                (conf).set##ValueName(v.value());                                                            \
-            } else {                                                                                         \
-                const char *from = nullptr;                                                                  \
-                if (f == 1)                                                                                  \
-                    from = "command line";                                                                   \
-                else if (f == 2)                                                                             \
-                    from = "config file";                                                                    \
-                else                                                                                         \
-                    from = "unknown config";                                                                 \
-                configError(QStringLiteral("Config item %1 (from %2) can't be parsed."), settingName, from); \
-            }                                                                                                \
-        }                                                                                                    \
+#define CONFIG_ITEM(type, conf, settingName, parserConvert, ValueName)                          \
+    do {                                                                                        \
+        QString s;                                                                              \
+        int f = 0;                                                                              \
+        if (parser->isSet(u"" settingName ""_s)) {                                              \
+            f = 1;                                                                              \
+            s = parser->value(u"" settingName ""_s);                                            \
+        } else if (setting->contains(u"" settingName ""_s)) {                                   \
+            f = 2;                                                                              \
+            s = setting->value(u"" settingName ""_s).toString();                                \
+        }                                                                                       \
+        if (f != 0) {                                                                           \
+            std::optional<type> v = parserConvert(s);                                           \
+            if (v.has_value()) {                                                                \
+                (conf).set##ValueName(v.value());                                               \
+            } else {                                                                            \
+                const char *from = nullptr;                                                     \
+                if (f == 1)                                                                     \
+                    from = "command line";                                                      \
+                else if (f == 2)                                                                \
+                    from = "config file";                                                       \
+                else                                                                            \
+                    from = "unknown config";                                                    \
+                configError(u"Config item %1 (from %2) can't be parsed."_s, settingName, from); \
+            }                                                                                   \
+        }                                                                                       \
     } while (false)
 
-    setting->beginGroup(QStringLiteral("server"));
+    setting->beginGroup(u"server"_s);
 
     CONFIG_ITEM(bool, serverConfiguration_, "tcp", stringToBool, TcpEnabled);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "tcp-port", stringToUint16, TcpPort);
@@ -389,14 +391,14 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
 
         // clang-format off
         static const std::array<QString, 8> shortForms {
-            QStringLiteral("2"),
-            QStringLiteral("3"),
-            QStringLiteral("4"),
-            QStringLiteral("5"),
-            QStringLiteral("6"),
-            QStringLiteral("7"),
-            QStringLiteral("8"),
-            QStringLiteral("9"),
+            u"2"_s,
+            u"3"_s,
+            u"4"_s,
+            u"5"_s,
+            u"6"_s,
+            u"7"_s,
+            u"8"_s,
+            u"9"_s,
         };
         // clang-format on
 
@@ -405,13 +407,13 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
                 if (players == 0)
                     players = static_cast<int>(i + 2);
                 else
-                    configError(QStringLiteral("-%1 can't be specified along with -%2"), static_cast<int>(i + 2), players);
+                    configError(u"-%1 can't be specified along with -%2"_s, static_cast<int>(i + 2), players);
             }
         }
 
         if (players != 0) {
-            if (parser->isSet(QStringLiteral("players")))
-                configError(QStringLiteral("-%1 can't be specified along with -n / --players"), players);
+            if (parser->isSet(u"players"_s))
+                configError(u"-%1 can't be specified along with -n / --players"_s, players);
 
             serverConfiguration_.setPlayerNumPerRoom(players);
         } else {
@@ -425,15 +427,15 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     // chance of a rock-paper-scissors tie during action-order resolution, so warn without rejecting.
     const int roomSize = serverConfiguration_.playerNumPerRoom();
     if (roomSize < 2)
-        configError(QStringLiteral("players must be at least 2 (got %1)"), roomSize);
+        configError(u"players must be at least 2 (got %1)"_s, roomSize);
     if (roomSize > 9)
         qWarning("players %d exceeds the soft cap of 9 (rock-paper-scissors ties become more likely)", roomSize);
 
     setting->endGroup();
 
-    setting->beginGroup(QStringLiteral("logic"));
+    setting->beginGroup(u"logic"_s);
 
-    if (parser->isSet(QStringLiteral("1")))
+    if (parser->isSet(u"1"_s))
         logicConfiguration_ = QMdmmCore::LogicConfiguration::v1();
 
     CONFIG_ITEM(int, logicConfiguration_, "slash", stringToInt, InitialKnifeDamage);
@@ -469,16 +471,16 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     });
     for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)
-            configError(QStringLiteral("Config item %1 must be at least %2 (got %3)"), check.name, check.min, check.value);
+            configError(u"Config item %1 must be at least %2 (got %3)"_s, check.name, check.min, check.value);
     }
 
     const int timeout = serverConfiguration_.requestTimeout();
     if (timeout != 0 && timeout < 15)
-        configError(QStringLiteral("Config item timeout must be 0 or at least 15 (got %1)"), timeout);
+        configError(u"Config item timeout must be 0 or at least 15 (got %1)"_s, timeout);
 
     const int punishHpModifier = logicConfiguration_.punishHpModifier();
     if (punishHpModifier != 0 && punishHpModifier < 2)
-        configError(QStringLiteral("Config item punish-hp-modifier must be 0 or at least 2 (got %1)"), punishHpModifier);
+        configError(u"Config item punish-hp-modifier must be 0 or at least 2 (got %1)"_s, punishHpModifier);
 
 #undef CONFIG_ITEM
 }
@@ -487,15 +489,15 @@ int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance to
 {
     // NOLINTBEGIN(bugprone-macro-parentheses)
 
-#define CONFIG_ITEM(type, conf, settingName, settingConvert, valueName)    \
-    do {                                                                   \
-        type v = conf.valueName();                                         \
-        setting->setValue(QStringLiteral(settingName), settingConvert(v)); \
+#define CONFIG_ITEM(type, conf, settingName, settingConvert, valueName) \
+    do {                                                                \
+        type v = conf.valueName();                                      \
+        setting->setValue(u"" settingName ""_s, settingConvert(v));     \
     } while (false)
 
     // NOLINTEND(bugprone-macro-parentheses)
 
-    setting->beginGroup(QStringLiteral("server"));
+    setting->beginGroup(u"server"_s);
 
     CONFIG_ITEM(bool, serverConfiguration_, "tcp", boolToString, tcpEnabled);
     CONFIG_ITEM(uint16_t, serverConfiguration_, "tcp-port", uint16ToString, tcpPort);
@@ -509,7 +511,7 @@ int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance to
 
     setting->endGroup();
 
-    setting->beginGroup(QStringLiteral("logic"));
+    setting->beginGroup(u"logic"_s);
 
     CONFIG_ITEM(int, logicConfiguration_, "slash", intToString, initialKnifeDamage);
     CONFIG_ITEM(int, logicConfiguration_, "maximum-slash", intToString, maximumKnifeDamage);
@@ -534,8 +536,8 @@ int Config::save_(QMdmmCore::Settings *setting, QMdmmCore::Settings::Instance to
 void Config::show_()
 {
     QJsonObject ob;
-    ob.insert(QStringLiteral("ServerConfiguration"), serverConfiguration_);
-    ob.insert(QStringLiteral("LogicConfiguration"), logicConfiguration_);
+    ob.insert(u"ServerConfiguration"_s, serverConfiguration_);
+    ob.insert(u"LogicConfiguration"_s, logicConfiguration_);
 
     QByteArray arr = QJsonDocument(ob).toJson(QJsonDocument::Indented);
     std::cout << arr.constData() << '\n' << std::flush;

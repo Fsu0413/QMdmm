@@ -2,10 +2,14 @@
 
 #include "mainwindow.h"
 
+#include <QMdmmCoreGlobal>
+
 #include <QApplication>
 #include <QFont>
 #include <QLocale>
 #include <QTranslator>
+
+using namespace Qt::StringLiterals;
 
 int main(int argc, char *argv[])
 {
@@ -13,7 +17,7 @@ int main(int argc, char *argv[])
 
     // Load the translation matching the system locale (falls back to the English source text).
     QTranslator translator;
-    if (translator.load(QLocale(), QStringLiteral("qmdmm"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+    if (translator.load(QLocale(), u"qmdmm"_s, u"_"_s, u":/i18n"_s))
         QApplication::installTranslator(&translator);
 
     // Make font suitable for displaying

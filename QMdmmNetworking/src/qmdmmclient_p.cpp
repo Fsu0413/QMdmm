@@ -12,6 +12,8 @@
 
 #include <algorithm>
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -128,9 +130,9 @@ void ClientP::requestRockPaperScissors(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("playerNames")))
+    if (!ob.contains(u"playerNames"_s))
         return;
-    QJsonValue vplayerNames = ob.value(QStringLiteral("playerNames"));
+    QJsonValue vplayerNames = ob.value(u"playerNames"_s);
     if (!vplayerNames.isArray())
         return;
     QJsonArray vaplayerNames = vplayerNames.toArray();
@@ -141,9 +143,9 @@ void ClientP::requestRockPaperScissors(const QJsonValue &value)
         playerNames << vplayerName.toString();
     }
 
-    if (!ob.contains(QStringLiteral("strivedOrder")))
+    if (!ob.contains(u"strivedOrder"_s))
         return;
-    QJsonValue vstrivedOrder = ob.value(QStringLiteral("strivedOrder"));
+    QJsonValue vstrivedOrder = ob.value(u"strivedOrder"_s);
     if (!vstrivedOrder.isDouble())
         return;
     int strivedOrder = vstrivedOrder.toInt();
@@ -161,9 +163,9 @@ void ClientP::requestActionOrder(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("remainedOrders")))
+    if (!ob.contains(u"remainedOrders"_s))
         return;
-    QJsonValue vremainedOrders = ob.value(QStringLiteral("remainedOrders"));
+    QJsonValue vremainedOrders = ob.value(u"remainedOrders"_s);
     if (!vremainedOrders.isArray())
         return;
     QJsonArray varemainedOrders = vremainedOrders.toArray();
@@ -174,16 +176,16 @@ void ClientP::requestActionOrder(const QJsonValue &value)
         remainedOrders << vremainedOrder.toInt();
     }
 
-    if (!ob.contains(QStringLiteral("maximumOrder")))
+    if (!ob.contains(u"maximumOrder"_s))
         return;
-    QJsonValue vmaximumOrder = ob.value(QStringLiteral("maximumOrder"));
+    QJsonValue vmaximumOrder = ob.value(u"maximumOrder"_s);
     if (!vmaximumOrder.isDouble())
         return;
     int maximumOrder = vmaximumOrder.toInt();
 
-    if (!ob.contains(QStringLiteral("selectionNum")))
+    if (!ob.contains(u"selectionNum"_s))
         return;
-    QJsonValue vselectionNum = ob.value(QStringLiteral("selectionNum"));
+    QJsonValue vselectionNum = ob.value(u"selectionNum"_s);
     if (!vselectionNum.isDouble())
         return;
     int selectionNum = vselectionNum.toInt();
@@ -247,16 +249,16 @@ void ClientP::notifyVersion(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("versionNumber")))
+    if (!ob.contains(u"versionNumber"_s))
         return;
-    QJsonValue vversionNumber = ob.value(QStringLiteral("versionNumber"));
+    QJsonValue vversionNumber = ob.value(u"versionNumber"_s);
     if (!vversionNumber.isString())
         return;
     QString versionNumber = vversionNumber.toString();
 
-    if (!ob.contains(QStringLiteral("protocolVersion")))
+    if (!ob.contains(u"protocolVersion"_s))
         return;
-    QJsonValue vprotocolVersion = ob.value(QStringLiteral("protocolVersion"));
+    QJsonValue vprotocolVersion = ob.value(u"protocolVersion"_s);
     if (!vprotocolVersion.isDouble())
         return;
     int protocolVersion = vprotocolVersion.toInt();
@@ -278,13 +280,13 @@ void ClientP::notifyVersion(const QJsonValue &value)
 
     // sign in process
     QJsonObject signInOb;
-    signInOb.insert(QStringLiteral("playerName"), q->objectName());
-    signInOb.insert(QStringLiteral("screenName"), clientConfiguration.screenName());
-    signInOb.insert(QStringLiteral("agentState"), static_cast<int>(initialState));
+    signInOb.insert(u"playerName"_s, q->objectName());
+    signInOb.insert(u"screenName"_s, clientConfiguration.screenName());
+    signInOb.insert(u"agentState"_s, static_cast<int>(initialState));
     // Report how many round events this client received before a drop, so the server can replay
     // only the events it missed (precise catch-up). On a fresh sign-in this is 0 and the server's
     // empty round-event log means nothing extra is replayed.
-    signInOb.insert(QStringLiteral("lastRoundEventSeq"), lastRoundEventSeq);
+    signInOb.insert(u"lastRoundEventSeq"_s, lastRoundEventSeq);
     emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifySignIn, signInOb));
 
     // The connection is back and we re-signed in. Stop the retry loop and tell
@@ -320,12 +322,12 @@ void ClientP::notifyAgentStateChanged(const QJsonValue &value)
         return;
 
     QJsonObject ob = value.toObject();
-    if (!ob.contains(QStringLiteral("playerName")))
+    if (!ob.contains(u"playerName"_s))
         return;
-    if (!ob.contains(QStringLiteral("agentState")))
+    if (!ob.contains(u"agentState"_s))
         return;
 
-    QJsonValue vplayerName = ob.value(QStringLiteral("playerName"));
+    QJsonValue vplayerName = ob.value(u"playerName"_s);
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
@@ -334,7 +336,7 @@ void ClientP::notifyAgentStateChanged(const QJsonValue &value)
         return;
     Agent *agent = agents.value(playerName);
 
-    QJsonValue vagentState = ob.value(QStringLiteral("agentState"));
+    QJsonValue vagentState = ob.value(u"agentState"_s);
     if (!vagentState.isDouble())
         return;
     QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
@@ -357,24 +359,24 @@ void ClientP::notifyPlayerAdded(const QJsonValue &value)
         return;
 
     QJsonObject ob = value.toObject();
-    if (!ob.contains(QStringLiteral("playerName")))
+    if (!ob.contains(u"playerName"_s))
         return;
-    if (!ob.contains(QStringLiteral("screenName")))
+    if (!ob.contains(u"screenName"_s))
         return;
-    if (!ob.contains(QStringLiteral("agentState")))
+    if (!ob.contains(u"agentState"_s))
         return;
 
-    QJsonValue vplayerName = ob.value(QStringLiteral("playerName"));
+    QJsonValue vplayerName = ob.value(u"playerName"_s);
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
 
-    QJsonValue vscreenName = ob.value(QStringLiteral("screenName"));
+    QJsonValue vscreenName = ob.value(u"screenName"_s);
     if (!vscreenName.isString())
         return;
     QString screenName = vscreenName.toString();
 
-    QJsonValue vagentState = ob.value(QStringLiteral("agentState"));
+    QJsonValue vagentState = ob.value(u"agentState"_s);
     if (!vagentState.isDouble())
         return;
     QMdmmCore::Data::AgentState agentState = QMdmmCore::Data::AgentState(static_cast<QMdmmCore::Data::AgentState::Int>(vagentState.toInt()));
@@ -415,9 +417,9 @@ void ClientP::notifyPlayerRemoved(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("playerName")))
+    if (!ob.contains(u"playerName"_s))
         return;
-    QJsonValue vplayerName = ob.value(QStringLiteral("playerName"));
+    QJsonValue vplayerName = ob.value(u"playerName"_s);
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
@@ -521,18 +523,18 @@ void ClientP::notifyAction(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("playerName")))
+    if (!ob.contains(u"playerName"_s))
         return;
-    QJsonValue vplayerName = ob.value(QStringLiteral("playerName"));
+    QJsonValue vplayerName = ob.value(u"playerName"_s);
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
     if (!agents.contains(playerName))
         return;
 
-    if (!ob.contains(QStringLiteral("action")))
+    if (!ob.contains(u"action"_s))
         return;
-    QJsonValue vaction = ob.value(QStringLiteral("action"));
+    QJsonValue vaction = ob.value(u"action"_s);
     if (!vaction.isDouble())
         return;
     QMdmmCore::Data::Action action = static_cast<QMdmmCore::Data::Action>(vaction.toInt());
@@ -556,9 +558,9 @@ void ClientP::notifyAction(const QJsonValue &value)
     case QMdmmCore::Data::Slash:
     case QMdmmCore::Data::Kick:
     case QMdmmCore::Data::LetMove: {
-        if (!ob.contains(QStringLiteral("toPlayer")))
+        if (!ob.contains(u"toPlayer"_s))
             return;
-        QJsonValue vtoPlayer = ob.value(QStringLiteral("toPlayer"));
+        QJsonValue vtoPlayer = ob.value(u"toPlayer"_s);
         if (!vtoPlayer.isString())
             return;
         toPlayer = vtoPlayer.toString();
@@ -574,9 +576,9 @@ void ClientP::notifyAction(const QJsonValue &value)
     switch (action) {
     case QMdmmCore::Data::Move:
     case QMdmmCore::Data::LetMove: {
-        if (!ob.contains(QStringLiteral("toPlace")))
+        if (!ob.contains(u"toPlace"_s))
             return;
-        QJsonValue vtoPlace = ob.value(QStringLiteral("toPlace"));
+        QJsonValue vtoPlace = ob.value(u"toPlace"_s);
         if (!vtoPlace.isDouble())
             return;
         toPlace = vtoPlace.toInt();
@@ -696,18 +698,18 @@ void ClientP::notifySpoken(const QJsonValue &value)
         return;
     QJsonObject ob = value.toObject();
 
-    if (!ob.contains(QStringLiteral("playerName")))
+    if (!ob.contains(u"playerName"_s))
         return;
-    QJsonValue vplayerName = ob.value(QStringLiteral("playerName"));
+    QJsonValue vplayerName = ob.value(u"playerName"_s);
     if (!vplayerName.isString())
         return;
     QString playerName = vplayerName.toString();
     if (!agents.contains(playerName))
         return;
 
-    if (!ob.contains(QStringLiteral("content")))
+    if (!ob.contains(u"content"_s))
         return;
-    QJsonValue vContent = ob.value(QStringLiteral("content"));
+    QJsonValue vContent = ob.value(u"content"_s);
     if (!vContent.isString())
         return;
     QString content = QString::fromUtf8(QByteArray::fromBase64(vContent.toString().toLatin1()));
@@ -817,9 +819,9 @@ void ClientP::sendActionReply(QMdmmCore::Data::Action act, const QString &toPlay
     if (socket != nullptr && currentRequest == QMdmmCore::Protocol::RequestAction) {
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         QJsonObject ob;
-        ob.insert(QStringLiteral("action"), static_cast<int>(act));
-        ob.insert(QStringLiteral("toPlayer"), toPlayer);
-        ob.insert(QStringLiteral("toPlace"), toPlace);
+        ob.insert(u"action"_s, static_cast<int>(act));
+        ob.insert(u"toPlayer"_s, toPlayer);
+        ob.insert(u"toPlace"_s, toPlace);
 
         emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, QMdmmCore::Protocol::RequestAction, ob));
     }
@@ -922,7 +924,7 @@ void ClientP::socketErrorOccurred(const Socket::Error &error)
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void ClientP::socketDisconnected()
 {
-    handleSocketGone(QStringLiteral("Disconnected"));
+    handleSocketGone(u"Disconnected"_s);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -982,7 +984,7 @@ void ClientP::scheduleReconnect()
         // Out of retries: stay disconnected and let the upper layer decide.
         reconnectInProgress = false;
         reconnectTimer->stop();
-        emit q->socketErrorDisconnected(QStringLiteral("Reconnect failed"), Client::QPrivateSignal());
+        emit q->socketErrorDisconnected(u"Reconnect failed"_s, Client::QPrivateSignal());
         return;
     }
 
@@ -1000,7 +1002,7 @@ void ClientP::reconnectTimeout()
     // The saved host is not connectable (invalid transport). No point retrying.
     reconnectInProgress = false;
     reconnectTimer->stop();
-    emit q->socketErrorDisconnected(QStringLiteral("Reconnect failed"), Client::QPrivateSignal());
+    emit q->socketErrorDisconnected(u"Reconnect failed"_s, Client::QPrivateSignal());
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)

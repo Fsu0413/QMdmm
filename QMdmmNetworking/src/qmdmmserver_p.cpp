@@ -8,6 +8,8 @@
 
 #include <QMdmmProtocol>
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmNetworking {
 namespace p {
 
@@ -74,14 +76,14 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 
         // no do .. while (0) here since I'd like 'break' to exit outside this block
         // where "socket->setError(...)" should be done
-#define CONF(member, check, convert)                      \
-    {                                                     \
-        if (!ob.contains(QStringLiteral(#member)))        \
-            break;                                        \
-        QJsonValue v = ob.value(QStringLiteral(#member)); \
-        if (!v.check())                                   \
-            break;                                        \
-        member = convert();                               \
+#define CONF(member, check, convert)               \
+    {                                              \
+        if (!ob.contains(u"" #member ""_s))        \
+            break;                                 \
+        QJsonValue v = ob.value(u"" #member ""_s); \
+        if (!v.check())                            \
+            break;                                 \
+        member = convert();                        \
     }
 
         // NOLINTEND(bugprone-macro-parentheses)
@@ -102,8 +104,8 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
         // replay only the events it missed (precise catch-up). A fresh sign-in omits the field and
         // defaults to 0 -- harmless, since a fresh room has an empty round-event log.
         int lastRoundEventSeq = 0;
-        if (ob.contains(QStringLiteral("lastRoundEventSeq"))) {
-            QJsonValue vlastRoundEventSeq = ob.value(QStringLiteral("lastRoundEventSeq"));
+        if (ob.contains(u"lastRoundEventSeq"_s)) {
+            QJsonValue vlastRoundEventSeq = ob.value(u"lastRoundEventSeq"_s);
             if (vlastRoundEventSeq.isDouble())
                 lastRoundEventSeq = vlastRoundEventSeq.toInt();
         }
@@ -175,8 +177,8 @@ void ServerP::introduceSocket(Socket *socket) // NOLINT(readability-make-member-
     connect(socket, &Socket::packetReceived, this, &ServerP::socketPacketReceived);
 
     QJsonObject ob;
-    ob.insert(QStringLiteral("versionNumber"), QMdmmCore::Global::version().toString());
-    ob.insert(QStringLiteral("protocolVersion"), QMdmmCore::Protocol::version());
+    ob.insert(u"versionNumber"_s, QMdmmCore::Global::version().toString());
+    ob.insert(u"protocolVersion"_s, QMdmmCore::Protocol::version());
     QMdmmCore::Packet packet(QMdmmCore::Protocol::NotifyVersion, ob);
     emit socket->sendPacket(packet);
 }

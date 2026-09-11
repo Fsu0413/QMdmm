@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QSettings>
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmCore {
 
 namespace p {
@@ -105,7 +107,7 @@ void SettingsWrapperP_QVariantMap::endGroup()
 
 QString SettingsWrapperP_QVariantMap::group() const
 {
-    return currentGroup.join(QStringLiteral("/"));
+    return currentGroup.join(u"/"_s);
 }
 
 bool SettingsWrapperP_QVariantMap::contains(const QString &key) const
@@ -118,7 +120,7 @@ QString SettingsWrapperP_QVariantMap::keyWithGroup(const QString &key) const
     QStringList groupPlusKey = currentGroup;
     groupPlusKey.append(key);
 
-    return groupPlusKey.join(QStringLiteral("/"));
+    return groupPlusKey.join(u"/"_s);
 }
 
 namespace {
@@ -127,8 +129,8 @@ struct InitializeQSettings
     InitializeQSettings()
     {
         QSettings::setDefaultFormat(QSettings::IniFormat);
-        QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QStringLiteral(QMDMM_CONFIGURATION_PREFIX));
-        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(QStringLiteral(".QMdmm")));
+        QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, u"" QMDMM_CONFIGURATION_PREFIX ""_s);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::home().absoluteFilePath(u".QMdmm"_s));
     }
     ~InitializeQSettings() = default;
     Q_DISABLE_COPY_MOVE(InitializeQSettings);
@@ -142,8 +144,8 @@ SettingsP::SettingsP()
 {
     static InitializeQSettings initializeQSettings;
 
-    globalConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::SystemScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
-    userConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::UserScope, QStringLiteral("Fsu0413.me"), QStringLiteral("QMdmm"));
+    globalConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::SystemScope, u"Fsu0413.me"_s, u"QMdmm"_s);
+    userConfig = std::make_unique<SettingsWrapperP_QSettings>(QSettings::UserScope, u"Fsu0413.me"_s, u"QMdmm"_s);
     specifiedConfig = std::make_unique<SettingsWrapperP_QVariantMap>();
 }
 

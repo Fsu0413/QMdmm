@@ -9,6 +9,8 @@
 
 #include "gameclient.h"
 
+using namespace Qt::StringLiterals;
+
 // NOLINTBEGIN
 
 // Registers the GUI bridge type and the core data types with the QML engine so
@@ -23,8 +25,8 @@ public:
 
     QMdmmGuiTestSetup()
     {
-        qmlRegisterUncreatableMetaObject(QMdmmCore::Data::staticMetaObject, "QMdmm.Core", 1, 0, "Data", QStringLiteral("Access to enums only"));
-        qmlRegisterUncreatableType<QMdmmCore::Player>("QMdmm.Core", 1, 0, "Player", QStringLiteral("Player is created by the engine"));
+        qmlRegisterUncreatableMetaObject(QMdmmCore::Data::staticMetaObject, "QMdmm.Core", 1, 0, "Data", u"Access to enums only"_s);
+        qmlRegisterUncreatableType<QMdmmCore::Player>("QMdmm.Core", 1, 0, "Player", u"Player is created by the engine"_s);
         qmlRegisterType<QMdmmGameClient>("QMdmm.Gui", 1, 0, "GameClient");
     }
 };

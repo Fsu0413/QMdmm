@@ -5,6 +5,8 @@
 
 #include <QMutexLocker>
 
+using namespace Qt::StringLiterals;
+
 namespace QMdmmCore {
 
 namespace p {
@@ -22,7 +24,7 @@ void messageOutput(QtMsgType type, const QMessageLogContext &context, const QStr
     if (debugLogInstance()->f != nullptr) {
         QString log = qFormatLogMessage(type, context, msg);
         QMutexLocker lock(&debugLogInstance()->m);
-        debugLogInstance()->f->write(log.append(QStringLiteral("\n")).toUtf8());
+        debugLogInstance()->f->write(log.append(u"\n"_s).toUtf8());
         if (debugLogInstance()->f->inherits("QFileDevice")) {
             QFileDevice *f = qobject_cast<QFileDevice *>(debugLogInstance()->f.data());
             if (f != nullptr)

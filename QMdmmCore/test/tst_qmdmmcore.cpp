@@ -10,6 +10,7 @@
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
+using namespace Qt::StringLiterals;
 
 class tst_QMdmmCore : public QObject
 {
@@ -48,37 +49,37 @@ private slots:
         QTest::addColumn<QStringList>("result");
 
         QTest::newRow("tie-allsame") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Rock),
-            std::make_pair(QStringLiteral("2"), Data::Rock),
-            std::make_pair(QStringLiteral("3"), Data::Rock),
-            std::make_pair(QStringLiteral("4"), Data::Rock),
+            std::make_pair(u"1"_s, Data::Rock),
+            std::make_pair(u"2"_s, Data::Rock),
+            std::make_pair(u"3"_s, Data::Rock),
+            std::make_pair(u"4"_s, Data::Rock),
         } << QStringList {};
         QTest::newRow("tie-alldiff") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Rock),
-            std::make_pair(QStringLiteral("2"), Data::Scissors),
-            std::make_pair(QStringLiteral("3"), Data::Paper),
-            std::make_pair(QStringLiteral("4"), Data::Rock),
+            std::make_pair(u"1"_s, Data::Rock),
+            std::make_pair(u"2"_s, Data::Scissors),
+            std::make_pair(u"3"_s, Data::Paper),
+            std::make_pair(u"4"_s, Data::Rock),
         } << QStringList {};
         QTest::newRow("rock-vs-scissors") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Rock),
-            std::make_pair(QStringLiteral("2"), Data::Scissors),
-            std::make_pair(QStringLiteral("3"), Data::Rock),
-            std::make_pair(QStringLiteral("4"), Data::Scissors),
+            std::make_pair(u"1"_s, Data::Rock),
+            std::make_pair(u"2"_s, Data::Scissors),
+            std::make_pair(u"3"_s, Data::Rock),
+            std::make_pair(u"4"_s, Data::Scissors),
         } << QStringList {
-            QStringLiteral("1"),
-            QStringLiteral("1"),
-            QStringLiteral("3"),
-            QStringLiteral("3"),
+            u"1"_s,
+            u"1"_s,
+            u"3"_s,
+            u"3"_s,
         };
         QTest::newRow("paper-vs-rock") << JudgeHash {
-            std::make_pair(QStringLiteral("1"), Data::Rock),
-            std::make_pair(QStringLiteral("2"), Data::Paper),
-            std::make_pair(QStringLiteral("3"), Data::Paper),
-            std::make_pair(QStringLiteral("4"), Data::Paper),
+            std::make_pair(u"1"_s, Data::Rock),
+            std::make_pair(u"2"_s, Data::Paper),
+            std::make_pair(u"3"_s, Data::Paper),
+            std::make_pair(u"4"_s, Data::Paper),
         } << QStringList {
-            QStringLiteral("2"),
-            QStringLiteral("3"),
-            QStringLiteral("4"),
+            u"2"_s,
+            u"3"_s,
+            u"4"_s,
         };
     }
     void QMdmmDatarockPaperScissorsWinners()
@@ -98,7 +99,7 @@ private slots:
     void QMdmmGlobalversion()
     {
         QVersionNumber r = Global::version();
-        QCOMPARE(r, QVersionNumber::fromString(QStringLiteral(QMDMM_VERSION)));
+        QCOMPARE(r, QVersionNumber::fromString(u"" QMDMM_VERSION ""_s));
     }
 
     void QMdmmUtilitieslist2Set()
@@ -164,8 +165,8 @@ private slots:
 
     void QMdmmUtilitiesstringList2VariantList()
     {
-        QStringList l {QStringLiteral("Fs"), QStringLiteral("u"), QStringLiteral("0413")};
-        QVariantList s {QStringLiteral("Fs"), QStringLiteral("u"), QStringLiteral("0413")};
+        QStringList l {u"Fs"_s, u"u"_s, u"0413"_s};
+        QVariantList s {u"Fs"_s, u"u"_s, u"0413"_s};
 
         QVariantList r = Utilities::stringList2VariantList(l);
         QCOMPARE(r, s);
@@ -173,8 +174,8 @@ private slots:
 
     void QMdmmUtilitiesvariantList2StringList()
     {
-        QVariantList l {QStringLiteral("3140"), QStringLiteral("u"), QStringLiteral("sF")};
-        QStringList s {QStringLiteral("3140"), QStringLiteral("u"), QStringLiteral("sF")};
+        QVariantList l {u"3140"_s, u"u"_s, u"sF"_s};
+        QStringList s {u"3140"_s, u"u"_s, u"sF"_s};
 
         QStringList r = Utilities::variantList2StringList(l);
         QCOMPARE(r, s);

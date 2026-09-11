@@ -4,6 +4,8 @@
 
 #include <QMdmmAgent>
 
+using namespace Qt::StringLiterals;
+
 Bot::Bot(QMdmmNetworking::Client *parent)
     : QObject(parent)
 {
@@ -120,16 +122,16 @@ double Bot::revengeScore(const QString &playerName) const
 
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
-    if (style == QStringLiteral("knifePreferred"))
+    if (style == u"knifePreferred"_s)
         return new KnifePreferredBot(parent);
-    if (style == QStringLiteral("horsePreferred"))
+    if (style == u"horsePreferred"_s)
         return new HorsePreferredBot(parent);
-    if (style == QStringLiteral("rl"))
+    if (style == u"rl"_s)
         return new RlBot(parent);
     return nullptr;
 }
 
 bool Bot::styleExist(const QString &style)
 {
-    return style == QStringLiteral("knifePreferred") || style == QStringLiteral("horsePreferred") || style == QStringLiteral("rl");
+    return style == u"knifePreferred"_s || style == u"horsePreferred"_s || style == u"rl"_s;
 }

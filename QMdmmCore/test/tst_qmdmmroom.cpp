@@ -9,6 +9,8 @@
 
 #include <memory>
 
+using namespace Qt::StringLiterals;
+
 // NOLINTBEGIN
 
 using namespace QMdmmCore;
@@ -45,7 +47,7 @@ private slots:
         QCOMPARE(QJsonObject(r->logicConfiguration()), QJsonObject(c));
 
         // configuration is taken by value, so it affects players immediately
-        Player *p = r->addPlayer(QStringLiteral("p1"));
+        Player *p = r->addPlayer(u"p1"_s);
         QCOMPARE(p->upgradeMaxHpRemainingTimes(), c.maximumMaxHp() - p->maxHp());
     }
 
@@ -53,57 +55,57 @@ private slots:
     {
         QSignalSpy spy(r.get(), &Room::playerAdded);
 
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
+        Player *p1 = r->addPlayer(u"p1"_s);
         QVERIFY(p1 != nullptr);
-        QCOMPARE(p1->objectName(), QStringLiteral("p1"));
+        QCOMPARE(p1->objectName(), u"p1"_s);
         QCOMPARE(p1->room(), r.get());
         QCOMPARE(spy.length(), 1);
-        QCOMPARE(spy.first().first().toString(), QStringLiteral("p1"));
+        QCOMPARE(spy.first().first().toString(), u"p1"_s);
 
         // duplicated name is rejected, and no signal is emitted
-        Player *dup = r->addPlayer(QStringLiteral("p1"));
+        Player *dup = r->addPlayer(u"p1"_s);
         QCOMPARE(dup, nullptr);
         QCOMPARE(spy.length(), 1);
 
-        Player *p2 = r->addPlayer(QStringLiteral("p2"));
+        Player *p2 = r->addPlayer(u"p2"_s);
         QVERIFY(p2 != nullptr);
         QVERIFY(p2 != p1);
         QCOMPARE(spy.length(), 2);
-        QCOMPARE(spy.at(1).first().toString(), QStringLiteral("p2"));
+        QCOMPARE(spy.at(1).first().toString(), u"p2"_s);
     }
 
     void QMdmmRoomremovePlayer()
     {
-        QPointer<Player> p1 = r->addPlayer(QStringLiteral("p1"));
-        r->addPlayer(QStringLiteral("p2"));
+        QPointer<Player> p1 = r->addPlayer(u"p1"_s);
+        r->addPlayer(u"p2"_s);
 
         QSignalSpy spy(r.get(), &Room::playerRemoved);
 
-        QVERIFY(r->removePlayer(QStringLiteral("p1")));
+        QVERIFY(r->removePlayer(u"p1"_s));
         QCOMPARE(spy.length(), 1);
-        QCOMPARE(spy.first().first().toString(), QStringLiteral("p1"));
+        QCOMPARE(spy.first().first().toString(), u"p1"_s);
 
         // the removed player is deleted
         QVERIFY(p1.isNull());
-        QCOMPARE(r->player(QStringLiteral("p1")), nullptr);
-        QCOMPARE(r->playerNames(), QStringList {QStringLiteral("p2")});
+        QCOMPARE(r->player(u"p1"_s), nullptr);
+        QCOMPARE(r->playerNames(), QStringList {u"p2"_s});
 
         // removing a nonexistent player fails, and no signal is emitted
-        QVERIFY(!r->removePlayer(QStringLiteral("p1")));
-        QVERIFY(!r->removePlayer(QStringLiteral("nonexist")));
+        QVERIFY(!r->removePlayer(u"p1"_s));
+        QVERIFY(!r->removePlayer(u"nonexist"_s));
         QCOMPARE(spy.length(), 1);
     }
 
     void QMdmmRoomplayer()
     {
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
+        Player *p1 = r->addPlayer(u"p1"_s);
 
-        QCOMPARE(r->player(QStringLiteral("p1")), p1);
-        QCOMPARE(r->player(QStringLiteral("nonexist")), nullptr);
+        QCOMPARE(r->player(u"p1"_s), p1);
+        QCOMPARE(r->player(u"nonexist"_s), nullptr);
 
         const Room *cr = r.get();
-        QCOMPARE(cr->player(QStringLiteral("p1")), p1);
-        QCOMPARE(cr->player(QStringLiteral("nonexist")), nullptr);
+        QCOMPARE(cr->player(u"p1"_s), p1);
+        QCOMPARE(cr->player(u"nonexist"_s), nullptr);
     }
 
     void QMdmmRoomplayers()
@@ -111,12 +113,12 @@ private slots:
         QVERIFY(r->players().isEmpty());
         QVERIFY(r->playerNames().isEmpty());
 
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
-        Player *p2 = r->addPlayer(QStringLiteral("p2"));
+        Player *p1 = r->addPlayer(u"p1"_s);
+        Player *p2 = r->addPlayer(u"p2"_s);
 
         // players are stored in a name-keyed map, so the order is sorted by name
         QCOMPARE(r->players(), (QList<Player *> {p1, p2}));
-        QCOMPARE(r->playerNames(), (QStringList {QStringLiteral("p1"), QStringLiteral("p2")}));
+        QCOMPARE(r->playerNames(), (QStringList {u"p1"_s, u"p2"_s}));
 
         const Room *cr = r.get();
         QCOMPARE(cr->players(), (QList<const Player *> {p1, p2}));
@@ -124,16 +126,16 @@ private slots:
 
     void QMdmmRoomalivePlayers()
     {
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
-        Player *p2 = r->addPlayer(QStringLiteral("p2"));
-        Player *p3 = r->addPlayer(QStringLiteral("p3"));
+        Player *p1 = r->addPlayer(u"p1"_s);
+        Player *p2 = r->addPlayer(u"p2"_s);
+        Player *p3 = r->addPlayer(u"p3"_s);
         r->prepareForRoundStart();
 
         const Room *cr = r.get();
 
         QCOMPARE(r->alivePlayers(), (QList<Player *> {p1, p2, p3}));
         QCOMPARE(cr->alivePlayers(), (QList<const Player *> {p1, p2, p3}));
-        QCOMPARE(r->alivePlayerNames(), (QStringList {QStringLiteral("p1"), QStringLiteral("p2"), QStringLiteral("p3")}));
+        QCOMPARE(r->alivePlayerNames(), (QStringList {u"p1"_s, u"p2"_s, u"p3"_s}));
         QCOMPARE(r->alivePlayersCount(), 3);
         QVERIFY(!r->isRoundOver());
 
@@ -144,7 +146,7 @@ private slots:
 
         QCOMPARE(r->alivePlayers(), (QList<Player *> {p1, p3}));
         QCOMPARE(cr->alivePlayers(), (QList<const Player *> {p1, p3}));
-        QCOMPARE(r->alivePlayerNames(), (QStringList {QStringLiteral("p1"), QStringLiteral("p3")}));
+        QCOMPARE(r->alivePlayerNames(), (QStringList {u"p1"_s, u"p3"_s}));
         QCOMPARE(r->alivePlayersCount(), 2);
         QVERIFY(!r->isRoundOver());
 
@@ -162,13 +164,13 @@ private slots:
 
     void QMdmmRoomisGameOver()
     {
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
-        r->addPlayer(QStringLiteral("p2"));
+        Player *p1 = r->addPlayer(u"p1"_s);
+        r->addPlayer(u"p2"_s);
         r->resetUpgrades();
 
         const LogicConfiguration &c = r->logicConfiguration();
 
-        QStringList winners {QStringLiteral("dirty")};
+        QStringList winners {u"dirty"_s};
         QVERIFY(!r->isGameOver(&winners));
         // the out param is cleared even when game is not over
         QVERIFY(winners.isEmpty());
@@ -187,24 +189,24 @@ private slots:
 
         p1->setMaxHp(c.maximumMaxHp());
         QVERIFY(r->isGameOver(&winners));
-        QCOMPARE(winners, QStringList {QStringLiteral("p1")});
+        QCOMPARE(winners, QStringList {u"p1"_s});
 
         QVERIFY(r->isGameOver());
 
         // multiple winners are all reported
-        Player *p2 = r->player(QStringLiteral("p2"));
+        Player *p2 = r->player(u"p2"_s);
         p2->setKnifeDamage(c.maximumKnifeDamage());
         p2->setHorseDamage(c.maximumHorseDamage());
         p2->setMaxHp(c.maximumMaxHp());
         QVERIFY(r->isGameOver(&winners));
-        QCOMPARE(winners, (QStringList {QStringLiteral("p1"), QStringLiteral("p2")}));
+        QCOMPARE(winners, (QStringList {u"p1"_s, u"p2"_s}));
     }
 
     void QMdmmRoomprepareForRoundStart()
     {
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
-        Player *p2 = r->addPlayer(QStringLiteral("p2"));
-        Player *p3 = r->addPlayer(QStringLiteral("p3"));
+        Player *p1 = r->addPlayer(u"p1"_s);
+        Player *p2 = r->addPlayer(u"p2"_s);
+        Player *p3 = r->addPlayer(u"p3"_s);
 
         foreach (Player *p, r->players()) {
             p->setHasKnife(true);
@@ -233,8 +235,8 @@ private slots:
     {
         const LogicConfiguration &c = r->logicConfiguration();
 
-        Player *p1 = r->addPlayer(QStringLiteral("p1"));
-        Player *p2 = r->addPlayer(QStringLiteral("p2"));
+        Player *p1 = r->addPlayer(u"p1"_s);
+        Player *p2 = r->addPlayer(u"p2"_s);
 
         foreach (Player *p, r->players()) {
             p->setKnifeDamage(c.maximumKnifeDamage());

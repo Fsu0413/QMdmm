@@ -11,17 +11,19 @@
 #include <QDir>
 #include <QFile>
 
+using namespace Qt::StringLiterals;
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("Fsu0413.me"));
-    QCoreApplication::setApplicationName(QStringLiteral("QMdmmBot"));
+    QCoreApplication::setOrganizationName(u"Fsu0413.me"_s);
+    QCoreApplication::setApplicationName(u"QMdmmBot"_s);
     QCoreApplication::setApplicationVersion(QMdmmCore::Global::version().toString());
 
-    QString logDirectory = QStringLiteral(QMDMM_RUNTIME_DATA_PREFIX "/log");
+    QString logDirectory = u"" QMDMM_RUNTIME_DATA_PREFIX "/log"_s;
 
     if (QDir().mkpath(logDirectory)) {
-        QString logFilePath = QDir(logDirectory).absoluteFilePath(QStringLiteral("QMdmmBot-") + QString::number(QDateTime::currentMSecsSinceEpoch()));
+        QString logFilePath = QDir(logDirectory).absoluteFilePath(u"QMdmmBot-"_s + QString::number(QDateTime::currentMSecsSinceEpoch()));
         QFile *logFile = new QFile(logFilePath);
 
         if (logFile->open(QIODevice::WriteOnly)) {

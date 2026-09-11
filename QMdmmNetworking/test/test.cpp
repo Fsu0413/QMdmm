@@ -1,10 +1,14 @@
 #include "test.h"
 
+#include <QMdmmCoreGlobal>
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QTest>
 
 #include <memory>
+
+using namespace Qt::StringLiterals;
 
 const QMetaObject *registerTestObjectImpl(const QMetaObject *metaObject)
 {
@@ -32,11 +36,7 @@ int main(int argc, char *argv[])
         qFatal("%s can't be created", ob->className());
 
     QStringList args {
-        QString::fromLatin1(ob->className()),
-        QStringLiteral("-o"),
-        QStringLiteral("-,txt"),
-        QStringLiteral("-o"),
-        QStringLiteral("%1%2.xml,junitxml").arg(QString::fromLatin1(ob->className()), QString::number(QT_VERSION_MAJOR)),
+        QString::fromLatin1(ob->className()), u"-o"_s, u"-,txt"_s, u"-o"_s, u"%1%2.xml,junitxml"_s.arg(QString::fromLatin1(ob->className()), QString::number(QT_VERSION_MAJOR)),
     };
 
     return QTest::qExec(toBeTested.get(), args);

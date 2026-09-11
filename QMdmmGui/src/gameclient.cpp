@@ -12,6 +12,8 @@
 using namespace QMdmmCore;
 using namespace QMdmmNetworking;
 
+using namespace Qt::StringLiterals;
+
 // Bridge between the QML GUI and the networking / core engine: owns the human
 // Client, optionally an in-process Server plus a few auto-replying bot Clients (so
 // a single user can fill a room and actually play a full match), and exposes a
@@ -69,15 +71,15 @@ QString QMdmmGameClient::gameState() const
 {
     switch (m_state) {
     case GameState::Start:
-        return QStringLiteral("start");
+        return u"start"_s;
     case GameState::Lobby:
-        return QStringLiteral("lobby");
+        return u"lobby"_s;
     case GameState::Playing:
-        return QStringLiteral("playing");
+        return u"playing"_s;
     case GameState::GameOver:
-        return QStringLiteral("gameover");
+        return u"gameover"_s;
     }
-    return QStringLiteral("start");
+    return u"start"_s;
 }
 
 QString QMdmmGameClient::localName() const
@@ -215,9 +217,9 @@ void QMdmmGameClient::wireClient(Client *client)
     });
     connect(agent, &Agent::speakNotified, this, [this](const QString &playerName, const QString &content) {
         QVariantMap entry;
-        entry.insert(QStringLiteral("name"), playerName);
-        entry.insert(QStringLiteral("screen"), screenName(playerName));
-        entry.insert(QStringLiteral("content"), content);
+        entry.insert(u"name"_s, playerName);
+        entry.insert(u"screen"_s, screenName(playerName));
+        entry.insert(u"content"_s, content);
         m_chat.append(entry);
         emit chatLogChanged();
     });
@@ -276,7 +278,7 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
     }
 
     ClientConfiguration hc;
-    hc.setScreenName(playerName.isEmpty() ? QStringLiteral("You") : playerName);
+    hc.setScreenName(playerName.isEmpty() ? u"You"_s : playerName);
     m_human = new Client(hc, this);
     m_localName = m_human->objectName();
     m_localScreen = hc.screenName();
@@ -285,7 +287,7 @@ void QMdmmGameClient::startLocalGame(const QString &playerName)
     m_human->connectToHost(QString::fromLatin1(LOCAL_HOST), Data::StateOnline);
 
     for (int i = 1; i < m_playerCount; ++i)
-        addBot(QStringLiteral("Bot %1").arg(i));
+        addBot(u"Bot %1"_s.arg(i));
 
     emit localNameChanged();
     setGameState(GameState::Lobby);
@@ -297,7 +299,7 @@ void QMdmmGameClient::connectOnline(const QString &host, const QString &playerNa
     reset();
 
     ClientConfiguration hc;
-    hc.setScreenName(playerName.isEmpty() ? QStringLiteral("You") : playerName);
+    hc.setScreenName(playerName.isEmpty() ? u"You"_s : playerName);
     m_human = new Client(hc, this);
     m_localName = m_human->objectName();
     m_localScreen = hc.screenName();
@@ -306,7 +308,7 @@ void QMdmmGameClient::connectOnline(const QString &host, const QString &playerNa
 
     QString addr = host.trimmed();
     if (!addr.contains(QLatin1String("://")))
-        addr = QStringLiteral("qmdmm://") + addr;
+        addr = u"qmdmm://"_s + addr;
     m_human->connectToHost(addr, Data::StateOnline);
 
     emit localNameChanged();
@@ -379,10 +381,10 @@ QVariantList QMdmmGameClient::actionListFor(const Player *from) const
 
     const auto make = [](Data::Action a, const QString &label, const QString &target, int place) {
         QVariantMap m;
-        m.insert(QStringLiteral("action"), static_cast<int>(a));
-        m.insert(QStringLiteral("label"), label);
-        m.insert(QStringLiteral("target"), target);
-        m.insert(QStringLiteral("place"), place);
+        m.insert(u"action"_s, static_cast<int>(a));
+        m.insert(u"label"_s, label);
+        m.insert(u"target"_s, target);
+        m.insert(u"place"_s, place);
         return m;
     };
 
@@ -434,8 +436,8 @@ QVariantList QMdmmGameClient::getUpgradeOptions() const
 
     auto add = [&](Data::UpgradeItem item, const QString &label) {
         QVariantMap m;
-        m.insert(QStringLiteral("item"), static_cast<int>(item));
-        m.insert(QStringLiteral("label"), label);
+        m.insert(u"item"_s, static_cast<int>(item));
+        m.insert(u"label"_s, label);
         ret.append(m);
     };
     if (p->canUpgradeKnife())

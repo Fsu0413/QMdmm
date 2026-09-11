@@ -4,6 +4,8 @@
 
 #include <map>
 
+using namespace Qt::StringLiterals;
+
 /**
  * @file qmdmmcoreglobal.h
  * @brief Global definition of QMdmmCore library
@@ -285,7 +287,7 @@ QStringList Data::rockPaperScissorsWinners(const QHash<QString, Data::RockPaperS
  */
 QVersionNumber Global::version()
 {
-    return QVersionNumber::fromString(QStringLiteral(QMDMM_VERSION));
+    return QVersionNumber::fromString(u"" QMDMM_VERSION ""_s);
 }
 
 /**

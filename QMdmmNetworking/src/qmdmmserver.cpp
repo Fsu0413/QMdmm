@@ -13,6 +13,8 @@
 #include <limits>
 #include <utility>
 
+using namespace Qt::StringLiterals;
+
 /**
  * @file qmdmmserver.h
  * @brief This is the file where the networking Server is defined.
@@ -199,15 +201,15 @@ const ServerConfiguration &ServerConfiguration::defaults()
 {
     // clang-format off
     static const ServerConfiguration defaultInstance {
-        qMakePair(QStringLiteral("tcpEnabled"), true),
-        qMakePair(QStringLiteral("tcpPort"), static_cast<int>(6366U)),
-        qMakePair(QStringLiteral("localEnabled"), true),
-        qMakePair(QStringLiteral("localSocketName"), QStringLiteral("QMdmm")),
-        qMakePair(QStringLiteral("websocketEnabled"), true),
-        qMakePair(QStringLiteral("websocketName"), QStringLiteral("QMdmm")),
-        qMakePair(QStringLiteral("websocketPort"), static_cast<int>(6367U)),
-        qMakePair(QStringLiteral("playerNumPerRoom"), 3),
-        qMakePair(QStringLiteral("requestTimeout"), 20),
+        qMakePair(u"tcpEnabled"_s, true),
+        qMakePair(u"tcpPort"_s, static_cast<int>(6366U)),
+        qMakePair(u"localEnabled"_s, true),
+        qMakePair(u"localSocketName"_s, u"QMdmm"_s),
+        qMakePair(u"websocketEnabled"_s, true),
+        qMakePair(u"websocketName"_s, u"QMdmm"_s),
+        qMakePair(u"websocketPort"_s, static_cast<int>(6367U)),
+        qMakePair(u"playerNumPerRoom"_s, 3),
+        qMakePair(u"requestTimeout"_s, 20),
     };
     // clang-format on
 
@@ -222,25 +224,25 @@ const ServerConfiguration &ServerConfiguration::defaults()
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type ServerConfiguration::valueName() const                                                     \
     {                                                                                               \
-        if (contains(QStringLiteral(#valueName)))                                                   \
-            return convertToType(value(QStringLiteral(#valueName)));                                \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
+        if (contains(u"" #valueName ""_s))                                                          \
+            return convertToType(value(u"" #valueName ""_s));                                       \
+        return convertToType(defaults().value(u"" #valueName ""_s));                                \
     }                                                                                               \
     void ServerConfiguration::set##ValueName(type valueName)                                        \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                          \
+        insert(u"" #valueName ""_s, convertToJsonValue(valueName));                                 \
     }
 
 #define IMPLEMENTATION_CONFIGURATION_SETTER_CONST_REFERENCE(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type ServerConfiguration::valueName() const                                                                            \
     {                                                                                                                      \
-        if (contains(QStringLiteral(#valueName)))                                                                          \
-            return convertToType(value(QStringLiteral(#valueName)));                                                       \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                                                \
+        if (contains(u"" #valueName ""_s))                                                                                 \
+            return convertToType(value(u"" #valueName ""_s));                                                              \
+        return convertToType(defaults().value(u"" #valueName ""_s));                                                       \
     }                                                                                                                      \
     void ServerConfiguration::set##ValueName(const type &valueName)                                                        \
     {                                                                                                                      \
-        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                                                 \
+        insert(u"" #valueName ""_s, convertToJsonValue(valueName));                                                        \
     }
 
 IMPLEMENTATION_CONFIGURATION(bool, tcpEnabled, TcpEnabled, CONVERTTOTYPEBOOL, )
@@ -298,34 +300,34 @@ bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabi
         return true;
     };
 
-#define CONF_BOOL(member)                                                              \
-    {                                                                                  \
-        if (ob.contains(QStringLiteral(#member))) {                                    \
-            if (!ob.value(QStringLiteral(#member)).isBool())                           \
-                return false;                                                          \
-            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
-        }                                                                              \
+#define CONF_BOOL(member)                                                \
+    {                                                                    \
+        if (ob.contains(u"" #member ""_s)) {                             \
+            if (!ob.value(u"" #member ""_s).isBool())                    \
+                return false;                                            \
+            result.insert(u"" #member ""_s, ob.value(u"" #member ""_s)); \
+        }                                                                \
     }
 
-#define CONF_STRING(member)                                                            \
-    {                                                                                  \
-        if (ob.contains(QStringLiteral(#member))) {                                    \
-            if (!ob.value(QStringLiteral(#member)).isString())                         \
-                return false;                                                          \
-            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
-        }                                                                              \
+#define CONF_STRING(member)                                              \
+    {                                                                    \
+        if (ob.contains(u"" #member ""_s)) {                             \
+            if (!ob.value(u"" #member ""_s).isString())                  \
+                return false;                                            \
+            result.insert(u"" #member ""_s, ob.value(u"" #member ""_s)); \
+        }                                                                \
     }
 
-#define CONF_PORT(member)                                                         \
-    {                                                                             \
-        int parsed = static_cast<int>(defaults().member());                       \
-        if (ob.contains(QStringLiteral(#member))) {                               \
-            if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &parsed)) \
-                return false;                                                     \
-            if (parsed == 0 || parsed > 65535)                                    \
-                return false;                                                     \
-            result.insert(QStringLiteral(#member), parsed);                       \
-        }                                                                         \
+#define CONF_PORT(member)                                                  \
+    {                                                                      \
+        int parsed = static_cast<int>(defaults().member());                \
+        if (ob.contains(u"" #member ""_s)) {                               \
+            if (!parseNonNegativeInt(ob.value(u"" #member ""_s), &parsed)) \
+                return false;                                              \
+            if (parsed == 0 || parsed > 65535)                             \
+                return false;                                              \
+            result.insert(u"" #member ""_s, parsed);                       \
+        }                                                                  \
     }
 
     CONF_BOOL(tcpEnabled);
@@ -342,24 +344,24 @@ bool ServerConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabi
     // playerNumPerRoom: whole number >= 2 (a game needs at least two players).
     {
         int parsed = 0;
-        if (ob.contains(QStringLiteral("playerNumPerRoom"))) {
-            if (!parseNonNegativeInt(ob.value(QStringLiteral("playerNumPerRoom")), &parsed))
+        if (ob.contains(u"playerNumPerRoom"_s)) {
+            if (!parseNonNegativeInt(ob.value(u"playerNumPerRoom"_s), &parsed))
                 return false;
             if (parsed < 2)
                 return false;
-            result.insert(QStringLiteral("playerNumPerRoom"), parsed);
+            result.insert(u"playerNumPerRoom"_s, parsed);
         }
     }
 
     // requestTimeout: 0 (no explicit timeout, grace only) or >= 15 seconds.
     {
         int parsed = 0;
-        if (ob.contains(QStringLiteral("requestTimeout"))) {
-            if (!parseNonNegativeInt(ob.value(QStringLiteral("requestTimeout")), &parsed))
+        if (ob.contains(u"requestTimeout"_s)) {
+            if (!parseNonNegativeInt(ob.value(u"requestTimeout"_s), &parsed))
                 return false;
             if (parsed != 0 && parsed < 15)
                 return false;
-            result.insert(QStringLiteral("requestTimeout"), parsed);
+            result.insert(u"requestTimeout"_s, parsed);
         }
     }
 
@@ -401,17 +403,17 @@ bool Server::listen()
     bool ret = true;
 
     if (d->serverConfiguration.tcpEnabled() && !d->t->listen(QHostAddress::Any, d->serverConfiguration.tcpPort())) {
-        emit listenError(QStringLiteral("tcp"), d->t->errorString(), QPrivateSignal());
+        emit listenError(u"tcp"_s, d->t->errorString(), QPrivateSignal());
         ret = false;
     }
 
     if (d->serverConfiguration.localEnabled() && !d->l->listen(d->serverConfiguration.localSocketName())) {
-        emit listenError(QStringLiteral("local"), d->l->errorString(), QPrivateSignal());
+        emit listenError(u"local"_s, d->l->errorString(), QPrivateSignal());
         ret = false;
     }
 
     if (d->serverConfiguration.websocketEnabled() && !d->w->listen(QHostAddress::Any, d->serverConfiguration.websocketPort())) {
-        emit listenError(QStringLiteral("websocket"), d->w->errorString(), QPrivateSignal());
+        emit listenError(u"websocket"_s, d->w->errorString(), QPrivateSignal());
         ret = false;
     }
 

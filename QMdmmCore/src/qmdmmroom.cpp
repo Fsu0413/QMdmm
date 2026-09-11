@@ -12,7 +12,7 @@
 #include <limits>
 #include <utility>
 
-using namespace QMdmmCore::p;
+using namespace Qt::StringLiterals;
 
 /**
  * @file qmdmmroom.h
@@ -283,17 +283,17 @@ const LogicConfiguration &LogicConfiguration::defaults()
 {
     // clang-format off
     static const LogicConfiguration defaultInstance {
-        qMakePair(QStringLiteral("initialKnifeDamage"), 1),
-        qMakePair(QStringLiteral("maximumKnifeDamage"), 10),
-        qMakePair(QStringLiteral("initialHorseDamage"), 2),
-        qMakePair(QStringLiteral("maximumHorseDamage"), 10),
-        qMakePair(QStringLiteral("initialMaxHp"), 10),
-        qMakePair(QStringLiteral("maximumMaxHp"), 20),
-        qMakePair(QStringLiteral("punishHpModifier"), 2),
-        qMakePair(QStringLiteral("punishHpRoundStrategy"), static_cast<int>(RoundToNearest45)),
-        qMakePair(QStringLiteral("zeroHpAsDead"), true),
-        qMakePair(QStringLiteral("enableLetMove"), true),
-        qMakePair(QStringLiteral("canBuyOnlyInInitialCity"), false),
+        qMakePair(u"initialKnifeDamage"_s, 1),
+        qMakePair(u"maximumKnifeDamage"_s, 10),
+        qMakePair(u"initialHorseDamage"_s, 2),
+        qMakePair(u"maximumHorseDamage"_s, 10),
+        qMakePair(u"initialMaxHp"_s, 10),
+        qMakePair(u"maximumMaxHp"_s, 20),
+        qMakePair(u"punishHpModifier"_s, 2),
+        qMakePair(u"punishHpRoundStrategy"_s, static_cast<int>(RoundToNearest45)),
+        qMakePair(u"zeroHpAsDead"_s, true),
+        qMakePair(u"enableLetMove"_s, true),
+        qMakePair(u"canBuyOnlyInInitialCity"_s, false),
     };
     // clang-format on
 
@@ -310,17 +310,17 @@ const LogicConfiguration &LogicConfiguration::v1()
 {
     // clang-format off
     static const LogicConfiguration defaultInstance {
-        qMakePair(QStringLiteral("initialKnifeDamage"), 1),
-        qMakePair(QStringLiteral("maximumKnifeDamage"), 3),
-        qMakePair(QStringLiteral("initialHorseDamage"), 3),
-        qMakePair(QStringLiteral("maximumHorseDamage"), 5),
-        qMakePair(QStringLiteral("initialMaxHp"), 7),
-        qMakePair(QStringLiteral("maximumMaxHp"), 7),
-        qMakePair(QStringLiteral("punishHpModifier"), 0),
-        qMakePair(QStringLiteral("punishHpRoundStrategy"), static_cast<int>(RoundToNearest45)),
-        qMakePair(QStringLiteral("zeroHpAsDead"), false),
-        qMakePair(QStringLiteral("enableLetMove"), false),
-        qMakePair(QStringLiteral("canBuyOnlyInInitialCity"), false),
+        qMakePair(u"initialKnifeDamage"_s, 1),
+        qMakePair(u"maximumKnifeDamage"_s, 3),
+        qMakePair(u"initialHorseDamage"_s, 3),
+        qMakePair(u"maximumHorseDamage"_s, 5),
+        qMakePair(u"initialMaxHp"_s, 7),
+        qMakePair(u"maximumMaxHp"_s, 7),
+        qMakePair(u"punishHpModifier"_s, 0),
+        qMakePair(u"punishHpRoundStrategy"_s, static_cast<int>(RoundToNearest45)),
+        qMakePair(u"zeroHpAsDead"_s, false),
+        qMakePair(u"enableLetMove"_s, false),
+        qMakePair(u"canBuyOnlyInInitialCity"_s, false),
     };
     // clang-format on
 
@@ -335,13 +335,13 @@ const LogicConfiguration &LogicConfiguration::v1()
 #define IMPLEMENTATION_CONFIGURATION(type, valueName, ValueName, convertToType, convertToJsonValue) \
     type LogicConfiguration::valueName() const                                                      \
     {                                                                                               \
-        if (contains(QStringLiteral(#valueName)))                                                   \
-            return convertToType(value(QStringLiteral(#valueName)));                                \
-        return convertToType(defaults().value(QStringLiteral(#valueName)));                         \
+        if (contains(u"" #valueName ""_s))                                                          \
+            return convertToType(value(u"" #valueName ""_s));                                       \
+        return convertToType(defaults().value(u"" #valueName ""_s));                                \
     }                                                                                               \
     void LogicConfiguration::set##ValueName(type valueName)                                         \
     {                                                                                               \
-        insert(QStringLiteral(#valueName), convertToJsonValue(valueName));                          \
+        insert(u"" #valueName ""_s, convertToJsonValue(valueName));                                 \
     }
 
 // NOLINTEND(bugprone-macro-parentheses,cppcoreguidelines-macro-usage)
@@ -407,13 +407,13 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
         return true;
     };
 
-#define CONF_INT(member)                                                               \
-    {                                                                                  \
-        if (ob.contains(QStringLiteral(#member))) {                                    \
-            if (!parseNonNegativeInt(ob.value(QStringLiteral(#member)), &(member)))    \
-                return false;                                                          \
-            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
-        }                                                                              \
+#define CONF_INT(member)                                                     \
+    {                                                                        \
+        if (ob.contains(u"" #member ""_s)) {                                 \
+            if (!parseNonNegativeInt(ob.value(u"" #member ""_s), &(member))) \
+                return false;                                                \
+            result.insert(u"" #member ""_s, ob.value(u"" #member ""_s));     \
+        }                                                                    \
     }
 
     CONF_INT(initialKnifeDamage);
@@ -427,13 +427,13 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
 
 #undef CONF_INT
 
-#define CONF_BOOL(member)                                                              \
-    {                                                                                  \
-        if (ob.contains(QStringLiteral(#member))) {                                    \
-            if (!ob.value(QStringLiteral(#member)).isBool())                           \
-                return false;                                                          \
-            result.insert(QStringLiteral(#member), ob.value(QStringLiteral(#member))); \
-        }                                                                              \
+#define CONF_BOOL(member)                                                \
+    {                                                                    \
+        if (ob.contains(u"" #member ""_s)) {                             \
+            if (!ob.value(u"" #member ""_s).isBool())                    \
+                return false;                                            \
+            result.insert(u"" #member ""_s, ob.value(u"" #member ""_s)); \
+        }                                                                \
     }
 
     CONF_BOOL(zeroHpAsDead);
@@ -470,7 +470,7 @@ bool LogicConfiguration::deserialize(const QJsonValue &value) // NOLINT(readabil
  */
 Room::Room(LogicConfiguration logicConfiguration, QObject *parent)
     : QObject(parent)
-    , d(std::make_unique<RoomP>())
+    , d(std::make_unique<p::RoomP>())
 {
     d->logicConfiguration = std::move(logicConfiguration);
 }

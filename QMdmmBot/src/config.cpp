@@ -9,12 +9,14 @@
 
 #include <iostream>
 
+using namespace Qt::StringLiterals;
+
 namespace {
 // The giant help literal lives in a function-local static so that a failed allocation surfaces
 // at the call site instead of terminating the process during static initialization (cert-err58-cpp).
 const QString &helpText()
 {
-    static const QString text = QStringLiteral(R"help(Usage: QMdmmBot [options]
+    static const QString text = uR"help(Usage: QMdmmBot [options]
 
 Options:
   -h, --help                         Show this help text and exit.
@@ -30,7 +32,7 @@ Bot:
                                        knifePreferred      prefer the knife
                                        horsePreferred      prefer the horse
                                        rl                  reinforcement learning (not implemented)
-)help");
+)help"_s;
     return text;
 }
 } // namespace
@@ -72,20 +74,20 @@ Config::Config()
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsCompactedShortOptions);
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("h"), QStringLiteral("help")}));
+    parser.addOption(QCommandLineOption(QStringList {u"h"_s, u"help"_s}));
     parser.addVersionOption();
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("l"), QStringLiteral("host")}, {}, QStringLiteral("host url")));
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("n"), QStringLiteral("name")}, {}, QStringLiteral("Screen Name")));
+    parser.addOption(QCommandLineOption(QStringList {u"l"_s, u"host"_s}, {}, u"host url"_s));
+    parser.addOption(QCommandLineOption(QStringList {u"n"_s, u"name"_s}, {}, u"Screen Name"_s));
 
-    parser.addOption(QCommandLineOption(QStringList {QStringLiteral("s"), QStringLiteral("playing-style")}, {}, QStringLiteral("playing style")));
+    parser.addOption(QCommandLineOption(QStringList {u"s"_s, u"playing-style"_s}, {}, u"playing style"_s));
 
     parser.process(*qApp);
 
     if (!parser.positionalArguments().isEmpty())
-        configError(QStringLiteral("Unknown argument: %1"), parser.positionalArguments().join(QStringLiteral(", ")));
+        configError(u"Unknown argument: %1"_s, parser.positionalArguments().join(u", "_s));
 
-    if (parser.isSet(QStringLiteral("h"))) {
+    if (parser.isSet(u"h"_s)) {
         std::cout << qPrintable(helpText()) << std::flush;
         std::exit(0);
     }
@@ -95,19 +97,19 @@ Config::Config()
 
 void Config::read_(QCommandLineParser *parser)
 {
-    if (!parser->isSet(QStringLiteral("host")))
-        configError(QStringLiteral("Host is required."));
-    host_ = parser->value(QStringLiteral("host"));
+    if (!parser->isSet(u"host"_s))
+        configError(u"Host is required."_s);
+    host_ = parser->value(u"host"_s);
 
-    if (parser->isSet(QStringLiteral("name")))
-        name_ = parser->value(QStringLiteral("name"));
+    if (parser->isSet(u"name"_s))
+        name_ = parser->value(u"name"_s);
 
-    playingStyle_ = QStringLiteral("knifePreferred");
-    if (parser->isSet(QStringLiteral("playing-style")))
-        playingStyle_ = parser->value(QStringLiteral("playing-style"));
+    playingStyle_ = u"knifePreferred"_s;
+    if (parser->isSet(u"playing-style"_s))
+        playingStyle_ = parser->value(u"playing-style"_s);
 
     // Validate the resolved style uniformly (default included), so the
     // whitelist in Bot::styleExist is the single source of truth.
     if (!Bot::styleExist(playingStyle_))
-        configError(QStringLiteral("Specified playing style does not exist."));
+        configError(u"Specified playing style does not exist."_s);
 }
