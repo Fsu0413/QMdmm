@@ -84,6 +84,12 @@ public:
     [[nodiscard]] bool canBuyKnife() const;
     [[nodiscard]] bool canBuyHorse() const;
     [[nodiscard]] bool canSlash(const Player *to) const;
+    // The HP this player is punished with for slashing from where it stands. A
+    // slash is only punished outside the Village, and only when the rules ask
+    // for it, so this is 0 where a slash is free. Which makes it the price a
+    // slasher pays on top of whatever it hits, and the number a strategy has to
+    // weigh before slashing.
+    [[nodiscard]] int slashPunishHp() const;
     [[nodiscard]] bool canKick(const Player *to) const;
     [[nodiscard]] bool canMove(int toPlace) const;
     [[nodiscard]] bool canLetMove(const Player *to, int toPlace) const;

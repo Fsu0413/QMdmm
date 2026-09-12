@@ -410,6 +410,46 @@ bool Player::canSlash(const Player *to) const
 }
 
 /**
+ * @brief The HP a player is punished with for slashing, at the place it stands
+ * @return the punish HP, @c 0 if a slash is not punished here
+ *
+ * A slash is punished only in city and only when @c QMdmmLogicConfiguration::punishHpModifier is positive. The punish HP itself is worked out from the slasher's own @c maxHp() and @c QMdmmLogicConfiguration::punishHpRoundStrategy.
+ *
+ * @sa @c canSlash() , @c slash()
+ */
+int Player::slashPunishHp() const
+{
+    if (place() == Data::Village)
+        return 0;
+
+    const int punishHpModifier = room()->logicConfiguration().punishHpModifier();
+    if (punishHpModifier <= 0)
+        return 0;
+
+    const LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
+
+    int punishedHp = 0;
+    switch (punishHpRoundStrategy) {
+    default:
+        [[fallthrough]];
+    case LogicConfiguration::RoundDown:
+        punishedHp = maxHp() / punishHpModifier;
+        break;
+    case LogicConfiguration::RoundToNearest45:
+        punishedHp = (((maxHp() * 2) / punishHpModifier) + 1) / 2;
+        break;
+    case LogicConfiguration::RoundUp:
+        punishedHp = (maxHp() + punishHpModifier - 1) / punishHpModifier;
+        break;
+    case LogicConfiguration::PlusOne:
+        punishedHp = (maxHp() / punishHpModifier) + 1;
+        break;
+    }
+
+    return punishedHp;
+}
+
+/**
  * @brief If the player can kick a specific player
  * @param to the target player
  * @return @c true if able, @c false if not
@@ -571,7 +611,7 @@ bool Player::buyHorse()
  *
  * If punish HP is enabled (@c QMdmmLogicConfiguration::punishHpModifier > 0) and this slash is occurred in city, the punish HP will take into account.
  *
- * @sa @c canSlash()
+ * @sa @c canSlash() , @c slashPunishHp()
  */
 bool Player::slash(Player *to)
 {
@@ -582,33 +622,9 @@ bool Player::slash(Player *to)
 
     p::PlayerP::applyDamage(this, to, knifeDamage(), Data::Slashed);
 
-    if (place() != Data::Village) {
-        int punishHpModifier = room()->logicConfiguration().punishHpModifier();
-        if (punishHpModifier > 0) {
-            LogicConfiguration::PunishHpRoundStrategy punishHpRoundStrategy = room()->logicConfiguration().punishHpRoundStrategy();
-
-            int punishedHp = 0;
-            switch (punishHpRoundStrategy) {
-            default:
-                [[fallthrough]];
-            case LogicConfiguration::RoundDown:
-                punishedHp = maxHp() / punishHpModifier;
-                break;
-            case LogicConfiguration::RoundToNearest45:
-                punishedHp = (((maxHp() * 2) / punishHpModifier) + 1) / 2;
-                break;
-            case LogicConfiguration::RoundUp:
-                punishedHp = (maxHp() + punishHpModifier - 1) / punishHpModifier;
-                break;
-            case LogicConfiguration::PlusOne:
-                punishedHp = (maxHp() / punishHpModifier) + 1;
-                break;
-            }
-
-            if (punishedHp > 0)
-                p::PlayerP::applyDamage(to, this, punishedHp, Data::HpPunished);
-        }
-    }
+    const int punishedHp = slashPunishHp();
+    if (punishedHp > 0)
+        p::PlayerP::applyDamage(to, this, punishedHp, Data::HpPunished);
 
     return true;
 }
