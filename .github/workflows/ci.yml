@@ -14,6 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set timezone (Linux)
+        run: |
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          date
+
       - name: Check non-ASCII characters
         run: |
           if LC_ALL=C grep -rn $'[^\t -~]' \
@@ -34,6 +39,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set timezone (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          date
+
+      - name: Set timezone (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          sudo systemsetup -settimezone Asia/Shanghai ||
+            sudo ln -sf /var/db/timezone/zoneinfo/Asia/Shanghai /etc/localtime
+          date
 
       - name: Install Qt (Linux)
         if: runner.os == 'Linux'
@@ -72,6 +90,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set timezone (Linux)
+        run: |
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          date
 
       - name: Install Qt (Linux)
         run: |
@@ -129,6 +152,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set timezone (macOS)
+        run: |
+          sudo systemsetup -settimezone Asia/Shanghai ||
+            sudo ln -sf /var/db/timezone/zoneinfo/Asia/Shanghai /etc/localtime
+          date
 
       - name: Install doxygen
         run: brew install doxygen
