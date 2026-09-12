@@ -12,6 +12,7 @@
 using namespace Qt::StringLiterals;
 
 // NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
 
 // Registers the GUI bridge type and the core data types with the QML engine so
 // the QML test cases can instantiate QMdmmGameClient and inspect the Player

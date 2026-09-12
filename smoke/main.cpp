@@ -27,6 +27,7 @@
 #include <QMdmmServer>
 
 // NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
 
 using namespace QMdmmCore;
 using namespace QMdmmNetworking;

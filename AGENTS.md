@@ -83,6 +83,13 @@ Read these before touching code:
 - QML: run `qmlformat -i` (config: `.qmlformat.ini`); note a known indentation
   bug -- check the resulting diff afterwards.
 
+### `clang-tidy`
+
+- Test and smoke code (`test/` / `smoke/`) is not linted. The policy is written
+  into the files themselves: each of them carries a file-level
+  `// NOLINTBEGIN` / `// NOLINTEND` pair, so the whole tree can be scanned
+  without the caller having to remember to filter paths.
+
 ### `using namespace`
 
 - In production code (i.e. `src/`)

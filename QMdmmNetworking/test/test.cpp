@@ -8,6 +8,9 @@
 
 #include <memory>
 
+// NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
+
 using namespace Qt::StringLiterals;
 
 const QMetaObject *registerTestObjectImpl(const QMetaObject *metaObject)
@@ -41,3 +44,5 @@ int main(int argc, char *argv[])
 
     return QTest::qExec(toBeTested.get(), args);
 }
+
+// NOLINTEND

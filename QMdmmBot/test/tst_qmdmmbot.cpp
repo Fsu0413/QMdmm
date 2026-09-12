@@ -13,6 +13,7 @@
 using namespace Qt::StringLiterals;
 
 // NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
 
 // The revenge memory lives in the Bot base class, but revengeScore() is
 // protected and the four request handlers are pure virtual (a style subclass

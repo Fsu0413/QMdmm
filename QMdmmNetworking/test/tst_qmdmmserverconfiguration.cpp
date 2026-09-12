@@ -9,6 +9,7 @@
 #include <limits>
 
 // NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
 
 using namespace QMdmmNetworking;
 using namespace Qt::StringLiterals;

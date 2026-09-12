@@ -8,6 +8,7 @@
 using namespace Qt::StringLiterals;
 
 // NOLINTBEGIN
+// Exempt from clang-tidy by policy; see AGENTS.md.
 
 using namespace QMdmmCore;
 
