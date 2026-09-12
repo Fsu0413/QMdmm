@@ -17,15 +17,15 @@ using namespace Qt::StringLiterals;
 // NOLINTBEGIN
 // Exempt from clang-tidy by policy; see AGENTS.md.
 
-// The state under test (the revenge memory, the threat assessment) lives in the
-// Bot base class, but its read accessors are protected and the four request
-// handlers are pure virtual (a style subclass must implement its strategy
-// there). This subclass only lifts the read accessors into public scope and
-// supplies the minimal concrete request handlers; it deliberately leaves the
-// notification handlers untouched, so the base class implementations are the
-// ones under test here. The notifications are delivered through the public
-// Agent API, which also pins the signal connections Bot makes in its
-// constructor.
+// The state under test (the revenge memory, the threat assessment, the target
+// selection built on them) lives in the Bot base class, but its read accessors
+// are protected and the four request handlers are pure virtual (a style
+// subclass must implement its strategy there). This subclass only lifts the
+// read accessors into public scope and supplies the minimal concrete request
+// handlers; it deliberately leaves the notification handlers untouched, so the
+// base class implementations are the ones under test here. The notifications are
+// delivered through the public Agent API, which also pins the signal
+// connections Bot makes in its constructor.
 class ProbeBot final : public Bot
 {
 public:
@@ -35,6 +35,8 @@ public:
     }
 
     using Bot::revengeScore;
+    using Bot::selectTarget;
+    using Bot::targetScore;
     using Bot::threatScore;
 
 protected:
@@ -88,6 +90,18 @@ private slots:
     // A peer that cannot hurt this bot -- because it is dead, or because it is
     // not in the room at all -- is no threat, and neither is a dead bot itself.
     void threat_ignoresDeadPlayersAndStrangers();
+
+    // How attractive a peer is as a target is its grudge plus the threat it
+    // poses; death zeroes the threat but not the grudge.
+    void target_combinesRevengeAndThreat();
+
+    // The target is the opponent with the highest score, on equal weight for the
+    // two dimensions, and a tie goes to room order.
+    void target_picksTheHighestScoringOpponent();
+
+    // Nobody scores above zero -- or nobody alive is left to act against -- means
+    // no target at all.
+    void target_returnsEmptyWhenNobodyIsWorthAimingAt();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -260,6 +274,133 @@ void tst_QMdmmBot::threat_ignoresDeadPlayersAndStrangers()
     enemy->setHp(10);
     self->setHp(0);
     QCOMPARE(bot.threatScore(u"enemy"_s), 0.0);
+}
+
+void tst_QMdmmBot::target_combinesRevengeAndThreat()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    const QString self = client.objectName();
+    const QString enemy = u"enemy"_s;
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *selfPlayer = room->addPlayer(self);
+    QMdmmCore::Player *enemyPlayer = room->addPlayer(enemy);
+    QVERIFY(selfPlayer != nullptr);
+    QVERIFY(enemyPlayer != nullptr);
+
+    selfPlayer->setPlace(1);
+    enemyPlayer->setPlace(1);
+
+    // An unarmed peer that never attacked this bot is worth nothing as a target,
+    // and so is a peer that is not in the room at all.
+    QCOMPARE(bot.targetScore(enemy), 0.0);
+    QCOMPARE(bot.targetScore(u"stranger"_s), 0.0);
+
+    // The threat it poses is what it brings to bear...
+    enemyPlayer->setKnifeDamage(3);
+    enemyPlayer->setHasKnife(true);
+    QCOMPARE(bot.targetScore(enemy), 3.0);
+
+    // ...and a grudge adds on top of that.
+    client.agent()->notifyAction(enemy, QMdmmCore::Data::Slash, self, 0);
+    QCOMPARE(bot.revengeScore(enemy), 1.0);
+    QCOMPARE(bot.targetScore(enemy), 4.0);
+
+    // Death zeroes the threat but not the grudge: the bot still remembers who
+    // wronged it.
+    enemyPlayer->setHp(0);
+    QCOMPARE(bot.threatScore(enemy), 0.0);
+    QCOMPARE(bot.targetScore(enemy), 1.0);
+}
+
+void tst_QMdmmBot::target_picksTheHighestScoringOpponent()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    const QString self = client.objectName();
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *selfPlayer = room->addPlayer(self);
+    // Room order is name order, which is what decides a tie: "bbb" comes before
+    // "ccc".
+    QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+    QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+    QVERIFY(selfPlayer != nullptr);
+    QVERIFY(bbb != nullptr);
+    QVERIFY(ccc != nullptr);
+
+    selfPlayer->setPlace(1);
+    bbb->setPlace(1);
+    ccc->setPlace(1);
+
+    // Nobody has wronged this bot and nobody is armed, so there is nothing to
+    // pick.
+    QCOMPARE(bot.selectTarget(), QString());
+
+    // "ccc" attacked us, which alone puts it ahead of the harmless "bbb".
+    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+    QCOMPARE(bot.selectTarget(), u"ccc"_s);
+
+    // A knife, however, makes "bbb" the bigger threat and hands it the lead.
+    bbb->setKnifeDamage(3);
+    bbb->setHasKnife(true);
+    QCOMPARE(bot.selectTarget(), u"bbb"_s);
+
+    // Both dimensions are summed at equal weight, so two more hits put the
+    // grudge against "ccc" at exactly the threat of "bbb" -- and a tie goes to
+    // room order, i.e. to "bbb".
+    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+    QCOMPARE(bot.targetScore(u"bbb"_s), 3.0);
+    QCOMPARE(bot.targetScore(u"ccc"_s), 3.0);
+    QCOMPARE(bot.selectTarget(), u"bbb"_s);
+
+    // One more hit and "ccc" pulls ahead on its own.
+    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+    QCOMPARE(bot.targetScore(u"ccc"_s), 4.0);
+    QCOMPARE(bot.selectTarget(), u"ccc"_s);
+}
+
+void tst_QMdmmBot::target_returnsEmptyWhenNobodyIsWorthAimingAt()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    const QString self = client.objectName();
+    const QString enemy = u"enemy"_s;
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *selfPlayer = room->addPlayer(self);
+    QMdmmCore::Player *enemyPlayer = room->addPlayer(enemy);
+    QVERIFY(selfPlayer != nullptr);
+    QVERIFY(enemyPlayer != nullptr);
+
+    // A peer that is out of reach, unarmed and holds no grudge is not worth
+    // aiming at.
+    selfPlayer->setPlace(1);
+    enemyPlayer->setPlace(2);
+    QCOMPARE(bot.targetScore(enemy), 0.0);
+    QCOMPARE(bot.selectTarget(), QString());
+
+    // Once it has wronged this bot there is something to act on...
+    client.agent()->notifyAction(enemy, QMdmmCore::Data::Slash, self, 0);
+    QCOMPARE(bot.selectTarget(), enemy);
+
+    // ...but a dead peer is out of the running even while the grudge survives:
+    // only the living can be acted against.
+    enemyPlayer->setHp(0);
+    QCOMPARE(bot.targetScore(enemy), 1.0);
+    QCOMPARE(bot.selectTarget(), QString());
+
+    // A bot whose room holds nobody but itself has no target either.
+    QMdmmNetworking::Client lonelyClient {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot lonelyBot {&lonelyClient};
+    QMdmmCore::Room *lonelyRoom = lonelyClient.room();
+    QVERIFY(lonelyRoom->addPlayer(lonelyClient.objectName()) != nullptr);
+    QCOMPARE(lonelyBot.selectTarget(), QString());
 }
 
 namespace {

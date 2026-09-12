@@ -78,6 +78,23 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
     // strategies need them. Style strategies read this when they pick a target.
     [[nodiscard]] double threatScore(const QString &playerName) const;
 
+    // Target score: how attractive one peer is as a target, which is its
+    // weighted revenge score plus its weighted threat score (see the weights
+    // below) -- this bot wants to hit back at whoever hurt it, and to take out
+    // whoever can hurt it. Both dimensions are read as they come, so a dead peer
+    // still scores the grudge it earned (threatScore() is the one death zeroes
+    // out). Style strategies read this when they pick a target.
+    [[nodiscard]] double targetScore(const QString &playerName) const;
+
+    // Target selection: the peer this bot currently wants to act against, that
+    // is, the alive peer with the highest target score. Ties go to the first
+    // peer in room order (players are held in a name-ordered map), so the pick
+    // is deterministic rather than dependent on iteration order. An empty name
+    // means nobody is worth aiming at: either no opponent is left or none of
+    // them scores above zero. Style strategies read this when they pick a
+    // target.
+    [[nodiscard]] QString selectTarget() const;
+
 private:
     // A hostile action is worth this many grudges; every finished round
     // multiplies all of them by the decay factor, and an entry that has decayed
@@ -93,6 +110,15 @@ private:
     // this bot within one round at all.
     static constexpr double threatSamePlaceWeight = 1.0;
     static constexpr double threatAdjacentWeight = 0.5;
+
+    // Target score weights: a grudge and an incoming threat both make a peer
+    // worth acting against, so the two dimensions are summed. They are kept
+    // apart, and named, because they are not the same unit -- a grudge counts
+    // hits taken, a threat counts damage taken -- so a style strategy that wants
+    // one of them to dominate can rebalance them here without touching the
+    // scoring code. At equal weight the score is a plain sum.
+    static constexpr double revengeWeight = 1.0;
+    static constexpr double threatWeight = 1.0;
 
     QHash<QString, double> revenge_;
 };

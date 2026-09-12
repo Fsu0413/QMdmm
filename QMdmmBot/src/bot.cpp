@@ -154,6 +154,41 @@ double Bot::threatScore(const QString &playerName) const
     return reach * damage;
 }
 
+double Bot::targetScore(const QString &playerName) const
+{
+    // Both dimensions are weighted and then added; the two terms are kept apart
+    // so the weighting reads as one step and the sum as another.
+    const double grudge = revengeWeight * revengeScore(playerName);
+    const double threat = threatWeight * threatScore(playerName);
+
+    return grudge + threat;
+}
+
+QString Bot::selectTarget() const
+{
+    const QMdmmCore::Room *room = client()->room();
+    const QString selfName = client()->objectName();
+
+    QString target;
+    double best = 0.0;
+
+    // Only alive peers are candidates, and a strict comparison from the zero
+    // start means a peer that scores nothing is never picked and that the first
+    // of several equally good peers wins.
+    const QList<const QMdmmCore::Player *> alive = room->alivePlayers();
+    for (const QMdmmCore::Player *player : alive) {
+        if (player->objectName() == selfName)
+            continue;
+        const double score = targetScore(player->objectName());
+        if (score > best) {
+            best = score;
+            target = player->objectName();
+        }
+    }
+
+    return target;
+}
+
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     if (style == u"knifePreferred"_s)
