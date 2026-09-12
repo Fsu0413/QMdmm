@@ -96,6 +96,38 @@ ActionReply askForAction(QMdmmNetworking::Client &client, int currentOrder)
     return reply;
 }
 
+// What a bot asked for in one upgrade request.
+struct UpgradeReply
+{
+    int count = 0;
+    QList<QMdmmCore::Data::UpgradeItem> items;
+};
+
+// Asks a bot for an upgrade the way the match does (see askForAction()).
+UpgradeReply askForUpgrade(QMdmmNetworking::Client &client, int remainingTimes)
+{
+    UpgradeReply reply;
+    const auto record = [&reply](const QList<QMdmmCore::Data::UpgradeItem> &items) {
+        ++reply.count;
+        reply.items = items;
+    };
+    const QMetaObject::Connection connection = QObject::connect(client.agent(), &QMdmmNetworking::Agent::replyUpgrade, &client, record);
+    client.agent()->requestUpgrade(remainingTimes);
+    QObject::disconnect(connection);
+    return reply;
+}
+
+// Whether a bot gave up on one upgrade request rather than answering it. The
+// reply-or-giveUp contract allows either, but never neither.
+bool upgradeWasGivenUp(QMdmmNetworking::Client &client, int remainingTimes)
+{
+    bool givenUp = false;
+    const QMetaObject::Connection connection = QObject::connect(client.agent(), &QMdmmNetworking::Agent::requestGivenUp, &client, [&givenUp] { givenUp = true; });
+    client.agent()->requestUpgrade(remainingTimes);
+    QObject::disconnect(connection);
+    return givenUp;
+}
+
 } // namespace
 
 class tst_QMdmmBot : public QObject
@@ -149,6 +181,23 @@ private slots:
     // The styles answer an action request with that rule in force: they pass up a
     // co-located attack that a city would punish them to death for.
     void action_skipsASlashThatTheCityPunishWouldMakeFatal();
+
+    // The knife style spends its points on the knife first, on max HP second,
+    // and leaves the horse for last (issue #6 Q3).
+    void upgrade_spendsOnKnifeThenMaxHpThenHorse();
+
+    // The knife style stops buying horses once two slashes finish every peer
+    // off: what it is short of past that point is staying power, not reach.
+    void action_buysAHorseOnlyWhileItIsStillShortOfReach();
+
+    // The knife style pays for a slash with its life only in the one case Q3
+    // names: a blow that finishes a peer off, thrown from the stronger side,
+    // with no third peer left to profit from the round it dies in.
+    void action_paysForASlashWithItsLifeOnlyWhenTheTradeIsWorthIt();
+
+    // The blow goes to the co-located peer the score rates highest -- the score
+    // ranks targets, it does not forbid hitting them.
+    void action_aimsAtTheBestScoringPeerStandingHere();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -568,8 +617,10 @@ void tst_QMdmmBot::slash_isSkippedWhenItsPunishWouldBeFatal()
 
 void tst_QMdmmBot::action_skipsASlashThatTheCityPunishWouldMakeFatal()
 {
-    // Both styles still answer out of the same shared placeholder, so both are
-    // asked to show that the place rules reach the reply they send.
+    // Both styles are asked: the place rules live in Bot::canSlashSafely(),
+    // which every style strikes through, so a city's fatal punish holds both of
+    // them back. (The knife style does have one trade that overrides it, but
+    // that needs a blow which finishes the peer off -- not this setup.)
     const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
 
     for (const QString &style : styles) {
@@ -623,6 +674,183 @@ void tst_QMdmmBot::action_skipsASlashThatTheCityPunishWouldMakeFatal()
         QCOMPARE(freeSlash.action, QMdmmCore::Data::Slash);
         QCOMPARE(freeSlash.toPlayer, enemy->objectName());
     }
+}
+
+void tst_QMdmmBot::upgrade_spendsOnKnifeThenMaxHpThenHorse()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"knifePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QVERIFY(self != nullptr);
+
+    // Under the default rules the knife runs 1..10, max HP 10..20 and the horse
+    // 2..10, so what each reply spends the points on is what these show.
+    QCOMPARE(self->upgradeKnifeRemainingTimes(), 9);
+
+    // The knife comes first...
+    const UpgradeReply knifeFirst = askForUpgrade(client, 2);
+    QCOMPARE(knifeFirst.count, 1);
+    QCOMPARE(knifeFirst.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeKnife, QMdmmCore::Data::UpgradeKnife}));
+
+    // ...then max HP, ahead of a horse that still has room to grow (Q3)...
+    self->setKnifeDamage(10);
+    QCOMPARE(self->upgradeKnifeRemainingTimes(), 0);
+    const UpgradeReply maxHpNext = askForUpgrade(client, 3);
+    QCOMPARE(maxHpNext.count, 1);
+    QCOMPARE(maxHpNext.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeMaxHp, QMdmmCore::Data::UpgradeMaxHp, QMdmmCore::Data::UpgradeMaxHp}));
+
+    // ...and the horse takes what is left once both are maxed out.
+    self->setMaxHp(20);
+    QCOMPARE(self->upgradeMaxHpRemainingTimes(), 0);
+    const UpgradeReply horseLast = askForUpgrade(client, 2);
+    QCOMPARE(horseLast.count, 1);
+    QCOMPARE(horseLast.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeHorse, QMdmmCore::Data::UpgradeHorse}));
+
+    // With nothing left to upgrade there is no feasible list at all, and the bot
+    // gives up rather than sending a short one.
+    self->setHorseDamage(10);
+    QCOMPARE(self->upgradeHorseRemainingTimes(), 0);
+    QVERIFY(upgradeWasGivenUp(client, 1));
+}
+
+void tst_QMdmmBot::action_buysAHorseOnlyWhileItIsStillShortOfReach()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"knifePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    // Armed, in a city, with the only opponent a walk away.
+    self->setHasKnife(true);
+    self->setPlace(1);
+    enemy->setPlace(2);
+
+    // Two slashes of a 3-damage knife would not finish a 10-HP peer off, so
+    // there is still ground to make up: the horse is worth buying.
+    self->setKnifeDamage(3);
+    const ActionReply shortOfReach = askForAction(client, 1);
+    QCOMPARE(shortOfReach.count, 1);
+    QCOMPARE(shortOfReach.action, QMdmmCore::Data::BuyHorse);
+
+    // Exactly two slashes of a 5-damage knife would, so reach is no longer what
+    // the bot is short of: it marches toward the peer instead (self stands in a
+    // city, so the way there goes through the Village).
+    self->setKnifeDamage(5);
+    const ActionReply enoughReach = askForAction(client, 1);
+    QCOMPARE(enoughReach.count, 1);
+    QCOMPARE(enoughReach.action, QMdmmCore::Data::Move);
+    QCOMPARE(enoughReach.toPlace, QMdmmCore::Data::Village);
+}
+
+void tst_QMdmmBot::action_paysForASlashWithItsLifeOnlyWhenTheTradeIsWorthIt()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"knifePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    // A city that charges half of the slasher's max HP for a slash.
+    QMdmmCore::LogicConfiguration configuration;
+    configuration.setPunishHpModifier(2);
+    configuration.setPunishHpRoundStrategy(QMdmmCore::LogicConfiguration::RoundDown);
+    client.room()->setLogicConfiguration(configuration);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    // Q3's example: the two stand in the same city, the bot has exactly the HP
+    // the punish takes (5 of a 10-HP maximum), one slash of its 5-damage knife
+    // finishes the peer off, and the peer's own knife is too weak to answer in
+    // kind.
+    self->setMaxHp(10);
+    self->setHp(5);
+    self->setHasKnife(true);
+    self->setKnifeDamage(5);
+    self->setPlace(1);
+    enemy->setMaxHp(10);
+    enemy->setHp(5);
+    enemy->setHasKnife(true);
+    enemy->setKnifeDamage(1);
+    enemy->setPlace(1);
+
+    // Alone with that peer, the trade is the one Q3 names as paying, so the bot
+    // strikes knowing the punish takes it along.
+    QCOMPARE(room->alivePlayersCount(), 2);
+    const ActionReply traded = askForAction(client, 1);
+    QCOMPARE(traded.count, 1);
+    QCOMPARE(traded.action, QMdmmCore::Data::Slash);
+    QCOMPARE(traded.toPlayer, enemy->objectName());
+
+    // A peer this blow would not finish off is not worth dying for.
+    enemy->setHp(6);
+    const ActionReply survives = askForAction(client, 1);
+    QCOMPARE(survives.count, 1);
+    QVERIFY(survives.action != QMdmmCore::Data::Slash);
+
+    // Neither is a peer that could cut the bot down in a single blow of its own:
+    // that is no longer the stronger side taking a trade, it is a coin flip.
+    enemy->setHp(5);
+    enemy->setKnifeDamage(10);
+    const ActionReply outmatched = askForAction(client, 1);
+    QCOMPARE(outmatched.count, 1);
+    QVERIFY(outmatched.action != QMdmmCore::Data::Slash);
+
+    // Nor is one with a third peer still alive to profit from the round the bot
+    // spends dying in -- Q3's example is a duel.
+    enemy->setKnifeDamage(1);
+    QMdmmCore::Player *third = room->addPlayer(u"third"_s);
+    QVERIFY(third != nullptr);
+    third->setPlace(2);
+    QCOMPARE(room->alivePlayersCount(), 3);
+    const ActionReply duelOnly = askForAction(client, 1);
+    QCOMPARE(duelOnly.count, 1);
+    QVERIFY(duelOnly.action != QMdmmCore::Data::Slash);
+}
+
+void tst_QMdmmBot::action_aimsAtTheBestScoringPeerStandingHere()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"knifePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    const QString self = client.objectName();
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *selfPlayer = room->addPlayer(self);
+    // Room order is name order, which is what decides a tie.
+    QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+    QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+    QVERIFY(selfPlayer != nullptr);
+    QVERIFY(bbb != nullptr);
+    QVERIFY(ccc != nullptr);
+
+    selfPlayer->setHasKnife(true);
+    selfPlayer->setKnifeDamage(1);
+    selfPlayer->setPlace(1);
+    bbb->setPlace(1);
+    ccc->setPlace(1);
+
+    // Two harmless peers that have never wronged this bot score nothing, so the
+    // blow goes to the first of them in room order.
+    QCOMPARE(askForAction(client, 1).toPlayer, u"bbb"_s);
+
+    // A grudge against the other one puts it on top of the score, and the blow
+    // follows the score.
+    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+    const ActionReply rated = askForAction(client, 1);
+    QCOMPARE(rated.count, 1);
+    QCOMPARE(rated.action, QMdmmCore::Data::Slash);
+    QCOMPARE(rated.toPlayer, u"ccc"_s);
 }
 
 namespace {

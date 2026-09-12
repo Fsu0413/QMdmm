@@ -144,6 +144,9 @@ private:
 // (or, for rlBot, deliberately absent) in its own translation unit. They are
 // only instantiated through Bot::createBot().
 
+// The knife style: buy the knife and keep it sharp (issue #6 Q3 -- the knife
+// first, max HP second, the horse only once both are maxed out), and act on
+// whatever stands within reach.
 class KnifePreferredBot final : public Bot
 {
 public:
@@ -154,6 +157,35 @@ protected:
     void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override;
     void handleActionRequest(int currentOrder) override;
     void handleUpgradeRequest(int remainingTimes) override;
+
+private:
+    // The peer to hit right now: among the peers standing in this bot's place,
+    // the one with the highest target score (see Bot::targetScore()), a tie
+    // going to room order. The score ranks targets but does not veto the blow
+    // -- a peer that has never wronged this bot and carries no weapon still
+    // goes down to a knife, and the kill it yields is an upgrade point -- so
+    // the first co-located peer is taken when none of them scores at all.
+    // nullptr means nobody is standing here to hit.
+    [[nodiscard]] QMdmmCore::Player *attackTarget();
+
+    // Whether two slashes would finish every peer still alive off: the knife
+    // style's own reading of "the knife is sharp enough" (issue #6 Q3). It is
+    // worked out afresh every time because both sides keep upgrading. Once it
+    // holds, reach is no longer what this bot is short of, so it stops buying
+    // horses. With no peer left the answer is yes -- there is nothing to finish
+    // off then, and no horse to buy for it either.
+    [[nodiscard]] bool twoSlashesFinishEveryone() const;
+
+    // Whether a slash that a city would punish with this bot's life is worth
+    // taking anyway (issue #6 Q3). Such a slash is normally passed up (see
+    // Bot::canSlashSafely()); this is the one trade Q3 names as paying: the
+    // slash finishes the peer off outright, so the bot banks the kill and the
+    // upgrade point that comes with it -- points outlive the round, HP and
+    // weapons do not -- while the bot is the stronger side of the two and no
+    // third peer is left to profit from the round it spends dying. Q3's example
+    // is exactly that duel: two peers alone in a city, the one that outmatches
+    // the other cutting it down even though the punish takes it along.
+    [[nodiscard]] bool slashIsWorthItsPunish(const QMdmmCore::Player *to) const;
 };
 
 class HorsePreferredBot final : public Bot
