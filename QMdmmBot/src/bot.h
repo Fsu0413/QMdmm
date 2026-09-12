@@ -9,6 +9,7 @@
 
 #include <QMdmmClient>
 #include <QMdmmData>
+#include <QMdmmLogicConfiguration>
 #include <QMdmmPlayer>
 
 #include <QObject>
@@ -37,6 +38,22 @@ protected:
 
     // Returns every alive player except this bot, in room order.
     [[nodiscard]] QList<QMdmmCore::Player *> opponents();
+
+    // The rules this match is played under, read off the room mirror the way the
+    // rest of the match state is: the server broadcasts them and the client keeps
+    // them in the room, so a strategy sees the very rules the players are playing
+    // under instead of tracking a copy of its own. The rules decide what a place
+    // is worth -- a slash is punished in a city and free in the Village, and
+    // moving a peer around may not be available at all.
+    [[nodiscard]] const QMdmmCore::LogicConfiguration &logicConfiguration() const;
+
+    // Whether this bot can slash that peer without paying for the slash with its
+    // life: a slash in a city is punished with the slasher's own HP (see
+    // Player::slashPunishHp()), and one that would finish this bot off is never
+    // worth taking -- doing nothing is always a legal reply, so a strategy just
+    // skips such a slash. A slash that is not possible in the first place, or one
+    // from a place that does not punish, is unaffected.
+    [[nodiscard]] bool canSlashSafely(const QMdmmCore::Player *to) const;
 
 protected slots: // NOLINT(readability-redundant-access-specifiers)
     // Request handlers: invoked when the server asks this bot to make a choice.

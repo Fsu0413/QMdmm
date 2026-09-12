@@ -12,7 +12,9 @@ KnifePreferredBot::KnifePreferredBot(QMdmmNetworking::Client *parent)
 // The real strategy lands later (see the C2 backlog item). For now every handler
 // only guarantees the reply-or-giveUp contract: it always answers with a legal
 // reply or explicitly gives up, so the bot never stalls a match until the server
-// times it out. The choices below mirror smoke/main.cpp's competent auto-player.
+// times it out. The choices below mirror smoke/main.cpp's competent auto-player,
+// with the rules of the place it stands in applied: a slash that a city would
+// punish it to death for is skipped (see Bot::canSlashSafely()).
 
 void KnifePreferredBot::handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder)
 {
@@ -53,7 +55,8 @@ void KnifePreferredBot::handleActionRequest(int currentOrder)
             client()->agent()->action(QMdmmCore::Data::BuyKnife, QString(), 0);
             return;
         }
-        // Cannot buy where we stand (e.g. Village) -> step to any city seat.
+        // Cannot buy where we stand (the Village never sells, and the rules may
+        // keep the shops to one's starting city) -> step to any city seat.
         const int seatCount = static_cast<int>(client()->room()->players().count());
         for (int place = 1; place <= seatCount; ++place) {
             if (self->canMove(place)) {
@@ -63,9 +66,12 @@ void KnifePreferredBot::handleActionRequest(int currentOrder)
         }
     }
 
-    // Attack a co-located opponent.
+    // Attack a co-located opponent. Where the two stand decides the price: a
+    // slash inside the Village costs nothing, while a slash in a city is punished
+    // with this bot's own HP, so one that would finish it off is skipped. A kick
+    // is free, but it needs a horse and is not possible inside the Village.
     for (QMdmmCore::Player *to : opponents()) {
-        if (self->canSlash(to)) {
+        if (canSlashSafely(to)) {
             client()->agent()->action(QMdmmCore::Data::Slash, to->objectName(), 0);
             return;
         }

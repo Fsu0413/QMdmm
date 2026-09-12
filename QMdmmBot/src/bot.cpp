@@ -189,6 +189,34 @@ QString Bot::selectTarget() const
     return target;
 }
 
+const QMdmmCore::LogicConfiguration &Bot::logicConfiguration() const
+{
+    // The mirror holds the rules the server broadcast. Before that broadcast, and
+    // for every rule it left out, the getters answer from
+    // LogicConfiguration::defaults() -- which is the same answer Player works the
+    // punish out from, so the two can never disagree.
+    return client()->room()->logicConfiguration();
+}
+
+bool Bot::canSlashSafely(const QMdmmCore::Player *to) const
+{
+    const QMdmmCore::Player *self = client()->room()->player(client()->objectName());
+
+    // Before sign-in there is no self player, and a peer that is not in the room
+    // is nothing to slash at.
+    if (self == nullptr || to == nullptr)
+        return false;
+
+    if (!self->canSlash(to))
+        return false;
+
+    // A slash pays for itself in HP, so a bot leaves out the ones that would take
+    // it to its own death threshold. Where that threshold lies is a rule of the
+    // match, so it is asked for rather than assumed.
+    const int hpLeft = self->hp() - self->slashPunishHp();
+    return logicConfiguration().zeroHpAsDead() ? (hpLeft > 0) : (hpLeft >= 0);
+}
+
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     if (style == u"knifePreferred"_s)

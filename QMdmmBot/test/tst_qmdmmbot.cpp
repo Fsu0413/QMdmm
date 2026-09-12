@@ -34,6 +34,8 @@ public:
     {
     }
 
+    using Bot::canSlashSafely;
+    using Bot::logicConfiguration;
     using Bot::revengeScore;
     using Bot::selectTarget;
     using Bot::targetScore;
@@ -63,6 +65,38 @@ protected:
         Q_UNUSED(remainingTimes);
     }
 };
+
+namespace {
+
+// What a bot answered to one action request.
+struct ActionReply
+{
+    int count = 0;
+    QMdmmCore::Data::Action action = QMdmmCore::Data::DoNothing;
+    QString toPlayer;
+    int toPlace = 0;
+};
+
+// Asks a bot for an action the way the match does: the server's request reaches
+// the client, which hands it to the agent, which raises it as a signal -- the
+// same signal the bot answered above. What comes back out is the reply signal,
+// recorded here together with the player and place it names.
+ActionReply askForAction(QMdmmNetworking::Client &client, int currentOrder)
+{
+    ActionReply reply;
+    const auto record = [&reply](QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace) {
+        ++reply.count;
+        reply.action = action;
+        reply.toPlayer = toPlayer;
+        reply.toPlace = toPlace;
+    };
+    const QMetaObject::Connection connection = QObject::connect(client.agent(), &QMdmmNetworking::Agent::replyAction, &client, record);
+    client.agent()->requestAction(currentOrder);
+    QObject::disconnect(connection);
+    return reply;
+}
+
+} // namespace
 
 class tst_QMdmmBot : public QObject
 {
@@ -102,6 +136,19 @@ private slots:
     // Nobody scores above zero -- or nobody alive is left to act against -- means
     // no target at all.
     void target_returnsEmptyWhenNobodyIsWorthAimingAt();
+
+    // Where a slash happens decides what it costs: a city charges the slasher its
+    // own HP, the Village charges nothing, and the rules decide whether there is a
+    // punish at all.
+    void punish_isChargedInCitiesAndNotInTheVillage();
+
+    // A slash is skipped when its punish would finish the slasher off, and taken
+    // when it would not.
+    void slash_isSkippedWhenItsPunishWouldBeFatal();
+
+    // The styles answer an action request with that rule in force: they pass up a
+    // co-located attack that a city would punish them to death for.
+    void action_skipsASlashThatTheCityPunishWouldMakeFatal();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -401,6 +448,181 @@ void tst_QMdmmBot::target_returnsEmptyWhenNobodyIsWorthAimingAt()
     QMdmmCore::Room *lonelyRoom = lonelyClient.room();
     QVERIFY(lonelyRoom->addPlayer(lonelyClient.objectName()) != nullptr);
     QCOMPARE(lonelyBot.selectTarget(), QString());
+}
+
+void tst_QMdmmBot::punish_isChargedInCitiesAndNotInTheVillage()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    // The rules a strategy reads are the ones the room holds -- the same ones the
+    // players are ruled by.
+    QMdmmCore::LogicConfiguration configuration;
+    configuration.setPunishHpModifier(2);
+    configuration.setPunishHpRoundStrategy(QMdmmCore::LogicConfiguration::RoundDown);
+    room->setLogicConfiguration(configuration);
+    QCOMPARE(bot.logicConfiguration().punishHpModifier(), 2);
+
+    self->setMaxHp(10);
+    self->setHp(10);
+    self->setHasKnife(true);
+    self->setKnifeDamage(1);
+    enemy->setMaxHp(10);
+    enemy->setHp(10);
+
+    // In a city a slash is punished with a share of the slasher's own max HP...
+    self->setPlace(1);
+    enemy->setPlace(1);
+    QCOMPARE(self->slashPunishHp(), 5);
+
+    // ...and the engine charges exactly that: the slash costs this player the
+    // punish on top of the hit it lands.
+    QVERIFY(self->slash(enemy));
+    QCOMPARE(self->hp(), 5);
+    QCOMPARE(enemy->hp(), 9);
+
+    // Inside the Village the very same slash is free.
+    self->setHp(10);
+    self->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(QMdmmCore::Data::Village);
+    QCOMPARE(self->slashPunishHp(), 0);
+    QVERIFY(self->slash(enemy));
+    QCOMPARE(self->hp(), 10);
+    QCOMPARE(enemy->hp(), 8);
+
+    // And with the punish rule called off, no city charges either.
+    configuration.setPunishHpModifier(0);
+    room->setLogicConfiguration(configuration);
+    self->setPlace(1);
+    enemy->setPlace(1);
+    QCOMPARE(self->slashPunishHp(), 0);
+}
+
+void tst_QMdmmBot::slash_isSkippedWhenItsPunishWouldBeFatal()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    QMdmmCore::LogicConfiguration configuration;
+    configuration.setPunishHpModifier(2);
+    configuration.setPunishHpRoundStrategy(QMdmmCore::LogicConfiguration::RoundDown);
+    room->setLogicConfiguration(configuration);
+
+    self->setMaxHp(10);
+    self->setHp(6);
+    self->setHasKnife(true);
+    self->setPlace(1);
+    enemy->setHp(10);
+    enemy->setPlace(1);
+
+    // A slash its owner walks away from is taken...
+    QCOMPARE(self->slashPunishHp(), 5);
+    QVERIFY(bot.canSlashSafely(enemy));
+
+    // ...but one that would be paid for with this bot's life is not, however
+    // healthy the peer happens to be.
+    self->setHp(5);
+    QVERIFY(!bot.canSlashSafely(enemy));
+
+    // Where zero HP still counts as alive, zero is survivable after all.
+    configuration.setZeroHpAsDead(false);
+    room->setLogicConfiguration(configuration);
+    QVERIFY(bot.canSlashSafely(enemy));
+    self->setHp(4);
+    QVERIFY(!bot.canSlashSafely(enemy));
+    configuration.setZeroHpAsDead(true);
+    room->setLogicConfiguration(configuration);
+
+    // Without a knife there is nothing to slash in the first place.
+    self->setHasKnife(false);
+    QVERIFY(!bot.canSlashSafely(enemy));
+    self->setHasKnife(true);
+
+    // A slash inside the Village costs nothing, so even a bot on its last HP
+    // takes it.
+    self->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(QMdmmCore::Data::Village);
+    self->setHp(1);
+    QVERIFY(bot.canSlashSafely(enemy));
+
+    // A peer that is not in the room is nothing to slash at.
+    QVERIFY(!bot.canSlashSafely(nullptr));
+
+    // And a bot that has not signed in yet has no self player to slash with.
+    QMdmmNetworking::Client otherClient {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot otherBot {&otherClient};
+    QVERIFY(!otherBot.canSlashSafely(enemy));
+}
+
+void tst_QMdmmBot::action_skipsASlashThatTheCityPunishWouldMakeFatal()
+{
+    // Both styles still answer out of the same shared placeholder, so both are
+    // asked to show that the place rules reach the reply they send.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(enemy != nullptr);
+
+        // A city that charges half of the slasher's max HP for a slash.
+        QMdmmCore::LogicConfiguration configuration;
+        configuration.setPunishHpModifier(2);
+        configuration.setPunishHpRoundStrategy(QMdmmCore::LogicConfiguration::RoundDown);
+        room->setLogicConfiguration(configuration);
+
+        self->setMaxHp(10);
+        self->setHp(6);
+        self->setHasKnife(true);
+        self->setKnifeDamage(1);
+        self->setPlace(1);
+        enemy->setHp(10);
+        enemy->setPlace(1);
+
+        // HP to spare: the bot attacks the opponent standing next to it.
+        const ActionReply attack = askForAction(client, 1);
+        QCOMPARE(attack.count, 1);
+        QCOMPARE(attack.action, QMdmmCore::Data::Slash);
+        QCOMPARE(attack.toPlayer, enemy->objectName());
+
+        // One HP less and that same slash would be punished with this bot's life:
+        // the charge is 5 and it has exactly 5 HP left. It spends the round
+        // elsewhere instead -- on the horse it does not have yet -- rather than
+        // trade its life for the hit.
+        self->setHp(5);
+        const ActionReply skips = askForAction(client, 1);
+        QCOMPARE(skips.count, 1);
+        QVERIFY(skips.action != QMdmmCore::Data::Slash);
+        QCOMPARE(skips.action, QMdmmCore::Data::BuyHorse);
+
+        // The same last HP is no reason to hold back inside the Village, where a
+        // slash is free.
+        self->setHp(1);
+        self->setPlace(QMdmmCore::Data::Village);
+        enemy->setPlace(QMdmmCore::Data::Village);
+        const ActionReply freeSlash = askForAction(client, 1);
+        QCOMPARE(freeSlash.count, 1);
+        QCOMPARE(freeSlash.action, QMdmmCore::Data::Slash);
+        QCOMPARE(freeSlash.toPlayer, enemy->objectName());
+    }
 }
 
 namespace {
