@@ -120,6 +120,40 @@ double Bot::revengeScore(const QString &playerName) const
     return revenge_.value(playerName);
 }
 
+double Bot::threatScore(const QString &playerName) const
+{
+    const QMdmmCore::Room *room = client()->room();
+    const QMdmmCore::Player *self = room->player(client()->objectName());
+    const QMdmmCore::Player *threat = room->player(playerName);
+
+    // Before sign-in there is no self player yet, and a peer that is not in the
+    // room (or is already dead) cannot hurt us.
+    if (self == nullptr || threat == nullptr || self->dead() || threat->dead())
+        return 0.0;
+
+    // Reach: a peer in the same place can hit us right now, a peer that is
+    // merely adjacent has to move in first and so lands a round later, and a
+    // peer further away cannot reach us within one round at all.
+    double reach = 0.0;
+    if (threat->place() == self->place())
+        reach = threatSamePlaceWeight;
+    else if (QMdmmCore::Data::isPlaceAdjacent(threat->place(), self->place()))
+        reach = threatAdjacentWeight;
+    else
+        return 0.0;
+
+    // Offensive power: the weapons the peer holds. The hit lands wherever this
+    // bot is standing -- its own place, or here after the move in -- and a horse
+    // cannot be used inside the Village.
+    double damage = 0.0;
+    if (threat->hasKnife())
+        damage += threat->knifeDamage();
+    if (threat->hasHorse() && self->place() != QMdmmCore::Data::Village)
+        damage += threat->horseDamage();
+
+    return reach * damage;
+}
+
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)
 {
     if (style == u"knifePreferred"_s)

@@ -5,6 +5,8 @@
 #include <QMdmmAgent>
 #include <QMdmmClient>
 #include <QMdmmData>
+#include <QMdmmPlayer>
+#include <QMdmmRoom>
 
 #include <QTest>
 
@@ -15,23 +17,25 @@ using namespace Qt::StringLiterals;
 // NOLINTBEGIN
 // Exempt from clang-tidy by policy; see AGENTS.md.
 
-// The revenge memory lives in the Bot base class, but revengeScore() is
-// protected and the four request handlers are pure virtual (a style subclass
-// must implement its strategy there). This subclass only lifts the read
-// accessor into public scope and supplies the minimal concrete request
-// handlers; it deliberately leaves the notification handlers untouched, so the
-// base class implementations are the ones under test here. The notifications
-// are delivered through the public Agent API, which also pins the signal
-// connections Bot makes in its constructor.
-class RevengeMemoryBot final : public Bot
+// The state under test (the revenge memory, the threat assessment) lives in the
+// Bot base class, but its read accessors are protected and the four request
+// handlers are pure virtual (a style subclass must implement its strategy
+// there). This subclass only lifts the read accessors into public scope and
+// supplies the minimal concrete request handlers; it deliberately leaves the
+// notification handlers untouched, so the base class implementations are the
+// ones under test here. The notifications are delivered through the public
+// Agent API, which also pins the signal connections Bot makes in its
+// constructor.
+class ProbeBot final : public Bot
 {
 public:
-    explicit RevengeMemoryBot(QMdmmNetworking::Client *parent)
+    explicit ProbeBot(QMdmmNetworking::Client *parent)
         : Bot(parent)
     {
     }
 
     using Bot::revengeScore;
+    using Bot::threatScore;
 
 protected:
     void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override
@@ -76,12 +80,20 @@ private slots:
     // Once a grudge has faded to nothing the entry is dropped, so the table
     // stays bounded over a long match.
     void revenge_dropsNegligibleEntries();
+
+    // The threat one opponent poses is the damage of its weapons, discounted by
+    // how far away it stands.
+    void threat_sumsWeaponsDiscountedByDistance();
+
+    // A peer that cannot hurt this bot -- because it is dead, or because it is
+    // not in the room at all -- is no threat, and neither is a dead bot itself.
+    void threat_ignoresDeadPlayersAndStrangers();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
 {
     QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
-    RevengeMemoryBot bot {&client};
+    ProbeBot bot {&client};
 
     // The client's objectName is its playerName, i.e. the name this bot is
     // known by (see Bot::selfPlayer()).
@@ -114,7 +126,7 @@ void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
 void tst_QMdmmBot::revenge_decaysEveryRound()
 {
     QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
-    RevengeMemoryBot bot {&client};
+    ProbeBot bot {&client};
 
     const QString self = client.objectName();
     const QString attacker = u"attacker"_s;
@@ -146,7 +158,7 @@ void tst_QMdmmBot::revenge_decaysEveryRound()
 void tst_QMdmmBot::revenge_dropsNegligibleEntries()
 {
     QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
-    RevengeMemoryBot bot {&client};
+    ProbeBot bot {&client};
 
     const QString self = client.objectName();
     const QString attacker = u"attacker"_s;
@@ -167,6 +179,87 @@ void tst_QMdmmBot::revenge_dropsNegligibleEntries()
     // A dropped entry starts over rather than leaving a residue behind.
     client.agent()->notifyAction(attacker, QMdmmCore::Data::Slash, self, 0);
     QCOMPARE(bot.revengeScore(attacker), 1.0);
+}
+
+void tst_QMdmmBot::threat_sumsWeaponsDiscountedByDistance()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    // The threat is read off the room mirror, so the room has to hold both this
+    // bot (under the client's objectName, see Bot::selfPlayer()) and the peer.
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    enemy->setKnifeDamage(3);
+    enemy->setHorseDamage(2);
+
+    // Unarmed, an opponent is harmless however close it stands.
+    self->setPlace(1);
+    enemy->setPlace(1);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 0.0);
+
+    // Sharing this bot's place, an opponent brings both weapons to bear...
+    enemy->setHasKnife(true);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 3.0);
+    enemy->setHasHorse(true);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 5.0);
+
+    // ...except inside the Village, where a horse cannot be used.
+    self->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(QMdmmCore::Data::Village);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 3.0);
+
+    // A merely adjacent opponent has to move in first, so its hit lands a round
+    // later and counts for half. It lands where this bot stands: stepping into a
+    // City it can still kick,
+    self->setPlace(1);
+    enemy->setPlace(QMdmmCore::Data::Village);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 2.5);
+
+    // but stepping into the Village it cannot.
+    self->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(1);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 1.5);
+
+    // Two Cities are not adjacent, so an opponent standing in one of them
+    // cannot reach this bot within a round.
+    self->setPlace(1);
+    enemy->setPlace(2);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 0.0);
+}
+
+void tst_QMdmmBot::threat_ignoresDeadPlayersAndStrangers()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    ProbeBot bot {&client};
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    self->setPlace(1);
+    enemy->setPlace(1);
+    enemy->setHasKnife(true);
+    enemy->setKnifeDamage(3);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 3.0);
+
+    // A dead opponent is harmless even at arm's length.
+    enemy->setHp(0);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 0.0);
+
+    // So is a peer that is not in the room at all.
+    QCOMPARE(bot.threatScore(u"stranger"_s), 0.0);
+
+    // And a bot that is itself dead is threatened by nobody.
+    enemy->setHp(10);
+    self->setHp(0);
+    QCOMPARE(bot.threatScore(u"enemy"_s), 0.0);
 }
 
 namespace {

@@ -68,6 +68,16 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
     // this when they pick a target.
     [[nodiscard]] double revengeScore(const QString &playerName) const;
 
+    // Threat: how much damage this bot expects from one peer over the coming
+    // round. The peer's offensive power is the damage of the weapons it holds
+    // (a knife hits for knifeDamage, a horse for horseDamage), discounted by
+    // how far away it is: one that already shares this bot's place can strike
+    // right away, one that is merely adjacent has to step in first. A peer that
+    // is not in the room (or one that is dead) is no threat at all. This is a
+    // first cut, so further dimensions are expected to be added here as the
+    // strategies need them. Style strategies read this when they pick a target.
+    [[nodiscard]] double threatScore(const QString &playerName) const;
+
 private:
     // A hostile action is worth this many grudges; every finished round
     // multiplies all of them by the decay factor, and an entry that has decayed
@@ -76,6 +86,13 @@ private:
     static constexpr double revengePerAttack = 1.0;
     static constexpr double revengeDecayPerRound = 0.8;
     static constexpr double revengeEpsilon = 0.01;
+
+    // A peer sharing this bot's place strikes this round, so its weapons count
+    // in full; a peer that is only adjacent has to move in first, so its hit
+    // lands a round later and counts for half. A peer further away cannot reach
+    // this bot within one round at all.
+    static constexpr double threatSamePlaceWeight = 1.0;
+    static constexpr double threatAdjacentWeight = 0.5;
 
     QHash<QString, double> revenge_;
 };
