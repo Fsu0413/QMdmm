@@ -128,7 +128,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     # DEB names omit the "t64" suffix: on 64-bit trixie the t64 packages
     # "Provide" the plain names, so they resolve across bookworm/trixie.
     set(CPACK_DEBIAN_6_PACKAGE_DEPENDS
-        "libqt6core6, libqt6gui6, libqt6network6, libqt6websockets6, libqt6qml6, libqt6quick6, libqt6quickwidgets6, libqt6widgets6, qml-module-qtquick")
+        "libqt6core6, libqt6gui6, libqt6network6, libqt6websockets6, libqt6qml6, libqt6quick6, libqt6quickwidgets6, libqt6widgets6, qml6-module-qtquick")
     set(CPACK_RPM_6_PACKAGE_REQUIRES
         "qt6-qtbase, qt6-qtwebsockets, qt6-qtdeclarative")
     # Dev dependencies for "dev6": what is needed to build against the libs
