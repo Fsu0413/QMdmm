@@ -185,6 +185,21 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     list(APPEND CPACK_GENERATOR RPM DEB)
     # Write cpack_add_component DEPENDS (dev6 -> 6 + dev-common) into DEB Depends.
     set(CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)
+
+    # Development packages are named after each distribution's own convention:
+    # Debian and Ubuntu suffix "-dev", Fedora and RHEL suffix "-devel". The CPack
+    # component names ("6", "dev6", "dev-common", "doc") are internal install()
+    # labels and stay as they are - only the package name a component produces is
+    # overridden here. CPackDEB lowercases the value itself, CPackRPM keeps it as
+    # written.
+    #
+    # "private-dev-common" keeps its default name on purpose: it only exists when
+    # QMDMM_EXPORT_PRIVATE is on, nothing consumes it and it has never shipped, so
+    # its final name is still an open question rather than something to guess.
+    set(CPACK_DEBIAN_DEV6_PACKAGE_NAME "qmdmm-6-dev")
+    set(CPACK_DEBIAN_DEV-COMMON_PACKAGE_NAME "qmdmm-common-dev")
+    set(CPACK_RPM_DEV6_PACKAGE_NAME "qmdmm-6-devel")
+    set(CPACK_RPM_DEV-COMMON_PACKAGE_NAME "qmdmm-common-devel")
     # Runtime Qt6 dependencies for the "6" (runtime) component.
     # DEB names omit the "t64" suffix: on 64-bit trixie the t64 packages
     # "Provide" the plain names, so they resolve across bookworm/trixie.
@@ -198,16 +213,16 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     # qt6_add_qml_module() and qt6_add_translations() invoke while configuring
     # and building) and CMake, without which find_package(QMdmm6) is unreachable.
     # doxygen is gone from the RPM list: it builds the doc component, it is not
-    # a dependency of a devel package.
+    # a dependency of a development package.
     set(CPACK_DEBIAN_DEV6_PACKAGE_DEPENDS
         "qt6-base-dev, qt6-declarative-dev, qt6-websockets-dev, qt6-tools-dev, cmake")
     # CPackRPM does not derive inter-component Requires the way CPackDEB does
-    # through CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS, so qmdmm-dev6 has to name
-    # qmdmm-6 and qmdmm-dev-common itself. Without those two, installing the
+    # through CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS, so qmdmm-6-devel has to name
+    # its runtime and headers packages itself. Without those two, installing the
     # devel RPM leaves the shared library, the headers and the CMake package
     # config behind.
     set(CPACK_RPM_DEV6_PACKAGE_REQUIRES
-        "cmake, qt6-qtbase-devel, qt6-qtdeclarative-devel, qt6-qtwebsockets-devel, qt6-qttools-devel, qmdmm-6, qmdmm-dev-common")
+        "cmake, qt6-qtbase-devel, qt6-qtdeclarative-devel, qt6-qtwebsockets-devel, qt6-qttools-devel, qmdmm-6, qmdmm-common-devel")
     # dev-common / doc intentionally carry no Qt dependencies: dev-common is
     # version-agnostic headers only. CPack emits one harmless
     # "CPACK_DEBIAN_PACKAGE_DEPENDS not set" note for dev-common — expected.
