@@ -6,6 +6,7 @@
 
 #include "qmdmmlogic_p.h"
 
+#include <QRegularExpression>
 #include <QSignalSpy>
 #include <QTest>
 
@@ -785,6 +786,54 @@ private slots:
         QVERIFY(!l->upgradeReply(u"test1"_s, {Data::UpgradeMaxHp}));
         // Still incomplete: test2 has not replied yet.
         QCOMPARE(up.length(), 0);
+    }
+
+    // M. A long streak of RPS ties is counted per run, reported once when it
+    //    reaches the threshold, and starts over on the next run.
+    void QMdmmLogicrpsTieStreak()
+    {
+        const int threshold = p::LogicP::rpsForActionTieStreakWarningThreshold;
+        QVERIFY(threshold > 1);
+
+        l->roundStart();
+
+        // Ties below the threshold stay silent and keep adding up.
+        for (int i = 1; i < threshold; ++i) {
+            l->rpsReply(u"test1"_s, Data::Rock);
+            l->rpsReply(u"test2"_s, Data::Rock);
+            l->rpsReply(u"test3"_s, Data::Rock);
+            QCOMPARE(l->d->rpsForActionTieStreak, i);
+        }
+
+        // The tie that reaches the threshold is reported.
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(u"Logic::rpsForAction: no winner after %1 ties"_s.arg(threshold)));
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Rock);
+        QCOMPARE(l->d->rpsForActionTieStreak, threshold);
+
+        // There is still no cap: one more tie only moves the count along.
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Rock);
+        QCOMPARE(l->d->rpsForActionTieStreak, threshold + 1);
+        QCOMPARE(l->state(), Logic::RpsForAction);
+
+        // A winning combination still leaves the state, and the next run does
+        // not inherit the count of the previous one.
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Scissors);
+        QCOMPARE(l->state(), Logic::ActionOrder);
+
+        l->d->state = Logic::BeforeRoundStart;
+        QVERIFY(l->roundStart());
+        QCOMPARE(l->d->rpsForActionTieStreak, 0);
+
+        l->rpsReply(u"test1"_s, Data::Rock);
+        l->rpsReply(u"test2"_s, Data::Rock);
+        l->rpsReply(u"test3"_s, Data::Rock);
+        QCOMPARE(l->d->rpsForActionTieStreak, 1);
     }
 };
 

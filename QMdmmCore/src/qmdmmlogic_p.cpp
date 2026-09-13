@@ -7,7 +7,10 @@
 #include "qmdmmroom.h"
 
 #include <QHash>
+#include <QMetaEnum>
 #include <QSet>
+
+using namespace Qt::StringLiterals;
 
 namespace QMdmmCore {
 
@@ -17,6 +20,7 @@ LogicP::LogicP(const LogicConfiguration &logicConfiguration, Logic *q)
     : q(q)
     , room(new Room(logicConfiguration, q))
     , state(Logic::BeforeRoundStart)
+    , rpsForActionTieStreak(0)
     , currentStrivingActionOrder(0)
     , currentActionOrder(0)
 {
@@ -130,6 +134,13 @@ bool LogicP::upgradeFeasible(const QString &playerName, const QList<Data::Upgrad
 
 void LogicP::startRpsForAction()
 {
+    if (state != Logic::RpsForAction) {
+        // Only the tie retry below re-enters while the state is already
+        // RpsForAction; everything else is a fresh run, which starts the
+        // streak over.
+        rpsForActionTieStreak = 0;
+    }
+
     rpsForActionReplies.clear();
     rpsForActionWinners.clear();
     state = Logic::RpsForAction;
@@ -143,6 +154,8 @@ void LogicP::rpsForAction()
         rpsForActionWinners = Data::rockPaperScissorsWinners(rpsForActionReplies);
         if (rpsForActionWinners.isEmpty()) {
             // restart due to tie
+            if (++rpsForActionTieStreak == rpsForActionTieStreakWarningThreshold)
+                reportRpsForActionTieStreak();
             startRpsForAction();
         } else {
             confirmedActionOrders.clear();
@@ -150,6 +163,22 @@ void LogicP::rpsForAction()
             startActionOrder();
         }
     }
+}
+
+void LogicP::reportRpsForActionTieStreak() const
+{
+    // Name the players and their throws: a streak of ties is silent otherwise,
+    // and "everybody threw the same" is the shape that never resolves.
+    const QMetaEnum throwEnum = QMetaEnum::fromType<Data::RockPaperScissors>();
+    QStringList playerNames = rpsForActionReplies.keys();
+    playerNames.sort();
+
+    QStringList reports;
+    foreach (const QString &playerName, playerNames) {
+        reports << u"%1 threw %2"_s.arg(playerName, QString::fromUtf8(throwEnum.valueToKey(rpsForActionReplies.value(playerName))));
+    }
+
+    qWarning() << "Logic::rpsForAction: no winner after" << rpsForActionTieStreak << "ties in a row;" << reports;
 }
 
 void LogicP::startActionOrder()

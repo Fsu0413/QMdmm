@@ -15,6 +15,13 @@ namespace p {
 
 struct QMDMMCORE_PRIVATE_EXPORT LogicP final
 {
+    // A tie makes the state re-enter itself and there is no cap, so a long
+    // streak of ties is the only trace a stuck round leaves behind. Uniform
+    // throws tie about one time in three, so ten in a row is far outside
+    // anything normal play produces -- worth one line in the log, and only
+    // once per streak rather than once per tie.
+    static constexpr int rpsForActionTieStreakWarningThreshold = 10;
+
     LogicP(const LogicConfiguration &logicConfiguration, Logic *q);
 
     Logic *q;
@@ -24,6 +31,7 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
 
     QHash<QString, Data::RockPaperScissors> rpsForActionReplies;
     QStringList rpsForActionWinners;
+    int rpsForActionTieStreak;
     QMultiHash<int, QString> desiredActionOrders;
     QHash<int, QString> confirmedActionOrders;
     QHash<QString, int> actionOrderRemainingSelections;
@@ -37,6 +45,7 @@ struct QMDMMCORE_PRIVATE_EXPORT LogicP final
     [[nodiscard]] bool actionFeasible(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace) const;
     bool applyAction(const QString &fromPlayer, Data::Action action, const QString &toPlayer, int toPlace);
     [[nodiscard]] bool upgradeFeasible(const QString &playerName, const QList<Data::UpgradeItem> &items) const;
+    void reportRpsForActionTieStreak() const;
 
     // Functions:
     void startRpsForAction();
