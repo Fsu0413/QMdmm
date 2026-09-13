@@ -79,7 +79,7 @@ namespace v0 {
  * @property ServerConfiguration::requestTimeout
  * @brief The request timeout in seconds, default 20
  *
- * The server's request timer only backstops abnormal cases now (D-020): a healthy
+ * The server's request timer only backstops abnormal cases now: a healthy
  * client replies or explicitly gives up on its own, so the timer fires only when the
  * client is gone or stuck. The value is in seconds; it is converted to milliseconds
  * when the request timer is armed.
