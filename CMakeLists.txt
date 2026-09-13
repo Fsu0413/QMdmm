@@ -196,6 +196,16 @@ if (CMAKE_SYSTEM_NAME MATCHES "[Ll]inux")
     # "private-dev-common" keeps its default name on purpose: it only exists when
     # QMDMM_EXPORT_PRIVATE is on, nothing consumes it and it has never shipped, so
     # its final name is still an open question rather than something to guess.
+    #
+    # The runtime component has to be named explicitly, even though "qmdmm-6" is
+    # exactly what the default would produce: CPackDeb resolves a component's
+    # dependencies through get_component_package_name(), whose fallback
+    # interpolates the *current* CPACK_DEBIAN_PACKAGE_NAME. While it writes the
+    # dev component's Depends that variable already holds the dev package's own
+    # name, so the runtime component came out as "qmdmm-6-dev-6" and the dev
+    # package was uninstallable. Naming it here keeps the emitted
+    # "Depends: qmdmm-6 (= 0.0.1)" correct.
+    set(CPACK_DEBIAN_6_PACKAGE_NAME "qmdmm-6")
     set(CPACK_DEBIAN_DEV6_PACKAGE_NAME "qmdmm-6-dev")
     set(CPACK_DEBIAN_DEV-COMMON_PACKAGE_NAME "qmdmm-common-dev")
     set(CPACK_RPM_DEV6_PACKAGE_NAME "qmdmm-6-devel")
