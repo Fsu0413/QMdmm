@@ -4,6 +4,10 @@
 
 #include <QMdmmAgent>
 
+#include <QRandomGenerator>
+
+#include <array>
+
 using namespace Qt::StringLiterals;
 
 Bot::Bot(QMdmmNetworking::Client *parent)
@@ -243,6 +247,21 @@ bool Bot::canSlashSafely(const QMdmmCore::Player *to) const
     // match, so it is asked for rather than assumed.
     const int hpLeft = self->hp() - self->slashPunishHp();
     return logicConfiguration().zeroHpAsDead() ? (hpLeft > 0) : (hpLeft >= 0);
+}
+
+QMdmmCore::Data::RockPaperScissors Bot::pickThrow()
+{
+    // The three throws, listed rather than counted through: their values are the
+    // historical wire encoding (see QMdmmCore::Data::RockPaperScissors), so they
+    // are not the plain 0..2 a counter would hand out.
+    constexpr std::array<QMdmmCore::Data::RockPaperScissors, 3> throws {
+        QMdmmCore::Data::Rock,
+        QMdmmCore::Data::Paper,
+        QMdmmCore::Data::Scissors,
+    };
+
+    const int index = QRandomGenerator::global()->bounded(static_cast<int>(throws.size()));
+    return throws.at(index);
 }
 
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)

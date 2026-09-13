@@ -128,6 +128,30 @@ bool upgradeWasGivenUp(QMdmmNetworking::Client &client, int remainingTimes)
     return givenUp;
 }
 
+// What a bot answered to one Rock-Paper-Scissors request.
+struct ThrowReply
+{
+    int count = 0;
+    QMdmmCore::Data::RockPaperScissors answer = QMdmmCore::Data::Rock;
+};
+
+// Asks a bot for a throw the way the match does (see askForAction()). The two
+// arguments are what the request carries -- the peers still in the running for
+// the order, and the order this bot would like -- and neither is anything a
+// fallback answer reads.
+ThrowReply askForThrow(QMdmmNetworking::Client &client)
+{
+    ThrowReply reply;
+    const auto record = [&reply](QMdmmCore::Data::RockPaperScissors rps) {
+        ++reply.count;
+        reply.answer = rps;
+    };
+    const QMetaObject::Connection connection = QObject::connect(client.agent(), &QMdmmNetworking::Agent::replyRockPaperScissors, &client, record);
+    client.agent()->requestRockPaperScissors(QStringList(), 0);
+    QObject::disconnect(connection);
+    return reply;
+}
+
 } // namespace
 
 class tst_QMdmmBot : public QObject
@@ -218,6 +242,13 @@ private slots:
     // rules forbid dragging, or nobody rates the peer, and then the round goes to
     // closing in on it instead (issue #6 C3, and Q4 for the rules).
     void action_pullsARatedPeerIntoItsCity();
+
+    // Neither implemented style answers the same throw every time. Answering one
+    // fixed throw is what makes two bots tie on every Rock-Paper-Scissors and
+    // never get past the first action time of a round (the D1 backlog item), so
+    // both styles are asked here, and each one's answers are collected until they
+    // vary.
+    void rps_doesNotAlwaysAnswerTheSameThrow();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -1061,6 +1092,43 @@ void tst_QMdmmBot::action_pullsARatedPeerIntoItsCity()
     QCOMPARE(walkedOut.count, 1);
     QCOMPARE(walkedOut.action, QMdmmCore::Data::Move);
     QCOMPARE(walkedOut.toPlace, enemy->place());
+}
+
+void tst_QMdmmBot::rps_doesNotAlwaysAnswerTheSameThrow()
+{
+    // Every throw a bot may answer with. All three are legal answers, and which
+    // one wins the request only decides the action order.
+    const QList<QMdmmCore::Data::RockPaperScissors> legal {
+        QMdmmCore::Data::Rock,
+        QMdmmCore::Data::Paper,
+        QMdmmCore::Data::Scissors,
+    };
+
+    // The two implemented styles answer through one shared fallback (the rl style
+    // is a placeholder that terminates in its constructor, so it never gets as far
+    // as answering).
+    const QList<QString> styles {u"knifePreferred"_s, u"horsePreferred"_s};
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QList<QMdmmCore::Data::RockPaperScissors> answered;
+        for (int i = 0; i < 60; ++i) {
+            const ThrowReply reply = askForThrow(client);
+            QCOMPARE(reply.count, 1);
+            QVERIFY(legal.contains(reply.answer));
+            if (!answered.contains(reply.answer))
+                answered << reply.answer;
+        }
+
+        // Never the same throw every time: answering one fixed throw is what makes
+        // two of these bots tie on every request and stay stuck at the first action
+        // time of a round (the D1 backlog item). Sixty draws all landing on the
+        // same one of three is a 3^-59 coincidence, so a failure here means the
+        // throw is constant rather than that one draw was unlucky.
+        QVERIFY(answered.size() > 1);
+    }
 }
 
 namespace {

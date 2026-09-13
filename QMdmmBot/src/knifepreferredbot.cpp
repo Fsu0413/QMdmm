@@ -24,8 +24,10 @@ void KnifePreferredBot::handleRockPaperScissorsRequest(const QStringList &player
     Q_UNUSED(playerNames);
     Q_UNUSED(strivedOrder);
 
-    // Any throw is legal; pick Rock until the strategy decides otherwise.
-    client()->agent()->rockPaperScissors(QMdmmCore::Data::Rock);
+    // Any throw is legal. Which one to use is a question about the action order
+    // this bot is after (issue #6 Q5, the C4 item) and not one about the knife, so
+    // this style answers with the shared fallback -- see Bot::pickThrow().
+    client()->agent()->rockPaperScissors(pickThrow());
 }
 
 void KnifePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)

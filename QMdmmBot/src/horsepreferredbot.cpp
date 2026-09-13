@@ -45,12 +45,13 @@ void HorsePreferredBot::handleRockPaperScissorsRequest(const QStringList &player
     Q_UNUSED(playerNames);
     Q_UNUSED(strivedOrder);
 
-    // Any throw is legal. Which throw to use is a question about the action order
-    // this style would like (issue #6 Q5, the C4 item) and not one about its
-    // weapon of choice, so this is Rock until that item lands. It is also why two
-    // of these bots still tie every Rock-Paper-Scissors and never get past the
-    // first action time of a round (the D1 backlog item).
-    client()->agent()->rockPaperScissors(QMdmmCore::Data::Rock);
+    // Any throw is legal. Which one to use is a question about the action order
+    // this bot is after (issue #6 Q5, the C4 item) and not one about the horse, so
+    // this style answers with the shared fallback -- see Bot::pickThrow(). Two of
+    // these bots answering one fixed throw is what used to make them tie on every
+    // Rock-Paper-Scissors and never get past the first action time of a round (the
+    // D1 backlog item).
+    client()->agent()->rockPaperScissors(pickThrow());
 }
 
 void HorsePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum)

@@ -55,6 +55,18 @@ protected:
     // from a place that does not punish, is unaffected.
     [[nodiscard]] bool canSlashSafely(const QMdmmCore::Player *to) const;
 
+    // The throw to answer a Rock-Paper-Scissors request with. Winning that request
+    // buys the action order, not the weapon of choice (issue #6 Q5), so which
+    // throw a style wants is a question no style has answered yet, and they all
+    // share this fallback: a throw drawn at random. What the fallback is for is
+    // that it is not the same throw every time -- two bots that both answer Rock
+    // tie on every single Rock-Paper-Scissors and never get past the first action
+    // time of a round (the D1 backlog item), while a throw that varies lets the
+    // request resolve after a tie or two. A style that wants to skew its throws
+    // towards the order it is after replaces this call with its own reasoning
+    // (issue #6 C4).
+    [[nodiscard]] static QMdmmCore::Data::RockPaperScissors pickThrow();
+
 protected slots: // NOLINT(readability-redundant-access-specifiers)
     // Request handlers: invoked when the server asks this bot to make a choice.
     // Pure virtual so each style subclass is forced to answer with its own
