@@ -152,6 +152,29 @@ ThrowReply askForThrow(QMdmmNetworking::Client &client)
     return reply;
 }
 
+// What a bot answered to one action-order request.
+struct ActionOrderReply
+{
+    int count = 0;
+    QList<int> order;
+};
+
+// Asks a bot to pick from the orders still up for grabbing, the way the match
+// does (see askForAction()). The arguments are what the request carries: the
+// orders on offer and how many of them the server wants chosen.
+ActionOrderReply askForActionOrder(QMdmmNetworking::Client &client, const QList<int> &remainedOrders, int selectionNum)
+{
+    ActionOrderReply reply;
+    const auto record = [&reply](const QList<int> &order) {
+        ++reply.count;
+        reply.order = order;
+    };
+    const QMetaObject::Connection connection = QObject::connect(client.agent(), &QMdmmNetworking::Agent::replyActionOrder, &client, record);
+    client.agent()->requestActionOrder(remainedOrders, int(remainedOrders.size()), selectionNum);
+    QObject::disconnect(connection);
+    return reply;
+}
+
 } // namespace
 
 class tst_QMdmmBot : public QObject
@@ -249,6 +272,11 @@ private slots:
     // both styles are asked here, and each one's answers are collected until they
     // vary.
     void rps_doesNotAlwaysAnswerTheSameThrow();
+
+    // Both styles answer an action-order request with the orders it was offered,
+    // and take no more of them than the request asked for -- whatever the request
+    // says, nothing is read past the end of the offered list.
+    void actionOrder_takesOnlyTheOrdersItWasOffered();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -1128,6 +1156,44 @@ void tst_QMdmmBot::rps_doesNotAlwaysAnswerTheSameThrow()
         // same one of three is a 3^-59 coincidence, so a failure here means the
         // throw is constant rather than that one draw was unlucky.
         QVERIFY(answered.size() > 1);
+    }
+}
+
+void tst_QMdmmBot::actionOrder_takesOnlyTheOrdersItWasOffered()
+{
+    // Both styles answer an action-order request the same way -- with the first
+    // orders on offer -- so both are asked here.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        const QList<int> offered {1, 2};
+
+        // Asked for fewer selections than it was offered, it takes that many.
+        const ActionOrderReply one = askForActionOrder(client, offered, 1);
+        QCOMPARE(one.count, 1);
+        QCOMPARE(one.order, (QList<int> {1}));
+
+        // Asked for exactly the number of orders on offer, it takes all of them.
+        const ActionOrderReply all = askForActionOrder(client, offered, 2);
+        QCOMPARE(all.count, 1);
+        QCOMPARE(all.order, offered);
+
+        // Asked for more selections than there are orders -- which the server
+        // promises never to do, but nothing on the wire holds it to -- it still
+        // answers once, with the orders it actually has, instead of reading past
+        // the end of the list.
+        const ActionOrderReply over = askForActionOrder(client, offered, 5);
+        QCOMPARE(over.count, 1);
+        QCOMPARE(over.order, offered);
+
+        // Asked for no selections at all, it answers with none.
+        const ActionOrderReply none = askForActionOrder(client, offered, 0);
+        QCOMPARE(none.count, 1);
+        QVERIFY(none.order.isEmpty());
     }
 }
 

@@ -34,11 +34,14 @@ void KnifePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrder
 {
     Q_UNUSED(maximumOrder);
 
-    // Take the first `selectionNum` available orders. The server never requests
-    // more selections than there are remaining orders, so this is always legal.
+    // Take the first `selectionNum` available orders. The server promises never to
+    // ask for more selections than there are remaining orders, but nothing on the
+    // wire holds it to that promise, so the loop stops at the end of the list as
+    // well (smoke/main.cpp and GameClient carry the same guard). Nothing is
+    // reserved up front either: what comes back is bounded by the offer, not by
+    // what the request asked for.
     QList<int> order;
-    order.reserve(selectionNum);
-    for (int i = 0; i < selectionNum; ++i)
+    for (int i = 0; i < selectionNum && i < remainedOrders.size(); ++i)
         order << remainedOrders.at(i);
     client()->agent()->actionOrder(order);
 }
