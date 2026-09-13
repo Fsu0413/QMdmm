@@ -53,7 +53,11 @@ namespace v0 {
  * <td>Rock-Paper-Scissors is requested for actions. This is always the first request per action time.
  * <td>@c Logic::rpsReply()
  * <td>@c Logic::requestRpsForAction() is emitted when this state enters, @c Logic::rpsResult() is emitted when this state exits to report the result.<br />
- *     If result is a tie @c Logic::RpsForAction re-enters.<br />
+ *     If result is a tie @c Logic::RpsForAction re-enters. The number of retries is
+ *     not bounded and no deterministic fallback follows a given number of them: a tie
+ *     is inherent to Rock-Paper-Scissors, so capping the retries would not make it any
+ *     less likely. Consequently, if all alive players keep answering with the same
+ *     throw, this state is never left (known limitation).<br />
  *     If there is only one winner, he / she gets all the action orders and @c Logic::Action enters.<br />
  *     Else @c Logic::ActionOrder enters.
  * </tr>
