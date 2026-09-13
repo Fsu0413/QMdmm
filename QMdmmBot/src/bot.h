@@ -204,6 +204,25 @@ protected:
     void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override;
     void handleActionRequest(int currentOrder) override;
     void handleUpgradeRequest(int remainingTimes) override;
+
+private:
+    // The peer to drag into the place this bot stands in, or an empty name when
+    // there is nobody to drag. This is the first half of the pull-kick loop: the
+    // peer stands one step away (the Village, which is adjacent to every city)
+    // and the round spent dragging it over is what the kick thrown at it next
+    // time is paid for with. Dragging happens only while the rules allow it (see
+    // QMdmmCore::LogicConfiguration::enableLetMove()) and only into a city -- a
+    // kick is forbidden inside the Village, so a peer pulled in there would be a
+    // round spent for nothing.
+    [[nodiscard]] QString pullTarget() const;
+
+    // The place this bot wants to stand in when there is nobody within arm's
+    // reach, or -1 when there is nowhere in particular to be. Sharing a place
+    // with the peer the score picks is where this style wants to end up (a kick
+    // and a slash both need it), and shopping is a reason to be in a city (the
+    // Village neither sells anything nor allows a kick). Every place is adjacent
+    // only to the Village, so the walk to either goes through it.
+    [[nodiscard]] int wantedPlace();
 };
 
 class RlBot final : public Bot

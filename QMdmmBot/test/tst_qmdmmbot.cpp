@@ -196,8 +196,28 @@ private slots:
     void action_paysForASlashWithItsLifeOnlyWhenTheTradeIsWorthIt();
 
     // The blow goes to the co-located peer the score rates highest -- the score
-    // ranks targets, it does not forbid hitting them.
+    // ranks targets, it does not forbid hitting them. Both styles ask this
+    // through the same base-class rule, so both are asked here.
     void action_aimsAtTheBestScoringPeerStandingHere();
+
+    // The horse style spends its points on the horse first, on the knife second,
+    // and leaves max HP for last (issue #6 Q4).
+    void upgrade_spendsOnHorseThenKnifeThenMaxHp();
+
+    // Bare at the start of a round, the horse style buys its horse before its
+    // knife -- and buys the knife too, only later (issue #6 Q4).
+    void action_buysTheHorseBeforeTheKnife();
+
+    // A kick costs nothing where a city slash costs HP, so the horse style kicks
+    // a peer standing with it in a city; where a kick is forbidden -- the Village
+    // -- it slashes it instead (issue #6 C3).
+    void action_kicksWhatStandsWithItForFree();
+
+    // The pull half of the pull-kick loop: a peer the score rates, standing in
+    // the Village, is dragged into the city this bot stands in -- unless the
+    // rules forbid dragging, or nobody rates the peer, and then the round goes to
+    // closing in on it instead (issue #6 C3, and Q4 for the rules).
+    void action_pullsARatedPeerIntoItsCity();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -819,38 +839,228 @@ void tst_QMdmmBot::action_paysForASlashWithItsLifeOnlyWhenTheTradeIsWorthIt()
 
 void tst_QMdmmBot::action_aimsAtTheBestScoringPeerStandingHere()
 {
+    // Both styles strike whatever stands with them -- the knife style with its
+    // knife, the horse style with whichever of its weapons reaches -- and both
+    // read that choice off the same rule in Bot, so both are asked here.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        const QString self = client.objectName();
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *selfPlayer = room->addPlayer(self);
+        // Room order is name order, which is what decides a tie.
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+        QVERIFY(selfPlayer != nullptr);
+        QVERIFY(bbb != nullptr);
+        QVERIFY(ccc != nullptr);
+
+        selfPlayer->setHasKnife(true);
+        selfPlayer->setKnifeDamage(1);
+        selfPlayer->setPlace(1);
+        bbb->setPlace(1);
+        ccc->setPlace(1);
+
+        // Two harmless peers that have never wronged this bot score nothing, so
+        // the blow goes to the first of them in room order.
+        QCOMPARE(askForAction(client, 1).toPlayer, u"bbb"_s);
+
+        // A grudge against the other one puts it on top of the score, and the
+        // blow follows the score.
+        client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
+        const ActionReply rated = askForAction(client, 1);
+        QCOMPARE(rated.count, 1);
+        QCOMPARE(rated.action, QMdmmCore::Data::Slash);
+        QCOMPARE(rated.toPlayer, u"ccc"_s);
+    }
+}
+
+void tst_QMdmmBot::upgrade_spendsOnHorseThenKnifeThenMaxHp()
+{
     QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
-    Bot *bot = Bot::createBot(u"knifePreferred"_s, &client);
+    Bot *bot = Bot::createBot(u"horsePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QVERIFY(self != nullptr);
+
+    // Under the default rules the horse runs 2..10, the knife 1..10 and max HP
+    // 10..20, so what each reply spends the points on is what these show.
+    QCOMPARE(self->upgradeHorseRemainingTimes(), 8);
+
+    // The horse comes first...
+    const UpgradeReply horseFirst = askForUpgrade(client, 2);
+    QCOMPARE(horseFirst.count, 1);
+    QCOMPARE(horseFirst.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeHorse, QMdmmCore::Data::UpgradeHorse}));
+
+    // ...then the knife, ahead of max HP (Q4)...
+    self->setHorseDamage(10);
+    QCOMPARE(self->upgradeHorseRemainingTimes(), 0);
+    const UpgradeReply knifeNext = askForUpgrade(client, 3);
+    QCOMPARE(knifeNext.count, 1);
+    QCOMPARE(knifeNext.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeKnife, QMdmmCore::Data::UpgradeKnife, QMdmmCore::Data::UpgradeKnife}));
+
+    // ...and max HP takes what is left once both weapons are maxed out.
+    self->setKnifeDamage(10);
+    QCOMPARE(self->upgradeKnifeRemainingTimes(), 0);
+    const UpgradeReply maxHpLast = askForUpgrade(client, 2);
+    QCOMPARE(maxHpLast.count, 1);
+    QCOMPARE(maxHpLast.items, (QList<QMdmmCore::Data::UpgradeItem> {QMdmmCore::Data::UpgradeMaxHp, QMdmmCore::Data::UpgradeMaxHp}));
+
+    // With nothing left to upgrade there is no feasible list at all, and the bot
+    // gives up rather than sending a short one.
+    self->setMaxHp(20);
+    QCOMPARE(self->upgradeMaxHpRemainingTimes(), 0);
+    QVERIFY(upgradeWasGivenUp(client, 1));
+}
+
+void tst_QMdmmBot::action_buysTheHorseBeforeTheKnife()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"horsePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    // A round starts every player bare and at its own seat (see
+    // Room::prepareForRoundStart()), so this is the opening the style has to
+    // play from: no weapon at all, in its own city, with the peer a walk away.
+    self->setInitialPlace(1);
+    self->setPlace(1);
+    enemy->setPlace(2);
+
+    // Both weapons are missing and both are on sale where this bot stands, and
+    // the horse is the one it buys first (Q4).
+    const ActionReply horseFirst = askForAction(client, 1);
+    QCOMPARE(horseFirst.count, 1);
+    QCOMPARE(horseFirst.action, QMdmmCore::Data::BuyHorse);
+
+    // The knife is bought too -- just not before the horse (Q4).
+    self->setHasHorse(true);
+    const ActionReply knifeSecond = askForAction(client, 1);
+    QCOMPARE(knifeSecond.count, 1);
+    QCOMPARE(knifeSecond.action, QMdmmCore::Data::BuyKnife);
+}
+
+void tst_QMdmmBot::action_kicksWhatStandsWithItForFree()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"horsePreferred"_s, &client);
+    QVERIFY(bot != nullptr);
+
+    // A city that charges half of the slasher's own max HP for a slash.
+    QMdmmCore::LogicConfiguration configuration;
+    configuration.setPunishHpModifier(2);
+    configuration.setPunishHpRoundStrategy(QMdmmCore::LogicConfiguration::RoundDown);
+    client.room()->setLogicConfiguration(configuration);
+
+    QMdmmCore::Room *room = client.room();
+    QMdmmCore::Player *self = room->addPlayer(client.objectName());
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
+    QVERIFY(self != nullptr);
+    QVERIFY(enemy != nullptr);
+
+    // Carrying both weapons and healthy, next to a peer in a city. The slash is
+    // legal and survivable there -- it would cost 5 of this bot's 10 HP -- but a
+    // kick costs nothing at all, so that is what this style throws.
+    self->setHasHorse(true);
+    self->setHorseDamage(2);
+    self->setHasKnife(true);
+    self->setPlace(1);
+    enemy->setHp(10);
+    enemy->setPlace(1);
+    QVERIFY(self->canSlash(enemy));
+    QCOMPARE(self->slashPunishHp(), 5);
+    const ActionReply kicked = askForAction(client, 1);
+    QCOMPARE(kicked.count, 1);
+    QCOMPARE(kicked.action, QMdmmCore::Data::Kick);
+    QCOMPARE(kicked.toPlayer, enemy->objectName());
+
+    // Inside the Village a kick is forbidden, so the same peer is slashed -- and
+    // that slash is free as well.
+    self->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(QMdmmCore::Data::Village);
+    QCOMPARE(self->slashPunishHp(), 0);
+    const ActionReply slashed = askForAction(client, 1);
+    QCOMPARE(slashed.count, 1);
+    QCOMPARE(slashed.action, QMdmmCore::Data::Slash);
+    QCOMPARE(slashed.toPlayer, enemy->objectName());
+}
+
+void tst_QMdmmBot::action_pullsARatedPeerIntoItsCity()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = Bot::createBot(u"horsePreferred"_s, &client);
     QVERIFY(bot != nullptr);
 
     const QString self = client.objectName();
 
     QMdmmCore::Room *room = client.room();
     QMdmmCore::Player *selfPlayer = room->addPlayer(self);
-    // Room order is name order, which is what decides a tie.
-    QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
-    QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+    QMdmmCore::Player *enemy = room->addPlayer(u"enemy"_s);
     QVERIFY(selfPlayer != nullptr);
-    QVERIFY(bbb != nullptr);
-    QVERIFY(ccc != nullptr);
+    QVERIFY(enemy != nullptr);
 
-    selfPlayer->setHasKnife(true);
-    selfPlayer->setKnifeDamage(1);
+    // Armed with both weapons, in its own city, with the only peer standing in
+    // the Village: one step away, and a kick does not reach that far.
+    selfPlayer->setInitialPlace(1);
     selfPlayer->setPlace(1);
-    bbb->setPlace(1);
-    ccc->setPlace(1);
+    selfPlayer->setHasHorse(true);
+    selfPlayer->setHasKnife(true);
+    enemy->setPlace(QMdmmCore::Data::Village);
 
-    // Two harmless peers that have never wronged this bot score nothing, so the
-    // blow goes to the first of them in room order.
-    QCOMPARE(askForAction(client, 1).toPlayer, u"bbb"_s);
+    // A peer nobody rates is not worth a round, and the pull is what costs one:
+    // the round goes to closing in on it instead. The walk is into the Village,
+    // which is both where the peer stands and where a slash is free.
+    const ActionReply unrated = askForAction(client, 1);
+    QCOMPARE(unrated.count, 1);
+    QCOMPARE(unrated.action, QMdmmCore::Data::Move);
+    QCOMPARE(unrated.toPlace, QMdmmCore::Data::Village);
 
-    // A grudge against the other one puts it on top of the score, and the blow
-    // follows the score.
-    client.agent()->notifyAction(u"ccc"_s, QMdmmCore::Data::Slash, self, 0);
-    const ActionReply rated = askForAction(client, 1);
-    QCOMPARE(rated.count, 1);
-    QCOMPARE(rated.action, QMdmmCore::Data::Slash);
-    QCOMPARE(rated.toPlayer, u"ccc"_s);
+    // Once that peer has wronged this bot it is worth the round, and the round is
+    // spent dragging it into the city this bot stands in -- the first half of the
+    // pull-kick loop (issue #6 C3). The kick that throws it back into the Village
+    // is what the next action time has to bring.
+    client.agent()->notifyAction(u"enemy"_s, QMdmmCore::Data::Slash, self, 0);
+    const ActionReply pulled = askForAction(client, 1);
+    QCOMPARE(pulled.count, 1);
+    QCOMPARE(pulled.action, QMdmmCore::Data::LetMove);
+    QCOMPARE(pulled.toPlayer, u"enemy"_s);
+    QCOMPARE(pulled.toPlace, selfPlayer->place());
+
+    // With the rules refusing to have a peer dragged around, there is no loop to
+    // play: the style plays it straight and walks in to slash it (Q4).
+    QMdmmCore::LogicConfiguration configuration;
+    configuration.setEnableLetMove(false);
+    room->setLogicConfiguration(configuration);
+    const ActionReply walkedIn = askForAction(client, 1);
+    QCOMPARE(walkedIn.count, 1);
+    QCOMPARE(walkedIn.action, QMdmmCore::Data::Move);
+    QCOMPARE(walkedIn.toPlace, QMdmmCore::Data::Village);
+
+    // From the Village there is nothing to drag, and nowhere to drag it to: the
+    // only place a pull made there can put a peer is the Village itself, where
+    // the kick it was dragged over for is forbidden and the peer's own slash
+    // would be as free as this bot's. So that peer is walked towards instead --
+    // into the city it stands in, where the kick does land.
+    configuration.setEnableLetMove(true);
+    room->setLogicConfiguration(configuration);
+    selfPlayer->setPlace(QMdmmCore::Data::Village);
+    enemy->setPlace(2);
+    const ActionReply walkedOut = askForAction(client, 1);
+    QCOMPARE(walkedOut.count, 1);
+    QCOMPARE(walkedOut.action, QMdmmCore::Data::Move);
+    QCOMPARE(walkedOut.toPlace, enemy->place());
 }
 
 namespace {
