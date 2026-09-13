@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# QMdmm 6 - version compatibility policy (hand-written, "Impl" layer).
+#
+# Included by QMdmm6ConfigVersion.cmake. Edit this file, not the shell.
+#
+# Policy: a consumer that requests any version up to the installed one is
+# satisfied; requesting a newer version is not.
+#
+#   find_package(QMdmm6)          -> satisfied (no version requested)
+#   find_package(QMdmm6 0.0.1)    -> satisfied, exact
+#   find_package(QMdmm6 0.0.0)    -> satisfied, not exact
+#   find_package(QMdmm6 0.0.2)    -> NOT satisfied (newer than installed)
+#
+# The Qt generation is NOT part of this check: QMdmm6 and QMdmm7 install into
+# different directories and namespaces, so they never contend for a version.
+
+if (NOT DEFINED PACKAGE_FIND_VERSION)
+    # find_package(QMdmm6) with no version: nothing to compare, it is a match.
+    set(PACKAGE_VERSION_COMPATIBLE TRUE)
+    set(PACKAGE_VERSION_EXACT FALSE)
+elseif (PACKAGE_FIND_VERSION VERSION_GREATER PACKAGE_VERSION)
+    # Asked for something newer than what is installed.
+    set(PACKAGE_VERSION_COMPATIBLE FALSE)
+    set(PACKAGE_VERSION_EXACT FALSE)
+else()
+    set(PACKAGE_VERSION_COMPATIBLE TRUE)
+    if (PACKAGE_FIND_VERSION VERSION_EQUAL PACKAGE_VERSION)
+        set(PACKAGE_VERSION_EXACT TRUE)
+    else()
+        set(PACKAGE_VERSION_EXACT FALSE)
+    endif()
+endif()
+
+set(PACKAGE_VERSION_UNSUITABLE FALSE)

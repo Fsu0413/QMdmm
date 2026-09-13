@@ -40,9 +40,12 @@ if (Qt6_FOUND)
         VERSION "${QMdmm_VERSION}"
     )
 
+    # QMdmm6::* rather than the bare target names: these are the names an
+    # installed dev package provides, so the GUI builds unchanged both inside
+    # this tree and from a consumer project that only did find_package(QMdmm6).
     target_link_libraries(QMdmm6
-        PUBLIC QMdmmNetworking6
-               QMdmmCore6
+        PUBLIC QMdmm6::Networking
+               QMdmm6::Core
                Qt6::QuickWidgets
                Qt6::Quick
                Qt6::Qml

@@ -46,8 +46,16 @@ install(FILES ${QMDMMNETWORKING_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking"
     COMPONENT "dev-common"
 )
+# See QMdmmCore: the INTERFACE library travels with the package because
+# QMdmmNetworking6 consumes it PUBLIC-ly.
+install(TARGETS QMdmmNetworking
+    EXPORT QMdmm6Targets
+    COMPONENT "dev-common"
+)
+# No INSTALL_INTERFACE entry here: the installed bare-name include directory is
+# published by QMdmmNetworking6 below, exactly as in the build tree.
 target_include_directories(QMdmmNetworking
-    INTERFACE src
+    INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
 )
 if (QMDMM_EXPORT_PRIVATE)
     add_library(QMdmmNetworkingPrivate INTERFACE)
@@ -66,6 +74,8 @@ if (Qt6_FOUND)
     add_library(QMdmm6::Networking ALIAS QMdmmNetworking6)
 
     set_target_properties(QMdmmNetworking6 PROPERTIES
+        # Exported as QMdmm6::Networking.
+        EXPORT_NAME "Networking"
         AUTOMOC ON
         AUTOUIC ON
         AUTORCC ON
@@ -83,17 +93,22 @@ if (Qt6_FOUND)
     endif()
 
     target_include_directories(QMdmmNetworking6
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking"
+        INTERFACE "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/build/include/QMdmmNetworking>"
+                  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/QMdmmNetworking>"
     )
 
+    # QMdmmCore6 by target name rather than the QMdmm6::Core alias: install(EXPORT)
+    # resolves what it is given, and naming the concrete target keeps the exported
+    # INTERFACE_LINK_LIBRARIES unambiguous.
     target_link_libraries(QMdmmNetworking6
-        PUBLIC QMdmm6::Core
+        PUBLIC QMdmmCore6
                QMdmmNetworking
                Qt6::Network
                Qt6::WebSockets
     )
 
     install(TARGETS QMdmmNetworking6
+        EXPORT QMdmm6Targets
         COMPONENT "6"
         RUNTIME
         LIBRARY
@@ -105,6 +120,7 @@ if (Qt6_FOUND)
     # component. Keep ARCHIVE for Windows DLL import libraries and static libs.
     if (WIN32 OR NOT BUILD_SHARED_LIBS)
         install(TARGETS QMdmmNetworking6
+            EXPORT QMdmm6Targets
             COMPONENT "dev6"
             ARCHIVE
         )

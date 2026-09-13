@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# QMdmm 6 - extras injected into the find_package() scope (hand-written).
+#
+# Expanded from QMdmm6ConfigExtras.cmake.in and include()d by QMdmm6Config.cmake
+# after the imported targets exist. This is the place for convenience variables
+# and for anything that should be visible to a consumer without polluting the
+# target graph.
+#
+# Note: the values are frozen here at build time on purpose. PACKAGE_VERSION,
+# which the version file publishes, lives in the version file's own scope and is
+# NOT visible to the configuration file, so the product version has to be
+# expanded in rather than read back.
+
+set(QMdmm6_VERSION "@QMdmm_VERSION@")
+
+# The Qt generation this package was built for. Kept explicit (rather than
+# derived from QT_VERSION_MAJOR at consume time) so it is greppable and
+# assertable; the headers use Qt's own QT_VERSION_MAJOR for the same purpose.
+set(QMdmm6_QT_GENERATION 6)
+
+# Components a consumer may request in find_package(QMdmm6 COMPONENTS ...),
+# mapped to the imported target providing them. Kept in one place so the
+# component check in QMdmm6Config.cmake cannot drift from the exported targets.
+set(QMdmm6_KNOWN_COMPONENTS "Core" "Networking")
+set(QMdmm6_COMPONENT_TARGET_Core "QMdmm6::Core")
+set(QMdmm6_COMPONENT_TARGET_Networking "QMdmm6::Networking")

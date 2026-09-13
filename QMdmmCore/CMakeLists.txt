@@ -55,6 +55,14 @@ install(FILES ${QMDMMCORE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore"
     COMPONENT "dev-common"
 )
+# This INTERFACE library carries the compile definitions and include directories
+# that consumers need, and QMdmmCore6 consumes it PUBLIC-ly, so it has to be part
+# of the exported package - otherwise install(EXPORT) refuses to write
+# QMdmmCore6 into it.
+install(TARGETS QMdmmCore
+    EXPORT QMdmm6Targets
+    COMPONENT "dev-common"
+)
 if (NOT BUILD_SHARED_LIBS)
     target_compile_definitions(QMdmmCore
         INTERFACE QMDMM_STATIC
@@ -65,9 +73,16 @@ target_compile_definitions(QMdmmCore
               "QT_DISABLE_DEPRECATED_BEFORE=0x70000"
               "QMDMM_VERSION=\"${QMdmm_VERSION}\""
 )
+# BUILD_INTERFACE / INSTALL_INTERFACE are correctness, not cosmetics: the
+# build-tree include root and the source-relative `src` are machine-local paths,
+# and install(EXPORT) either rejects the relative one outright or bakes this
+# build directory into the installed package.
 target_include_directories(QMdmmCore
-    INTERFACE "${CMAKE_BINARY_DIR}/build/include"
-              src
+    INTERFACE "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/build/include>"
+              "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+              # <QMdmmCore/QMdmmPlayer> resolves through the include root;
+              # the bare <QMdmmPlayer> through QMdmmCore6's own entry below.
+              "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 if (NOT MSVC)
     target_compile_options(QMdmmCore
@@ -133,6 +148,9 @@ if (Qt6_FOUND)
     add_library(QMdmm6::Core ALIAS QMdmmCore6)
 
     set_target_properties(QMdmmCore6 PROPERTIES
+        # Exported as QMdmm6::Core: the generation lives in the namespace, not in
+        # the target name consumers write.
+        EXPORT_NAME "Core"
         AUTOMOC ON
         AUTOUIC ON
         AUTORCC ON
@@ -150,7 +168,8 @@ if (Qt6_FOUND)
     endif()
 
     target_include_directories(QMdmmCore6
-        INTERFACE "${CMAKE_BINARY_DIR}/build/include/QMdmmCore"
+        INTERFACE "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/build/include/QMdmmCore>"
+                  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/QMdmmCore>"
     )
 
     target_link_libraries(QMdmmCore6
@@ -159,6 +178,7 @@ if (Qt6_FOUND)
     )
 
     install(TARGETS QMdmmCore6
+        EXPORT QMdmm6Targets
         COMPONENT "6"
         RUNTIME
         LIBRARY
@@ -170,6 +190,7 @@ if (Qt6_FOUND)
     # component. Keep ARCHIVE for Windows DLL import libraries and static libs.
     if (WIN32 OR NOT BUILD_SHARED_LIBS)
         install(TARGETS QMdmmCore6
+            EXPORT QMdmm6Targets
             COMPONENT "dev6"
             ARCHIVE
         )
