@@ -138,7 +138,7 @@ Agent *LogicRunner::addAgent(Agent *agent)
  * game has started) but whose socket was disconnected or deleted, which also marked the agent
  * offline. This is the logic-side half of a reconnect: it restores the online flag (not Trust --
  * the "managed" flag, see @c StateMaskTrust) and resends the state snapshot so the reconnecting
- * client can rebuild its room view. The room itself only ever deals with agents, never sockets (D-018).
+ * client can rebuild its room view. The room itself only ever deals with agents, never sockets.
  */
 Agent *LogicRunner::reconnectAgent(Agent *agent)
 {
