@@ -155,35 +155,6 @@ void KnifePreferredBot::handleUpgradeRequest(int remainingTimes)
     client()->agent()->upgrade(items);
 }
 
-QMdmmCore::Player *KnifePreferredBot::attackTarget()
-{
-    const QMdmmCore::Room *room = client()->room();
-    const QMdmmCore::Player *self = room->player(client()->objectName());
-    if (self == nullptr)
-        return nullptr;
-
-    QMdmmCore::Player *firstHere = nullptr;
-    QMdmmCore::Player *bestScored = nullptr;
-    double bestScore = 0.0;
-
-    // A strict comparison from the zero start keeps the first of several equally
-    // good peers (room order) and leaves a peer that scores nothing to the
-    // fallback below.
-    for (QMdmmCore::Player *to : opponents()) {
-        if (to->place() != self->place())
-            continue;
-        if (firstHere == nullptr)
-            firstHere = to;
-        const double score = targetScore(to->objectName());
-        if (score > bestScore) {
-            bestScore = score;
-            bestScored = to;
-        }
-    }
-
-    return (bestScored != nullptr) ? bestScored : firstHere;
-}
-
 bool KnifePreferredBot::twoSlashesFinishEveryone() const
 {
     const QMdmmCore::Room *room = client()->room();

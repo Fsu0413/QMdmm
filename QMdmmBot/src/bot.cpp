@@ -189,6 +189,34 @@ QString Bot::selectTarget() const
     return target;
 }
 
+QMdmmCore::Player *Bot::attackTarget()
+{
+    QMdmmCore::Player *self = selfPlayer();
+    if (self == nullptr)
+        return nullptr;
+
+    QMdmmCore::Player *firstHere = nullptr;
+    QMdmmCore::Player *bestScored = nullptr;
+    double bestScore = 0.0;
+
+    // A strict comparison from the zero start keeps the first of several equally
+    // good peers (room order) and leaves a peer that scores nothing to the
+    // fallback below.
+    for (QMdmmCore::Player *to : opponents()) {
+        if (to->place() != self->place())
+            continue;
+        if (firstHere == nullptr)
+            firstHere = to;
+        const double score = targetScore(to->objectName());
+        if (score > bestScore) {
+            bestScore = score;
+            bestScored = to;
+        }
+    }
+
+    return (bestScored != nullptr) ? bestScored : firstHere;
+}
+
 const QMdmmCore::LogicConfiguration &Bot::logicConfiguration() const
 {
     // The mirror holds the rules the server broadcast. Before that broadcast, and

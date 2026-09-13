@@ -108,9 +108,24 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
     // peer in room order (players are held in a name-ordered map), so the pick
     // is deterministic rather than dependent on iteration order. An empty name
     // means nobody is worth aiming at: either no opponent is left or none of
-    // them scores above zero. Style strategies read this when they pick a
-    // target.
+    // them scores above zero.
+    //
+    // The zero score does exclude here, unlike in attackTarget(): this is the
+    // question a style asks before spending a round on a peer -- walking towards
+    // it, or dragging it into reach -- and a round has to be paid for with
+    // something. A blow thrown at a peer that is already standing here is not
+    // paid for with anything, which is why that question (attackTarget()) is the
+    // cheaper one and answers differently.
     [[nodiscard]] QString selectTarget() const;
+
+    // The peer to strike right now: among the peers standing in this bot's place,
+    // the one with the highest target score (see Bot::targetScore()), a tie going
+    // to room order. The score ranks those peers but does not veto the blow -- a
+    // peer that has never wronged this bot and carries no weapon still goes down,
+    // and the kill it yields is an upgrade point -- so the first co-located peer
+    // is taken when none of them scores at all. nullptr means nobody is standing
+    // here to strike.
+    [[nodiscard]] QMdmmCore::Player *attackTarget();
 
 private:
     // A hostile action is worth this many grudges; every finished round
@@ -159,15 +174,6 @@ protected:
     void handleUpgradeRequest(int remainingTimes) override;
 
 private:
-    // The peer to hit right now: among the peers standing in this bot's place,
-    // the one with the highest target score (see Bot::targetScore()), a tie
-    // going to room order. The score ranks targets but does not veto the blow
-    // -- a peer that has never wronged this bot and carries no weapon still
-    // goes down to a knife, and the kill it yields is an upgrade point -- so
-    // the first co-located peer is taken when none of them scores at all.
-    // nullptr means nobody is standing here to hit.
-    [[nodiscard]] QMdmmCore::Player *attackTarget();
-
     // Whether two slashes would finish every peer still alive off: the knife
     // style's own reading of "the knife is sharp enough" (issue #6 Q3). It is
     // worked out afresh every time because both sides keep upgrading. Once it
