@@ -86,9 +86,10 @@ Read these before touching code:
 ### `clang-tidy`
 
 - Test and smoke code (`test/` / `smoke/`) is not linted. The policy is written
-  into the files themselves: each of them carries a file-level
-  `// NOLINTBEGIN` / `// NOLINTEND` pair, so the whole tree can be scanned
-  without the caller having to remember to filter paths.
+  into the files themselves: each test / smoke translation unit carries a
+  file-level `// NOLINTBEGIN` / `// NOLINTEND` pair, so the whole tree can be
+  scanned without the caller having to remember to filter paths. The `test.h`
+  helpers are headers rather than translation units, so they carry no pair.
 
 ### `using namespace`
 
@@ -114,6 +115,6 @@ Read these before touching code:
   Above example code should be modified to:
   ```
 #define SOME_MACRO(x) \
-  if (x)
+  if (x)              \
       v << u"" x ""_s;
   ```
