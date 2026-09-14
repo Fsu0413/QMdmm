@@ -6,6 +6,7 @@
 
 #include <QRandomGenerator>
 
+#include <algorithm>
 #include <array>
 
 using namespace Qt::StringLiterals;
@@ -262,6 +263,99 @@ QMdmmCore::Data::RockPaperScissors Bot::pickThrow()
 
     const int index = QRandomGenerator::global()->bounded(static_cast<int>(throws.size()));
     return throws.at(index);
+}
+
+QList<int> Bot::desiredActionOrders(const QList<int> &remainedOrders, int selectionNum) const
+{
+    // An early order is worth paying for as soon as something can happen this
+    // round that only an early turn can answer: a blow that would finish this bot
+    // off, a blow of its own that would finish somebody (the only way to an
+    // upgrade point), or a round that could be over before the last order runs.
+    // With none of those on the table, the latest orders are the better ones:
+    // nobody can act against this bot before its turn, and by the time the turn
+    // comes up every other commitment is out in the open. Waiting is only safe
+    // while no blow on the field can be fatal, though, so an early order is taken
+    // as soon as one would be -- a late turn is lost outright to a round that ends
+    // first. (The two conditions overlap: a round short enough to end before the
+    // last order runs is one with fatal blows in it, which is the case the guard
+    // below catches anyway.)
+    const bool urgent = aPeerCouldFinishSelf() || selfCouldFinishAPeer() || roundCouldEndEarly();
+    const bool noBlowCanBeFatal = finishingBlowsOnTheTable() == 0;
+    const bool holdBack = !urgent && noBlowCanBeFatal;
+
+    // The offer arrives ascending, but which end is taken from is read off the
+    // values rather than off the order they arrived in. Either pick goes back
+    // ascending: the reply is a set of orders, and that is how it is read.
+    QList<int> offers = remainedOrders;
+    std::ranges::sort(offers);
+
+    const int count = qMin(selectionNum, static_cast<int>(offers.size()));
+    if (count <= 0)
+        return {};
+
+    return holdBack ? offers.mid(offers.size() - count) : offers.mid(0, count);
+}
+
+bool Bot::blowWouldFinish(const QMdmmCore::Player *attacker, const QMdmmCore::Player *victim) const
+{
+    if (!attacker->canSlash(victim))
+        return false;
+
+    // A slash takes the victim down by the attacker's knife damage. Whether what
+    // is left is fatal is a rule of the match (see
+    // LogicConfiguration::zeroHpAsDead), so it is asked for rather than assumed --
+    // the same reading canSlashSafely() uses for this bot's own life.
+    const int hpLeft = victim->hp() - attacker->knifeDamage();
+    return logicConfiguration().zeroHpAsDead() ? (hpLeft <= 0) : (hpLeft < 0);
+}
+
+bool Bot::aPeerCouldFinishSelf() const
+{
+    const QMdmmCore::Room *room = client()->room();
+    const QMdmmCore::Player *self = room->player(client()->objectName());
+    if (self == nullptr)
+        return false;
+
+    const auto finishesSelf = [this, self](const QMdmmCore::Player *peer) { return peer != self && blowWouldFinish(peer, self); };
+    return std::ranges::any_of(room->alivePlayers(), finishesSelf);
+}
+
+bool Bot::selfCouldFinishAPeer() const
+{
+    const QMdmmCore::Room *room = client()->room();
+    const QMdmmCore::Player *self = room->player(client()->objectName());
+    if (self == nullptr)
+        return false;
+
+    const auto finishesPeer = [this, self](const QMdmmCore::Player *peer) { return peer != self && blowWouldFinish(self, peer); };
+    return std::ranges::any_of(room->alivePlayers(), finishesPeer);
+}
+
+int Bot::finishingBlowsOnTheTable() const
+{
+    const QList<const QMdmmCore::Player *> alive = client()->room()->alivePlayers();
+
+    int count = 0;
+    for (const QMdmmCore::Player *attacker : alive) {
+        for (const QMdmmCore::Player *victim : alive) {
+            if (attacker != victim && blowWouldFinish(attacker, victim))
+                ++count;
+        }
+    }
+
+    return count;
+}
+
+bool Bot::roundCouldEndEarly() const
+{
+    const int alive = client()->room()->alivePlayersCount();
+
+    // A round with nobody but this bot in it has no last player left to reach, so
+    // there is nothing to cut short.
+    if (alive <= 1)
+        return false;
+
+    return finishingBlowsOnTheTable() >= alive - 1;
 }
 
 Bot *Bot::createBot(const QString &style, QMdmmNetworking::Client *parent)

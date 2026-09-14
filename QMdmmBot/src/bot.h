@@ -67,6 +67,21 @@ protected:
     // (issue #6 C4).
     [[nodiscard]] static QMdmmCore::Data::RockPaperScissors pickThrow();
 
+    // The orders to ask for out of the ones still up for grabs, given how many
+    // the server wants picked. Which end of the offer to take from turns on
+    // whether an early order is worth paying for this round: when it is, the
+    // earliest orders go in; when it is not, the latest do, because moving last
+    // costs nothing -- this bot commits to nothing early and sees what everybody
+    // else has committed to before it commits to anything. Waiting is
+    // only safe while no blow on the field can finish anybody off, though: a late
+    // order is void if this bot dies before its turn comes up or the round ends
+    // first. Nothing is ever yielded (no 0 goes into the reply) -- yielding gives
+    // up the pick without saving the action, so it buys nothing. What comes back
+    // is bounded by the offer rather than by what the request asked for. Which
+    // order is worth having is a question about the round, not about a playing
+    // style, so the styles share this answer instead of each carrying a copy.
+    [[nodiscard]] QList<int> desiredActionOrders(const QList<int> &remainedOrders, int selectionNum) const;
+
 protected slots: // NOLINT(readability-redundant-access-specifiers)
     // Request handlers: invoked when the server asks this bot to make a choice.
     // Pure virtual so each style subclass is forced to answer with its own
@@ -140,6 +155,37 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
     [[nodiscard]] QMdmmCore::Player *attackTarget();
 
 private:
+    // Whether one blow from `attacker` would finish `victim` off this round. The
+    // blow has to be one that could be thrown at all -- the two standing in the
+    // same place, both alive, a knife in the attacker's hand (see
+    // Player::canSlash()) -- and what the victim is left with has to be at or
+    // below its death threshold. Where that threshold lies is a rule of the
+    // match, so it is asked for rather than assumed: the same reading
+    // canSlashSafely() uses for this bot's own life.
+    [[nodiscard]] bool blowWouldFinish(const QMdmmCore::Player *attacker, const QMdmmCore::Player *victim) const;
+
+    // Whether this bot's life is on the line this round: a peer standing where it
+    // stands carries a knife that would finish it off.
+    [[nodiscard]] bool aPeerCouldFinishSelf() const;
+
+    // Whether this bot could bank a kill this round: a peer standing where it
+    // stands would go down to one of its blows. A kill is the only way to an
+    // upgrade point, which is what makes it worth taking an early order.
+    [[nodiscard]] bool selfCouldFinishAPeer() const;
+
+    // How many finishing blows could land this round, counted as (attacker,
+    // victim) pairs among the players still alive. A place holding three peers
+    // counts every direction between them, so this is an upper bound on the
+    // deaths a round can actually deal out -- which is the safe side to err on,
+    // since the count feeds the two reasons to take an early order.
+    [[nodiscard]] int finishingBlowsOnTheTable() const;
+
+    // Whether this round could be over before the last order runs. The round is
+    // over once at most one player is left (see Room::isRoundOver()), so it takes
+    // that many finishes to cut it short; with the count above being an upper
+    // bound, this answers "yes" liberally, which again is the safe side.
+    [[nodiscard]] bool roundCouldEndEarly() const;
+
     // A hostile action is worth this many grudges; every finished round
     // multiplies all of them by the decay factor, and an entry that has decayed
     // to the epsilon or below is dropped so the table stays bounded over a long

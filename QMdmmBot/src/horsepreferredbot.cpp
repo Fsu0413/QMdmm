@@ -58,16 +58,10 @@ void HorsePreferredBot::handleActionOrderRequest(const QList<int> &remainedOrder
 {
     Q_UNUSED(maximumOrder);
 
-    // Take the first `selectionNum` available orders. The server promises never to
-    // ask for more selections than there are remaining orders, but nothing on the
-    // wire holds it to that promise, so the loop stops at the end of the list as
-    // well (smoke/main.cpp and GameClient carry the same guard). Nothing is
-    // reserved up front either: what comes back is bounded by the offer, not by
-    // what the request asked for.
-    QList<int> order;
-    for (int i = 0; i < selectionNum && i < remainedOrders.size(); ++i)
-        order << remainedOrders.at(i);
-    client()->agent()->actionOrder(order);
+    // Which order is worth having is a question about the round rather than about
+    // the horse style, so the pick is shared with the other styles (see
+    // Bot::desiredActionOrders()).
+    client()->agent()->actionOrder(desiredActionOrders(remainedOrders, selectionNum));
 }
 
 void HorsePreferredBot::handleActionRequest(int currentOrder)

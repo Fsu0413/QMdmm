@@ -175,6 +175,19 @@ ActionOrderReply askForActionOrder(QMdmmNetworking::Client &client, const QList<
     return reply;
 }
 
+// Lays one player out the way the action-order cases need it: standing in a place
+// of its own, at full HP, holding a knife of a stated damage. Places are told
+// apart by comparing them, so any three distinct values stand for two cities and
+// the Village.
+void placeArmedPlayer(QMdmmCore::Player *player, int place, int hp, int knifeDamage)
+{
+    player->setPlace(place);
+    player->setMaxHp(hp);
+    player->setHp(hp);
+    player->setKnifeDamage(knifeDamage);
+    player->setHasKnife(true);
+}
+
 } // namespace
 
 class tst_QMdmmBot : public QObject
@@ -277,6 +290,25 @@ private slots:
     // and take no more of them than the request asked for -- whatever the request
     // says, nothing is read past the end of the offered list.
     void actionOrder_takesOnlyTheOrdersItWasOffered();
+
+    // The pick itself, laid out on three peers in three places: a round in which
+    // no blow can land on anybody is the one where waiting costs nothing, so the
+    // latest order on offer is the one both styles ask for.
+    void actionOrder_holdsBackWhenNoBlowCanBeFatal();
+
+    // And the rounds in which waiting does cost something, so the earliest order
+    // is the one worth asking for: a peer standing here whose knife would finish
+    // this bot off, a peer standing here that this bot's own knife would finish,
+    // and a pair of peers able to finish each other while this bot stands aside.
+    void actionOrder_grabsTheEarliestOrderWhenItsOwnLifeIsOnTheLine();
+    void actionOrder_grabsTheEarliestOrderWhenAKillIsOnTheTable();
+    void actionOrder_grabsTheEarliestOrderWhenAPeerCouldBeFinished();
+
+    // Where the death threshold lies is a rule of the match, so the same layout
+    // answers differently under the two rules: one blow that leaves a peer on
+    // exactly zero HP is fatal where zero counts as dead, and is not where it does
+    // not.
+    void actionOrder_readsTheDeathThresholdOffTheMatchRules();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -1161,8 +1193,10 @@ void tst_QMdmmBot::rps_doesNotAlwaysAnswerTheSameThrow()
 
 void tst_QMdmmBot::actionOrder_takesOnlyTheOrdersItWasOffered()
 {
-    // Both styles answer an action-order request the same way -- with the first
-    // orders on offer -- so both are asked here.
+    // Both styles answer an action-order request the same way, so both are asked
+    // here. Nothing has been laid out in the room, so no blow can land on anybody
+    // and the later orders are the ones worth asking for (see
+    // actionOrder_holdsBackWhenNoBlowCanBeFatal()).
     const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
 
     for (const QString &style : styles) {
@@ -1172,10 +1206,11 @@ void tst_QMdmmBot::actionOrder_takesOnlyTheOrdersItWasOffered()
 
         const QList<int> offered {1, 2};
 
-        // Asked for fewer selections than it was offered, it takes that many.
+        // Asked for fewer selections than it was offered, it takes that many,
+        // from the late end of the offer.
         const ActionOrderReply one = askForActionOrder(client, offered, 1);
         QCOMPARE(one.count, 1);
-        QCOMPARE(one.order, (QList<int> {1}));
+        QCOMPARE(one.order, (QList<int> {2}));
 
         // Asked for exactly the number of orders on offer, it takes all of them.
         const ActionOrderReply all = askForActionOrder(client, offered, 2);
@@ -1194,6 +1229,187 @@ void tst_QMdmmBot::actionOrder_takesOnlyTheOrdersItWasOffered()
         const ActionOrderReply none = askForActionOrder(client, offered, 0);
         QCOMPARE(none.count, 1);
         QVERIFY(none.order.isEmpty());
+    }
+}
+
+void tst_QMdmmBot::actionOrder_holdsBackWhenNoBlowCanBeFatal()
+{
+    // Three peers in three places, none of them within reach of another: no blow
+    // can land this round, so waiting costs nothing, and by the time the bot's
+    // turn comes up every other commitment is out in the open. The latest order on
+    // offer is the one worth asking for -- the opposite of what "take the first
+    // orders" answered on this same layout.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(bbb != nullptr);
+        QVERIFY(ccc != nullptr);
+
+        // Every knife here is fatal to whoever it is aimed at -- nobody is within
+        // reach of anybody, which is what leaves the round with nothing that can
+        // happen in it.
+        placeArmedPlayer(self, 1, 4, 4);
+        placeArmedPlayer(bbb, 2, 4, 4);
+        placeArmedPlayer(ccc, QMdmmCore::Data::Village, 4, 4);
+
+        // Asked for one of the two orders on offer, it asks for the later one.
+        const ActionOrderReply late = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(late.count, 1);
+        QCOMPARE(late.order, (QList<int> {2}));
+        QVERIFY(!late.order.contains(0));
+
+        // Asked for both, it asks for both rather than giving one back.
+        const ActionOrderReply all = askForActionOrder(client, {1, 2}, 2);
+        QCOMPARE(all.count, 1);
+        QCOMPARE(all.order, (QList<int> {1, 2}));
+        QVERIFY(!all.order.contains(0));
+    }
+}
+
+void tst_QMdmmBot::actionOrder_grabsTheEarliestOrderWhenItsOwnLifeIsOnTheLine()
+{
+    // A peer standing where this bot stands with a knife that would finish it off:
+    // the bot may not live to see the last order, and an action it has not taken
+    // when it dies is skipped, so the earliest order is the one worth having.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(bbb != nullptr);
+        QVERIFY(ccc != nullptr);
+
+        // The knife standing here is fatal to this bot; its own knife is not fatal
+        // to that peer, and "ccc" is out of everyone's reach.
+        placeArmedPlayer(self, 1, 4, 1);
+        placeArmedPlayer(bbb, 1, 4, 4);
+        placeArmedPlayer(ccc, 2, 4, 1);
+
+        const ActionOrderReply early = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(early.count, 1);
+        QCOMPARE(early.order, (QList<int> {1}));
+        QVERIFY(!early.order.contains(0));
+    }
+}
+
+void tst_QMdmmBot::actionOrder_grabsTheEarliestOrderWhenAKillIsOnTheTable()
+{
+    // A peer standing here that one blow of this bot's would finish: a kill is the
+    // only way to an upgrade point, so it is worth an early order. Nothing here can
+    // finish this bot off -- the knife facing it is too weak -- so it is the kill
+    // and not the danger that turns the answer around.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(bbb != nullptr);
+        QVERIFY(ccc != nullptr);
+
+        placeArmedPlayer(self, 1, 4, 4);
+        placeArmedPlayer(bbb, 1, 4, 1);
+        placeArmedPlayer(ccc, 2, 4, 1);
+
+        const ActionOrderReply early = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(early.count, 1);
+        QCOMPARE(early.order, (QList<int> {1}));
+        QVERIFY(!early.order.contains(0));
+    }
+}
+
+void tst_QMdmmBot::actionOrder_grabsTheEarliestOrderWhenAPeerCouldBeFinished()
+{
+    // A bot that neither is in danger nor has a kill of its own still waits at its
+    // peril when somebody else can die: a death can end the round before a late
+    // order runs, and the order is lost when that happens. So the earliest order is
+    // taken as soon as any blow on the field would be fatal -- here between the two
+    // peers, with this bot standing aside.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QMdmmCore::Player *ccc = room->addPlayer(u"ccc"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(bbb != nullptr);
+        QVERIFY(ccc != nullptr);
+
+        placeArmedPlayer(self, 1, 4, 1);
+        placeArmedPlayer(bbb, 2, 4, 4);
+        placeArmedPlayer(ccc, 2, 4, 1);
+
+        const ActionOrderReply early = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(early.count, 1);
+        QCOMPARE(early.order, (QList<int> {1}));
+        QVERIFY(!early.order.contains(0));
+    }
+}
+
+void tst_QMdmmBot::actionOrder_readsTheDeathThresholdOffTheMatchRules()
+{
+    // Where a player stops being alive is a rule of the match, so the same layout
+    // answers differently under the two rules it allows: a blow leaving a peer on
+    // exactly zero HP is fatal where zero counts as dead and is not where HP has to
+    // go below zero. The bot asks the match rather than assuming either reading.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s};
+
+    for (const QString &style : styles) {
+        QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+        Bot *bot = Bot::createBot(style, &client);
+        QVERIFY(bot != nullptr);
+
+        QMdmmCore::Room *room = client.room();
+        QMdmmCore::Player *self = room->addPlayer(client.objectName());
+        QMdmmCore::Player *bbb = room->addPlayer(u"bbb"_s);
+        QVERIFY(self != nullptr);
+        QVERIFY(bbb != nullptr);
+
+        // One blow from "bbb" takes this bot to exactly zero HP.
+        placeArmedPlayer(self, 1, 4, 1);
+        placeArmedPlayer(bbb, 1, 4, 4);
+
+        // Under the default rules that is death, so the early order is taken.
+        const ActionOrderReply underDefaultRules = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(underDefaultRules.count, 1);
+        QCOMPARE(underDefaultRules.order, (QList<int> {1}));
+
+        // Under the other reading the bot survives on zero HP, nothing on the field
+        // can be fatal, and waiting is free again.
+        QMdmmCore::LogicConfiguration rules = QMdmmCore::LogicConfiguration::defaults();
+        rules.setZeroHpAsDead(false);
+        room->setLogicConfiguration(rules);
+
+        const ActionOrderReply underTheOtherReading = askForActionOrder(client, {1, 2}, 1);
+        QCOMPARE(underTheOtherReading.count, 1);
+        QCOMPARE(underTheOtherReading.order, (QList<int> {2}));
     }
 }
 
