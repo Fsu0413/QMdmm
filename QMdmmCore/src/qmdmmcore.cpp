@@ -13,14 +13,8 @@ using namespace Qt::StringLiterals;
 
 /**
  * @namespace QMdmmCore
- * @brief All APIs are in this namespace.
+ * @brief The Core API, including game logic, configuration, and debug essentials.
  */
-
-namespace QMdmmCore {
-
-#ifndef DOXYGEN
-namespace v0 {
-#endif
 
 /**
  * @def QMDMMCORE_EXPORT
@@ -37,6 +31,12 @@ namespace v0 {
  * @brief Specify a file name for automatic header generation. Expand to nothing.
  * @param QMdmmCoreGlobal dummy parameter.
  */
+
+namespace QMdmmCore {
+
+#ifndef DOXYGEN
+namespace v0 {
+#endif
 
 /**
  * @namespace QMdmmCore::Data

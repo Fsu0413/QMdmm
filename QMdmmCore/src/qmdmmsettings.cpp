@@ -6,6 +6,11 @@
 #include <QGlobalStatic>
 #include <QSettings>
 
+/**
+ * @file qmdmmsettings.h
+ * @brief Contains definitions of settings.
+ */
+
 namespace QMdmmCore {
 
 #ifndef DOXYGEN

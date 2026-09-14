@@ -23,6 +23,7 @@ set(QMDMMNETWORKING_PRIVATE_HEADERS
 )
 
 set(QMDMMNETWORKING_SOURCES
+    src/qmdmmnetworking.cpp
     src/qmdmmserver.cpp
     src/qmdmmagent.cpp
     src/qmdmmclient.cpp
