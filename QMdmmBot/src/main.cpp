@@ -46,9 +46,17 @@ int main(int argc, char *argv[])
 
     Bot *bot = Bot::createBot(config.playingStyle(), &client);
 
+    // The bot needs no further driving and the pointer is discarded on purpose:
+    // it is a child of the client, so it is destroyed with the client and needs
+    // no owner here, and its whole behaviour is the set of signal connections its
+    // constructor makes. Signing in below is all that is left for this process.
+    //
+    // createBot() answers nullptr for a style it does not know, which would leave
+    // this run a strategy-less client that still signs in and plays. That is out
+    // of reach today because Config::read_() rejects an unknown style through
+    // Bot::styleExist before we get here, but the guarantee is implicit and worth
+    // stating.
     Q_UNUSED(bot);
-
-    // TODO: implement
 
     client.connectToHost(config.host(), QMdmmCore::Data::StateOnlineBot);
 
