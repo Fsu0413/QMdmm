@@ -128,6 +128,7 @@ jobs:
             --filter 'QMdmmNetworking/src/' \
             --filter 'QMdmmGui/src/' \
             --filter 'QMdmmServer/src/' \
+            --filter 'QMdmmBot/src/' \
             --html-details build/coverage/index.html \
             --print-summary
 
