@@ -243,7 +243,7 @@ namespace v0 {
 /**
  * @property LogicConfiguration::canBuyOnlyInInitialCity
  * @brief Can buy knife / horse only in initial city. default false
- * @note even if this is false, one cannot buy things in country.
+ * @note even if this is false, one cannot buy things in the Village.
  */
 
 /**
@@ -266,8 +266,8 @@ namespace v0 {
  * In both versions one can only buy k/h in city. <br />
  * In both versions one can slash only if knife is bought and kick only if horse is bought. <br />
  * In both versions one can only slash / kick other one when they are at same place. <br />
- * In both versions one can kick other one in city, and the kicked one will be force moved to country. <br />
- * In both versions one can only move to adjacent place at a time. Different cities are not adjacent, while country is adjacent to every city. <br />
+ * In both versions one can kick other one in city, and the kicked one will be force moved to the Village. <br />
+ * In both versions one can only move to adjacent place at a time. Different cities are not adjacent, while the Village is adjacent to every city. <br />
  *
  * Version 1 (Legacy): initial 7/1/3 mh/kd/hd, maximum 7/3/5 mh/kd/hd (Yeah, no maxHp upgrade). One with zero HP is still alive. No "Let move"s, no punish HP. <br />
  * This is the version I had experienced in primary school. <br />

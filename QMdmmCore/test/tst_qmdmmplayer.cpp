@@ -512,7 +512,7 @@ private slots:
 
         r->prepareForRoundStart();
 
-        // case 4: in country - cannot buy knife
+        // case 4: in the Village - cannot buy knife
         {
             p1->setPlace(Data::Village);
             QVERIFY(!p1->canBuyKnife());
@@ -563,7 +563,7 @@ private slots:
 
         r->prepareForRoundStart();
 
-        // case 4: in country - cannot buy knife
+        // case 4: in the Village - cannot buy knife
         {
             p1->setPlace(Data::Village);
             QVERIFY(!p1->canBuyHorse());
@@ -690,7 +690,7 @@ private slots:
 
         r->prepareForRoundStart();
 
-        // case 6: can't kick in country
+        // case 6: can't kick in the Village
         {
             p1->setHasHorse(true);
             p1->setPlace(Data::Village);
@@ -704,7 +704,7 @@ private slots:
     {
         r->prepareForRoundStart();
 
-        // case 1: can move to country when in city
+        // case 1: can move to the Village when in city
         {
             QVERIFY(p1->canMove(Data::Village));
         }
@@ -718,7 +718,7 @@ private slots:
 
         r->prepareForRoundStart();
 
-        // case 3: can move to any city when in a country
+        // case 3: can move to any city when in the Village
         {
             p1->setPlace(Data::Village);
 
