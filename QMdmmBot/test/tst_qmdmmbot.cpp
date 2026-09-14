@@ -7,8 +7,15 @@
 #include <QMdmmData>
 #include <QMdmmPlayer>
 #include <QMdmmRoom>
+#include <QMdmmServer>
 
+#include <QEventLoop>
+#include <QRegularExpression>
 #include <QTest>
+#include <QTimer>
+
+#include <memory>
+#include <vector>
 
 #include "bot.h"
 
@@ -188,6 +195,66 @@ void placeArmedPlayer(QMdmmCore::Player *player, int place, int hp, int knifeDam
     player->setHasKnife(true);
 }
 
+// What one bot's requests came to over a whole match: how many were put to it,
+// and how many it answered -- a reply or a give-up, the two the contract allows
+// and the only two that keep the server from timing the bot out.
+struct ReplyTally
+{
+    int requests = 0;
+    int replies = 0;
+    int giveUps = 0;
+
+    [[nodiscard]] int answers() const
+    {
+        return replies + giveUps;
+    }
+};
+
+// Counts every request that reaches a bot and every answer it sends back, over
+// all four request kinds. Both are the wire-level Agent signals, so what is
+// counted is what the server sees: the requests it put to this bot, and the
+// answers this bot sent it.
+void tallyReplies(QMdmmNetworking::Client &client, ReplyTally &tally)
+{
+    QMdmmNetworking::Agent *agent = client.agent();
+    const auto request = [&tally] { ++tally.requests; };
+    const auto reply = [&tally] { ++tally.replies; };
+    const auto giveUp = [&tally] { ++tally.giveUps; };
+
+    QObject::connect(agent, &QMdmmNetworking::Agent::rockPaperScissorsRequested, &client, request);
+    QObject::connect(agent, &QMdmmNetworking::Agent::actionOrderRequested, &client, request);
+    QObject::connect(agent, &QMdmmNetworking::Agent::actionRequested, &client, request);
+    QObject::connect(agent, &QMdmmNetworking::Agent::upgradeRequested, &client, request);
+
+    QObject::connect(agent, &QMdmmNetworking::Agent::replyRockPaperScissors, &client, reply);
+    QObject::connect(agent, &QMdmmNetworking::Agent::replyActionOrder, &client, reply);
+    QObject::connect(agent, &QMdmmNetworking::Agent::replyAction, &client, reply);
+    QObject::connect(agent, &QMdmmNetworking::Agent::replyUpgrade, &client, reply);
+
+    QObject::connect(agent, &QMdmmNetworking::Agent::requestGivenUp, &client, giveUp);
+}
+
+// One seat in the whole-match case: a client playing the match, the style Bot
+// attached to it -- the same pairing the shipped QMdmmBot program builds, a Bot
+// whose parent is its client -- and what its bot was asked and answered over the
+// match.
+struct Seat
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    Bot *bot = nullptr;
+    ReplyTally tally;
+};
+
+// The loopback port the whole-match case's server listens on. It is a fixed
+// port because the server offers no way to read back one it picked itself, and
+// it is deliberately not the port the smoke test's own server binds.
+constexpr quint16 MATCH_PORT = 6367;
+
+// The whole-match case's deadline, well past what the match below takes in
+// practice: it is there so a match that stalls fails the case instead of hanging
+// the test run, not to bound a healthy one.
+constexpr int MATCH_TIMEOUT_MS = 30000;
+
 } // namespace
 
 class tst_QMdmmBot : public QObject
@@ -309,6 +376,12 @@ private slots:
     // exactly zero HP is fatal where zero counts as dead, and is not where it does
     // not.
     void actionOrder_readsTheDeathThresholdOffTheMatchRules();
+
+    // The whole match, played by the real styles against the real server, in
+    // this process: the seats are drawn from the two implemented styles, and the
+    // case is that the match runs its own loop to the end without a bot stalling
+    // or the server dropping one.
+    void fullGame_theTwoStylesPlayAWholeMatchToTheEnd();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -1410,6 +1483,141 @@ void tst_QMdmmBot::actionOrder_readsTheDeathThresholdOffTheMatchRules()
         const ActionOrderReply underTheOtherReading = askForActionOrder(client, {1, 2}, 1);
         QCOMPARE(underTheOtherReading.count, 1);
         QCOMPARE(underTheOtherReading.order, (QList<int> {2}));
+    }
+}
+
+void tst_QMdmmBot::fullGame_theTwoStylesPlayAWholeMatchToTheEnd()
+{
+    // The cases above drive one handler at a time against a room mirror laid out
+    // by hand. This one lets the match run its own loop -- Rock-Paper-Scissors,
+    // action order, actions, upgrades, round over, until the game ends -- with the
+    // real styles sitting in it, which is the configuration the shipped QMdmmBot
+    // plays in. What it guards is what none of the others can: that the replies
+    // these strategies actually produce are accepted by the server, and that they
+    // never leave a request unanswered. Both would show up in the field as a bot
+    // that got disconnected mid-match, and neither shows up in a handler test.
+    //
+    // A match small enough to finish quickly: one blow kills, so rounds do end,
+    // and each stat is only a few upgrades away from its maximum -- a player that
+    // has maxed out all three is the winner, which is what ends the game.
+    QMdmmCore::LogicConfiguration rules = QMdmmCore::LogicConfiguration::defaults();
+    rules.setInitialMaxHp(1);
+    rules.setMaximumMaxHp(8);
+    rules.setInitialKnifeDamage(1);
+    rules.setMaximumKnifeDamage(8);
+    rules.setInitialHorseDamage(1);
+    rules.setMaximumHorseDamage(8);
+    // A slash in a city costs the slasher HP; with the punish called off, neither
+    // style is held back by it on the way to the finish.
+    rules.setPunishHpModifier(0);
+
+    // The seats' styles. Both real styles are in the match, and one of them takes
+    // a second seat: a two-player match never gets as far as the action-order
+    // phase (with a single Rock-Paper-Scissors winner, startActionOrder() hands
+    // every order out without negotiating), and the shared order pick is part of
+    // the loop this case is here to run. Three players bring that phase on
+    // whenever the Rock-Paper-Scissors leaves two winners.
+    const QStringList styles = {u"knifePreferred"_s, u"horsePreferred"_s, u"knifePreferred"_s};
+
+    QMdmmNetworking::ServerConfiguration serverConfiguration = QMdmmNetworking::ServerConfiguration::defaults();
+    serverConfiguration.setTcpPort(MATCH_PORT);
+    serverConfiguration.setPlayerNumPerRoom(styles.size());
+    // Only the loopback TCP transport: the other two are named for the real
+    // deployment (a local socket called "QMdmm", a websocket on its own port) and
+    // would collide with whatever else is running on the machine, which in a test
+    // run is the smoke test's own server.
+    serverConfiguration.setLocalEnabled(false);
+    serverConfiguration.setWebsocketEnabled(false);
+    // A bot has its answer ready as soon as it is asked, so a request still
+    // unanswered a couple of seconds later is one that is never going to be
+    // answered. The server would hold such a request open for its own grace
+    // period before treating the timeout as a disconnect; what catches a stalled
+    // bot here is the match deadline below, well before that.
+    serverConfiguration.setRequestTimeout(2);
+
+    QMdmmNetworking::Server server {serverConfiguration, rules};
+    QVERIFY(server.listen());
+
+    std::vector<std::unique_ptr<Seat>> seats;
+    seats.reserve(styles.size());
+    for (const QString &style : styles) {
+        seats.push_back(std::make_unique<Seat>());
+        Seat &seat = *seats.back();
+        seat.bot = Bot::createBot(style, &seat.client);
+        QVERIFY(seat.bot != nullptr);
+        tallyReplies(seat.client, seat.tally);
+    }
+
+    // The match is watched through one seat's agent, which is told the same
+    // things as the others are.
+    QMdmmNetworking::Agent *const watcher = seats.front()->client.agent();
+    int roundsStarted = 0;
+    int roundsOver = 0;
+    int gameOvers = 0;
+    QStringList winners;
+    QObject::connect(watcher, &QMdmmNetworking::Agent::roundStartNotified, watcher, [&roundsStarted] { ++roundsStarted; });
+    QObject::connect(watcher, &QMdmmNetworking::Agent::roundOverNotified, watcher, [&roundsOver] { ++roundsOver; });
+    QObject::connect(watcher, &QMdmmNetworking::Agent::gameOverNotified, watcher, [&gameOvers, &winners](const QStringList &playerNames) {
+        ++gameOvers;
+        winners = playerNames;
+    });
+
+    // A dropped connection fails this case rather than being played through:
+    // nothing in this match interrupts a seat on purpose, so a drop means the
+    // server closed the socket -- either because a bot stalled past its timeout
+    // or because something it sent was refused.
+    bool connectionLost = false;
+    const auto noteLost = [&connectionLost](const QString &errorString) {
+        connectionLost = true;
+        qWarning() << "the whole-match case lost a connection:" << errorString;
+    };
+    for (const std::unique_ptr<Seat> &seat : seats) {
+        QObject::connect(&seat->client, &QMdmmNetworking::Client::socketConnectionLost, &seat->client, noteLost);
+        QObject::connect(&seat->client, &QMdmmNetworking::Client::socketErrorDisconnected, &seat->client, noteLost);
+    }
+
+    QEventLoop match;
+    QObject::connect(watcher, &QMdmmNetworking::Agent::gameOverNotified, &match, &QEventLoop::quit);
+    QTimer::singleShot(MATCH_TIMEOUT_MS, &match, &QEventLoop::quit);
+
+    // A reply the server will not use is refused quietly: the logic warns and
+    // carries on with its own default reply (see Logic::actionOrderReply,
+    // Logic::actionReply and Logic::upgradeReply), so a strategy that answered
+    // illegally would leave the match running and this case green. These three
+    // warnings are therefore the illegal replies themselves, and the match is run
+    // with them failing the case. Whatever else the match warns about -- a long
+    // Rock-Paper-Scissors tie streak, for one, which is a normal thing for this
+    // game to hit -- is left alone.
+    QTest::failOnWarning(QRegularExpression(u"Logic::(actionOrderReply|actionReply|upgradeReply)"_s));
+
+    const QString host = u"qmdmm://127.0.0.1:%1"_s.arg(MATCH_PORT);
+    for (const std::unique_ptr<Seat> &seat : seats)
+        QVERIFY(seat->client.connectToHost(host, QMdmmCore::Data::StateOnlineBot));
+    match.exec();
+
+    // Playing the match to its end is the assertion this case exists for: a bot
+    // that merely stayed alive is not evidence of anything, which is what the D1
+    // item says about the "the bot survived N seconds" check this replaces.
+    QCOMPARE(gameOvers, 1);
+    QVERIFY(roundsStarted > 0);
+    QVERIFY(roundsOver > 0);
+
+    // One of the seats won it -- there was nobody else in the room.
+    bool winnerIsASeat = false;
+    for (const std::unique_ptr<Seat> &seat : seats)
+        winnerIsASeat = winnerIsASeat || winners.contains(seat->client.objectName());
+    QVERIFY(winnerIsASeat);
+
+    // Every seat kept its connection for the whole match.
+    QVERIFY(!connectionLost);
+
+    // Every request that reached a bot got an answer out of it: the reply-or-giveUp
+    // contract, which is what keeps the server from timing a bot out and dropping
+    // it mid-match. Fewer answers than requests is a stall, more is a bot
+    // answering the same request twice, so the counts have to come out equal.
+    for (const std::unique_ptr<Seat> &seat : seats) {
+        QVERIFY(seat->tally.requests > 0);
+        QCOMPARE(seat->tally.answers(), seat->tally.requests);
     }
 }
 
