@@ -93,6 +93,8 @@ Configuration save / inspect:
   -d, --show-current-configuration   Print the current configuration as JSON.
 
 Value ranges: <min~> means "at least min"; <0,min~> means "0, or at least min".
+Each maximum must be at least its own initial value, so for example --slash must not
+exceed --maximum-slash.
 )help"_s;
     return text;
 }
@@ -472,6 +474,30 @@ void Config::read_(QMdmmCore::Settings *setting, QCommandLineParser *parser)
     for (const RangeCheck &check : rangeChecks) {
         if (check.value < check.min)
             configError(u"Config item %1 must be at least %2 (got %3)"_s, check.name, check.min, check.value);
+    }
+
+    // Cross-item validation. The minimums above judge every value on its own, so they cannot see a
+    // pair whose members are each in range but contradict one another (--slash 15 with
+    // --maximum-slash 7, say). Such a pair is self-inflicting rather than merely odd: an attribute
+    // grows within [initial, maximum], so inverting the pair leaves that attribute with no room to
+    // grow at all -- and Room::isGameOver() declares a player whose three attributes are all
+    // maxed out the winner of the game. Rejecting the three pairs here keeps the command line, the
+    // config file and LogicConfiguration::deserialize() telling the user the same story.
+    struct CrossCheck
+    {
+        int initial;
+        int maximum;
+        const char *initialName;
+        const char *maximumName;
+    };
+    const std::array crossChecks = std::to_array<CrossCheck>({
+        {.initial = logicConfiguration_.initialKnifeDamage(), .maximum = logicConfiguration_.maximumKnifeDamage(), .initialName = "slash", .maximumName = "maximum-slash"},
+        {.initial = logicConfiguration_.initialHorseDamage(), .maximum = logicConfiguration_.maximumHorseDamage(), .initialName = "kick", .maximumName = "maximum-kick"},
+        {.initial = logicConfiguration_.initialMaxHp(), .maximum = logicConfiguration_.maximumMaxHp(), .initialName = "maxhp", .maximumName = "maximum-maxhp"},
+    });
+    for (const CrossCheck &check : crossChecks) {
+        if (check.initial > check.maximum)
+            configError(u"Config item %1 must not exceed %2 (got %3 and %4)"_s, check.initialName, check.maximumName, check.initial, check.maximum);
     }
 
     const int timeout = serverConfiguration_.requestTimeout();
