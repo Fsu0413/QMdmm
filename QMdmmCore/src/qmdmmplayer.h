@@ -74,6 +74,11 @@ public:
     void setUpgradePoint(int u);
 
     // calculated property
+    // Whether a given HP would leave this player dead. Where the death threshold
+    // lies is a rule of the match rather than a fixed number (see
+    // LogicConfiguration::zeroHpAsDead), so a caller holding an HP in hand asks
+    // here instead of comparing on its own.
+    [[nodiscard]] bool deadAtHp(int hp) const;
     [[nodiscard]] bool dead() const;
     [[nodiscard]] bool alive() const
     {

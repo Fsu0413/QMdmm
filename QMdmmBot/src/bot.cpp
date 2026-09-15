@@ -245,9 +245,9 @@ bool Bot::canSlashSafely(const QMdmmCore::Player *to) const
 
     // A slash pays for itself in HP, so a bot leaves out the ones that would take
     // it to its own death threshold. Where that threshold lies is a rule of the
-    // match, so it is asked for rather than assumed.
+    // match, so it is asked of the player rather than assumed.
     const int hpLeft = self->hp() - self->slashPunishHp();
-    return logicConfiguration().zeroHpAsDead() ? (hpLeft > 0) : (hpLeft >= 0);
+    return !self->deadAtHp(hpLeft);
 }
 
 QMdmmCore::Data::RockPaperScissors Bot::pickThrow()
@@ -303,10 +303,10 @@ bool Bot::blowWouldFinish(const QMdmmCore::Player *attacker, const QMdmmCore::Pl
 
     // A slash takes the victim down by the attacker's knife damage. Whether what
     // is left is fatal is a rule of the match (see
-    // LogicConfiguration::zeroHpAsDead), so it is asked for rather than assumed --
-    // the same reading canSlashSafely() uses for this bot's own life.
+    // LogicConfiguration::zeroHpAsDead), so it is asked of the victim rather than
+    // assumed -- the same predicate canSlashSafely() uses for this bot's own life.
     const int hpLeft = victim->hp() - attacker->knifeDamage();
-    return logicConfiguration().zeroHpAsDead() ? (hpLeft <= 0) : (hpLeft < 0);
+    return victim->deadAtHp(hpLeft);
 }
 
 bool Bot::aPeerCouldFinishSelf() const

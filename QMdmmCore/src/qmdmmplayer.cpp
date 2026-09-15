@@ -346,13 +346,29 @@ void Player::setUpgradePoint(int u)
 }
 
 /**
+ * @brief whether a given HP would leave the player dead
+ * @param hp the HP to read against the death threshold
+ * @return @c true if @a hp is at or below that threshold
+ *
+ * A player is alive while its HP is positive and dead once it is negative; whether @c 0 still counts as alive depends on @c QMdmmLogicConfiguration::zeroHpAsDead . This is where that reading lives, so a strategy weighing a blow asks here instead of comparing on its own.
+ *
+ * @sa @c dead() , @c QMdmmLogicConfiguration::zeroHpAsDead()
+ */
+bool Player::deadAtHp(int hp) const
+{
+    bool zeroHpAsDead = room()->logicConfiguration().zeroHpAsDead();
+    return zeroHpAsDead ? (hp <= 0) : (hp < 0);
+}
+
+/**
  * @brief getter of property @c dead
  * @return @c dead
+ *
+ * @sa @c deadAtHp()
  */
 bool Player::dead() const
 {
-    bool zeroHpAsDead = room()->logicConfiguration().zeroHpAsDead();
-    return zeroHpAsDead ? (d->hp <= 0) : (d->hp < 0);
+    return deadAtHp(d->hp);
 }
 
 /**

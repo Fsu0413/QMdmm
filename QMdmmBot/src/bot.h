@@ -160,8 +160,8 @@ private:
     // same place, both alive, a knife in the attacker's hand (see
     // Player::canSlash()) -- and what the victim is left with has to be at or
     // below its death threshold. Where that threshold lies is a rule of the
-    // match, so it is asked for rather than assumed: the same reading
-    // canSlashSafely() uses for this bot's own life.
+    // match, so it is asked of the player rather than assumed: the same
+    // predicate canSlashSafely() uses for this bot's own life.
     [[nodiscard]] bool blowWouldFinish(const QMdmmCore::Player *attacker, const QMdmmCore::Player *victim) const;
 
     // Whether this bot's life is on the line this round: a peer standing where it
