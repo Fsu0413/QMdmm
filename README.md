@@ -54,7 +54,7 @@ config-gated (`enableLetMove`).
 | `QMdmmNetworking` | Network layer (server / client / signaling) | Main flow + reconnect work; spectate / lobby missing |
 | `QMdmmServer` | Standalone server program | Runs; full CLI configuration |
 | `QMdmmGui` | Graphical client (QML) | Start menu only; cannot play a full game yet |
-| `QMdmmBot` | Scripted client that plays automatically via a bot strategy | Skeleton only; strategies not implemented |
+| `QMdmmBot` | Scripted client that plays automatically via a bot strategy | Runs; `knifePreferred` / `horsePreferred` implemented, `rl` not yet |
 
 In other words: the headless smoke test plays a full game end-to-end (including
 a mid-game reconnect), but the GUI cannot play one yet. The core library is
