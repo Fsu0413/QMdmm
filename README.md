@@ -101,8 +101,12 @@ default):
 ```
 
 The server accepts a full set of command-line options (room size, damage
-values, timeouts, transport toggles, ...). Run `--help` to see the table. Then
-start a client:
+values, timeouts, transport toggles, ...). Run `--help` to see the table;
+`-d, --show-current-configuration` prints the configuration the server actually
+resolved as JSON, and `-c` / `-C` store it. During v0 the placement of
+configuration keys may still change.
+
+Then start a client:
 
 ```sh
 ../build-QMdmm-Release/build/bin/QMdmm6

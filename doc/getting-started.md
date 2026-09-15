@@ -30,6 +30,18 @@ By default it listens for TCP on port 6366 and WebSocket on port 6367. It takes
 a full set of command-line options (room size, damage and HP values, timeouts,
 transport toggles, …); run `--help` to see the table.
 
+To see the configuration the server actually resolved, run it with
+`-d, --show-current-configuration`, which prints the whole configuration as
+JSON. `-c, --save-configuration` and `-C, --save-global-configuration` instead
+store the fully resolved configuration (defaults included) in the per-user and
+system-global settings stores, and exit.
+
+Stored keys carry the long option names and are grouped by what they configure:
+transports, room size and the request timeout under `server`; the game rules
+(damage, HP and punish values) under `logic`. While QMdmm is still at v0, a key
+may move between groups, and a value stored under the old name is then ignored,
+falling back to the default.
+
 ## Run a client (GUI)
 
 ```sh
