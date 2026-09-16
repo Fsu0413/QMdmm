@@ -11,6 +11,12 @@ Item {
 
     // ---- properties / logic ----------------------------------------------
     property string activeRequest: ""
+
+    // A view-only log of what the other players did, built from the operation
+    // broadcasts the client re-emits as result signals. The match itself is
+    // driven by the requests above, which only ever show *your* turn -- without
+    // this, everyone else's picks, actions and upgrades happen invisibly.
+    property var matchLog: []
     property int orderNeed: 0
     property var orderOptions: []
     property int orderRemaining: 0
@@ -19,6 +25,47 @@ Item {
     property var upgradeOptions: []
     property int upgradeRemaining: 0
     property var upgradeSelected: []
+
+    // One action broadcast -> one line. Which of toPlayer / toPlace carries
+    // the information is decided by the action: the wire leaves the other unset.
+    function actionLine(playerName, action, toPlayer, toPlace) {
+        const who = game.screenName(playerName);
+        if (action === 1)
+            return qsTr("%1 bought a knife").arg(who);
+        if (action === 2)
+            return qsTr("%1 bought a horse").arg(who);
+        if (action === 3)
+            return qsTr("%1 slashed %2").arg(who).arg(game.screenName(toPlayer));
+        if (action === 4)
+            return qsTr("%1 kicked %2").arg(who).arg(game.screenName(toPlayer));
+        if (action === 5)
+            return qsTr("%1 moved to %2").arg(who).arg(game.placeName(toPlace));
+        if (action === 6)
+            return qsTr("%1 moved %2 to %3").arg(who).arg(game.screenName(toPlayer)).arg(game.placeName(toPlace));
+        return qsTr("%1 did nothing").arg(who);
+    }
+
+    function appendMatchLog(text) {
+        if (!text)
+            return;
+        // Re-assign rather than mutate in place: a plain JS array carries no
+        // change signal, so a Repeater bound to it would never see the line.
+        const items = matchLog.slice();
+        items.push(text);
+        if (items.length > 200)
+            items.splice(0, items.length - 200);
+        matchLog = items;
+    }
+
+    function rpsName(rps) {
+        if (rps === 0)
+            return qsTr("Rock");
+        if (rps === 1)
+            return qsTr("Scissors");
+        if (rps === 2)
+            return qsTr("Paper");
+        return "?";
+    }
 
     function toggleOrder(v) {
         const i = orderSelected.indexOf(v);
@@ -38,6 +85,16 @@ Item {
             upgradeSelected.push(v);
         }
         upgradeRemaining = upgradeNeed - upgradeSelected.length;
+    }
+
+    function upgradeItemName(item) {
+        if (item === 0)
+            return qsTr("knife damage");
+        if (item === 1)
+            return qsTr("horse damage");
+        if (item === 2)
+            return qsTr("max HP");
+        return "?";
     }
 
     anchors.fill: parent
@@ -133,6 +190,18 @@ Item {
 
                 spacing: 4
                 width: parent.width
+
+                Repeater {
+                    model: scene.matchLog
+
+                    Text {
+                        color: "#9fd0ff"
+                        font.pixelSize: 20
+                        text: modelData
+                        width: logArea.width - 16
+                        wrapMode: Text.Wrap
+                    }
+                }
 
                 Repeater {
                     model: game.chatLog
@@ -433,6 +502,21 @@ Item {
     }
 
     Connections {
+        function onActionOrderResult(result) {
+            // The map is keyed by the order number, "1".."N": key i carries the
+            // player taking order i. Object.keys returns those integer-like keys
+            // in ascending order.
+            const keys = Object.keys(result);
+            const names = [];
+            for (let i = 0; i < keys.length; ++i)
+                names.push(game.screenName(result[keys[i]]));
+            appendMatchLog(qsTr("Action order: %1").arg(names.join(" then ")));
+        }
+
+        function onActionResult(playerName, action, toPlayer, toPlace) {
+            appendMatchLog(actionLine(playerName, action, toPlayer, toPlace));
+        }
+
         function onGameOver(winners) {
             activeRequest = "";
             let names = [];
@@ -471,6 +555,24 @@ Item {
             bannerText.text = qsTr("Round over");
             banner.visible = true;
             bannerTimer.start();
+        }
+
+        function onRpsResult(results) {
+            const parts = [];
+            for (let name in results)
+                parts.push(qsTr("%1 (%2)").arg(game.screenName(name)).arg(rpsName(results[name])));
+            appendMatchLog(qsTr("Rock-paper-scissors: %1").arg(parts.join(", ")));
+        }
+
+        function onUpgradeResult(upgrades) {
+            const parts = [];
+            for (let name in upgrades) {
+                const items = [];
+                for (let i = 0; i < upgrades[name].length; ++i)
+                    items.push(upgradeItemName(upgrades[name][i]));
+                parts.push(qsTr("%1 (%2)").arg(game.screenName(name)).arg(items.join(", ")));
+            }
+            appendMatchLog(qsTr("Upgrades: %1").arg(parts.join(", ")));
         }
 
         target: game

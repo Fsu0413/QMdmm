@@ -3,6 +3,7 @@
 #include <QtQuickTest/quicktest.h>
 
 #include <QtQml>
+#include <QQmlContext>
 
 #include <QMdmmData>
 #include <QMdmmPlayer>
@@ -25,11 +26,26 @@ public:
     using QObject::QObject;
 
     QMdmmGuiTestSetup()
+        : m_game(new QMdmmGameClient(this))
     {
         qmlRegisterUncreatableMetaObject(QMdmmCore::Data::staticMetaObject, "QMdmm.Core", 1, 0, "Data", u"Access to enums only"_s);
         qmlRegisterUncreatableType<QMdmmCore::Player>("QMdmm.Core", 1, 0, "Player", u"Player is created by the engine"_s);
         qmlRegisterType<QMdmmGameClient>("QMdmm.Gui", 1, 0, "GameClient");
     }
+
+    // The scenes reach the client through the `game` context property, exactly
+    // as MainWindow installs it. The QML cases need the same view of the world,
+    // so they get an idle client (nothing happens until it is started) to drive
+    // by emitting its signals. Qt looks this up on the setup object's meta
+    // object, so it has to be a slot.
+public slots:
+    void qmlEngineAvailable(QQmlEngine *engine)
+    {
+        engine->rootContext()->setContextProperty(u"game"_s, m_game);
+    }
+
+private:
+    QMdmmGameClient *m_game = nullptr;
 };
 
 QUICK_TEST_MAIN_WITH_SETUP(qmdmmgui, QMdmmGuiTestSetup)
