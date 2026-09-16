@@ -40,4 +40,8 @@ if (Qt6_FOUND)
         # TODO: check if it is right
         qt6_finalize_target(QMdmmServer6)
     endif()
+
+    if (BUILD_TESTING)
+        add_subdirectory(test)
+    endif()
 endif()
