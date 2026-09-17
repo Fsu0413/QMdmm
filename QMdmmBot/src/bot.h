@@ -82,6 +82,21 @@ protected:
     // style, so the styles share this answer instead of each carrying a copy.
     [[nodiscard]] QList<int> desiredActionOrders(const QList<int> &remainedOrders, int selectionNum) const;
 
+    // Notification hooks: how a style subclass tracks the match. Each one is
+    // called by the matching handleXxxNotified() entry point once the state
+    // every bot shares is up to date, so a hook already sees the action that was
+    // just played (in the revenge memory) and the round that just finished
+    // (faded). Overriding one is additive by construction -- the entry points
+    // are not virtual, so a style cannot replace them and a hook that does
+    // nothing else still cannot lose the shared state. The base implementations
+    // do nothing.
+    virtual void onLogicConfigurationNotified();
+    virtual void onRoundStartNotified();
+    virtual void onActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    virtual void onUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
+    virtual void onRoundOverNotified();
+    virtual void onGameOverNotified(const QStringList &playerNames);
+
 protected slots: // NOLINT(readability-redundant-access-specifiers)
     // Request handlers: invoked when the server asks this bot to make a choice.
     // Pure virtual so each style subclass is forced to answer with its own
@@ -92,17 +107,18 @@ protected slots: // NOLINT(readability-redundant-access-specifiers)
     virtual void handleActionRequest(int currentOrder) = 0;
     virtual void handleUpgradeRequest(int remainingTimes) = 0;
 
-    // Notification handlers: invoked when the server broadcasts game progress.
-    // Virtual for the same reason -- style subclasses track the match here.
-    // The base implementations of handleActionNotified() and
-    // handleRoundOverNotified() also maintain the revenge memory, so a subclass
-    // that overrides either of them must call the base implementation.
-    virtual void handleLogicConfigurationNotified();
-    virtual void handleRoundStartNotified();
-    virtual void handleActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
-    virtual void handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
-    virtual void handleRoundOverNotified();
-    virtual void handleGameOverNotified(const QStringList &playerNames);
+    // Notification entry points: invoked when the server broadcasts game
+    // progress. Connected to the agent in the constructor, and deliberately not
+    // virtual: an implementation keeps the state every bot shares -- the revenge
+    // memory -- and then calls the matching onXxxNotified() hook a style
+    // subclass overrides. A style tracks the match through the hook, so it can
+    // neither skip nor replace the shared state by accident.
+    void handleLogicConfigurationNotified();
+    void handleRoundStartNotified();
+    void handleActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace);
+    void handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades);
+    void handleRoundOverNotified();
+    void handleGameOverNotified(const QStringList &playerNames);
 
     // Revenge memory: how much of a grudge this bot holds against one peer, 0
     // for a peer that never attacked it. Only a hostile action aimed at this bot

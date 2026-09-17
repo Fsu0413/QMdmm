@@ -29,8 +29,8 @@ using namespace Qt::StringLiterals;
 // are protected and the four request handlers are pure virtual (a style
 // subclass must implement its strategy there). This subclass only lifts the
 // read accessors into public scope and supplies the minimal concrete request
-// handlers; it deliberately leaves the notification handlers untouched, so the
-// base class implementations are the ones under test here. The notifications are
+// handlers; it deliberately leaves the notification side untouched, so the base
+// class implementations are the ones under test here. The notifications are
 // delivered through the public Agent API, which also pins the signal
 // connections Bot makes in its constructor.
 class ProbeBot final : public Bot
@@ -70,6 +70,92 @@ protected:
     void handleUpgradeRequest(int remainingTimes) override
     {
         Q_UNUSED(remainingTimes);
+    }
+};
+
+// The other half of the notification contract: the entry points the Agent
+// reaches are not virtual, so a style subclass tracks the match by overriding
+// the onXxxNotified() hooks instead, and the state every bot shares is kept for
+// it. This subclass is exactly that shape -- it records what it is told, which
+// also pins that the hooks are the half a subclass gets.
+class HookProbeBot final : public Bot
+{
+public:
+    explicit HookProbeBot(QMdmmNetworking::Client *parent)
+        : Bot(parent)
+    {
+    }
+
+    using Bot::revengeScore;
+
+    int logicConfigurationSeen = 0;
+    int roundStartSeen = 0;
+    int actionsSeen = 0;
+    int upgradesSeen = 0;
+    int roundsSeen = 0;
+    int gameOverSeen = 0;
+
+    QString lastActionPlayer;
+    QMdmmCore::Data::Action lastAction = QMdmmCore::Data::DoNothing;
+
+protected:
+    void handleRockPaperScissorsRequest(const QStringList &playerNames, int strivedOrder) override
+    {
+        Q_UNUSED(playerNames);
+        Q_UNUSED(strivedOrder);
+    }
+
+    void handleActionOrderRequest(const QList<int> &remainedOrders, int maximumOrder, int selectionNum) override
+    {
+        Q_UNUSED(remainedOrders);
+        Q_UNUSED(maximumOrder);
+        Q_UNUSED(selectionNum);
+    }
+
+    void handleActionRequest(int currentOrder) override
+    {
+        Q_UNUSED(currentOrder);
+    }
+
+    void handleUpgradeRequest(int remainingTimes) override
+    {
+        Q_UNUSED(remainingTimes);
+    }
+
+    void onLogicConfigurationNotified() override
+    {
+        ++logicConfigurationSeen;
+    }
+
+    void onRoundStartNotified() override
+    {
+        ++roundStartSeen;
+    }
+
+    void onActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace) override
+    {
+        ++actionsSeen;
+        lastActionPlayer = playerName;
+        lastAction = action;
+        Q_UNUSED(toPlayer);
+        Q_UNUSED(toPlace);
+    }
+
+    void onUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades) override
+    {
+        ++upgradesSeen;
+        Q_UNUSED(upgrades);
+    }
+
+    void onRoundOverNotified() override
+    {
+        ++roundsSeen;
+    }
+
+    void onGameOverNotified(const QStringList &playerNames) override
+    {
+        ++gameOverSeen;
+        Q_UNUSED(playerNames);
     }
 };
 
@@ -276,6 +362,13 @@ private slots:
     // stays bounded over a long match.
     void revenge_dropsNegligibleEntries();
 
+    // A style subclass tracks the match through the notification hooks, and
+    // overriding one cannot cost it the state every bot keeps: the Agent reaches
+    // a non-virtual entry point, which updates that state and then calls the
+    // hook. The hooks are told about every broadcast, not only the ones the
+    // shared state has an opinion on.
+    void notify_overridingAHookKeepsTheSharedState();
+
     // The threat one opponent poses is the damage of its weapons, discounted by
     // how far away it stands.
     void threat_sumsWeaponsDiscountedByDistance();
@@ -473,6 +566,46 @@ void tst_QMdmmBot::revenge_dropsNegligibleEntries()
     // A dropped entry starts over rather than leaving a residue behind.
     client.agent()->notifyAction(attacker, QMdmmCore::Data::Slash, self, 0);
     QCOMPARE(bot.revengeScore(attacker), 1.0);
+}
+
+void tst_QMdmmBot::notify_overridingAHookKeepsTheSharedState()
+{
+    QMdmmNetworking::Client client {QMdmmNetworking::ClientConfiguration::defaults()};
+    HookProbeBot bot {&client};
+
+    const QString self = client.objectName();
+    const QString attacker = u"attacker"_s;
+
+    // Every broadcast reaches its hook -- that is the half of the notification
+    // path a style subclass overrides to track the match.
+    client.agent()->notifyLogicConfiguration();
+    client.agent()->notifyRoundStart();
+    client.agent()->notifyAction(attacker, QMdmmCore::Data::Slash, self, 0);
+    client.agent()->notifyUpgrade({});
+    client.agent()->notifyRoundOver();
+    client.agent()->notifyGameOver({attacker});
+
+    QCOMPARE(bot.logicConfigurationSeen, 1);
+    QCOMPARE(bot.roundStartSeen, 1);
+    QCOMPARE(bot.actionsSeen, 1);
+    QCOMPARE(bot.upgradesSeen, 1);
+    QCOMPARE(bot.roundsSeen, 1);
+    QCOMPARE(bot.gameOverSeen, 1);
+    QCOMPARE(bot.lastActionPlayer, attacker);
+    QCOMPARE(bot.lastAction, QMdmmCore::Data::Slash);
+
+    // The hook is told and the shared state is kept in the same delivery: the
+    // grudge was recorded before the hook ran, and the round that then finished
+    // faded it. Overriding a hook loses neither.
+    QVERIFY(qFuzzyCompare(bot.revengeScore(attacker), 0.8));
+
+    // The hooks are told about the broadcasts the shared state has no opinion
+    // on, too -- the entry points filter their own bookkeeping, not what a style
+    // sees: a hit aimed at somebody else still reaches the hook, and still
+    // earns no grudge.
+    client.agent()->notifyAction(attacker, QMdmmCore::Data::Slash, u"somebodyElse"_s, 0);
+    QCOMPARE(bot.actionsSeen, 2);
+    QVERIFY(qFuzzyCompare(bot.revengeScore(attacker), 0.8));
 }
 
 void tst_QMdmmBot::threat_sumsWeaponsDiscountedByDistance()

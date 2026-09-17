@@ -23,7 +23,9 @@ Bot::Bot(QMdmmNetworking::Client *parent)
     connect(agent, &QMdmmNetworking::Agent::actionRequested, this, &Bot::handleActionRequest);
     connect(agent, &QMdmmNetworking::Agent::upgradeRequested, this, &Bot::handleUpgradeRequest);
 
-    // Notifications: the server broadcasts game progress.
+    // Notifications: the server broadcasts game progress. These are connected to
+    // fixed entry points rather than to virtual slots, so what a style subclass
+    // overrides is only the half that is its own business (see the hooks below).
     connect(agent, &QMdmmNetworking::Agent::logicConfigurationNotified, this, &Bot::handleLogicConfigurationNotified);
     connect(agent, &QMdmmNetworking::Agent::roundStartNotified, this, &Bot::handleRoundStartNotified);
     connect(agent, &QMdmmNetworking::Agent::actionNotified, this, &Bot::handleActionNotified);
@@ -37,36 +39,38 @@ Bot::Bot(QMdmmNetworking::Client *parent)
 // also pure virtual and gets a defaulted definition here.
 Bot::~Bot() = default;
 
-// Notification handlers: apart from the revenge memory (see Bot::revengeScore()),
-// which handleActionNotified() and handleRoundOverNotified() maintain, the base
-// implementations do nothing. Style subclasses override them to maintain their
-// own view of the match.
+// Notification entry points: each one keeps the state every bot shares up to
+// date and then hands off to the matching hook (see the hooks below). Keeping
+// the two apart is what makes a style's tracking additive -- the hook a subclass
+// overrides has nothing to do with the state kept here, so it cannot lose it.
 
 void Bot::handleLogicConfigurationNotified()
 {
+    onLogicConfigurationNotified();
 }
 
 void Bot::handleRoundStartNotified()
 {
+    onRoundStartNotified();
 }
 
 void Bot::handleActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
 {
-    Q_UNUSED(toPlace);
-
     // Revenge memory: only Slash and Kick are hostile. LetMove moves a player
-    // against their will but deals no damage, so it never earns a grudge.
-    if (action != QMdmmCore::Data::Slash && action != QMdmmCore::Data::Kick)
-        return;
-    if (toPlayer != client()->objectName())
-        return;
+    // against their will but deals no damage, so it never earns a grudge. What
+    // the action was aimed at decides whether it counts, and nothing here
+    // filters what the hook is told -- a style tracks the whole match, not just
+    // the hits taken.
+    const bool hostile = action == QMdmmCore::Data::Slash || action == QMdmmCore::Data::Kick;
+    if (hostile && toPlayer == client()->objectName())
+        revenge_[playerName] += revengePerAttack;
 
-    revenge_[playerName] += revengePerAttack;
+    onActionNotified(playerName, action, toPlayer, toPlace);
 }
 
 void Bot::handleUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
 {
-    Q_UNUSED(upgrades);
+    onUpgradeNotified(upgrades);
 }
 
 void Bot::handleRoundOverNotified()
@@ -82,9 +86,45 @@ void Bot::handleRoundOverNotified()
         else
             revenge_.insert(attacker, decayed);
     }
+
+    onRoundOverNotified();
 }
 
 void Bot::handleGameOverNotified(const QStringList &playerNames)
+{
+    onGameOverNotified(playerNames);
+}
+
+// Notification hooks: the base implementations do nothing, and the parameters
+// are unused for that reason -- a hook is a place for a style to put its own
+// tracking, not a state the base class keeps here.
+
+void Bot::onLogicConfigurationNotified()
+{
+}
+
+void Bot::onRoundStartNotified()
+{
+}
+
+void Bot::onActionNotified(const QString &playerName, QMdmmCore::Data::Action action, const QString &toPlayer, int toPlace)
+{
+    Q_UNUSED(playerName);
+    Q_UNUSED(action);
+    Q_UNUSED(toPlayer);
+    Q_UNUSED(toPlace);
+}
+
+void Bot::onUpgradeNotified(const QHash<QString, QList<QMdmmCore::Data::UpgradeItem>> &upgrades)
+{
+    Q_UNUSED(upgrades);
+}
+
+void Bot::onRoundOverNotified()
+{
+}
+
+void Bot::onGameOverNotified(const QStringList &playerNames)
 {
     Q_UNUSED(playerNames);
 }
