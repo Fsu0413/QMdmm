@@ -99,9 +99,10 @@ void ClientP::initSelfAgent()
 
     // Wire the client's own agent's reply / speech / operation signals to the encode-and-send
     // slots below. The operation side drives the Agent's bare-verb methods (rockPaperScissors /
-    // actionOrder / action / upgrade) and speak / operate, which forward as the replyXxx / spoken /
-    // operated signals; this client turns them back into wire packets. Mirrors the server side,
-    // where ServerConnectionP wires the Agent's xxxRequested / xxxNotified signals.
+    // actionOrder / action / upgrade) and speak / operate / setManaged, which forward as the
+    // replyXxx / spoken / operated / managedChanged signals; this client turns them back into wire
+    // packets. Mirrors the server side, where ServerConnectionP wires the Agent's xxxRequested /
+    // xxxNotified signals.
     connect(self, &Agent::replyRockPaperScissors, this, &ClientP::sendRockPaperScissorsReply);
     connect(self, &Agent::replyActionOrder, this, &ClientP::sendActionOrderReply);
     connect(self, &Agent::replyAction, this, &ClientP::sendActionReply);
@@ -109,6 +110,7 @@ void ClientP::initSelfAgent()
     connect(self, &Agent::spoken, this, &ClientP::sendSpeak);
     connect(self, &Agent::operated, this, &ClientP::sendOperate);
     connect(self, &Agent::requestGivenUp, this, &ClientP::sendRequestGivenUp);
+    connect(self, &Agent::managedChanged, this, &ClientP::sendManagedChanged);
 }
 
 // Qt documentation only mentioned "auto" here
@@ -872,6 +874,20 @@ void ClientP::sendRequestGivenUp()
         QMdmmCore::Protocol::RequestId requestId = currentRequest;
         currentRequest = QMdmmCore::Protocol::RequestInvalid;
         emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::TypeReply, requestId, QJsonValue(QJsonValue::Null)));
+    }
+}
+
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void ClientP::sendManagedChanged(bool managed)
+{
+    // Declare the managed flag to the server, which owns the agent state: it applies the flag and
+    // reports the result back through the ordinary agent state broadcast, so the client never
+    // treats its own declaration as the final word. The player is identified by the socket, hence
+    // no name in the payload.
+    if (socket != nullptr) {
+        QJsonObject ob;
+        ob.insert(u"managed"_s, managed);
+        emit socket->sendPacket(QMdmmCore::Packet(QMdmmCore::Protocol::NotifyManagedChanged, ob));
     }
 }
 

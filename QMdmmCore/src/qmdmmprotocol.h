@@ -63,6 +63,7 @@ enum NotifyId : uint16_t
     NotifyPingServer, // int64 epoch-ms timestamp
     NotifySignIn, // string playerName, string screenName, int(AgentState) agentState, int lastRoundEventSeq
     NotifyObserve, // string observerName, string playerName
+    NotifyManagedChanged, // bool managed
 
     NotifyToAgentMask = 0x8000,
     NotifySpeak, // string

@@ -38,6 +38,7 @@ public:
     // callbacks
     void pingServer(Socket *socket, const QJsonValue &packetValue);
     void signIn(Socket *socket, const QJsonValue &packetValue);
+    void managedChanged(Socket *socket, const QJsonValue &packetValue);
     void observe(Socket *socket, const QJsonValue &packetValue);
 
     void introduceSocket(Socket *socket);

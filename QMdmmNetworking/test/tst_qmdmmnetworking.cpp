@@ -44,6 +44,7 @@ private slots:
     void client_giveUpTriggersServerDefaultReply();
     void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
+    void client_declaresManagedStateToServer();
     void server_disconnectsOnAbnormalPacket();
     void server_disconnectsOnOutOfRangeReply();
     void server_disconnectsOnOversizedActionOrderReply();
@@ -452,6 +453,67 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     p2Sock->abort();
 
     QTRY_VERIFY_WITH_TIMEOUT(stateRouted, 5000);
+}
+
+// The runtime managed toggle (D-021): the operation side flips the client's own agent with
+// Agent::setManaged, the client declares the new flag on the wire, and the server -- which owns the
+// agent state -- applies it and reports the result back through the ordinary agent state broadcast.
+// A second player in the same room observes the declaration, which is what makes this a
+// synchronized flag rather than a client-local one. Withdrawing it is part of the contract too: the
+// managed state is a toggle, not a one-way grant.
+void tst_QMdmmNetworking::client_declaresManagedStateToServer()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2);
+    serverConf.setTcpPort(16378);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60); // bots stay silent without timing out during the test
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    const QString host = u"qmdmm://localhost:16378"_s;
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p1->connectToHost(host, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(p1->room() != nullptr && p1->room()->player(p1->objectName()) != nullptr, 5000);
+
+    auto *p2 = new Client(ClientConfiguration(), &server);
+    QVERIFY(p2->connectToHost(host, Data::StateOnlineBot));
+    QTRY_VERIFY_WITH_TIMEOUT(p2->room() != nullptr && p2->room()->player(p1->objectName()) != nullptr, 5000);
+
+    // The sign-in carried Online without Trust, so nothing is managed before the toggle.
+    QVERIFY(p1->agent()->state().testFlag(Data::StateMaskOnline));
+    QVERIFY(!p1->agent()->managed());
+
+    bool p2SawManaged = false;
+    connect(p2->agent(), &Agent::agentStateChangeNotified, &server, [&p2SawManaged, p1](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p1->objectName() && state.testFlag(Data::StateMaskTrust))
+            p2SawManaged = true;
+    });
+
+    p1->agent()->setManaged(true);
+    QTRY_VERIFY_WITH_TIMEOUT(p2SawManaged, 5000);
+
+    // The declaring client reflects it as well (applied on the way out, then confirmed by the
+    // broadcast), and the flag is the only thing that moved: the player is still online, and p2's
+    // own state is not touched -- a declaration is about the declaring player only.
+    QVERIFY(p1->agent()->managed());
+    QVERIFY(p1->agent()->state().testFlag(Data::StateMaskOnline));
+    QVERIFY(!p2->agent()->managed());
+
+    bool p2SawUnmanaged = false;
+    connect(p2->agent(), &Agent::agentStateChangeNotified, &server, [&p2SawUnmanaged, p1](const QString &playerName, const Data::AgentState &state) {
+        if (playerName == p1->objectName() && !state.testFlag(Data::StateMaskTrust))
+            p2SawUnmanaged = true;
+    });
+
+    p1->agent()->setManaged(false);
+    QTRY_VERIFY_WITH_TIMEOUT(p2SawUnmanaged, 5000);
+    QVERIFY(!p1->agent()->managed());
 }
 
 // A reply carrying a statically checkable invalid value -- here an out-of-range

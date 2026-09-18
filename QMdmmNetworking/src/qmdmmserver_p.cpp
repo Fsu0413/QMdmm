@@ -18,6 +18,7 @@ const QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJs
     static const QHash<QMdmmCore::Protocol::NotifyId, void (ServerP::*)(Socket *, const QJsonValue &)> callbacks {
         std::make_pair(QMdmmCore::Protocol::NotifyPingServer, &ServerP::pingServer),
         std::make_pair(QMdmmCore::Protocol::NotifySignIn, &ServerP::signIn),
+        std::make_pair(QMdmmCore::Protocol::NotifyManagedChanged, &ServerP::managedChanged),
         std::make_pair(QMdmmCore::Protocol::NotifyObserve, &ServerP::observe),
     };
     return callbacks;
@@ -163,6 +164,33 @@ void ServerP::signIn(Socket *socket, const QJsonValue &packetValue)
 
     socket->setError({.code = Socket::ProtocolError, .errorString = {}});
     // NOLINTEND(cppcoreguidelines-avoid-do-while,cppcoreguidelines-macro-usage)
+}
+
+void ServerP::managedChanged(Socket *socket, const QJsonValue &packetValue)
+{
+    // The runtime counterpart of the managed flag a sign-in carries: the player's own client
+    // declares it while the connection is up. The socket identifies the player, so a socket-bound
+    // agent's wire plumbing is what gets looked up (the connection is a child of its agent, D-018);
+    // a socket that has not signed in has neither a connection nor an agent to update. Only the
+    // managed flag is applied: the rest of the state is not the client's to re-declare here.
+    if (packetValue.isObject()) {
+        QJsonValue vmanaged = packetValue.toObject().value(u"managed"_s);
+        if (vmanaged.isBool()) {
+            for (p::ServerConnectionP *connection : findChildren<p::ServerConnectionP *>()) {
+                if (connection->socket != socket)
+                    continue;
+
+                QMdmmCore::Data::AgentState state = connection->agent->state();
+                state.setFlag(QMdmmCore::Data::StateMaskTrust, vmanaged.toBool());
+                // Emits stateChanged for an actual change, which is what reports the new state
+                // back to every client (see LogicRunnerP::agentStateChanged).
+                connection->agent->setState(state);
+                return;
+            }
+        }
+    }
+
+    socket->setError({.code = Socket::ProtocolError, .errorString = {}});
 }
 
 void ServerP::observe(Socket *socket, const QJsonValue &packetValue)

@@ -271,6 +271,19 @@ namespace v0 {
  */
 
 /**
+ * @var Protocol::NotifyId Protocol::NotifyManagedChanged
+ * @brief A notify to server of the player declaring its managed state
+ *
+ * Wire format: @c {"managed": bool}.
+ *
+ * The player is identified by the socket, so no name is carried. Like the sign-in @c agentState
+ * (see @c NotifySignIn) this is a self-declaration: the server applies it to the @c StateMaskTrust
+ * flag, leaves the remaining flags alone, and reports the result back through the ordinary
+ * @c NotifyAgentStateChanged broadcast. It is the runtime counterpart of the managed flag a sign-in
+ * carries, for a client UI that toggles being managed while the connection is up.
+ */
+
+/**
  * @var Protocol::NotifyId Protocol::NotifyToAgentMask
  * @brief A mask of notify to agent
  */
@@ -515,6 +528,9 @@ bool isRequestIdValid(int requestId)
     }
 }
 
+// Every Protocol::NotifyId must be listed here. Deserialization uses this as the whitelist, and the
+// socket layer refuses to deliver a malformed packet: an id missing from this list therefore makes
+// every packet carrying it drop the connection, rather than reach whichever side handles it.
 bool isNotifyIdValid(int notifyId)
 {
     switch (static_cast<Protocol::NotifyId>(notifyId)) {
@@ -538,6 +554,7 @@ bool isNotifyIdValid(int notifyId)
     case Protocol::NotifyPingServer:
     case Protocol::NotifySignIn:
     case Protocol::NotifyObserve:
+    case Protocol::NotifyManagedChanged:
     case Protocol::NotifySpeak:
     case Protocol::NotifyOperate:
         return true;

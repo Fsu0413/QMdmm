@@ -103,6 +103,38 @@ void Agent::setState(const QMdmmCore::Data::AgentState &state)
     }
 }
 
+/**
+ * @brief Whether the player is managed
+ * @return @c true when the @c StateMaskTrust flag is set
+ *
+ * A managed (entrusted) player still replies from its own client, only with default values; see
+ * @c StateMaskTrust.
+ */
+bool Agent::managed() const
+{
+    return d->state.testFlag(QMdmmCore::Data::StateMaskTrust);
+}
+
+/**
+ * @brief Declare whether the player is managed
+ * @param managed @c true to declare the player managed, @c false to withdraw the declaration
+ *
+ * The runtime counterpart of the @c StateMaskTrust bit a sign-in carries: on the client's own agent
+ * this is what the client reports to the server, which owns the state, applies the flag and reports
+ * the result back through the ordinary agent state broadcast. Declaring the value the state already
+ * has is a no-op, so it puts nothing on the wire.
+ */
+void Agent::setManaged(bool managed)
+{
+    QMdmmCore::Data::AgentState state = d->state;
+    state.setFlag(QMdmmCore::Data::StateMaskTrust, managed);
+    if (state == d->state)
+        return;
+
+    setState(state);
+    emit managedChanged(managed, QPrivateSignal());
+}
+
 // Controller interface -- notifications (logic side -> operation side).
 
 /**
@@ -361,6 +393,12 @@ void Agent::operate(const QJsonValue &todo)
  * @fn Agent::stateChanged(QMdmmCore::Data::AgentState state, QPrivateSignal)
  * @brief notify signal for property @c state
  * @param state the new state
+ */
+
+/**
+ * @fn Agent::managedChanged(bool managed, QPrivateSignal)
+ * @brief emitted when the operation side declares a different managed state
+ * @param managed the newly declared managed state
  */
 
 /**

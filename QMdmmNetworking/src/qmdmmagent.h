@@ -48,6 +48,12 @@ public:
     [[nodiscard]] QMdmmCore::Data::AgentState state() const;
     void setState(const QMdmmCore::Data::AgentState &state);
 
+    // The managed flag (StateMaskTrust) is read out of `state` rather than being a property of its
+    // own: it has no NOTIFY of its own to give, and the operation side *declares* it on the wire
+    // instead of setting it locally, so it cannot be described by a plain change signal.
+    [[nodiscard]] bool managed() const;
+    void setManaged(bool managed);
+
     void notifyLogicConfiguration();
     void notifyAgentStateChange(const QString &playerName, const QMdmmCore::Data::AgentState &agentState);
     void notifyPlayerAdd(const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState);
@@ -81,6 +87,10 @@ public:
 signals:
     void screenNameChanged(const QString &, QPrivateSignal);
     void stateChanged(QMdmmCore::Data::AgentState, QPrivateSignal);
+    // The operation side declared a different managed state (see setManaged). The server's own view
+    // of the flag arrives through stateChanged instead, so a server-driven change is never declared
+    // back out on the wire.
+    void managedChanged(bool managed, QPrivateSignal);
 
     void logicConfigurationNotified(QPrivateSignal);
     void agentStateChangeNotified(const QString &playerName, const QMdmmCore::Data::AgentState &agentState, QPrivateSignal);
