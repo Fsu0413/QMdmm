@@ -251,7 +251,9 @@ bool SocketP_QWebSocket::connectToHost(const QString &addr)
     if (socket != nullptr)
         socket->deleteLater();
 
-    socket = new QWebSocket(u"qmdmm.com"_s, QWebSocketProtocol::VersionLatest, this);
+    // The origin is what rides along in the handshake's Origin header, and nothing more:
+    // the server never looks at it, so this names the client, it does not guard anything.
+    socket = new QWebSocket(u"fsu0413.me"_s, QWebSocketProtocol::VersionLatest, this);
     setupSocket();
     QUrl url(addr);
     socket->open(url);
