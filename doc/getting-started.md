@@ -7,7 +7,7 @@ same in-process server + clients the GUI's local-game mode is built on.
 ## Prerequisites
 
 - CMake ≥ 3.19
-- Qt ≥ 6.5 (Core / Network / WebSockets / Gui / Qml / Quick / Widgets /
+- Qt ≥ 6.7 (Core / Network / WebSockets / Gui / Qml / Quick / Widgets /
   QuickWidgets)
 - A C++20 compiler
 

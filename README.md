@@ -74,7 +74,7 @@ solid; what is missing is wiring the GUI to the network layer.
 Requirements:
 
 - CMake ≥ 3.19
-- Qt ≥ 6.5 (Core / Network / WebSockets / Gui / Qml / Quick / Widgets / QuickWidgets)
+- Qt ≥ 6.7 (Core / Network / WebSockets / Gui / Qml / Quick / Widgets / QuickWidgets)
 - A C++20 compiler
 
 ```sh
