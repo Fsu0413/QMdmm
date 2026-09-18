@@ -331,10 +331,15 @@ struct Seat
     ReplyTally tally;
 };
 
-// The loopback port the whole-match case's server listens on. It is a fixed
-// port because the server offers no way to read back one it picked itself, and
-// it is deliberately not the port the smoke test's own server binds.
-constexpr quint16 MATCH_PORT = 6367;
+// The loopback endpoints the whole-match case's server listens on, one per
+// transport. They are fixed because the server offers no way to read back a port
+// it picked itself, and they are deliberately not the ones the smoke test's own
+// server binds: that server takes the configuration defaults (TCP 6366, a
+// websocket on 6367 and a local socket called "QMdmm"), and both servers run on
+// the same machine during a test run.
+constexpr quint16 MATCH_PORT = 6368;
+constexpr quint16 MATCH_WEBSOCKET_PORT = 6369;
+const QString MATCH_LOCAL_SOCKET_NAME = u"QMdmmBotTest"_s;
 
 // The whole-match case's deadline, well past what the match below takes in
 // practice: it is there so a match that stalls fails the case instead of hanging
@@ -473,8 +478,10 @@ private slots:
     // The whole match, played by the real styles against the real server, in
     // this process: the seats are drawn from the two implemented styles, and the
     // case is that the match runs its own loop to the end without a bot stalling
-    // or the server dropping one.
+    // or the server dropping one. It is run once per transport, so the same
+    // match also covers the three ways a player can reach the server.
     void fullGame_theTwoStylesPlayAWholeMatchToTheEnd();
+    void fullGame_theTwoStylesPlayAWholeMatchToTheEnd_data();
 };
 
 void tst_QMdmmBot::revenge_recordsHostileActionsOnly()
@@ -1619,8 +1626,28 @@ void tst_QMdmmBot::actionOrder_readsTheDeathThresholdOffTheMatchRules()
     }
 }
 
+// The three transports a client can be pointed at, one row each. The prefix
+// whitelist in SocketP::typeByConnectAddr picks the transport from the connect
+// address, and each of the three reaches the server through a different listener
+// and a different socket implementation. Only the TCP one had ever been
+// connected: the websocket and the local socket -- the client half of each, and
+// the session the server builds once it accepts one -- went unexercised, which
+// is the gap this case's rows close.
+void tst_QMdmmBot::fullGame_theTwoStylesPlayAWholeMatchToTheEnd_data()
+{
+    QTest::addColumn<QString>("host");
+
+    QTest::newRow("tcp") << u"qmdmm://127.0.0.1:%1"_s.arg(MATCH_PORT);
+    QTest::newRow("websocket") << u"ws://127.0.0.1:%1"_s.arg(MATCH_WEBSOCKET_PORT);
+    // A local socket is named rather than addressed, so its "address" is the
+    // name the server listens on.
+    QTest::newRow("local socket") << MATCH_LOCAL_SOCKET_NAME;
+}
+
 void tst_QMdmmBot::fullGame_theTwoStylesPlayAWholeMatchToTheEnd()
 {
+    QFETCH(QString, host);
+
     // The cases above drive one handler at a time against a room mirror laid out
     // by hand. This one lets the match run its own loop -- Rock-Paper-Scissors,
     // action order, actions, upgrades, round over, until the game ends -- with the
@@ -1654,13 +1681,14 @@ void tst_QMdmmBot::fullGame_theTwoStylesPlayAWholeMatchToTheEnd()
 
     QMdmmNetworking::ServerConfiguration serverConfiguration = QMdmmNetworking::ServerConfiguration::defaults();
     serverConfiguration.setTcpPort(MATCH_PORT);
+    serverConfiguration.setWebsocketPort(MATCH_WEBSOCKET_PORT);
+    serverConfiguration.setLocalSocketName(MATCH_LOCAL_SOCKET_NAME);
     serverConfiguration.setPlayerNumPerRoom(styles.size());
-    // Only the loopback TCP transport: the other two are named for the real
-    // deployment (a local socket called "QMdmm", a websocket on its own port) and
-    // would collide with whatever else is running on the machine, which in a test
-    // run is the smoke test's own server.
-    serverConfiguration.setLocalEnabled(false);
-    serverConfiguration.setWebsocketEnabled(false);
+    // All three transports listen, on endpoints of this case's own (see the
+    // constants above). The row says which one the seats come in over; the other
+    // two listening at the same time is what shows the three do not step on each
+    // other.
+
     // A bot has its answer ready as soon as it is asked, so a request still
     // unanswered a couple of seconds later is one that is never going to be
     // answered. The server would hold such a request open for its own grace
@@ -1723,7 +1751,6 @@ void tst_QMdmmBot::fullGame_theTwoStylesPlayAWholeMatchToTheEnd()
     // game to hit -- is left alone.
     QTest::failOnWarning(QRegularExpression(u"Logic::(actionOrderReply|actionReply|upgradeReply)"_s));
 
-    const QString host = u"qmdmm://127.0.0.1:%1"_s.arg(MATCH_PORT);
     for (const std::unique_ptr<Seat> &seat : seats)
         QVERIFY(seat->client.connectToHost(host, QMdmmCore::Data::StateOnlineBot));
     match.exec();
