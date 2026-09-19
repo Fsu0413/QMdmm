@@ -8,7 +8,11 @@ import QtTest 1.2
 // upgrades of *every* player have to show up there, not only the ones the local
 // player makes. That is the gap this guards -- the request handlers only ever
 // cover your own turn. The match / round start markers are guarded here too:
-// they carry no operation data, so nothing else would put them on screen.
+// they carry no operation data, so nothing else would put them on screen. The
+// request overlays are guarded the same way: a request carries more than the
+// choices it asks for (what the throw is for and who is in it, the range the
+// orders come from, which turn is being acted on) and none of that is visible
+// unless the overlay says it.
 //
 // Like tst_scene.qml, the scene is loaded from the source tree (the QMdmm.Gui
 // module resource lives in the QMdmm6 executable, which this test does not
@@ -18,6 +22,19 @@ import QtTest 1.2
 TestCase {
     id: testCase
 
+    // Recursive search for a rendered Text, so a case can assert on what the
+    // overlay actually says rather than on the properties behind it.
+    function hasText(root, text) {
+        for (let i = 0; i < root.children.length; ++i) {
+            const c = root.children[i];
+            if (c.text === text)
+                return true;
+            if (hasText(c, text))
+                return true;
+        }
+        return false;
+    }
+
     function makeScene() {
         const comp = Qt.createComponent(Qt.resolvedUrl("../qml/GameScene.qml"));
         tryCompare(comp, "status", Component.Ready);
@@ -26,6 +43,17 @@ TestCase {
         const scene = createTemporaryObject(comp, testCase);
         verify(scene !== null, "GameScene should instantiate");
         return scene;
+    }
+
+    function test_actionOrderRequestShowsTheRange() {
+        const scene = makeScene();
+
+        // The request carries the number of action orders on top of the ones
+        // still free; the range is what the buttons alone cannot tell.
+        game.requestActionOrder([3, 4], 5, 2);
+
+        compare(scene.orderMaximum, 5);
+        verify(hasText(scene, "Action orders go from 1 to 5"));
     }
 
     function test_actionOrderResultIsLogged() {
@@ -39,6 +67,15 @@ TestCase {
 
         compare(scene.matchLog.length, 1);
         compare(scene.matchLog[0], "Action order: p2 then p1");
+    }
+
+    function test_actionRequestShowsTheCurrentOrder() {
+        const scene = makeScene();
+
+        game.requestAction(3);
+
+        compare(scene.turnOrder, 3);
+        verify(hasText(scene, "Action order 3"));
     }
 
     function test_actionResultIsLogged() {
@@ -92,6 +129,24 @@ TestCase {
 
         compare(scene.matchLog.length, 1);
         compare(scene.matchLog[0], "Round started");
+    }
+
+    function test_rpsRequestShowsTheStake() {
+        const scene = makeScene();
+
+        // strivedOrder 0 = the throw decides the right to act this round.
+        game.requestRockPaperScissors(["p1", "p2"], 0);
+
+        compare(scene.rpsOrder, 0);
+        compare(scene.rpsRivals.length, 2);
+        verify(hasText(scene, "This throw is for the right to act this round (players: p1, p2)"));
+
+        // A non-zero strivedOrder = the throw is for that very action order,
+        // and the payload names the players striving for it.
+        game.requestRockPaperScissors(["p1"], 3);
+
+        compare(scene.rpsOrder, 3);
+        verify(hasText(scene, "This throw is for action order 3 (contested by p1)"));
     }
 
     function test_rpsResultIsLogged() {

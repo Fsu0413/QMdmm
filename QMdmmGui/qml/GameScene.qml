@@ -19,10 +19,20 @@ Item {
     // start of the match and of each round go in as markers, so the lines below
     // them can be read per round (round over is the banner, not a line).
     property var matchLog: []
+    // Total number of action orders, on top of the ones still free: the
+    // selection overlay shows the range the picks come from.
+    property int orderMaximum: 0
     property int orderNeed: 0
     property var orderOptions: []
     property int orderRemaining: 0
     property var orderSelected: []
+    // The rock-paper-scissors request: the order the throw is for (0 = the right
+    // to act this round) and the internal names of the players in that throw --
+    // everyone still alive for 0, everyone striving for that order otherwise.
+    property int rpsOrder: 0
+    property var rpsRivals: []
+    // The action order the action request is for, i.e. the turn being played.
+    property int turnOrder: 0
     property int upgradeNeed: 0
     property var upgradeOptions: []
     property int upgradeRemaining: 0
@@ -67,6 +77,26 @@ Item {
         if (rps === 2)
             return qsTr("Paper");
         return "?";
+    }
+
+    // The request names the players in the struggle by internal name -- all of
+    // them, the local player included; the overlay shows them by screen name.
+    function rpsPlayerNames() {
+        const names = [];
+        for (let i = 0; i < rpsRivals.length; ++i)
+            names.push(game.screenName(rpsRivals[i]));
+        return names.join(", ");
+    }
+
+    // What the throw is for, and who is in it. strivedOrder 0 means the throw
+    // decides the right to act this round, in which case the core names every
+    // player still alive; any other value is an action order, and the core names
+    // the players striving for that very order.
+    function rpsStakeText() {
+        const players = rpsPlayerNames();
+        if (rpsOrder === 0)
+            return qsTr("This throw is for the right to act this round (players: %1)").arg(players);
+        return qsTr("This throw is for action order %1 (contested by %2)").arg(rpsOrder).arg(players);
     }
 
     function toggleOrder(v) {
@@ -279,6 +309,15 @@ Item {
                 width: requestOverlay.width
             }
 
+            Text {
+                color: "#ccc"
+                font.pixelSize: 22
+                horizontalAlignment: Text.AlignHCenter
+                text: rpsStakeText()
+                width: requestOverlay.width
+                wrapMode: Text.Wrap
+            }
+
             Row {
                 spacing: 12
 
@@ -330,6 +369,14 @@ Item {
                 color: "white"
                 font.pixelSize: 26
                 text: qsTr("Choose action order (%1 more)").arg(orderRemaining)
+                width: requestOverlay.width
+                wrapMode: Text.Wrap
+            }
+
+            Text {
+                color: "#ccc"
+                font.pixelSize: 22
+                text: qsTr("Action orders go from 1 to %1").arg(orderMaximum)
                 width: requestOverlay.width
                 wrapMode: Text.Wrap
             }
@@ -392,6 +439,12 @@ Item {
                 color: "white"
                 font.pixelSize: 28
                 text: qsTr("Your turn to act")
+            }
+
+            Text {
+                color: "#ccc"
+                font.pixelSize: 22
+                text: qsTr("Action order %1").arg(turnOrder)
             }
 
             Flow {
@@ -532,13 +585,15 @@ Item {
             appendMatchLog(qsTr("Match started"));
         }
 
-        function onRequestAction() {
+        function onRequestAction(currentOrder) {
             actionOptions = game.getActionOptions();
+            turnOrder = currentOrder;
             activeRequest = "action";
         }
 
         function onRequestActionOrder(remainedOrders, maximumOrder, selectionNum) {
             orderOptions = remainedOrders;
+            orderMaximum = maximumOrder;
             orderSelected = [];
             orderNeed = selectionNum;
             orderRemaining = selectionNum;
@@ -546,6 +601,8 @@ Item {
         }
 
         function onRequestRockPaperScissors(playerNames, strivedOrder) {
+            rpsRivals = playerNames;
+            rpsOrder = strivedOrder;
             activeRequest = "rps";
         }
 
