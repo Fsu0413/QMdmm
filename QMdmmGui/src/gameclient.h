@@ -24,6 +24,7 @@ class QMdmmGameClient : public QObject
     Q_PROPERTY(QString gameState READ gameState NOTIFY gameStateChanged)
     Q_PROPERTY(QString localName READ localName NOTIFY localNameChanged)
     Q_PROPERTY(QVariantList chatLog READ chatLog NOTIFY chatLogChanged)
+    Q_PROPERTY(QVariantMap agentStates READ agentStates NOTIFY agentStatesChanged)
     Q_PROPERTY(QVariantMap logicConfiguration READ logicConfiguration NOTIFY logicConfigurationChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
     Q_PROPERTY(int playerCount READ playerCount WRITE setPlayerCount NOTIFY playerCountChanged)
@@ -47,6 +48,7 @@ public:
     [[nodiscard]] QString gameState() const;
     [[nodiscard]] QString localName() const;
     [[nodiscard]] QVariantList chatLog() const;
+    [[nodiscard]] QVariantMap agentStates() const;
     [[nodiscard]] QVariantMap logicConfiguration() const;
     [[nodiscard]] QString statusMessage() const;
     [[nodiscard]] int playerCount() const;
@@ -78,6 +80,7 @@ signals:
     void gameStateChanged();
     void localNameChanged();
     void chatLogChanged();
+    void agentStatesChanged();
     void logicConfigurationChanged();
     void statusMessageChanged(const QString &);
     void playerCountChanged();

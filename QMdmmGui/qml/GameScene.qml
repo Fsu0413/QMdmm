@@ -12,6 +12,11 @@ Item {
     // ---- properties / logic ----------------------------------------------
     property string activeRequest: ""
 
+    // What each player in the room is, as the server broadcasts it: the cards in the players
+    // row spell out their own entry (see PlayerCard). The map follows every change -- a join,
+    // a drop, the managed flag.
+    property var agentStates: game.agentStates
+
     // A view-only log of what the other players did, built from the operation
     // broadcasts the client re-emits as result signals. The match itself is
     // driven by the requests above, which only ever show *your* turn -- without
@@ -59,6 +64,13 @@ Item {
         if (action === 6)
             return qsTr("%1 moved %2 to %3").arg(who).arg(game.screenName(toPlayer)).arg(game.placeName(toPlace));
         return qsTr("%1 did nothing").arg(who);
+    }
+
+    // One player's state out of the broadcast map. A player the map has not caught up with
+    // reads as offline rather than leaving the card blank.
+    function agentStateOf(playerName) {
+        const state = agentStates[playerName];
+        return state === undefined ? 0 : state;
     }
 
     function appendMatchLog(text) {
@@ -227,6 +239,7 @@ Item {
             model: game.players
 
             PlayerCard {
+                agentState: scene.agentStateOf(modelData.objectName)
                 displayName: game.screenName(modelData.objectName)
                 player: modelData
                 you: game.isYou(modelData.objectName)

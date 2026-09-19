@@ -7,9 +7,26 @@ import "."
 Item {
     id: card
 
+    // The state the protocol carries for this player, as the broadcast hands it over: a mask
+    // (Data::AgentState) with online = 0x10, bot = 0x01, managed = 0x08. Only the number
+    // reaches the view, so spelling it out is the card's job -- the managed flag has nowhere
+    // else on screen to show up.
+    property int agentState: 0
     property string displayName
     property var player
+    readonly property int stateBot: 0x01
+    readonly property int stateManaged: 0x08
+    readonly property int stateOnline: 0x10
     property bool you
+
+    function stateText(state) {
+        const words = [(state & stateOnline) ? qsTr("Online") : qsTr("Offline")];
+        if (state & stateBot)
+            words.push(qsTr("Bot"));
+        if (state & stateManaged)
+            words.push(qsTr("Managed"));
+        return words.join(", ");
+    }
 
     height: 300
     width: 280
@@ -66,6 +83,8 @@ Item {
     }
 
     Row {
+        id: itemsRow
+
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: hpBack.bottom
         anchors.topMargin: 16
@@ -86,6 +105,15 @@ Item {
             visible: player.hasHorse
             width: 48
         }
+    }
+
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: itemsRow.bottom
+        anchors.topMargin: 8
+        color: "#9fd0ff"
+        font.pixelSize: 20
+        text: card.stateText(card.agentState)
     }
 
     Text {

@@ -28,6 +28,42 @@ TestCase {
         verify(game !== null, "GameClient should instantiate");
     }
 
+    function test_agentStatesFollowTheRoom() {
+        // Every player's agent state is broadcast with the player list, and the bridge has to
+        // keep the map the player cards read in step with it -- a bot has to read as a bot, not
+        // as an anonymous online player. The values are what is waited for, not a change count:
+        // startLocalGame() clears the mirror on the way in and announces that too, so a count
+        // on its own would be satisfied before a single player is in. The count that is asserted
+        // is per arrival, which is what makes the announcement itself on trial.
+        var announced = createTemporaryObject(signalSpyComponent, testCase, {
+                                                  target: game,
+                                                  signalName: "agentStatesChanged"
+                                              });
+
+        game.playerCount = 3;
+        game.startLocalGame("Tester");
+
+        tryVerify(function () {
+            return game.players.length === 3 && Object.keys(game.agentStates).length === 3;
+        }, 15000);
+
+        compare(game.agentStates[game.localName], 0x10); // the human signs in as an online agent
+        var names = Object.keys(game.agentStates);
+        var bots = 0;
+        for (var i = 0; i < names.length; ++i) {
+            if (game.agentStates[names[i]] === 0x11) // online + bot
+                ++bots;
+        }
+        compare(bots, 2);
+        verify(announced.count >= game.players.length, "every arriving player has to be announced");
+
+        // A state that changes later (the managed toggle, a drop, a reconnect) rides on the same
+        // map through the client's state-change notification, but nothing in the GUI can move a
+        // state yet -- the runtime entry is its own task -- so no case drives one here. The wire
+        // half of that path is guarded in tst_qmdmmnetworking (the managed-toggle case), and what
+        // this case leaves unguarded is measured: taking the connect out leaves the suite green.
+    }
+
     function test_botObjectNameDiffersFromScreenName() {
         // 1 human + 1 auto-replying bot. The bot's internal objectName (the
         // protocol-level player identity) must stay distinct from its display

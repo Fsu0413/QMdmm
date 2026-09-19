@@ -14,7 +14,12 @@ import QtTest 1.2
 // orders come from, which turn is being acted on) and none of that is visible
 // unless the overlay says it. The rules strip is guarded here for the same
 // reason: the logic configuration is broadcast once and nothing else on screen
-// would show what the match is played under.
+// would show what the match is played under. The agent-state lookup is guarded
+// here too: the scene is what picks each player's entry out of the broadcast
+// map, and the card that renders it is guarded in tst_playercard. What is NOT
+// covered is the two wired together -- a scene holding a live room cannot be
+// torn down yet (see the log for 2026-09-20), so no case plays that last step
+// through.
 //
 // Like tst_scene.qml, the scene is loaded from the source tree (the QMdmm.Gui
 // module resource lives in the QMdmm6 executable, which this test does not
@@ -101,6 +106,21 @@ TestCase {
         compare(scene.matchLog[4], "p1 kicked p2");
         compare(scene.matchLog[5], "p1 moved to City 2");
         compare(scene.matchLog[6], "p1 moved p2 to City 2");
+    }
+
+    function test_agentStateOfAPlayerTheMapDoesNotKnow() {
+        const scene = makeScene();
+
+        // The map is filled per player, so a card built the moment its player joins can read
+        // before that player's entry is in. That has to come out as offline, not as a blank
+        // line behind a blank card. The map is handed to the scene the way tst_gameclient hands
+        // the client's real one over, so the lookup itself is on trial here.
+        scene.agentStates = {
+            "p1": 0x18
+        };
+
+        compare(scene.agentStateOf("p1"), 0x18);
+        compare(scene.agentStateOf("p2"), 0);
     }
 
     function test_gameStartIsLogged() {

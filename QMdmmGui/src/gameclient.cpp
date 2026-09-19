@@ -49,6 +49,7 @@ void QMdmmGameClient::reset()
     m_chat.clear();
     m_logicConfiguration.clear();
 
+    emit agentStatesChanged();
     emit chatLogChanged();
     emit logicConfigurationChanged();
     emit playersChanged();
@@ -89,6 +90,14 @@ QString QMdmmGameClient::localName() const
 QVariantList QMdmmGameClient::chatLog() const
 {
     return m_chat;
+}
+
+QVariantMap QMdmmGameClient::agentStates() const
+{
+    QVariantMap ret;
+    for (QHash<QString, QMdmmCore::Data::AgentState>::const_iterator it = m_agentStates.constBegin(); it != m_agentStates.constEnd(); ++it)
+        ret.insert(it.key(), static_cast<int>(it.value()));
+    return ret;
 }
 
 QVariantMap QMdmmGameClient::logicConfiguration() const
@@ -200,15 +209,23 @@ void QMdmmGameClient::wireClient(QMdmmNetworking::Client *client)
         if (m_room != nullptr)
             setLogicConfiguration(m_room->logicConfiguration());
     });
+    // An agent's state changes on the wire: the managed toggle, a drop, a reconnect. The
+    // player cards are the only place it can be read, so the map they read has to follow.
+    connect(agent, &QMdmmNetworking::Agent::agentStateChangeNotified, this, [this](const QString &playerName, const QMdmmCore::Data::AgentState &agentState) {
+        m_agentStates.insert(playerName, agentState);
+        emit agentStatesChanged();
+    });
     connect(agent, &QMdmmNetworking::Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState) {
         m_screenNames.insert(playerName, screenName);
         m_agentStates.insert(playerName, agentState);
+        emit agentStatesChanged();
         emit playerAdded(playerName, screenName, static_cast<int>(agentState));
         emit playersChanged();
     });
     connect(agent, &QMdmmNetworking::Agent::playerRemoveNotified, this, [this](const QString &playerName) {
         m_screenNames.remove(playerName);
         m_agentStates.remove(playerName);
+        emit agentStatesChanged();
         emit playerRemoved(playerName);
         emit playersChanged();
     });
