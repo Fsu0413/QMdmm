@@ -15,7 +15,9 @@ Item {
     // A view-only log of what the other players did, built from the operation
     // broadcasts the client re-emits as result signals. The match itself is
     // driven by the requests above, which only ever show *your* turn -- without
-    // this, everyone else's picks, actions and upgrades happen invisibly.
+    // this, everyone else's picks, actions and upgrades happen invisibly. The
+    // start of the match and of each round go in as markers, so the lines below
+    // them can be read per round (round over is the banner, not a line).
     property var matchLog: []
     property int orderNeed: 0
     property var orderOptions: []
@@ -526,6 +528,10 @@ Item {
             banner.visible = true;
         }
 
+        function onGameStart() {
+            appendMatchLog(qsTr("Match started"));
+        }
+
         function onRequestAction() {
             actionOptions = game.getActionOptions();
             activeRequest = "action";
@@ -555,6 +561,10 @@ Item {
             bannerText.text = qsTr("Round over");
             banner.visible = true;
             bannerTimer.start();
+        }
+
+        function onRoundStart() {
+            appendMatchLog(qsTr("Round started"));
         }
 
         function onRpsResult(results) {

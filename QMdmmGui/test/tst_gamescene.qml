@@ -7,7 +7,8 @@ import QtTest 1.2
 // signals: the rock-paper-scissors picks, the action order, the actions and the
 // upgrades of *every* player have to show up there, not only the ones the local
 // player makes. That is the gap this guards -- the request handlers only ever
-// cover your own turn.
+// cover your own turn. The match / round start markers are guarded here too:
+// they carry no operation data, so nothing else would put them on screen.
 //
 // Like tst_scene.qml, the scene is loaded from the source tree (the QMdmm.Gui
 // module resource lives in the QMdmm6 executable, which this test does not
@@ -63,6 +64,15 @@ TestCase {
         compare(scene.matchLog[6], "p1 moved p2 to City 2");
     }
 
+    function test_gameStartIsLogged() {
+        const scene = makeScene();
+
+        game.gameStart();
+
+        compare(scene.matchLog.length, 1);
+        compare(scene.matchLog[0], "Match started");
+    }
+
     function test_matchLogIsBounded() {
         const scene = makeScene();
 
@@ -73,6 +83,15 @@ TestCase {
                            });
 
         compare(scene.matchLog.length, 200);
+    }
+
+    function test_roundStartIsLogged() {
+        const scene = makeScene();
+
+        game.roundStart();
+
+        compare(scene.matchLog.length, 1);
+        compare(scene.matchLog[0], "Round started");
     }
 
     function test_rpsResultIsLogged() {
