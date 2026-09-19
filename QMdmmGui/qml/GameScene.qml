@@ -31,6 +31,10 @@ Item {
     // everyone still alive for 0, everyone striving for that order otherwise.
     property int rpsOrder: 0
     property var rpsRivals: []
+    // The rules the match is played under, mirrored from the logic configuration
+    // the server broadcasts when a player joins the room. Every field it carries
+    // has to be readable on screen; the strip below the top bar spells them out.
+    property var rules: game.logicConfiguration
     // The action order the action request is for, i.e. the turn being played.
     property int turnOrder: 0
     property int upgradeNeed: 0
@@ -69,6 +73,20 @@ Item {
         matchLog = items;
     }
 
+    // How the punish HP is rounded, spelled out -- the wire carries only the
+    // enum's integer value.
+    function punishStrategyName(strategy) {
+        if (strategy === 0)
+            return qsTr("rounded down");
+        if (strategy === 1)
+            return qsTr("rounded to nearest");
+        if (strategy === 2)
+            return qsTr("rounded up");
+        if (strategy === 3)
+            return qsTr("rounded down, plus one");
+        return "?";
+    }
+
     function rpsName(rps) {
         if (rps === 0)
             return qsTr("Rock");
@@ -97,6 +115,31 @@ Item {
         if (rpsOrder === 0)
             return qsTr("This throw is for the right to act this round (players: %1)").arg(players);
         return qsTr("This throw is for action order %1 (contested by %2)").arg(rpsOrder).arg(players);
+    }
+
+    // A "<what>: <initial> (up to <maximum>)" rule, for the three damage / HP
+    // pairs the configuration carries.
+    function ruleRange(label, from, to) {
+        return qsTr("%1: %2 (up to %3)").arg(label).arg(from).arg(to);
+    }
+
+    // The rules, one line per group, built so that every field the logic
+    // configuration carries is readable: the numbers (HP and damage, initial and
+    // maximum) and the switches (punish, 0 HP, let-move, where buying is
+    // allowed). The values are the wire's own -- nothing is recomputed here.
+    function rulesLines() {
+        if (!rules || rules.initialMaxHp === undefined)
+            return [];
+        const hp = ruleRange(qsTr("max HP"), rules.initialMaxHp, rules.maximumMaxHp);
+        const knife = ruleRange(qsTr("knife damage"), rules.initialKnifeDamage, rules.maximumKnifeDamage);
+        const horse = ruleRange(qsTr("horse damage"), rules.initialHorseDamage, rules.maximumHorseDamage);
+        const shares = qsTr("max HP / %1").arg(rules.punishHpModifier);
+        const strategy = punishStrategyName(rules.punishHpRoundStrategy);
+        const punish = rules.punishHpModifier > 0 ? qsTr("slash self-punish: %1, %2").arg(shares).arg(strategy) : qsTr("slash self-punish: off");
+        const death = rules.zeroHpAsDead ? qsTr("0 HP counts as dead") : qsTr("0 HP is still alive");
+        const letMove = rules.enableLetMove ? qsTr("let-move allowed") : qsTr("let-move not allowed");
+        const buy = rules.canBuyOnlyInInitialCity ? qsTr("buy: starting city only") : qsTr("buy: any city");
+        return [hp + " | " + knife + " | " + horse, punish + " | " + death + " | " + letMove + " | " + buy];
     }
 
     function toggleOrder(v) {
@@ -209,11 +252,40 @@ Item {
             radius: 8
         }
 
+        // The rules strip: the logic configuration arrives once and the log below
+        // scrolls away, so the rules get their own permanent lines at the top.
+        Column {
+            id: rulesStrip
+
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.top: parent.top
+            anchors.topMargin: 8
+            spacing: 2
+
+            Repeater {
+                model: scene.rulesLines()
+
+                Text {
+                    color: "#ffd54f"
+                    font.pixelSize: 18
+                    text: modelData
+                    width: rulesStrip.width
+                    wrapMode: Text.Wrap
+                }
+            }
+        }
+
         Flickable {
             id: logFlick
 
-            anchors.fill: parent
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
             anchors.margins: 8
+            anchors.right: parent.right
+            anchors.top: rulesStrip.bottom
             clip: true
             contentHeight: logCol.height
 

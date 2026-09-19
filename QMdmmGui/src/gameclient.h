@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QStringList>
 #include <QVariantList>
+#include <QVariantMap>
 
 #include <QMdmmClient>
 #include <QMdmmPlayer>
@@ -23,6 +24,7 @@ class QMdmmGameClient : public QObject
     Q_PROPERTY(QString gameState READ gameState NOTIFY gameStateChanged)
     Q_PROPERTY(QString localName READ localName NOTIFY localNameChanged)
     Q_PROPERTY(QVariantList chatLog READ chatLog NOTIFY chatLogChanged)
+    Q_PROPERTY(QVariantMap logicConfiguration READ logicConfiguration NOTIFY logicConfigurationChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
     Q_PROPERTY(int playerCount READ playerCount WRITE setPlayerCount NOTIFY playerCountChanged)
 
@@ -45,6 +47,7 @@ public:
     [[nodiscard]] QString gameState() const;
     [[nodiscard]] QString localName() const;
     [[nodiscard]] QVariantList chatLog() const;
+    [[nodiscard]] QVariantMap logicConfiguration() const;
     [[nodiscard]] QString statusMessage() const;
     [[nodiscard]] int playerCount() const;
     void setPlayerCount(int n);
@@ -75,6 +78,7 @@ signals:
     void gameStateChanged();
     void localNameChanged();
     void chatLogChanged();
+    void logicConfigurationChanged();
     void statusMessageChanged(const QString &);
     void playerCountChanged();
 
@@ -102,6 +106,7 @@ private:
     void reset();
     void setGameState(GameState s);
     void setStatusMessage(const QString &msg);
+    void setLogicConfiguration(const QMdmmCore::LogicConfiguration &conf);
     [[nodiscard]] QMdmmCore::Player *localPlayer() const;
     QVariantList actionListFor(const QMdmmCore::Player *from) const;
 
@@ -114,6 +119,7 @@ private:
     QString m_localScreen;
     GameState m_state = GameState::Start;
     QVariantList m_chat;
+    QVariantMap m_logicConfiguration;
     QString m_status;
     int m_playerCount = 3;
 

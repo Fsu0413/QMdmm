@@ -12,7 +12,9 @@ import QtTest 1.2
 // request overlays are guarded the same way: a request carries more than the
 // choices it asks for (what the throw is for and who is in it, the range the
 // orders come from, which turn is being acted on) and none of that is visible
-// unless the overlay says it.
+// unless the overlay says it. The rules strip is guarded here for the same
+// reason: the logic configuration is broadcast once and nothing else on screen
+// would show what the match is played under.
 //
 // Like tst_scene.qml, the scene is loaded from the source tree (the QMdmm.Gui
 // module resource lives in the QMdmm6 executable, which this test does not
@@ -162,6 +164,56 @@ TestCase {
 
         compare(scene.matchLog.length, 1);
         compare(scene.matchLog[0], "Rock-paper-scissors: p1 (Rock), p2 (Scissors), p3 (Paper)");
+    }
+
+    function test_rulesShowTheBroadcastConfiguration() {
+        const scene = makeScene();
+
+        // The rules the server broadcast are how the players know what they are playing under.
+        // The wiring behind them (client -> scene) is guarded in tst_gameclient; here the strip
+        // itself is on trial, so the scene is handed a configuration to render -- the default
+        // rules of a local game.
+        scene.rules = {
+            "initialKnifeDamage": 1,
+            "maximumKnifeDamage": 10,
+            "initialHorseDamage": 2,
+            "maximumHorseDamage": 10,
+            "initialMaxHp": 10,
+            "maximumMaxHp": 20,
+            "punishHpModifier": 2,
+            "punishHpRoundStrategy": 1,
+            "zeroHpAsDead": true,
+            "enableLetMove": true,
+            "canBuyOnlyInInitialCity": false
+        };
+
+        verify(hasText(scene, "max HP: 10 (up to 20) | knife damage: 1 (up to 10) | horse damage: 2 (up to 10)"));
+        verify(hasText(scene, "slash self-punish: max HP / 2, rounded to nearest | 0 HP counts as dead | let-move allowed | buy: any city"));
+    }
+
+    function test_rulesShowTheOtherSideOfEverySwitch() {
+        const scene = makeScene();
+
+        // The other direction of every switch: no punish at all (the modifier is a divisor, so
+        // zero turns it off), 0 HP is not death yet, let-move is off, and buying is tied to the
+        // starting city. All four are read off the broadcast map, so none of them may be
+        // hard-coded to the default.
+        scene.rules = {
+            "initialKnifeDamage": 1,
+            "maximumKnifeDamage": 3,
+            "initialHorseDamage": 3,
+            "maximumHorseDamage": 5,
+            "initialMaxHp": 7,
+            "maximumMaxHp": 7,
+            "punishHpModifier": 0,
+            "punishHpRoundStrategy": 0,
+            "zeroHpAsDead": false,
+            "enableLetMove": false,
+            "canBuyOnlyInInitialCity": true
+        };
+
+        verify(hasText(scene, "max HP: 7 (up to 7) | knife damage: 1 (up to 3) | horse damage: 3 (up to 5)"));
+        verify(hasText(scene, "slash self-punish: off | 0 HP is still alive | let-move not allowed | buy: starting city only"));
     }
 
     function test_upgradeResultIsLogged() {

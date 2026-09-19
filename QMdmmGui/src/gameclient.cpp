@@ -47,8 +47,10 @@ void QMdmmGameClient::reset()
     m_screenNames.clear();
     m_agentStates.clear();
     m_chat.clear();
+    m_logicConfiguration.clear();
 
     emit chatLogChanged();
+    emit logicConfigurationChanged();
     emit playersChanged();
 }
 
@@ -89,6 +91,11 @@ QVariantList QMdmmGameClient::chatLog() const
     return m_chat;
 }
 
+QVariantMap QMdmmGameClient::logicConfiguration() const
+{
+    return m_logicConfiguration;
+}
+
 QString QMdmmGameClient::statusMessage() const
 {
     return m_status;
@@ -122,6 +129,31 @@ void QMdmmGameClient::setStatusMessage(const QString &msg)
         return;
     m_status = msg;
     emit statusMessageChanged(msg);
+}
+
+void QMdmmGameClient::setLogicConfiguration(const QMdmmCore::LogicConfiguration &conf)
+{
+    // Read the rules through the getters rather than off the stored object: a rule the server
+    // left out is answered from LogicConfiguration::defaults(), which is the same answer the
+    // engine plays by -- so the view can never disagree with the match.
+    QVariantMap rules;
+    rules.insert(u"initialKnifeDamage"_s, conf.initialKnifeDamage());
+    rules.insert(u"maximumKnifeDamage"_s, conf.maximumKnifeDamage());
+    rules.insert(u"initialHorseDamage"_s, conf.initialHorseDamage());
+    rules.insert(u"maximumHorseDamage"_s, conf.maximumHorseDamage());
+    rules.insert(u"initialMaxHp"_s, conf.initialMaxHp());
+    rules.insert(u"maximumMaxHp"_s, conf.maximumMaxHp());
+    rules.insert(u"punishHpModifier"_s, conf.punishHpModifier());
+    rules.insert(u"punishHpRoundStrategy"_s, static_cast<int>(conf.punishHpRoundStrategy()));
+    rules.insert(u"zeroHpAsDead"_s, conf.zeroHpAsDead());
+    rules.insert(u"enableLetMove"_s, conf.enableLetMove());
+    rules.insert(u"canBuyOnlyInInitialCity"_s, conf.canBuyOnlyInInitialCity());
+
+    if (rules == m_logicConfiguration)
+        return;
+
+    m_logicConfiguration = rules;
+    emit logicConfigurationChanged();
 }
 
 QMdmmCore::Player *QMdmmGameClient::localPlayer() const
@@ -164,6 +196,10 @@ void QMdmmGameClient::wireClient(QMdmmNetworking::Client *client)
     connect(agent, &QMdmmNetworking::Agent::upgradeRequested, this, [this](int remainingTimes) { emit requestUpgrade(remainingTimes); });
 
     // notify signals -> re-emit (and keep the local view in sync)
+    connect(agent, &QMdmmNetworking::Agent::logicConfigurationNotified, this, [this]() {
+        if (m_room != nullptr)
+            setLogicConfiguration(m_room->logicConfiguration());
+    });
     connect(agent, &QMdmmNetworking::Agent::playerAddNotified, this, [this](const QString &playerName, const QString &screenName, const QMdmmCore::Data::AgentState &agentState) {
         m_screenNames.insert(playerName, screenName);
         m_agentStates.insert(playerName, agentState);

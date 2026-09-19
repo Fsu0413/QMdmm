@@ -72,6 +72,33 @@ TestCase {
         compare(game.players.length, 0);
     }
 
+    function test_logicConfigurationArrivesWithTheLocalGame() {
+        // The rules are broadcast when the player joins the room, before the match starts, and
+        // the bridge has to pass them on rather than only keep them in the room mirror: reading
+        // the mirror is not the same as being told that they are there. Without the agent
+        // notification the rules strip stays empty for the whole match.
+        //
+        // Wait for the values, not for a change count: startLocalGame() clears the mirror on the
+        // way in and announces that too, so counting signals would pass before the rules are in.
+        var rules = createTemporaryObject(signalSpyComponent, testCase, {
+                                              target: game,
+                                              signalName: "logicConfigurationChanged"
+                                          });
+
+        game.playerCount = 2;
+        game.startLocalGame("Tester");
+
+        tryVerify(function () {
+            return game.logicConfiguration.initialMaxHp === 10;
+        }, 15000);
+
+        // A local game runs on LogicConfiguration::defaults().
+        compare(game.logicConfiguration.maximumMaxHp, 20);
+        compare(game.logicConfiguration.enableLetMove, true);
+        compare(game.logicConfiguration.canBuyOnlyInInitialCity, false);
+        verify(rules.count > 0, "the rules arriving has to be announced");
+    }
+
     function test_replyDrivesTheMatch() {
         var rps = createTemporaryObject(signalSpyComponent, testCase, {
                                             target: game,
