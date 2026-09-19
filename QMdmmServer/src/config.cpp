@@ -140,7 +140,10 @@ inline void configErrorArgs(QString &message)
 template<typename T, typename... Rest>
 void configErrorArgs(QString &message, T &&arg, Rest &&...rest)
 {
-    message = message.arg(std::forward<T>(arg));
+    if constexpr (requires { message.arg(std::forward<T>(arg)); })
+        message = message.arg(std::forward<T>(arg));
+    else
+        message = message.arg(QAnyStringView(std::forward<T>(arg)).toString());
     configErrorArgs(message, std::forward<Rest>(rest)...);
 }
 
