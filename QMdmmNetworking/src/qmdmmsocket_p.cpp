@@ -143,7 +143,7 @@ void SocketP_QTcpSocket::setupSocket()
 void SocketP_QTcpSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
-        socket->write(QByteArray(packet).append("\n"));
+        socket->write(QByteArray(packet).append("\n"_ba));
         socket->flush();
     }
 }
@@ -211,7 +211,7 @@ void SocketP_QLocalSocket::setupSocket()
 void SocketP_QLocalSocket::sendPacket(QMdmmCore::Packet packet)
 {
     if (socket != nullptr) {
-        socket->write(QByteArray(packet).append("\n"));
+        socket->write(QByteArray(packet).append("\n"_ba));
         socket->flush();
     }
 }

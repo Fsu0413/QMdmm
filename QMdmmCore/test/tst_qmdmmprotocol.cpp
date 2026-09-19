@@ -133,7 +133,7 @@ private slots:
             QByteArray arr = p;
 
             // The Json object created by Qt is sorted by key
-            QByteArray d = R"json({"notifyId":0,"requestId":1,"type":1,"value":1})json";
+            QByteArray d = R"json({"notifyId":0,"requestId":1,"type":1,"value":1})json"_ba;
 
             QCOMPARE(arr, d);
         }
@@ -144,29 +144,28 @@ private slots:
         QTest::addColumn<QByteArray>("input");
         QTest::addColumn<QString>("errorString");
 
-        QTest::newRow("not-object") << QByteArray("[1,2,3]") << u"Document is not object"_s;
-        QTest::newRow("type-notexist") << QByteArray("{}") << u"'type' is non-existent"_s;
-        QTest::newRow("type-invalid") << QByteArray(R"json({"type": "Fsu0413"})json") << u"'type' is not number"_s;
-        QTest::newRow("type-fractional") << QByteArray(R"json({"type": 1.5})json") << u"'type' is not an integer"_s;
-        QTest::newRow("type-outofrange") << QByteArray(R"json({"type": 99})json") << u"'type' is out of range"_s;
-        QTest::newRow("requestid-notexist") << QByteArray(R"json({"type": 1})json") << u"'requestId' is non-existent"_s;
-        QTest::newRow("requestid-invalid") << QByteArray(R"json({"type": 1, "requestId": "Fsu0413"})json") << u"'requestId' is not number"_s;
-        QTest::newRow("requestid-fractional") << QByteArray(R"json({"type": 1, "requestId": 2.5})json") << u"'requestId' is not an integer"_s;
-        QTest::newRow("requestid-outofrange") << QByteArray(R"json({"type": 1, "requestId": 99})json") << u"'requestId' is out of range"_s;
-        QTest::newRow("notifyid-notexist") << QByteArray(R"json({"type": 1, "requestId": 2})json") << u"'notifyId' is non-existent"_s;
-        QTest::newRow("notifyid-invalid") << QByteArray(R"json({"type": 1, "requestId": 2, "notifyId": "Fsu0413"})json") << u"'notifyId' is not number"_s;
-        QTest::newRow("notifyid-fractional") << QByteArray(R"json({"type": 1, "requestId": 2, "notifyId": 8193.5})json") << u"'notifyId' is not an integer"_s;
-        QTest::newRow("notifyid-outofrange") << QByteArray(R"json({"type": 1, "requestId": 2, "notifyId": 99})json") << u"'notifyId' is out of range"_s;
-        QTest::newRow("request-requestid-invalid") << QByteArray(R"json({"type": 1, "requestId": 0, "notifyId": 0, "value": null})json")
+        QTest::newRow("not-object") << "[1,2,3]"_ba << u"Document is not object"_s;
+        QTest::newRow("type-notexist") << "{}"_ba << u"'type' is non-existent"_s;
+        QTest::newRow("type-invalid") << R"json({"type": "Fsu0413"})json"_ba << u"'type' is not number"_s;
+        QTest::newRow("type-fractional") << R"json({"type": 1.5})json"_ba << u"'type' is not an integer"_s;
+        QTest::newRow("type-outofrange") << R"json({"type": 99})json"_ba << u"'type' is out of range"_s;
+        QTest::newRow("requestid-notexist") << R"json({"type": 1})json"_ba << u"'requestId' is non-existent"_s;
+        QTest::newRow("requestid-invalid") << R"json({"type": 1, "requestId": "Fsu0413"})json"_ba << u"'requestId' is not number"_s;
+        QTest::newRow("requestid-fractional") << R"json({"type": 1, "requestId": 2.5})json"_ba << u"'requestId' is not an integer"_s;
+        QTest::newRow("requestid-outofrange") << R"json({"type": 1, "requestId": 99})json"_ba << u"'requestId' is out of range"_s;
+        QTest::newRow("notifyid-notexist") << R"json({"type": 1, "requestId": 2})json"_ba << u"'notifyId' is non-existent"_s;
+        QTest::newRow("notifyid-invalid") << R"json({"type": 1, "requestId": 2, "notifyId": "Fsu0413"})json"_ba << u"'notifyId' is not number"_s;
+        QTest::newRow("notifyid-fractional") << R"json({"type": 1, "requestId": 2, "notifyId": 8193.5})json"_ba << u"'notifyId' is not an integer"_s;
+        QTest::newRow("notifyid-outofrange") << R"json({"type": 1, "requestId": 2, "notifyId": 99})json"_ba << u"'notifyId' is out of range"_s;
+        QTest::newRow("request-requestid-invalid") << R"json({"type": 1, "requestId": 0, "notifyId": 0, "value": null})json"_ba
                                                    << u"'requestId' is invalid for a request/reply packet"_s;
-        QTest::newRow("request-notifyid-notinvalid") << QByteArray(R"json({"type": 1, "requestId": 1, "notifyId": 8193, "value": null})json")
+        QTest::newRow("request-notifyid-notinvalid") << R"json({"type": 1, "requestId": 1, "notifyId": 8193, "value": null})json"_ba
                                                      << u"'notifyId' should be invalid for a request/reply packet"_s;
-        QTest::newRow("notify-notifyid-invalid") << QByteArray(R"json({"type": 3, "requestId": 0, "notifyId": 0, "value": null})json")
-                                                 << u"'notifyId' is invalid for a notify packet"_s;
-        QTest::newRow("notify-requestid-notinvalid") << QByteArray(R"json({"type": 3, "requestId": 1, "notifyId": 8193, "value": null})json")
+        QTest::newRow("notify-notifyid-invalid") << R"json({"type": 3, "requestId": 0, "notifyId": 0, "value": null})json"_ba << u"'notifyId' is invalid for a notify packet"_s;
+        QTest::newRow("notify-requestid-notinvalid") << R"json({"type": 3, "requestId": 1, "notifyId": 8193, "value": null})json"_ba
                                                      << u"'requestId' should be invalid for a notify packet"_s;
-        QTest::newRow("value-notexist") << QByteArray(R"json({"type": 1, "requestId": 2, "notifyId": 8193})json") << u"'value' is non-existent"_s;
-        QTest::newRow("valid") << QByteArray(R"json({"type": 1, "requestId": 2, "notifyId": 0, "value": "Fsu0413"})json") << QString {};
+        QTest::newRow("value-notexist") << R"json({"type": 1, "requestId": 2, "notifyId": 8193})json"_ba << u"'value' is non-existent"_s;
+        QTest::newRow("valid") << R"json({"type": 1, "requestId": 2, "notifyId": 0, "value": "Fsu0413"})json"_ba << QString {};
     }
     void QMdmmPacketfromJsonhasError()
     {
@@ -193,18 +192,18 @@ private slots:
     {
         {
             // the no-errorString overload of hasError() reports a parse error
-            QVERIFY(Packet::fromJson(QByteArray("some_invalid")).hasError());
+            QVERIFY(Packet::fromJson("some_invalid"_ba).hasError());
         }
         {
             QString actualErrorString;
-            QVERIFY(Packet::fromJson(QByteArray("some_invalid")).hasError(&actualErrorString));
+            QVERIFY(Packet::fromJson("some_invalid"_ba).hasError(&actualErrorString));
 
             bool r = actualErrorString.startsWith(u"Json error: "_s);
             QVERIFY(r);
         }
         {
             // Check of a notify JSON
-            QByteArray input = R"json({"type": 3, "requestId": 0, "notifyId": 8193, "value": "Fsu0413"})json";
+            QByteArray input = R"json({"type": 3, "requestId": 0, "notifyId": 8193, "value": "Fsu0413"})json"_ba;
             QString actualErrorString;
 
             Packet p = Packet::fromJson(input);

@@ -25,7 +25,7 @@ private slots:
     // called before each test case is run
     void init()
     {
-        buf.setData(QByteArray());
+        buf.setData({});
         buf.open(QIODevice::ReadWrite);
     }
 
