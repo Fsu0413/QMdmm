@@ -44,6 +44,7 @@ private slots:
     void client_giveUpTriggersServerDefaultReply();
     void client_actionOrderYieldAcceptsAssignment();
     void client_routesAgentStateChangeToSelfAgent();
+    void client_routesLogicConfigurationToSelfAgent();
     void client_declaresManagedStateToServer();
     void server_disconnectsOnAbnormalPacket();
     void server_disconnectsOnOutOfRangeReply();
@@ -453,6 +454,44 @@ void tst_QMdmmNetworking::client_routesAgentStateChangeToSelfAgent()
     p2Sock->abort();
 
     QTRY_VERIFY_WITH_TIMEOUT(stateRouted, 5000);
+}
+
+// The logic configuration is broadcast when a player joins a room, and the receiving client must
+// route it out through its selfAgent's logicConfigurationNotified signal -- filling the mirror
+// room's configuration alone only reaches whatever reads the room model directly. The operation
+// side (GUI, Bot) learns that the rules are in place from that signal, exactly like it learns
+// about a player joining or leaving.
+void tst_QMdmmNetworking::client_routesLogicConfigurationToSelfAgent()
+{
+    LogicConfiguration conf = LogicConfiguration::defaults();
+    conf.setInitialMaxHp(7);
+    conf.setMaximumMaxHp(9);
+    conf.setEnableLetMove(false);
+
+    ServerConfiguration serverConf = ServerConfiguration::defaults();
+    serverConf.setPlayerNumPerRoom(2); // not full: nothing else is broadcast
+    serverConf.setTcpPort(16379);
+    serverConf.setLocalEnabled(false);
+    serverConf.setWebsocketEnabled(false);
+    serverConf.setRequestTimeout(60);
+
+    Server server(serverConf, conf);
+    QVERIFY(server.listen());
+
+    auto *p1 = new Client(ClientConfiguration(), &server);
+
+    // The broadcast can land before connectToHost() returns, so the observation is armed first.
+    int configRouted = 0;
+    connect(p1->agent(), &Agent::logicConfigurationNotified, &server, [&configRouted]() { ++configRouted; });
+
+    QVERIFY(p1->connectToHost(u"qmdmm://localhost:16379"_s, Data::StateOnline));
+    QTRY_VERIFY_WITH_TIMEOUT(configRouted >= 1, 5000);
+
+    // What the signal announces has to be readable: it carries no payload, so the rules the
+    // server sent are the ones the mirror room now holds, field for field.
+    QCOMPARE(p1->room()->logicConfiguration().initialMaxHp(), conf.initialMaxHp());
+    QCOMPARE(p1->room()->logicConfiguration().maximumMaxHp(), conf.maximumMaxHp());
+    QCOMPARE(p1->room()->logicConfiguration().enableLetMove(), conf.enableLetMove());
 }
 
 // The runtime managed toggle (D-021): the operation side flips the client's own agent with

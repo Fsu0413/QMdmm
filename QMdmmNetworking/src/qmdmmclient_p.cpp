@@ -312,6 +312,10 @@ void ClientP::notifyLogicConfiguration(const QJsonValue &value)
         return;
 
     room->setLogicConfiguration(conf);
+    // Route it out to the operation side like every other notification: the mirror room now
+    // holds the rules, but reading them off the room is not the same as learning that they are
+    // there. The signal carries no payload by design -- the rules are read from the mirror.
+    selfAgent->notifyLogicConfiguration();
     onRet_.dismiss();
 }
 
